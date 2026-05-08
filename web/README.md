@@ -33,6 +33,16 @@ npm run dev
 
 Файл [`vercel.json`](./vercel.json) отправляет все пути на `index.html` для SPA.
 
+## PWA (установка на домашний экран)
+
+В production-сборке подключены **manifest** и **service worker** (`vite-plugin-pwa`): кэшируются статические ассеты приложения, для SPA настроен **navigate fallback** на `/index.html`.
+
+Иконки `public/pwa-192.png` и `public/pwa-512.png` можно перегенерировать скриптом:
+
+`powershell -ExecutionPolicy Bypass -File scripts/generate-pwa-icons.ps1`
+
+В режиме `npm run dev` SW **выключен** (`devOptions.enabled: false`), чтобы не мешать разработке.
+
 ## Сборка
 
 ```bash
