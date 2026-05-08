@@ -20,6 +20,12 @@ const PASSWORD_KEY = 'motivator_kdf_password'
 type VaultContextValue = {
   ready: boolean
   unlocked: boolean
+  /** Первая загрузка/создание строки на сервере завершена — можно безопасно сохранять правки */
+  remoteHydrated: boolean
+  /** Идёт запись vault на сервер */
+  savePending: boolean
+  /** Успешное сохранение после последнего действия пользователя */
+  lastSyncedAt: number | null
   vault: VaultPayload
   remoteError: string | null
   saveSeed: (seedB64: string, password: string) => Promise<void>
@@ -41,6 +47,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [vault, setVault] = useState<VaultPayload>(emptyVault())
   const [ready, setReady] = useState(false)
   const [remoteError, setRemoteError] = useState<string | null>(null)
+  const [remoteHydrated, setRemoteHydrated] = useState(false)
+  const [savePending, setSavePending] = useState(false)
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null)
   const versionRef = useRef(1)
 
   const unlocked = Boolean(cryptoKey)
@@ -81,39 +90,54 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(PASSWORD_KEY)
     setVault(emptyVault())
     versionRef.current = 1
+    setRemoteHydrated(false)
+    setLastSyncedAt(null)
+    setRemoteError(null)
   }, [])
 
   const pushVault = useCallback(
     async (next: VaultPayload) => {
       setVault(next)
       if (!cryptoKey || !session?.user || !supabase) return
-      const json = JSON.stringify(next)
-      const ciphertext = await encryptUtf8(json, cryptoKey)
-      const nextVersion = versionRef.current + 1
-      const { error } = await supabase.from('user_vault').upsert(
-        {
-          user_id: session.user.id,
-          ciphertext,
-          version: nextVersion,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' },
-      )
-      if (error) setRemoteError(error.message)
-      else {
-        setRemoteError(null)
-        versionRef.current = nextVersion
+      setSavePending(true)
+      try {
+        const json = JSON.stringify(next)
+        const ciphertext = await encryptUtf8(json, cryptoKey)
+        const nextVersion = versionRef.current + 1
+        const { error } = await supabase.from('user_vault').upsert(
+          {
+            user_id: session.user.id,
+            ciphertext,
+            version: nextVersion,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' },
+        )
+        if (error) setRemoteError(error.message)
+        else {
+          setRemoteError(null)
+          versionRef.current = nextVersion
+          setLastSyncedAt(Date.now())
+        }
+      } finally {
+        setSavePending(false)
       }
     },
     [cryptoKey, session],
   )
 
   useEffect(() => {
-    if (!cryptoKey || !session?.user || !supabase) return
+    if (!cryptoKey || !session?.user || !supabase) {
+      startTransition(() => setRemoteHydrated(false))
+      return
+    }
+
     let cancelled = false
 
     void (async () => {
+      startTransition(() => setRemoteHydrated(false))
       setRemoteError(null)
+
       const { data, error } = await supabase
         .from('user_vault')
         .select('ciphertext, version')
@@ -121,8 +145,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         .maybeSingle()
 
       if (cancelled) return
+
       if (error) {
         setRemoteError(error.message)
+        setRemoteHydrated(true)
         return
       }
 
@@ -139,11 +165,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
           { onConflict: 'user_id' },
         )
         if (cancelled) return
-        if (upErr) setRemoteError(upErr.message)
-        else {
+        if (upErr) {
+          setRemoteError(upErr.message)
+        } else {
           setVault(emptyVault())
           versionRef.current = 1
+          setLastSyncedAt(Date.now())
         }
+        setRemoteHydrated(true)
         return
       }
 
@@ -153,9 +182,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         setVault(parsed.schemaVersion === 1 ? parsed : emptyVault())
         versionRef.current =
           typeof data.version === 'number' && data.version > 0 ? data.version : 1
+        setLastSyncedAt(Date.now())
       } catch {
         setRemoteError('Не удалось расшифровать vault. Проверьте seed и пароль.')
       }
+      if (!cancelled) setRemoteHydrated(true)
     })()
 
     return () => {
@@ -165,6 +196,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const addTask = useCallback(
     async (title: string) => {
+      if (!remoteHydrated) return
       const trimmed = title.trim()
       if (!trimmed) return
       const now = new Date().toISOString()
@@ -181,11 +213,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       }
       await pushVault(next)
     },
-    [pushVault, vault],
+    [pushVault, remoteHydrated, vault],
   )
 
   const toggleTask = useCallback(
     async (id: string) => {
+      if (!remoteHydrated) return
       const now = new Date().toISOString()
       const next: VaultPayload = {
         ...vault,
@@ -195,24 +228,28 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       }
       await pushVault(next)
     },
-    [pushVault, vault],
+    [pushVault, remoteHydrated, vault],
   )
 
   const removeTask = useCallback(
     async (id: string) => {
+      if (!remoteHydrated) return
       const next: VaultPayload = {
         ...vault,
         tasks: vault.tasks.filter((t) => t.id !== id),
       }
       await pushVault(next)
     },
-    [pushVault, vault],
+    [pushVault, remoteHydrated, vault],
   )
 
   const value = useMemo(
     () => ({
       ready,
       unlocked,
+      remoteHydrated,
+      savePending,
+      lastSyncedAt,
       vault,
       remoteError,
       saveSeed,
@@ -221,7 +258,20 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       toggleTask,
       removeTask,
     }),
-    [ready, unlocked, vault, remoteError, saveSeed, lock, addTask, toggleTask, removeTask],
+    [
+      ready,
+      unlocked,
+      remoteHydrated,
+      savePending,
+      lastSyncedAt,
+      vault,
+      remoteError,
+      saveSeed,
+      lock,
+      addTask,
+      toggleTask,
+      removeTask,
+    ],
   )
 
   return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>
