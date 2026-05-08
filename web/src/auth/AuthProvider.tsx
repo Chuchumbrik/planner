@@ -14,7 +14,10 @@ type AuthContextValue = {
   session: Session | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>
+  signUp: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: Error | null; session: Session | null }>
   signOut: () => Promise<void>
 }
 
@@ -48,9 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = useCallback(async (email: string, password: string) => {
-    if (!supabase) return { error: new Error('Supabase не настроен') }
-    const { error } = await supabase.auth.signUp({ email, password })
-    return { error: error ? new Error(error.message) : null }
+    if (!supabase)
+      return { error: new Error('Supabase не настроен'), session: null as Session | null }
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    return {
+      error: error ? new Error(error.message) : null,
+      session: data.session ?? null,
+    }
   }, [])
 
   const signOut = useCallback(async () => {
@@ -74,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }),
           signUp: async () => ({
             error: new Error('Задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY'),
+            session: null,
           }),
           signOut: async () => {},
         }}

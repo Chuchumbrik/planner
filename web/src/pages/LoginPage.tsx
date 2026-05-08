@@ -10,19 +10,41 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setInfo(null)
     setPending(true)
-    const fn = mode === 'login' ? signIn : signUp
-    const { error: err } = await fn(email.trim(), password)
+
+    if (mode === 'login') {
+      const { error: err } = await signIn(email.trim(), password)
+      setPending(false)
+      if (err) {
+        setError(err.message)
+        return
+      }
+      navigate('/onboarding', { replace: true })
+      return
+    }
+
+    const { error: err, session } = await signUp(email.trim(), password)
     setPending(false)
     if (err) {
       setError(err.message)
       return
     }
+
+    if (!session) {
+      setInfo(
+        'Аккаунт создан. Подтвердите email по ссылке из письма, затем войдите. Если письма нет — проверьте «Спам».',
+      )
+      setMode('login')
+      return
+    }
+
     navigate('/onboarding', { replace: true })
   }
 
@@ -70,6 +92,12 @@ export function LoginPage() {
           />
         </label>
 
+        {info && (
+          <p className="rounded-lg border border-emerald-800/60 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-100">
+            {info}
+          </p>
+        )}
+
         {error && (
           <p className="rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-100">
             {error}
@@ -88,7 +116,11 @@ export function LoginPage() {
       <button
         type="button"
         className="mt-4 text-center text-sm text-emerald-400/90 hover:text-emerald-300"
-        onClick={() => setMode((m) => (m === 'login' ? 'register' : 'login'))}
+        onClick={() => {
+          setMode((m) => (m === 'login' ? 'register' : 'login'))
+          setError(null)
+          setInfo(null)
+        }}
       >
         {mode === 'login' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
       </button>
