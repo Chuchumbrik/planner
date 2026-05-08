@@ -1,0 +1,9 @@
+{
+  "legacyEditor": false,
+  "livePreview": true,
+  "readableLineLength": true,
+  "strictLineBreaks": false,
+  "showIndentGuide": true,
+  "spellcheck": true,
+  "spellcheckLanguages": ["ru", "en"]
+}

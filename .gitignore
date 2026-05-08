@@ -1,0 +1,20 @@
+# Dependencies & build
+web/node_modules/
+web/dist/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+web/.env.local
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+npm-debug.log*
