@@ -11,8 +11,18 @@ import {
 } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
 import { decryptUtf8, deriveAesKey, encryptUtf8 } from '@/lib/cryptoVault'
+import i18n from '@/i18n'
+import { normalizeVault } from '@/vault/normalize'
 import { supabase } from '@/lib/supabase'
-import { emptyVault, type Task, type VaultPayload } from '@/vault/types'
+import {
+  DEFAULT_GROUP_ID,
+  emptyVault,
+  type Task,
+  type TaskColorKey,
+  type TaskGroup,
+  type VaultPayload,
+  type VaultPayloadV2,
+} from '@/vault/types'
 
 const SEED_KEY = 'motivator_seed_b64'
 const PASSWORD_KEY = 'motivator_kdf_password'
@@ -20,25 +30,35 @@ const PASSWORD_KEY = 'motivator_kdf_password'
 type VaultContextValue = {
   ready: boolean
   unlocked: boolean
-  /** Первая загрузка/создание строки на сервере завершена — можно безопасно сохранять правки */
   remoteHydrated: boolean
-  /** Идёт запись vault на сервер */
+  decryptFailed: boolean
   savePending: boolean
-  /** Успешное сохранение после последнего действия пользователя */
   lastSyncedAt: number | null
   vault: VaultPayload
   remoteError: string | null
   saveSeed: (seedB64: string, password: string) => Promise<void>
   lock: () => void
-  addTask: (title: string) => Promise<void>
+  addTask: (title: string, opts?: { groupId?: string; colorKey?: TaskColorKey }) => Promise<void>
   toggleTask: (id: string) => Promise<void>
   removeTask: (id: string) => Promise<void>
+  setTaskColor: (taskId: string, colorKey: TaskColorKey) => Promise<void>
+  setTaskGroup: (taskId: string, groupId: string) => Promise<void>
+  addSubtask: (taskId: string, title: string) => Promise<void>
+  toggleSubtask: (taskId: string, subId: string) => Promise<void>
+  removeSubtask: (taskId: string, subId: string) => Promise<void>
+  addGroup: (name: string) => Promise<void>
+  renameGroup: (groupId: string, name: string) => Promise<void>
+  deleteGroup: (groupId: string) => Promise<void>
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null)
 
 function newId(): string {
   return crypto.randomUUID()
+}
+
+function ensureV2(v: VaultPayload): VaultPayloadV2 {
+  return v.schemaVersion === 2 ? v : normalizeVault(v)
 }
 
 export function VaultProvider({ children }: { children: ReactNode }) {
@@ -50,6 +70,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [remoteHydrated, setRemoteHydrated] = useState(false)
   const [savePending, setSavePending] = useState(false)
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null)
+  const [decryptFailed, setDecryptFailed] = useState(false)
   const versionRef = useRef(1)
 
   const unlocked = Boolean(cryptoKey)
@@ -90,6 +111,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(PASSWORD_KEY)
     setVault(emptyVault())
     versionRef.current = 1
+    setDecryptFailed(false)
     setRemoteHydrated(false)
     setLastSyncedAt(null)
     setRemoteError(null)
@@ -97,11 +119,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const pushVault = useCallback(
     async (next: VaultPayload) => {
-      setVault(next)
+      const v2 = ensureV2(next)
+      setVault(v2)
       if (!cryptoKey || !session?.user || !supabase) return
       setSavePending(true)
       try {
-        const json = JSON.stringify(next)
+        const json = JSON.stringify(v2)
         const ciphertext = await encryptUtf8(json, cryptoKey)
         const nextVersion = versionRef.current + 1
         const { error } = await supabase.from('user_vault').upsert(
@@ -137,6 +160,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     void (async () => {
       startTransition(() => setRemoteHydrated(false))
       setRemoteError(null)
+      setDecryptFailed(false)
 
       const { data, error } = await supabase
         .from('user_vault')
@@ -153,8 +177,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       }
 
       if (!data?.ciphertext) {
-        const json = JSON.stringify(emptyVault())
-        const ciphertext = await encryptUtf8(json, cryptoKey)
+        const empty = emptyVault()
+        const ciphertext = await encryptUtf8(JSON.stringify(empty), cryptoKey)
         const { error: upErr } = await supabase.from('user_vault').upsert(
           {
             user_id: session.user.id,
@@ -168,7 +192,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         if (upErr) {
           setRemoteError(upErr.message)
         } else {
-          setVault(emptyVault())
+          setVault(empty)
+          setDecryptFailed(false)
           versionRef.current = 1
           setLastSyncedAt(Date.now())
         }
@@ -178,13 +203,15 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
       try {
         const plain = await decryptUtf8(data.ciphertext as string, cryptoKey)
-        const parsed = JSON.parse(plain) as VaultPayload
-        setVault(parsed.schemaVersion === 1 ? parsed : emptyVault())
+        const parsed = normalizeVault(JSON.parse(plain) as unknown)
+        setVault(parsed)
+        setDecryptFailed(false)
         versionRef.current =
           typeof data.version === 'number' && data.version > 0 ? data.version : 1
         setLastSyncedAt(Date.now())
       } catch {
-        setRemoteError('Не удалось расшифровать vault. Проверьте seed и пароль.')
+        setDecryptFailed(true)
+        setRemoteError(i18n.t('vault.decryptError'))
       }
       if (!cancelled) setRemoteHydrated(true)
     })()
@@ -194,11 +221,25 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   }, [cryptoKey, session])
 
+  const mutate = useCallback(
+    async (fn: (v: VaultPayloadV2) => VaultPayloadV2) => {
+      if (!remoteHydrated) return
+      const base = ensureV2(vault)
+      await pushVault(fn(base))
+    },
+    [pushVault, remoteHydrated, vault],
+  )
+
   const addTask = useCallback(
-    async (title: string) => {
+    async (title: string, opts?: { groupId?: string; colorKey?: TaskColorKey }) => {
       if (!remoteHydrated) return
       const trimmed = title.trim()
       if (!trimmed) return
+      const base = ensureV2(vault)
+      const gid =
+        opts?.groupId && base.groups.some((g) => g.id === opts.groupId)
+          ? opts.groupId
+          : DEFAULT_GROUP_ID
       const now = new Date().toISOString()
       const task: Task = {
         id: newId(),
@@ -206,41 +247,178 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         done: false,
         createdAt: now,
         updatedAt: now,
+        groupId: gid,
+        colorKey: opts?.colorKey ?? 'zinc',
+        subtasks: [],
       }
-      const next: VaultPayload = {
-        ...vault,
-        tasks: [task, ...vault.tasks],
-      }
-      await pushVault(next)
+      await pushVault({
+        ...base,
+        tasks: [task, ...base.tasks],
+      })
     },
     [pushVault, remoteHydrated, vault],
   )
 
   const toggleTask = useCallback(
     async (id: string) => {
-      if (!remoteHydrated) return
-      const now = new Date().toISOString()
-      const next: VaultPayload = {
-        ...vault,
-        tasks: vault.tasks.map((t) =>
-          t.id === id ? { ...t, done: !t.done, updatedAt: now } : t,
-        ),
-      }
-      await pushVault(next)
+      await mutate((v) => {
+        const now = new Date().toISOString()
+        return {
+          ...v,
+          tasks: v.tasks.map((t) =>
+            t.id === id ? { ...t, done: !t.done, updatedAt: now } : t,
+          ),
+        }
+      })
     },
-    [pushVault, remoteHydrated, vault],
+    [mutate],
   )
 
   const removeTask = useCallback(
     async (id: string) => {
-      if (!remoteHydrated) return
-      const next: VaultPayload = {
-        ...vault,
-        tasks: vault.tasks.filter((t) => t.id !== id),
-      }
-      await pushVault(next)
+      await mutate((v) => ({
+        ...v,
+        tasks: v.tasks.filter((t) => t.id !== id),
+      }))
     },
-    [pushVault, remoteHydrated, vault],
+    [mutate],
+  )
+
+  const setTaskColor = useCallback(
+    async (taskId: string, colorKey: TaskColorKey) => {
+      await mutate((v) => ({
+        ...v,
+        tasks: v.tasks.map((t) =>
+          t.id === taskId ? { ...t, colorKey, updatedAt: new Date().toISOString() } : t,
+        ),
+      }))
+    },
+    [mutate],
+  )
+
+  const setTaskGroup = useCallback(
+    async (taskId: string, groupId: string) => {
+      await mutate((v) => {
+        if (!v.groups.some((g) => g.id === groupId)) return v
+        return {
+          ...v,
+          tasks: v.tasks.map((t) =>
+            t.id === taskId ? { ...t, groupId, updatedAt: new Date().toISOString() } : t,
+          ),
+        }
+      })
+    },
+    [mutate],
+  )
+
+  const addSubtask = useCallback(
+    async (taskId: string, title: string) => {
+      const trimmed = title.trim()
+      if (!trimmed) return
+      await mutate((v) => {
+        const now = new Date().toISOString()
+        const sub = {
+          id: newId(),
+          title: trimmed,
+          done: false,
+          createdAt: now,
+          updatedAt: now,
+        }
+        return {
+          ...v,
+          tasks: v.tasks.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  updatedAt: now,
+                  subtasks: [sub, ...t.subtasks],
+                }
+              : t,
+          ),
+        }
+      })
+    },
+    [mutate],
+  )
+
+  const toggleSubtask = useCallback(
+    async (taskId: string, subId: string) => {
+      await mutate((v) => {
+        const now = new Date().toISOString()
+        return {
+          ...v,
+          tasks: v.tasks.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  updatedAt: now,
+                  subtasks: t.subtasks.map((s) =>
+                    s.id === subId ? { ...s, done: !s.done, updatedAt: now } : s,
+                  ),
+                }
+              : t,
+          ),
+        }
+      })
+    },
+    [mutate],
+  )
+
+  const removeSubtask = useCallback(
+    async (taskId: string, subId: string) => {
+      await mutate((v) => ({
+        ...v,
+        tasks: v.tasks.map((t) =>
+          t.id === taskId
+            ? { ...t, subtasks: t.subtasks.filter((s) => s.id !== subId) }
+            : t,
+        ),
+      }))
+    },
+    [mutate],
+  )
+
+  const addGroup = useCallback(
+    async (name: string) => {
+      const trimmed = name.trim()
+      if (!trimmed) return
+      await mutate((v) => {
+        const maxOrder = v.groups.reduce((m, g) => Math.max(m, g.sortOrder), 0)
+        const g: TaskGroup = {
+          id: newId(),
+          name: trimmed,
+          sortOrder: maxOrder + 1,
+        }
+        return { ...v, groups: [...v.groups, g] }
+      })
+    },
+    [mutate],
+  )
+
+  const renameGroup = useCallback(
+    async (groupId: string, name: string) => {
+      const trimmed = name.trim()
+      if (!trimmed) return
+      await mutate((v) => ({
+        ...v,
+        groups: v.groups.map((g) => (g.id === groupId ? { ...g, name: trimmed } : g)),
+      }))
+    },
+    [mutate],
+  )
+
+  const deleteGroup = useCallback(
+    async (groupId: string) => {
+      if (groupId === DEFAULT_GROUP_ID) return
+      await mutate((v) => ({
+        ...v,
+        groups: v.groups.filter((g) => g.id !== groupId),
+        tasks: v.tasks.map((t) =>
+          t.groupId === groupId ? { ...t, groupId: DEFAULT_GROUP_ID } : t,
+        ),
+      }))
+    },
+    [mutate],
   )
 
   const value = useMemo(
@@ -248,6 +426,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       ready,
       unlocked,
       remoteHydrated,
+      decryptFailed,
       savePending,
       lastSyncedAt,
       vault,
@@ -257,11 +436,20 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       addTask,
       toggleTask,
       removeTask,
+      setTaskColor,
+      setTaskGroup,
+      addSubtask,
+      toggleSubtask,
+      removeSubtask,
+      addGroup,
+      renameGroup,
+      deleteGroup,
     }),
     [
       ready,
       unlocked,
       remoteHydrated,
+      decryptFailed,
       savePending,
       lastSyncedAt,
       vault,
@@ -271,6 +459,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       addTask,
       toggleTask,
       removeTask,
+      setTaskColor,
+      setTaskGroup,
+      addSubtask,
+      toggleSubtask,
+      removeSubtask,
+      addGroup,
+      renameGroup,
+      deleteGroup,
     ],
   )
 

@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/auth/AuthProvider'
 import { AppPage } from '@/pages/AppPage'
 import { HomePage } from '@/pages/HomePage'
@@ -8,11 +9,12 @@ import { SettingsPage } from '@/pages/SettingsPage'
 
 export function App() {
   const { session, loading } = useAuth()
+  const { t } = useTranslation()
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-100">
-        <p className="text-sm text-zinc-400">Загрузка…</p>
+        <p className="text-sm text-zinc-400">{t('shell.loading')}</p>
       </div>
     )
   }

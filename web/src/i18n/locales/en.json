@@ -1,0 +1,91 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "add": "Add",
+    "language": "Language",
+    "langRu": "Russian",
+    "langEn": "English"
+  },
+  "app": {
+    "brand": "Motivator",
+    "tasks": "Tasks",
+    "settings": "Settings",
+    "syncLoadingVault": "Loading vault from server…",
+    "syncSaving": "Saving…",
+    "syncDone": "Synced {{time}}",
+    "syncReady": "Ready",
+    "syncErrorPrefix": "Sync:",
+    "newTask": "New task",
+    "waitLoad": "Wait for load…",
+    "emptyList": "Nothing yet. Add a task — it will be stored encrypted in Supabase.",
+    "filterAllGroups": "All groups",
+    "group": "Group",
+    "color": "Color",
+    "subtasks": "Subtasks",
+    "addSubtask": "Subtask…",
+    "goalSplitHint": "Break down: add subtasks below."
+  },
+  "settings": {
+    "title": "Settings",
+    "back": "← Back to tasks",
+    "seedHint": "Seed is stored locally. Copy it on onboarding or add export later.",
+    "signOut": "Sign out",
+    "groupsTitle": "Groups & projects",
+    "newGroupPlaceholder": "New group…",
+    "addGroup": "Add group",
+    "rename": "Name",
+    "cannotDeleteDefault": "The default group cannot be deleted."
+  },
+  "home": {
+    "badge": "Motivator · V1",
+    "title": "A planner that respects your rhythm",
+    "subtitle": "Minimal web app: sign-in, client-side encryption, tasks.",
+    "login": "Sign in",
+    "docsHint": "Docs — obsidian-motivator folder in the repo"
+  },
+  "login": {
+    "loginTitle": "Sign in",
+    "registerTitle": "Register",
+    "subtitle": "Tasks are encrypted on device; only ciphertext goes to the server.",
+    "email": "Email",
+    "password": "Password",
+    "submitLogin": "Sign in",
+    "submitRegister": "Create account",
+    "pending": "Sending…",
+    "toggleRegister": "No account? Register",
+    "toggleLogin": "Have an account? Sign in",
+    "homeLink": "Home",
+    "confirmEmailInfo": "Account created. Confirm your email from the message, then sign in. Check Spam if needed.",
+    "envHint": "Set {{url}} and {{key}} in {{env}} and on Vercel.",
+    "envUrl": "VITE_SUPABASE_URL",
+    "envKey": "VITE_SUPABASE_ANON_KEY",
+    "envFile": "web/.env.local"
+  },
+  "onboarding": {
+    "title": "Encryption key",
+    "intro": "Seed is combined with a derivation password (optional in V1 — less secure). After sign-out the seed is cleared — to open the same tasks again, paste <strong>the same</strong> seed and derivation password as the first time.",
+    "tabNew": "New seed",
+    "tabImport": "I already have a seed",
+    "generate": "Generate seed",
+    "seedLabel": "Seed (base64)",
+    "importLabel": "Paste saved seed (base64)",
+    "importPlaceholder": "Single line",
+    "kdfPassword": "Derivation password (same as first time)",
+    "kdfPlaceholder": "If empty before — leave empty",
+    "continue": "Continue to app",
+    "saving": "Saving…",
+    "errNeedSeed": "Generate a seed first.",
+    "errNeedImport": "Paste the saved base64 seed.",
+    "errSave": "Could not save key. Try again."
+  },
+  "shell": {
+    "loading": "Loading…",
+    "initCrypto": "Initializing crypto…"
+  },
+  "vault": {
+    "decryptError": "Could not decrypt vault. Check seed and password."
+  }
+}

@@ -1,34 +1,145 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { RequireVault } from '@/components/RequireVault'
+import { DEFAULT_GROUP_ID } from '@/vault/types'
 import { useVault } from '@/vault/VaultProvider'
 
+function GroupRow({
+  initialName,
+  isDefault,
+  canEdit,
+  onRename,
+  onDelete,
+}: {
+  initialName: string
+  isDefault: boolean
+  canEdit: boolean
+  onRename: (name: string) => void
+  onDelete: () => void
+}) {
+  const { t } = useTranslation()
+  const [name, setName] = useState(initialName)
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+      <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-zinc-500">
+        <span>{t('settings.rename')}</span>
+        <input
+          className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-white disabled:opacity-40"
+          value={name}
+          disabled={!canEdit}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={() => {
+            const trimmed = name.trim()
+            if (trimmed && trimmed !== initialName) onRename(trimmed)
+          }}
+        />
+      </label>
+      {!isDefault && (
+        <button
+          type="button"
+          disabled={!canEdit}
+          className="shrink-0 rounded border border-red-900/50 px-2 py-1 text-xs text-red-300 hover:bg-red-950/40 disabled:opacity-40"
+          onClick={() => onDelete()}
+        >
+          {t('common.delete')}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function SettingsPageInner() {
+  const { t, i18n } = useTranslation()
   const { signOut } = useAuth()
-  const { lock } = useVault()
+  const {
+    lock,
+    vault,
+    remoteHydrated,
+    decryptFailed,
+    addGroup,
+    renameGroup,
+    deleteGroup,
+  } = useVault()
+  const [newGroupName, setNewGroupName] = useState('')
+
+  const canEdit = remoteHydrated && !decryptFailed
 
   async function handleSignOut() {
     lock()
     await signOut()
   }
 
+  const sortedGroups = [...vault.groups].sort((a, b) => a.sortOrder - b.sortOrder)
+
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
       <Link className="mb-6 text-sm text-emerald-400 hover:text-emerald-300" to="/app">
-        ← К задачам
+        {t('settings.back')}
       </Link>
-      <h1 className="text-xl font-semibold text-white">Настройки</h1>
-      <p className="mt-2 text-sm text-zinc-400">
-        Seed хранится локально в браузере. Для экспорта скопируйте его на шаге онбординга или
-        добавьте экран экспорта позже.
-      </p>
+      <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
+      <p className="mt-2 text-sm text-zinc-400">{t('settings.seedHint')}</p>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-medium text-zinc-300">{t('common.language')}</h2>
+        <select
+          className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
+          value={i18n.language === 'en' ? 'en' : 'ru'}
+          onChange={(e) => void i18n.changeLanguage(e.target.value)}
+        >
+          <option value="ru">{t('common.langRu')}</option>
+          <option value="en">{t('common.langEn')}</option>
+        </select>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-medium text-zinc-300">{t('settings.groupsTitle')}</h2>
+        <form
+          className="mt-3 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (!canEdit) return
+            void addGroup(newGroupName).then(() => setNewGroupName(''))
+          }}
+        >
+          <input
+            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            placeholder={t('settings.newGroupPlaceholder')}
+            value={newGroupName}
+            disabled={!canEdit}
+            onChange={(e) => setNewGroupName(e.target.value)}
+          />
+          <button
+            type="submit"
+            disabled={!canEdit}
+            className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+          >
+            {t('settings.addGroup')}
+          </button>
+        </form>
+
+        <div className="mt-4 flex flex-col gap-2">
+          {sortedGroups.map((g) => (
+            <GroupRow
+              key={`${g.id}-${g.name}`}
+              initialName={g.name}
+              isDefault={g.id === DEFAULT_GROUP_ID}
+              canEdit={canEdit}
+              onRename={(name) => void renameGroup(g.id, name)}
+              onDelete={() => void deleteGroup(g.id)}
+            />
+          ))}
+        </div>
+      </section>
 
       <button
         type="button"
-        className="mt-8 w-full rounded-lg border border-zinc-700 py-2.5 text-sm text-zinc-100 hover:border-zinc-500"
+        className="mt-10 w-full rounded-lg border border-zinc-700 py-2.5 text-sm text-zinc-100 hover:border-zinc-500"
         onClick={() => void handleSignOut()}
       >
-        Выйти из аккаунта
+        {t('settings.signOut')}
       </button>
     </div>
   )

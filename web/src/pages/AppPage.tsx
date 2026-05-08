@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { TaskCard } from '@/components/TaskCard'
 import { RequireVault } from '@/components/RequireVault'
 import { useVault } from '@/vault/VaultProvider'
 
-function formatSynced(ts: number | null): string | null {
+function formatSynced(ts: number | null, locale: string): string | null {
   if (ts == null) return null
   try {
-    return new Date(ts).toLocaleString('ru-RU', {
+    return new Date(ts).toLocaleString(locale, {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
@@ -19,42 +21,62 @@ function formatSynced(ts: number | null): string | null {
 }
 
 function AppPageInner() {
+  const { t, i18n } = useTranslation()
   const {
     vault,
     remoteError,
     remoteHydrated,
+    decryptFailed,
     savePending,
     lastSyncedAt,
     addTask,
     toggleTask,
     removeTask,
+    setTaskColor,
+    setTaskGroup,
+    addSubtask,
+    toggleSubtask,
+    removeSubtask,
   } = useVault()
   const [title, setTitle] = useState('')
+  const [filterGroupId, setFilterGroupId] = useState<string | 'all'>('all')
+
+  const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
   const syncHint = !remoteHydrated
-    ? 'Загрузка vault с сервера…'
+    ? t('app.syncLoadingVault')
     : savePending
-      ? 'Сохранение…'
+      ? t('app.syncSaving')
       : lastSyncedAt
-        ? `Синхронизировано ${formatSynced(lastSyncedAt) ?? ''}`.trim()
-        : 'Готово к работе'
+        ? t('app.syncDone', { time: formatSynced(lastSyncedAt, locale) ?? '' })
+        : t('app.syncReady')
 
-  const canEdit = remoteHydrated && !remoteError?.includes('расшифровать')
+  const canEdit = remoteHydrated && !decryptFailed
+
+  const sortedGroups = useMemo(
+    () => [...vault.groups].sort((a, b) => a.sortOrder - b.sortOrder),
+    [vault.groups],
+  )
+
+  const filteredTasks = useMemo(() => {
+    if (filterGroupId === 'all') return vault.tasks
+    return vault.tasks.filter((x) => x.groupId === filterGroupId)
+  }, [vault.tasks, filterGroupId])
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
       <header className="mb-4 flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-emerald-400/90">
-            Мотиватор
+            {t('app.brand')}
           </p>
-          <h1 className="text-xl font-semibold text-white">Задачи</h1>
+          <h1 className="text-xl font-semibold text-white">{t('app.tasks')}</h1>
         </div>
         <Link
           to="/settings"
           className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
         >
-          Настройки
+          {t('app.settings')}
         </Link>
       </header>
 
@@ -64,21 +86,44 @@ function AppPageInner() {
 
       {remoteError && (
         <div className="mb-4 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
-          Синхронизация: {remoteError}
+          {t('app.syncErrorPrefix')} {remoteError}
         </div>
       )}
+
+      <div className="mb-4">
+        <label className="flex flex-col gap-1 text-xs text-zinc-500">
+          <span>{t('app.group')}</span>
+          <select
+            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+            value={filterGroupId}
+            disabled={!canEdit}
+            onChange={(e) =>
+              setFilterGroupId(e.target.value === 'all' ? 'all' : e.target.value)
+            }
+          >
+            <option value="all">{t('app.filterAllGroups')}</option>
+            {sortedGroups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <form
         className="mb-6 flex gap-2"
         onSubmit={(e) => {
           e.preventDefault()
           if (!canEdit) return
-          void addTask(title).then(() => setTitle(''))
+          void addTask(title, {
+            groupId: filterGroupId !== 'all' ? filterGroupId : undefined,
+          }).then(() => setTitle(''))
         }}
       >
         <input
           className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-emerald-500/80 disabled:opacity-50"
-          placeholder={remoteHydrated ? 'Новая задача' : 'Подождите загрузку…'}
+          placeholder={remoteHydrated ? t('app.newTask') : t('app.waitLoad')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           disabled={!canEdit}
@@ -88,44 +133,30 @@ function AppPageInner() {
           disabled={!canEdit}
           className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-40"
         >
-          Добавить
+          {t('common.add')}
         </button>
       </form>
 
-      <ul className="flex flex-col gap-2">
-        {vault.tasks.length === 0 && (
+      <ul className="flex flex-col gap-3">
+        {filteredTasks.length === 0 && (
           <li className="rounded-lg border border-dashed border-zinc-700 px-4 py-8 text-center text-sm text-zinc-500">
-            Пока пусто. Добавьте первую задачу — она сохранится в зашифрованном vault в Supabase.
+            {t('app.emptyList')}
           </li>
         )}
-        {vault.tasks.map((t) => (
-          <li
-            key={t.id}
-            className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2.5"
-          >
-            <label className="flex flex-1 cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={t.done}
-                disabled={!canEdit}
-                onChange={() => void toggleTask(t.id)}
-                className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
-              />
-              <span
-                className={`text-sm ${t.done ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}
-              >
-                {t.title}
-              </span>
-            </label>
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="text-xs text-red-400/90 hover:text-red-300 disabled:opacity-40"
-              onClick={() => void removeTask(t.id)}
-            >
-              Удалить
-            </button>
-          </li>
+        {filteredTasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            groups={vault.groups}
+            canEdit={canEdit}
+            onToggle={() => void toggleTask(task.id)}
+            onRemove={() => void removeTask(task.id)}
+            onSetColor={(key) => void setTaskColor(task.id, key)}
+            onSetGroup={(gid) => void setTaskGroup(task.id, gid)}
+            onAddSubtask={(subTitle) => void addSubtask(task.id, subTitle)}
+            onToggleSubtask={(subId) => void toggleSubtask(task.id, subId)}
+            onRemoveSubtask={(subId) => void removeSubtask(task.id, subId)}
+          />
         ))}
       </ul>
     </div>
