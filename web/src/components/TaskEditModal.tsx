@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { mergeEstimateParts, splitEstimateMinutes } from '@/lib/estimateInput'
 import { useTranslation } from 'react-i18next'
 import { ColorPalette } from '@/components/ColorPalette'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
@@ -108,9 +109,9 @@ export function TaskEditModal({
   const { t } = useTranslation()
   const [titleDraft, setTitleDraft] = useState(task.title)
   const [checkDraft, setCheckDraft] = useState('')
-  const [estDraft, setEstDraft] = useState(
-    task.estimatedMinutes != null ? String(task.estimatedMinutes) : '',
-  )
+  const [estHoursDraft, setEstHoursDraft] = useState('')
+  const [estMinutesDraft, setEstMinutesDraft] = useState('')
+  const [estFieldError, setEstFieldError] = useState<string | null>(null)
   const [timeDraft, setTimeDraft] = useState(
     task.timeMinutesFromMidnight != null
       ? minutesToTimeInput(task.timeMinutesFromMidnight)
@@ -124,6 +125,13 @@ export function TaskEditModal({
   useEffect(() => {
     if (task.recurrence?.kind === 'everyNDays') setEveryNDaysDraft(task.recurrence.n)
   }, [task])
+
+  useEffect(() => {
+    const p = splitEstimateMinutes(task.estimatedMinutes)
+    setEstHoursDraft(p.hours)
+    setEstMinutesDraft(p.minutes)
+    setEstFieldError(null)
+  }, [task.id, task.estimatedMinutes])
 
   const sortedGroups = [...groups].sort((a, b) => a.sortOrder - b.sortOrder)
 
@@ -172,14 +180,25 @@ export function TaskEditModal({
     else setTitleDraft(task.title)
   }
 
-  function applyEst() {
-    const v = estDraft.trim()
-    if (!v) {
-      void onSetEstimatedMinutes(null)
+  function commitEstimate() {
+    const r = mergeEstimateParts(estHoursDraft, estMinutesDraft)
+    if (r.invalid) {
+      setEstFieldError(t('app.estimateInvalid'))
+      const p = splitEstimateMinutes(task.estimatedMinutes)
+      setEstHoursDraft(p.hours)
+      setEstMinutesDraft(p.minutes)
       return
     }
-    const n = Number(v)
-    if (!Number.isNaN(n) && n > 0) void onSetEstimatedMinutes(Math.floor(n))
+    const planned = task.scheduledLocalDate != null
+    if (planned && r.total == null) {
+      setEstFieldError(t('app.estimateRequiredWhenPlanned'))
+      const p = splitEstimateMinutes(task.estimatedMinutes)
+      setEstHoursDraft(p.hours)
+      setEstMinutesDraft(p.minutes)
+      return
+    }
+    setEstFieldError(null)
+    void onSetEstimatedMinutes(r.total)
   }
 
   function applyTime(mode: TaskTimeMode) {
@@ -383,22 +402,41 @@ export function TaskEditModal({
           ) : null}
         </fieldset>
 
-        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
-          <span>{t('app.estimatedMinutes')}</span>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              min={1}
-              max={1440}
-              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-              placeholder={t('app.estimatedPlaceholder')}
-              value={estDraft}
-              disabled={!canEdit}
-              onChange={(e) => setEstDraft(e.target.value)}
-              onBlur={() => applyEst()}
-            />
+        <div className="mt-4 flex flex-col gap-2">
+          <span className="text-xs text-zinc-500">{t('app.estimatedTimeSection')}</span>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.estimatedHours')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                placeholder="0"
+                value={estHoursDraft}
+                disabled={!canEdit}
+                onChange={(e) => setEstHoursDraft(e.target.value)}
+                onBlur={() => commitEstimate()}
+              />
+            </label>
+            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.estimatedMinutesPart')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                placeholder="0"
+                value={estMinutesDraft}
+                disabled={!canEdit}
+                onChange={(e) => setEstMinutesDraft(e.target.value)}
+                onBlur={() => commitEstimate()}
+              />
+            </label>
           </div>
-        </label>
+          {estFieldError ? <p className="text-xs text-red-400">{estFieldError}</p> : null}
+          <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
+        </div>
 
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.timeSection')}</legend>
@@ -441,7 +479,7 @@ export function TaskEditModal({
             <span>{t('app.timeClock')}</span>
             <input
               type="time"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
               disabled={!canEdit || task.timeMode === 'none'}
               value={
                 task.timeMode === 'none'
@@ -501,7 +539,7 @@ export function TaskEditModal({
             }}
           >
             <input
-              className="flex-1 rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-emerald-500/80 disabled:opacity-40"
+              className="flex-1 rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-base text-white outline-none focus:ring-1 focus:ring-emerald-500/80 disabled:opacity-40"
               placeholder={t('app.addChecklistItem')}
               value={checkDraft}
               disabled={!canEdit}

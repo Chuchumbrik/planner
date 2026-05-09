@@ -21,6 +21,8 @@ type Props = {
   canEdit: boolean
   onToggle: () => void
   onOpen: () => void
+  /** Отметка пунктов чек-листа с карточки (день / бэклог) */
+  onToggleChecklistItem?: (itemId: string) => void
 }
 
 export function TaskMiniCard({
@@ -29,6 +31,7 @@ export function TaskMiniCard({
   canEdit,
   onToggle,
   onOpen,
+  onToggleChecklistItem,
 }: Props) {
   const { t } = useTranslation()
   const borderClass = taskBorderClass(task.colorKey)
@@ -95,6 +98,30 @@ export function TaskMiniCard({
           </span>
         </button>
       </div>
+      {task.checklist.length > 0 && onToggleChecklistItem ? (
+        <ul className="border-t border-zinc-800/90 px-3 pb-2 pt-2">
+          {task.checklist.map((item) => (
+            <li key={item.id} className="flex items-start gap-2 py-0.5">
+              <input
+                type="checkbox"
+                checked={item.done}
+                disabled={!canEdit}
+                onChange={() => onToggleChecklistItem(item.id)}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={item.title}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+              />
+              <span
+                className={`min-w-0 flex-1 text-xs leading-snug ${
+                  item.done ? 'text-zinc-500 line-through' : 'text-zinc-400'
+                }`}
+              >
+                {item.title}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   )
 }

@@ -17,6 +17,7 @@ import type {
   TaskTimeMode,
 } from '@/vault/types'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS } from '@/vault/types'
+import { mergeEstimateParts, splitEstimateMinutes } from '@/lib/estimateInput'
 
 function minutesToTimeInput(m: number): string {
   const h = Math.floor(m / 60)
@@ -46,7 +47,8 @@ type Snapshot = {
   priorityRank: number
   backlogOnly: boolean
   scheduledLocalDate: string | null
-  estimatedMinutes: string
+  estimatedHours: string
+  estimatedMinutesPart: string
   timeMode: TaskTimeMode
   timeClock: string
   recurrenceKind: RecurrenceUiKind
@@ -69,7 +71,13 @@ function snapshotFromDraft(d: TaskDraft, fallbackDay: string): Snapshot {
     priorityRank: d.priorityRank,
     backlogOnly: d.scheduledLocalDate === null,
     scheduledLocalDate: d.scheduledLocalDate,
-    estimatedMinutes: d.estimatedMinutes != null ? String(d.estimatedMinutes) : '',
+    ...(() => {
+      const p = splitEstimateMinutes(d.estimatedMinutes)
+      return {
+        estimatedHours: p.hours,
+        estimatedMinutesPart: p.minutes,
+      }
+    })(),
     timeMode: d.timeMode,
     timeClock:
       d.timeMinutesFromMidnight != null ? minutesToTimeInput(d.timeMinutesFromMidnight) : '',
@@ -89,7 +97,8 @@ function emptySnapshot(selectedDayKey: string, groupId: string): Snapshot {
     priorityRank: 3,
     backlogOnly: false,
     scheduledLocalDate: selectedDayKey,
-    estimatedMinutes: '',
+    estimatedHours: '',
+    estimatedMinutesPart: '',
     timeMode: 'none',
     timeClock: '',
     recurrenceKind: 'none',
@@ -154,6 +163,7 @@ export function CreateTaskModal({
   const [snap, setSnap] = useState<Snapshot>(() =>
     emptySnapshot(selectedDayKey, defaultGroupId),
   )
+  const [estimateError, setEstimateError] = useState<string | null>(null)
 
   const sortedGroups = useMemo(() => [...groups].sort((a, b) => a.sortOrder - b.sortOrder), [groups])
 
@@ -175,6 +185,7 @@ export function CreateTaskModal({
       : emptySnapshot(selectedDayKey, defaultGroupId)
     initialRef.current = JSON.parse(JSON.stringify(base)) as Snapshot
     setSnap(base)
+    setEstimateError(null)
   }, [open, resumeDraft, selectedDayKey, defaultGroupId])
 
   const isDirty = useMemo(() => {
@@ -183,15 +194,25 @@ export function CreateTaskModal({
     return JSON.stringify(snap) !== JSON.stringify(init)
   }, [snap])
 
-  function applyEst(): number | null {
-    const v = snap.estimatedMinutes.trim()
-    if (!v) return null
-    const n = Number(v)
-    if (Number.isNaN(n) || n <= 0) return null
-    const e = Math.floor(n)
-    if (e > 24 * 60) return null
-    return e
-  }
+  const estimateBlocked = useMemo(() => {
+    const estMerge = mergeEstimateParts(snap.estimatedHours, snap.estimatedMinutesPart)
+    const planned = !snap.backlogOnly && snap.scheduledLocalDate != null
+    return estMerge.invalid || (planned && estMerge.total == null)
+  }, [
+    snap.estimatedHours,
+    snap.estimatedMinutesPart,
+    snap.backlogOnly,
+    snap.scheduledLocalDate,
+  ])
+
+  useEffect(() => {
+    setEstimateError(null)
+  }, [
+    snap.estimatedHours,
+    snap.estimatedMinutesPart,
+    snap.backlogOnly,
+    snap.scheduledLocalDate,
+  ])
 
   function parseTimeForSubmit(): { mode: TaskTimeMode; minutes: number | null } {
     if (snap.timeMode === 'none') return { mode: 'none', minutes: null }
@@ -203,6 +224,18 @@ export function CreateTaskModal({
   async function handleSave() {
     const trimmed = snap.title.trim()
     if (!trimmed || !canEdit) return
+
+    const estMerge = mergeEstimateParts(snap.estimatedHours, snap.estimatedMinutesPart)
+    if (estMerge.invalid) {
+      setEstimateError(t('app.estimateInvalid'))
+      return
+    }
+    const planned = !snap.backlogOnly && snap.scheduledLocalDate != null
+    if (planned && estMerge.total == null) {
+      setEstimateError(t('app.estimateRequiredWhenPlanned'))
+      return
+    }
+    setEstimateError(null)
 
     const recurrence = buildRecurrenceRule(
       snap.recurrenceKind,
@@ -226,7 +259,7 @@ export function CreateTaskModal({
         ? (snap.priorityRank as CreateTaskInput['priorityRank'])
         : 3,
       scheduledLocalDate: scheduled,
-      estimatedMinutes: applyEst(),
+      estimatedMinutes: estMerge.total,
       timeMode: tm.mode,
       timeMinutesFromMidnight: tm.minutes,
       recurrence: recurrenceFinal,
@@ -257,6 +290,7 @@ export function CreateTaskModal({
       const recurrenceFinal = recurrence && anchorOut ? recurrence : null
 
       const tm = parseTimeForSubmit()
+      const draftEst = mergeEstimateParts(snap.estimatedHours, snap.estimatedMinutesPart)
       const draft: TaskDraft = {
         id: draftIdRef.current ?? crypto.randomUUID(),
         updatedAt: new Date().toISOString(),
@@ -267,7 +301,7 @@ export function CreateTaskModal({
           ? (snap.priorityRank as TaskDraft['priorityRank'])
           : 3,
         scheduledLocalDate: scheduled,
-        estimatedMinutes: applyEst(),
+        estimatedMinutes: draftEst.invalid ? null : draftEst.total,
         timeMode: tm.mode,
         timeMinutesFromMidnight: tm.minutes,
         recurrence: recurrenceFinal,
@@ -546,19 +580,45 @@ export function CreateTaskModal({
           ) : null}
         </fieldset>
 
-        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
-          <span>{t('app.estimatedMinutes')}</span>
-          <input
-            type="number"
-            min={1}
-            max={1440}
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-            placeholder={t('app.estimatedPlaceholder')}
-            value={snap.estimatedMinutes}
-            disabled={!canEdit}
-            onChange={(e) => setSnap((s) => ({ ...s, estimatedMinutes: e.target.value }))}
-          />
-        </label>
+        <div className="mt-4 flex flex-col gap-2">
+          <span className="text-xs text-zinc-500">{t('app.estimatedTimeSection')}</span>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.estimatedHours')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                placeholder="0"
+                value={snap.estimatedHours}
+                disabled={!canEdit}
+                onChange={(e) =>
+                  setSnap((s) => ({ ...s, estimatedHours: e.target.value }))
+                }
+              />
+            </label>
+            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.estimatedMinutesPart')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                placeholder="0"
+                value={snap.estimatedMinutesPart}
+                disabled={!canEdit}
+                onChange={(e) =>
+                  setSnap((s) => ({ ...s, estimatedMinutesPart: e.target.value }))
+                }
+              />
+            </label>
+          </div>
+          {estimateError ? (
+            <p className="text-xs text-red-400">{estimateError}</p>
+          ) : null}
+          <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
+        </div>
 
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.timeSection')}</legend>
@@ -610,7 +670,7 @@ export function CreateTaskModal({
             <span>{t('app.timeClock')}</span>
             <input
               type="time"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
               disabled={!canEdit || snap.timeMode === 'none'}
               value={snap.timeMode === 'none' ? '' : snap.timeClock}
               onChange={(e) => setSnap((s) => ({ ...s, timeClock: e.target.value }))}
@@ -621,7 +681,7 @@ export function CreateTaskModal({
         <div className="mt-6 flex flex-wrap gap-2 border-t border-zinc-800 pt-4">
           <button
             type="button"
-            disabled={!canEdit || !snap.title.trim()}
+            disabled={!canEdit || !snap.title.trim() || estimateBlocked}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
             onClick={() => void handleSave()}
           >

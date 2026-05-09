@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
@@ -124,8 +124,26 @@ function AppPageInner() {
   )
   const [editId, setEditId] = useState<string | null>(null)
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false)
+  const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
+  const priorityMenuRef = useRef<HTMLDivElement>(null)
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
+
+  useEffect(() => {
+    if (!filtersPanelOpen) setOpenFilterMenu(null)
+  }, [filtersPanelOpen])
+
+  useEffect(() => {
+    if (!openFilterMenu) return
+    function handlePointerDown(e: MouseEvent) {
+      const node = priorityMenuRef.current
+      if (node && !node.contains(e.target as Node)) {
+        setOpenFilterMenu(null)
+      }
+    }
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [openFilterMenu])
 
   const syncHint = !remoteHydrated
     ? t('app.syncLoadingVault')
@@ -380,6 +398,7 @@ function AppPageInner() {
                   className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
                   value={filterGroupId}
                   disabled={!canEdit}
+                  onFocus={() => setOpenFilterMenu(null)}
                   onChange={(e) =>
                     setFilterGroupId(e.target.value === 'all' ? 'all' : e.target.value)
                   }
@@ -395,44 +414,54 @@ function AppPageInner() {
 
               <div className="flex min-w-[11rem] flex-col gap-1 text-xs text-zinc-500">
                 <span>{t('app.filterPriorities')}</span>
-                <details className="relative">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white [&::-webkit-details-marker]:hidden">
+                <div className="relative" ref={priorityMenuRef}>
+                  <button
+                    type="button"
+                    disabled={!canEdit}
+                    aria-expanded={openFilterMenu === 'priorities'}
+                    className="flex w-full cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-white disabled:opacity-50"
+                    onClick={() =>
+                      setOpenFilterMenu((v) => (v === 'priorities' ? null : 'priorities'))
+                    }
+                  >
                     <span className="min-w-0 flex-1 truncate">{priorityFilterSummary}</span>
                     <span className="shrink-0 text-zinc-500" aria-hidden>
                       ▾
                     </span>
-                  </summary>
-                  <div
-                    className="absolute left-0 top-full z-30 mt-1 min-w-[14rem] rounded-lg border border-zinc-700 bg-zinc-950 p-2 shadow-xl"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
-                      {PRIORITY_RANKS.map((r) => (
-                        <label
-                          key={r}
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={priorityEnabled.has(r)}
-                            disabled={!canEdit}
-                            onChange={() => togglePriority(r)}
-                            className="h-3.5 w-3.5 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
-                          />
-                          <span>{vault.priorityLabels[r]}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      disabled={!canEdit}
-                      className="mt-2 w-full rounded border border-zinc-700 px-2 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
-                      onClick={() => selectAllPriorities()}
+                  </button>
+                  {openFilterMenu === 'priorities' ? (
+                    <div
+                      className="absolute left-0 top-full z-30 mt-1 min-w-[14rem] rounded-lg border border-zinc-700 bg-zinc-950 p-2 shadow-xl"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {t('app.filterPrioritiesAllShort')}
-                    </button>
-                  </div>
-                </details>
+                      <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
+                        {PRIORITY_RANKS.map((r) => (
+                          <label
+                            key={r}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={priorityEnabled.has(r)}
+                              disabled={!canEdit}
+                              onChange={() => togglePriority(r)}
+                              className="h-3.5 w-3.5 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                            />
+                            <span>{vault.priorityLabels[r]}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={!canEdit}
+                        className="mt-2 w-full rounded border border-zinc-700 px-2 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
+                        onClick={() => selectAllPriorities()}
+                      >
+                        {t('app.filterPrioritiesAllShort')}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
@@ -441,6 +470,7 @@ function AppPageInner() {
                   className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
                   value={filterColor}
                   disabled={!canEdit}
+                  onFocus={() => setOpenFilterMenu(null)}
                   onChange={(e) =>
                     setFilterColor(
                       e.target.value === 'all' ? 'all' : (e.target.value as TaskColorKey),
@@ -462,6 +492,7 @@ function AppPageInner() {
                   className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
                   value={filterRepeats}
                   disabled={!canEdit}
+                  onFocus={() => setOpenFilterMenu(null)}
                   onChange={(e) =>
                     setFilterRepeats(e.target.value as 'all' | 'recurring' | 'nonRecurring')
                   }
@@ -475,13 +506,15 @@ function AppPageInner() {
           </div>
         ) : null}
 
-        <div
-          className="rounded-lg border border-cyan-800/55 bg-cyan-950/45 px-3 py-2 text-xs leading-relaxed text-cyan-100/95 shadow-sm"
-          role="status"
-          aria-live="polite"
-        >
-          {informerLine}
-        </div>
+        {!filtersPanelOpen ? (
+          <div
+            className="rounded-lg border border-cyan-800/55 bg-cyan-950/45 px-3 py-2 text-xs leading-relaxed text-cyan-100/95 shadow-sm"
+            role="status"
+            aria-live="polite"
+          >
+            {informerLine}
+          </div>
+        ) : null}
 
         {vault.drafts.length > 0 ? (
           <section className="max-w-lg rounded-lg border border-amber-900/40 bg-amber-950/20 p-3">
@@ -594,6 +627,9 @@ function AppPageInner() {
                       canEdit={canEdit}
                       onToggle={() => void toggleTask(task.id)}
                       onOpen={() => setEditId(task.id)}
+                      onToggleChecklistItem={(itemId) =>
+                        void toggleChecklistItem(task.id, itemId)
+                      }
                     />
                   </li>
                 ))}
@@ -619,6 +655,9 @@ function AppPageInner() {
                       canEdit={canEdit}
                       onToggle={() => void toggleTask(task.id)}
                       onOpen={() => setEditId(task.id)}
+                      onToggleChecklistItem={(itemId) =>
+                        void toggleChecklistItem(task.id, itemId)
+                      }
                     />
                   </li>
                 ))}

@@ -58,8 +58,9 @@ export function WeekGrid({
   }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="inline-block min-w-[720px]">
+    <div className="w-full">
+      <div className="overflow-x-auto">
+        <div className="inline-block min-w-[720px]">
         <div
           className="grid border-b border-zinc-800 text-xs"
           style={{ gridTemplateColumns: `56px repeat(7, minmax(0,1fr))` }}
@@ -174,9 +175,11 @@ export function WeekGrid({
             })}
           </div>
         </div>
-
-        <p className="mt-2 text-[10px] text-zinc-600">{t('app.weekGridHint')}</p>
+        </div>
       </div>
+      <p className="mt-2 shrink-0 border-t border-zinc-800 pt-2 text-[10px] leading-snug text-zinc-600">
+        {t('app.weekGridHint')}
+      </p>
     </div>
   )
 }
