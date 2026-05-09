@@ -130,7 +130,9 @@ export function WeekGrid({
           })}
       </div>
 
-      <div className="flex min-w-0 max-h-[min(70vh,900px)] overflow-y-auto">
+      <div
+        className="week-grid-v-scroll flex min-h-0 min-w-0 max-h-[min(70vh,900px)] overflow-y-auto overscroll-y-contain"
+      >
           <div className="sticky left-0 z-10 w-14 shrink-0 border-r border-zinc-800 bg-zinc-950 pr-1">
             <div style={{ height: gridHeight }}>
               {HOURS.map((h) => (
@@ -146,7 +148,7 @@ export function WeekGrid({
           </div>
 
           <div
-            className="grid min-w-0 flex-1"
+            className="grid min-w-0 flex-1 pr-1.5 sm:pr-2"
             style={{ gridTemplateColumns: `repeat(7, minmax(0,1fr))` }}
           >
             {weekDays.map((day) => {

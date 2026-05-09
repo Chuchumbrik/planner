@@ -37,6 +37,35 @@ body {
   background: #71717a;
 }
 
+/**
+ * Вертикальный скролл недельной сетки (`WeekGrid`): резерв под полосу прокрутки,
+ * чтобы трек не наезжал на колонку последнего дня; тонкая тёмная полоса в духе сайта.
+ */
+.week-grid-v-scroll {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #52525b rgb(9 9 11);
+}
+
+.week-grid-v-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.week-grid-v-scroll::-webkit-scrollbar-track {
+  background: rgb(9 9 11);
+  border-radius: 9999px;
+}
+
+.week-grid-v-scroll::-webkit-scrollbar-thumb {
+  background: #52525b;
+  border-radius: 9999px;
+  border: 2px solid rgb(9 9 11);
+}
+
+.week-grid-v-scroll::-webkit-scrollbar-thumb:hover {
+  background: #71717a;
+}
+
 /* Раскрывающиеся блоки (цвет, время) — поворот шеврона при open */
 .plan-accordion[open] > summary .plan-accordion-chevron {
   transform: rotate(180deg);

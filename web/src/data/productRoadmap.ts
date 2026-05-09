@@ -136,8 +136,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Week plan ring: sums per-day metrics through today (`plannedPeriodProgress`); grid left, ring right on wide screens; ring first on narrow (`flex-col-reverse`).',
       },
       {
-        ru: 'Сетка недели без горизонтальной прокрутки: колонки делят ширину; вертикальная прокрутка блока с часами при `max-height`.',
-        en: 'Week grid avoids horizontal scrolling; columns flex; vertical scroll on the hour pane when height-capped.',
+        ru: 'Сетка недели без горизонтальной прокрутки: колонки делят ширину; вертикальная прокрутка блока с часами при `max-height`; тёмный вертикальный скролл, резерв под полосу и отступ у последней колонки.',
+        en: 'Week grid avoids horizontal scrolling; columns flex; vertical scroll when height-capped; dark scrollbar gutter and padding so the last column stays clear.',
       },
     ],
   },
@@ -237,6 +237,19 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-20', en: '2026-05-20' },
+    items: [
+      {
+        changes: [
+          {
+            ru: '«Неделя»: вертикальный скролл сетки часов — **тёмная** полоса (класс `week-grid-v-scroll`), резерв под трек (`scrollbar-gutter: stable`), правый отступ у колонок дней — чтобы полоса не перекрывала последний день недели.',
+            en: 'Week tab: vertical scroll on the hour grid — **dark** scrollbar (`week-grid-v-scroll`), gutter reservation (`scrollbar-gutter: stable`), right padding on day columns so the track does not cover the last weekday.',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-19', en: '2026-05-19' },
     items: [
