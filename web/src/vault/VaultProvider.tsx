@@ -17,12 +17,11 @@ import { supabase } from '@/lib/supabase'
 import {
   DEFAULT_GROUP_ID,
   emptyVault,
-  type EisenhowerQuadrant,
-  type PriorityLevel,
-  type PrioritySystem,
+  type PriorityRank,
   type Task,
   type TaskColorKey,
   type TaskGroup,
+  type TaskTimeMode,
   type VaultPayload,
 } from '@/vault/types'
 
@@ -40,23 +39,35 @@ type VaultContextValue = {
   remoteError: string | null
   saveSeed: (seedB64: string, password: string) => Promise<void>
   lock: () => void
-  addTask: (title: string, opts?: { groupId?: string; colorKey?: TaskColorKey }) => Promise<void>
+  addTask: (
+    title: string,
+    opts?: {
+      groupId?: string
+      colorKey?: TaskColorKey
+      /** По умолчанию null — задача в бэклоге */
+      scheduledLocalDate?: string | null
+    },
+  ) => Promise<void>
   toggleTask: (id: string) => Promise<void>
   removeTask: (id: string) => Promise<void>
   setTaskColor: (taskId: string, colorKey: TaskColorKey) => Promise<void>
   setTaskGroup: (taskId: string, groupId: string) => Promise<void>
-  addSubtask: (taskId: string, title: string) => Promise<void>
-  toggleSubtask: (taskId: string, subId: string) => Promise<void>
-  removeSubtask: (taskId: string, subId: string) => Promise<void>
+  addChecklistItem: (taskId: string, title: string) => Promise<void>
+  toggleChecklistItem: (taskId: string, itemId: string) => Promise<void>
+  removeChecklistItem: (taskId: string, itemId: string) => Promise<void>
   addGroup: (name: string) => Promise<void>
   renameGroup: (groupId: string, name: string) => Promise<void>
   deleteGroup: (groupId: string) => Promise<void>
-  setPrioritySystem: (mode: PrioritySystem) => Promise<void>
-  setTaskPriorityLevel: (taskId: string, level: PriorityLevel) => Promise<void>
-  setTaskEisenhowerQuadrant: (
+  setPriorityLabel: (rank: PriorityRank, label: string) => Promise<void>
+  setTaskPriorityRank: (taskId: string, rank: PriorityRank) => Promise<void>
+  setTaskScheduledLocalDate: (taskId: string, date: string | null) => Promise<void>
+  setTaskEstimatedMinutes: (taskId: string, minutes: number | null) => Promise<void>
+  setTaskTimePlan: (
     taskId: string,
-    quadrant: EisenhowerQuadrant | null,
+    mode: TaskTimeMode,
+    minutesFromMidnight: number | null,
   ) => Promise<void>
+  patchTask: (taskId: string, patch: Partial<Pick<Task, 'title'>>) => Promise<void>
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null)
@@ -234,7 +245,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   )
 
   const addTask = useCallback(
-    async (title: string, opts?: { groupId?: string; colorKey?: TaskColorKey }) => {
+    async (
+      title: string,
+      opts?: {
+        groupId?: string
+        colorKey?: TaskColorKey
+        scheduledLocalDate?: string | null
+      },
+    ) => {
       if (!remoteHydrated) return
       const trimmed = title.trim()
       if (!trimmed) return
@@ -244,6 +262,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
           ? opts.groupId
           : DEFAULT_GROUP_ID
       const now = new Date().toISOString()
+      const scheduled =
+        opts?.scheduledLocalDate === undefined ? null : opts.scheduledLocalDate
+
       const task: Task = {
         id: newId(),
         title: trimmed,
@@ -252,9 +273,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         updatedAt: now,
         groupId: gid,
         colorKey: opts?.colorKey ?? 'zinc',
-        subtasks: [],
-        priorityLevel: 2,
-        eisenhowerQuadrant: null,
+        checklist: [],
+        priorityRank: 3,
+        scheduledLocalDate: scheduled,
+        estimatedMinutes: null,
+        timeMode: 'none',
+        timeMinutesFromMidnight: null,
       }
       await pushVault({
         ...base,
@@ -270,11 +294,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         const t = v.tasks.find((x) => x.id === id)
         if (!t) return v
         const nextDone = !t.done
-        if (
-          nextDone &&
-          t.subtasks.length > 0 &&
-          t.subtasks.some((s) => !s.done)
-        ) {
+        if (nextDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
           return v
         }
         const now = new Date().toISOString()
@@ -326,7 +346,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
-  const addSubtask = useCallback(
+  const addChecklistItem = useCallback(
     async (taskId: string, title: string) => {
       const trimmed = title.trim()
       if (!trimmed) return
@@ -346,7 +366,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
               ? {
                   ...t,
                   updatedAt: now,
-                  subtasks: [sub, ...t.subtasks],
+                  checklist: [sub, ...t.checklist],
                 }
               : t,
           ),
@@ -356,8 +376,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
-  const toggleSubtask = useCallback(
-    async (taskId: string, subId: string) => {
+  const toggleChecklistItem = useCallback(
+    async (taskId: string, itemId: string) => {
       await mutate((v) => {
         const now = new Date().toISOString()
         return {
@@ -367,8 +387,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
               ? {
                   ...t,
                   updatedAt: now,
-                  subtasks: t.subtasks.map((s) =>
-                    s.id === subId ? { ...s, done: !s.done, updatedAt: now } : s,
+                  checklist: t.checklist.map((s) =>
+                    s.id === itemId ? { ...s, done: !s.done, updatedAt: now } : s,
                   ),
                 }
               : t,
@@ -379,13 +399,13 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
-  const removeSubtask = useCallback(
-    async (taskId: string, subId: string) => {
+  const removeChecklistItem = useCallback(
+    async (taskId: string, itemId: string) => {
       await mutate((v) => ({
         ...v,
         tasks: v.tasks.map((t) =>
           t.id === taskId
-            ? { ...t, subtasks: t.subtasks.filter((s) => s.id !== subId) }
+            ? { ...t, checklist: t.checklist.filter((s) => s.id !== itemId) }
             : t,
         ),
       }))
@@ -436,20 +456,25 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
-  const setPrioritySystem = useCallback(
-    async (mode: PrioritySystem) => {
-      await mutate((v) => ({ ...v, prioritySystem: mode }))
+  const setPriorityLabel = useCallback(
+    async (rank: PriorityRank, label: string) => {
+      const trimmed = label.trim()
+      if (!trimmed) return
+      await mutate((v) => ({
+        ...v,
+        priorityLabels: { ...v.priorityLabels, [rank]: trimmed },
+      }))
     },
     [mutate],
   )
 
-  const setTaskPriorityLevel = useCallback(
-    async (taskId: string, level: PriorityLevel) => {
+  const setTaskPriorityRank = useCallback(
+    async (taskId: string, rank: PriorityRank) => {
       await mutate((v) => ({
         ...v,
         tasks: v.tasks.map((t) =>
           t.id === taskId
-            ? { ...t, priorityLevel: level, updatedAt: new Date().toISOString() }
+            ? { ...t, priorityRank: rank, updatedAt: new Date().toISOString() }
             : t,
         ),
       }))
@@ -457,17 +482,83 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
-  const setTaskEisenhowerQuadrant = useCallback(
-    async (taskId: string, quadrant: EisenhowerQuadrant | null) => {
+  const setTaskScheduledLocalDate = useCallback(
+    async (taskId: string, date: string | null) => {
       await mutate((v) => ({
         ...v,
         tasks: v.tasks.map((t) =>
           t.id === taskId
             ? {
                 ...t,
-                eisenhowerQuadrant: quadrant,
+                scheduledLocalDate: date,
                 updatedAt: new Date().toISOString(),
               }
+            : t,
+        ),
+      }))
+    },
+    [mutate],
+  )
+
+  const setTaskEstimatedMinutes = useCallback(
+    async (taskId: string, minutes: number | null) => {
+      await mutate((v) => ({
+        ...v,
+        tasks: v.tasks.map((t) => {
+          if (t.id !== taskId) return t
+          let est: number | null = null
+          if (minutes != null && !Number.isNaN(minutes)) {
+            const e = Math.floor(minutes)
+            if (e > 0 && e <= 24 * 60) est = e
+          }
+          return { ...t, estimatedMinutes: est, updatedAt: new Date().toISOString() }
+        }),
+      }))
+    },
+    [mutate],
+  )
+
+  const setTaskTimePlan = useCallback(
+    async (taskId: string, mode: TaskTimeMode, minutesFromMidnight: number | null) => {
+      await mutate((v) => ({
+        ...v,
+        tasks: v.tasks.map((t) => {
+          if (t.id !== taskId) return t
+          const now = new Date().toISOString()
+          if (mode === 'none') {
+            return {
+              ...t,
+              timeMode: 'none' as const,
+              timeMinutesFromMidnight: null,
+              updatedAt: now,
+            }
+          }
+          const m =
+            minutesFromMidnight != null &&
+            !Number.isNaN(minutesFromMidnight) &&
+            minutesFromMidnight >= 0 &&
+            minutesFromMidnight <= 1439
+              ? Math.floor(minutesFromMidnight)
+              : null
+          return {
+            ...t,
+            timeMode: mode,
+            timeMinutesFromMidnight: m,
+            updatedAt: now,
+          }
+        }),
+      }))
+    },
+    [mutate],
+  )
+
+  const patchTask = useCallback(
+    async (taskId: string, patch: Partial<Pick<Task, 'title'>>) => {
+      await mutate((v) => ({
+        ...v,
+        tasks: v.tasks.map((t) =>
+          t.id === taskId
+            ? { ...t, ...patch, updatedAt: new Date().toISOString() }
             : t,
         ),
       }))
@@ -492,15 +583,18 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       removeTask,
       setTaskColor,
       setTaskGroup,
-      addSubtask,
-      toggleSubtask,
-      removeSubtask,
+      addChecklistItem,
+      toggleChecklistItem,
+      removeChecklistItem,
       addGroup,
       renameGroup,
       deleteGroup,
-      setPrioritySystem,
-      setTaskPriorityLevel,
-      setTaskEisenhowerQuadrant,
+      setPriorityLabel,
+      setTaskPriorityRank,
+      setTaskScheduledLocalDate,
+      setTaskEstimatedMinutes,
+      setTaskTimePlan,
+      patchTask,
     }),
     [
       ready,
@@ -518,15 +612,18 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       removeTask,
       setTaskColor,
       setTaskGroup,
-      addSubtask,
-      toggleSubtask,
-      removeSubtask,
+      addChecklistItem,
+      toggleChecklistItem,
+      removeChecklistItem,
       addGroup,
       renameGroup,
       deleteGroup,
-      setPrioritySystem,
-      setTaskPriorityLevel,
-      setTaskEisenhowerQuadrant,
+      setPriorityLabel,
+      setTaskPriorityRank,
+      setTaskScheduledLocalDate,
+      setTaskEstimatedMinutes,
+      setTaskTimePlan,
+      patchTask,
     ],
   )
 

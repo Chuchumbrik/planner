@@ -22,3 +22,7 @@ export const TASK_COLOR_KEYS: TaskColorKey[] = [
   'violet',
   'pink',
 ]
+
+export function taskBorderClass(colorKey: TaskColorKey): string {
+  return TASK_LEFT_BORDER[colorKey] ?? TASK_LEFT_BORDER.zinc
+}

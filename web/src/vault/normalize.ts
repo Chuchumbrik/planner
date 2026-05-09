@@ -1,15 +1,21 @@
 import {
   DEFAULT_GROUP_ID,
+  defaultPriorityLabels,
   emptyVault,
+  type ChecklistItem,
   type EisenhowerQuadrant,
-  type PriorityLevel,
+  type PriorityLabels,
+  type PriorityRank,
   type PrioritySystem,
   type Task,
   type TaskColorKey,
+  type TaskTimeMode,
   type TaskV2Stored,
+  type TaskV3,
   type VaultPayloadV1,
   type VaultPayloadV2,
   type VaultPayloadV3,
+  type VaultPayloadV4,
 } from '@/vault/types'
 
 function isColorKey(x: unknown): x is TaskColorKey {
@@ -19,8 +25,8 @@ function isColorKey(x: unknown): x is TaskColorKey {
   )
 }
 
-function isPriorityLevel(x: unknown): x is PriorityLevel {
-  return x === 1 || x === 2 || x === 3
+function normalizePrioritySystem(x: unknown): PrioritySystem {
+  return x === 'eisenhower' ? 'eisenhower' : 'levels'
 }
 
 function normalizeQuadrant(q: unknown): EisenhowerQuadrant | null {
@@ -29,25 +35,52 @@ function normalizeQuadrant(q: unknown): EisenhowerQuadrant | null {
   return null
 }
 
-function normalizePrioritySystem(x: unknown): PrioritySystem {
-  return x === 'eisenhower' ? 'eisenhower' : 'levels'
+function isPriorityRank(x: unknown): x is PriorityRank {
+  return x === 1 || x === 2 || x === 3 || x === 4 || x === 5
 }
 
-/** Приводит произвольный JSON к актуальной схеме v3 */
-export function normalizeVault(raw: unknown): VaultPayloadV3 {
+function isTaskTimeMode(x: unknown): x is TaskTimeMode {
+  return x === 'none' || x === 'start' || x === 'end'
+}
+
+function clampMinutes(m: number | null | undefined): number | null {
+  if (m == null || Number.isNaN(m)) return null
+  const n = Math.floor(m)
+  if (n < 0 || n > 1439) return null
+  return n
+}
+
+function normalizePriorityLabels(raw: unknown): PriorityLabels {
+  const base = defaultPriorityLabels()
+  if (!raw || typeof raw !== 'object') return base
+  const o = raw as Record<string, unknown>
+  const out = { ...base }
+  for (const r of [1, 2, 3, 4, 5] as const) {
+    const v = o[String(r)]
+    if (typeof v === 'string' && v.trim()) out[r] = v.trim()
+  }
+  return out
+}
+
+/** Приводит произвольный JSON к актуальной схеме v4 */
+export function normalizeVault(raw: unknown): VaultPayloadV4 {
   if (!raw || typeof raw !== 'object') return emptyVault()
   const o = raw as Record<string, unknown>
 
+  if (o.schemaVersion === 4 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
+    return repairV4(o as VaultPayloadV4)
+  }
+
   if (o.schemaVersion === 3 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return repairV3(o as VaultPayloadV3)
+    return migrateV3toV4(repairV3(o as VaultPayloadV3))
   }
 
   if (o.schemaVersion === 2 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV2toV3(repairV2(o as VaultPayloadV2))
+    return migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))
   }
 
   if (o.schemaVersion === 1 && Array.isArray(o.tasks)) {
-    return migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1)))
+    return migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1)))))
   }
 
   return emptyVault()
@@ -78,6 +111,57 @@ function migrateV2toV3(v: VaultPayloadV2): VaultPayloadV3 {
       priorityLevel: 2,
       eisenhowerQuadrant: null,
     })),
+  }
+}
+
+function mapV3TaskToV4(t: TaskV3, prioritySystem: PrioritySystem): Task {
+  let rank: PriorityRank
+  if (prioritySystem === 'eisenhower') {
+    const q = t.eisenhowerQuadrant
+    if (q === 'q1') rank = 1
+    else if (q === 'q2') rank = 2
+    else if (q === 'q3') rank = 4
+    else if (q === 'q4') rank = 5
+    else rank = 3
+  } else {
+    rank = t.priorityLevel === 1 ? 1 : t.priorityLevel === 2 ? 2 : 3
+  }
+
+  const checklist: ChecklistItem[] = (Array.isArray(t.subtasks) ? t.subtasks : []).map((s) => ({
+    id: typeof s.id === 'string' ? s.id : crypto.randomUUID(),
+    title: typeof s.title === 'string' ? s.title : '',
+    done: Boolean(s.done),
+    createdAt: typeof s.createdAt === 'string' ? s.createdAt : nowIso(),
+    updatedAt: typeof s.updatedAt === 'string' ? s.updatedAt : nowIso(),
+  }))
+
+  return {
+    id: typeof t.id === 'string' ? t.id : crypto.randomUUID(),
+    title: typeof t.title === 'string' ? t.title : '',
+    done: Boolean(t.done),
+    createdAt: typeof t.createdAt === 'string' ? t.createdAt : nowIso(),
+    updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : nowIso(),
+    groupId: typeof t.groupId === 'string' ? t.groupId : DEFAULT_GROUP_ID,
+    colorKey: isColorKey(t.colorKey) ? t.colorKey : 'zinc',
+    checklist,
+    priorityRank: rank,
+    scheduledLocalDate: null,
+    estimatedMinutes: null,
+    timeMode: 'none',
+    timeMinutesFromMidnight: null,
+  }
+}
+
+function migrateV3toV4(v: VaultPayloadV3): VaultPayloadV4 {
+  const prioritySystem = normalizePrioritySystem(v.prioritySystem)
+  const tasks = (Array.isArray(v.tasks) ? v.tasks : []).map((t) =>
+    mapV3TaskToV4(t, prioritySystem),
+  )
+  return {
+    schemaVersion: 4,
+    priorityLabels: defaultPriorityLabels(),
+    groups: v.groups,
+    tasks,
   }
 }
 
@@ -121,14 +205,15 @@ function repairV3(v: VaultPayloadV3): VaultPayloadV3 {
   if (!hasDefault) {
     groups.unshift({ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 })
   }
-  const tasks: Task[] = (Array.isArray(v.tasks) ? v.tasks : []).map((t) => {
+  const tasks: TaskV3[] = (Array.isArray(v.tasks) ? v.tasks : []).map((t) => {
     const subtasks = Array.isArray(t.subtasks) ? t.subtasks : []
     const groupId =
       typeof t.groupId === 'string' && groups.some((g) => g.id === t.groupId)
         ? t.groupId
         : DEFAULT_GROUP_ID
     const colorKey = isColorKey(t.colorKey) ? t.colorKey : 'zinc'
-    const priorityLevel = isPriorityLevel(t.priorityLevel) ? t.priorityLevel : 2
+    const priorityLevel =
+      t.priorityLevel === 1 || t.priorityLevel === 2 || t.priorityLevel === 3 ? t.priorityLevel : 2
     const eisenhowerQuadrant = normalizeQuadrant(t.eisenhowerQuadrant)
     return {
       id: typeof t.id === 'string' ? t.id : crypto.randomUUID(),
@@ -150,6 +235,72 @@ function repairV3(v: VaultPayloadV3): VaultPayloadV3 {
     }
   })
   return { schemaVersion: 3, prioritySystem, groups, tasks }
+}
+
+const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/
+
+function repairV4(v: VaultPayloadV4): VaultPayloadV4 {
+  const priorityLabels = normalizePriorityLabels(v.priorityLabels)
+  const groups = Array.isArray(v.groups) && v.groups.length > 0 ? [...v.groups] : emptyVault().groups
+  const hasDefault = groups.some((g) => g.id === DEFAULT_GROUP_ID)
+  if (!hasDefault) {
+    groups.unshift({ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 })
+  }
+
+  const tasks: Task[] = (Array.isArray(v.tasks) ? v.tasks : []).map((t) => {
+    const row = t as Record<string, unknown>
+    const checklistRaw = Array.isArray(row.checklist)
+      ? row.checklist
+      : Array.isArray(row.subtasks)
+        ? row.subtasks
+        : []
+
+    const checklist: ChecklistItem[] = checklistRaw.map((s) => ({
+      id: typeof s.id === 'string' ? s.id : crypto.randomUUID(),
+      title: typeof s.title === 'string' ? s.title : '',
+      done: Boolean(s.done),
+      createdAt: typeof s.createdAt === 'string' ? s.createdAt : nowIso(),
+      updatedAt: typeof s.updatedAt === 'string' ? s.updatedAt : nowIso(),
+    }))
+
+    const scheduled =
+      typeof t.scheduledLocalDate === 'string' && DATE_KEY.test(t.scheduledLocalDate)
+        ? t.scheduledLocalDate
+        : null
+
+    const timeMode: TaskTimeMode = isTaskTimeMode(t.timeMode) ? t.timeMode : 'none'
+    let timeMinutes = clampMinutes(t.timeMinutesFromMidnight ?? null)
+    if (timeMode === 'none') timeMinutes = null
+
+    let est: number | null = null
+    if (typeof t.estimatedMinutes === 'number' && !Number.isNaN(t.estimatedMinutes)) {
+      const e = Math.floor(t.estimatedMinutes)
+      if (e > 0 && e <= 24 * 60) est = e
+    }
+
+    const priorityRank = isPriorityRank(t.priorityRank) ? t.priorityRank : 3
+
+    return {
+      id: typeof t.id === 'string' ? t.id : crypto.randomUUID(),
+      title: typeof t.title === 'string' ? t.title : '',
+      done: Boolean(t.done),
+      createdAt: typeof t.createdAt === 'string' ? t.createdAt : nowIso(),
+      updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : nowIso(),
+      groupId:
+        typeof t.groupId === 'string' && groups.some((g) => g.id === t.groupId)
+          ? t.groupId
+          : DEFAULT_GROUP_ID,
+      colorKey: isColorKey(t.colorKey) ? t.colorKey : 'zinc',
+      checklist,
+      priorityRank,
+      scheduledLocalDate: scheduled,
+      estimatedMinutes: est,
+      timeMode,
+      timeMinutesFromMidnight: timeMinutes,
+    }
+  })
+
+  return { schemaVersion: 4, priorityLabels, groups, tasks }
 }
 
 function nowIso(): string {

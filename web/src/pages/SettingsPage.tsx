@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { RequireVault } from '@/components/RequireVault'
-import { DEFAULT_GROUP_ID } from '@/vault/types'
+import { APP_VERSION } from '@/version'
+import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank } from '@/vault/types'
 import { useVault } from '@/vault/VaultProvider'
 
 function GroupRow({
@@ -51,6 +52,39 @@ function GroupRow({
   )
 }
 
+function PriorityLabelField({
+  rank,
+  initialValue,
+  canEdit,
+  onCommit,
+}: {
+  rank: PriorityRank
+  initialValue: string
+  canEdit: boolean
+  onCommit: (rank: PriorityRank, label: string) => void
+}) {
+  const { t } = useTranslation()
+  const [draft, setDraft] = useState(initialValue)
+
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-xs text-zinc-500">
+        {t('settings.priorityLevelLabel', { rank })}
+      </span>
+      <input
+        className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+        value={draft}
+        disabled={!canEdit}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          const trimmed = draft.trim()
+          if (trimmed && trimmed !== initialValue) onCommit(rank, trimmed)
+        }}
+      />
+    </label>
+  )
+}
+
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
   const { signOut } = useAuth()
@@ -62,7 +96,7 @@ function SettingsPageInner() {
     addGroup,
     renameGroup,
     deleteGroup,
-    setPrioritySystem,
+    setPriorityLabel,
   } = useVault()
   const [newGroupName, setNewGroupName] = useState('')
 
@@ -84,19 +118,19 @@ function SettingsPageInner() {
       <p className="mt-2 text-sm text-zinc-400">{t('settings.seedHint')}</p>
 
       <section className="mt-8">
-        <h2 className="text-sm font-medium text-zinc-300">{t('settings.prioritySystemTitle')}</h2>
-        <select
-          className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-          value={vault.prioritySystem}
-          disabled={!canEdit}
-          onChange={(e) =>
-            void setPrioritySystem(e.target.value === 'eisenhower' ? 'eisenhower' : 'levels')
-          }
-        >
-          <option value="levels">{t('settings.priorityLevelsOption')}</option>
-          <option value="eisenhower">{t('settings.priorityEisenhowerOption')}</option>
-        </select>
-        <p className="mt-2 text-xs text-zinc-500">{t('settings.prioritySystemHelp')}</p>
+        <h2 className="text-sm font-medium text-zinc-300">{t('settings.priorityLabelsTitle')}</h2>
+        <p className="mt-2 text-xs text-zinc-500">{t('settings.priorityLabelsHelp')}</p>
+        <div className="mt-4 flex flex-col gap-3">
+          {PRIORITY_RANKS.map((rank) => (
+            <PriorityLabelField
+              key={`${rank}-${vault.priorityLabels[rank]}`}
+              rank={rank}
+              initialValue={vault.priorityLabels[rank]}
+              canEdit={canEdit}
+              onCommit={(r, label) => void setPriorityLabel(r, label)}
+            />
+          ))}
+        </div>
       </section>
 
       <section className="mt-8">
@@ -151,9 +185,13 @@ function SettingsPageInner() {
         </div>
       </section>
 
+      <p className="mt-10 text-center text-xs text-zinc-600">
+        {t('settings.appVersion', { version: APP_VERSION })}
+      </p>
+
       <button
         type="button"
-        className="mt-10 w-full rounded-lg border border-zinc-700 py-2.5 text-sm text-zinc-100 hover:border-zinc-500"
+        className="mt-4 w-full rounded-lg border border-zinc-700 py-2.5 text-sm text-zinc-100 hover:border-zinc-500"
         onClick={() => void handleSignOut()}
       >
         {t('settings.signOut')}

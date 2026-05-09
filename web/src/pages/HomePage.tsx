@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { APP_VERSION } from '@/version'
 import { useVault } from '@/vault/VaultProvider'
 
 export function HomePage() {
@@ -23,7 +24,7 @@ export function HomePage() {
     <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-8 px-6 py-16">
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-emerald-400/90">
-          {t('home.badge')}
+          {t('home.badge', { version: APP_VERSION })}
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">{t('home.title')}</h1>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">{t('home.subtitle')}</p>

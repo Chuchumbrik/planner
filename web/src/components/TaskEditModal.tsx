@@ -1,0 +1,378 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ColorPalette } from '@/components/ColorPalette'
+import type { PriorityLabels, Task, TaskColorKey, TaskTimeMode } from '@/vault/types'
+import { PRIORITY_RANKS } from '@/vault/types'
+
+function minutesToTimeInput(m: number): string {
+  const h = Math.floor(m / 60)
+  const min = m % 60
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
+}
+
+function timeInputToMinutes(v: string): number | null {
+  if (!v.trim()) return null
+  const [hs, ms] = v.split(':')
+  const h = Number(hs)
+  const min = Number(ms)
+  if (Number.isNaN(h) || Number.isNaN(min)) return null
+  const total = h * 60 + min
+  if (total < 0 || total > 1439) return null
+  return total
+}
+
+type Props = {
+  task: Task
+  groups: { id: string; name: string; sortOrder: number }[]
+  priorityLabels: PriorityLabels
+  selectedDayKey: string
+  canEdit: boolean
+  onClose: () => void
+  onRemove: () => void
+  onSetColor: (key: TaskColorKey) => void
+  onSetGroup: (groupId: string) => void
+  onSetPriorityRank: (rank: Task['priorityRank']) => void
+  onSetScheduledLocalDate: (date: string | null) => void
+  onSetEstimatedMinutes: (minutes: number | null) => void
+  onSetTimePlan: (mode: TaskTimeMode, minutes: number | null) => void
+  onTitleCommit: (title: string) => void
+  onAddChecklistItem: (title: string) => void
+  onToggleChecklistItem: (itemId: string) => void
+  onRemoveChecklistItem: (itemId: string) => void
+}
+
+export function TaskEditModal({
+  task,
+  groups,
+  priorityLabels,
+  selectedDayKey,
+  canEdit,
+  onClose,
+  onRemove,
+  onSetColor,
+  onSetGroup,
+  onSetPriorityRank,
+  onSetScheduledLocalDate,
+  onSetEstimatedMinutes,
+  onSetTimePlan,
+  onTitleCommit,
+  onAddChecklistItem,
+  onToggleChecklistItem,
+  onRemoveChecklistItem,
+}: Props) {
+  const { t } = useTranslation()
+  const [titleDraft, setTitleDraft] = useState(task.title)
+  const [checkDraft, setCheckDraft] = useState('')
+  const [estDraft, setEstDraft] = useState(
+    task.estimatedMinutes != null ? String(task.estimatedMinutes) : '',
+  )
+  const [timeDraft, setTimeDraft] = useState(
+    task.timeMinutesFromMidnight != null
+      ? minutesToTimeInput(task.timeMinutesFromMidnight)
+      : '',
+  )
+
+  const sortedGroups = [...groups].sort((a, b) => a.sortOrder - b.sortOrder)
+
+  function requestRemove() {
+    if (task.checklist.length > 0) {
+      if (!window.confirm(t('app.confirmDeleteTaskWithChecklist'))) return
+    }
+    onRemove()
+    onClose()
+  }
+
+  function handleBlurTitle() {
+    const trimmed = titleDraft.trim()
+    if (trimmed && trimmed !== task.title) onTitleCommit(trimmed)
+    else setTitleDraft(task.title)
+  }
+
+  function applyEst() {
+    const v = estDraft.trim()
+    if (!v) {
+      void onSetEstimatedMinutes(null)
+      return
+    }
+    const n = Number(v)
+    if (!Number.isNaN(n) && n > 0) void onSetEstimatedMinutes(Math.floor(n))
+  }
+
+  function applyTime(mode: TaskTimeMode) {
+    if (mode === 'none') {
+      void onSetTimePlan('none', null)
+      setTimeDraft('')
+      return
+    }
+    let m = timeInputToMinutes(timeDraft)
+    if (m == null) {
+      m = 9 * 60
+      setTimeDraft(minutesToTimeInput(m))
+    }
+    void onSetTimePlan(mode, m)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+      role="dialog"
+      aria-modal
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="text-sm font-semibold text-zinc-200">{t('app.editTask')}</h2>
+          <button
+            type="button"
+            className="text-zinc-500 hover:text-zinc-300"
+            onClick={onClose}
+          >
+            ✕
+          </button>
+        </div>
+
+        <label className="mt-3 flex flex-col gap-1 text-xs text-zinc-500">
+          <span>{t('app.taskTitle')}</span>
+          <input
+            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            value={titleDraft}
+            disabled={!canEdit}
+            onChange={(e) => setTitleDraft(e.target.value)}
+            onBlur={() => handleBlurTitle()}
+          />
+        </label>
+
+        <div className="mt-4">
+          <ColorPalette
+            label={t('app.color')}
+            value={task.colorKey}
+            canEdit={canEdit}
+            onChange={onSetColor}
+          />
+        </div>
+
+        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
+          <span>{t('app.group')}</span>
+          <select
+            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            value={task.groupId}
+            disabled={!canEdit}
+            onChange={(e) => onSetGroup(e.target.value)}
+          >
+            {sortedGroups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
+          <span>{t('app.priorityShort')}</span>
+          <select
+            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            value={task.priorityRank}
+            disabled={!canEdit}
+            onChange={(e) =>
+              onSetPriorityRank(Number(e.target.value) as Task['priorityRank'])
+            }
+          >
+            {PRIORITY_RANKS.map((r) => (
+              <option key={r} value={r}>
+                {priorityLabels[r]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
+          <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
+          <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            <span>{t('app.plannedDate')}</span>
+            <input
+              type="date"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              disabled={!canEdit}
+              value={task.scheduledLocalDate ?? ''}
+              onChange={(e) => {
+                const v = e.target.value
+                void onSetScheduledLocalDate(v === '' ? null : v)
+              }}
+            />
+          </label>
+          <p className="mt-2 text-xs text-zinc-600">{t('app.backlogHint')}</p>
+          <button
+            type="button"
+            disabled={!canEdit}
+            className="mt-2 rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
+            onClick={() => void onSetScheduledLocalDate(null)}
+          >
+            {t('app.moveToBacklog')}
+          </button>
+          <button
+            type="button"
+            disabled={!canEdit}
+            className="mt-2 ml-2 rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
+            onClick={() => void onSetScheduledLocalDate(selectedDayKey)}
+          >
+            {t('app.planForSelectedDay', { date: selectedDayKey })}
+          </button>
+        </fieldset>
+
+        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
+          <span>{t('app.estimatedMinutes')}</span>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min={1}
+              max={1440}
+              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              placeholder={t('app.estimatedPlaceholder')}
+              value={estDraft}
+              disabled={!canEdit}
+              onChange={(e) => setEstDraft(e.target.value)}
+              onBlur={() => applyEst()}
+            />
+          </div>
+        </label>
+
+        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
+          <legend className="px-1 text-xs text-zinc-500">{t('app.timeSection')}</legend>
+          <div className="flex flex-col gap-2">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
+              <input
+                type="radio"
+                name="timemode"
+                checked={task.timeMode === 'none'}
+                disabled={!canEdit}
+                onChange={() => {
+                  void onSetTimePlan('none', null)
+                  setTimeDraft('')
+                }}
+              />
+              {t('app.timeNone')}
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
+              <input
+                type="radio"
+                name="timemode"
+                checked={task.timeMode === 'start'}
+                disabled={!canEdit}
+                onChange={() => applyTime('start')}
+              />
+              {t('app.timeStart')}
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
+              <input
+                type="radio"
+                name="timemode"
+                checked={task.timeMode === 'end'}
+                disabled={!canEdit}
+                onChange={() => applyTime('end')}
+              />
+              {t('app.timeEnd')}
+            </label>
+          </div>
+          <label className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
+            <span>{t('app.timeClock')}</span>
+            <input
+              type="time"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              disabled={!canEdit || task.timeMode === 'none'}
+              value={
+                task.timeMode === 'none'
+                  ? ''
+                  : timeDraft ||
+                    (task.timeMinutesFromMidnight != null
+                      ? minutesToTimeInput(task.timeMinutesFromMidnight)
+                      : '')
+              }
+              onChange={(e) => setTimeDraft(e.target.value)}
+              onBlur={() => {
+                if (task.timeMode !== 'none') applyTime(task.timeMode)
+              }}
+            />
+          </label>
+        </fieldset>
+
+        <div className="mt-4 border-t border-zinc-800 pt-4">
+          <p className="text-xs font-medium text-zinc-400">{t('app.checklistTitle')}</p>
+          <ul className="mt-2 flex flex-col gap-2">
+            {task.checklist.map((s) => (
+              <li key={s.id} className="flex items-start gap-2">
+                <label className="flex flex-1 cursor-pointer items-start gap-2">
+                  <input
+                    type="checkbox"
+                    checked={s.done}
+                    disabled={!canEdit}
+                    onChange={() => onToggleChecklistItem(s.id)}
+                    className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                  />
+                  <span
+                    className={`text-xs ${s.done ? 'text-zinc-500 line-through' : 'text-zinc-300'}`}
+                  >
+                    {s.title}
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  disabled={!canEdit}
+                  className="text-[11px] text-zinc-500 hover:text-red-400 disabled:opacity-40"
+                  onClick={() => onRemoveChecklistItem(s.id)}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+          <form
+            className="mt-2 flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!canEdit) return
+              const v = checkDraft.trim()
+              if (!v) return
+              onAddChecklistItem(v)
+              setCheckDraft('')
+            }}
+          >
+            <input
+              className="flex-1 rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-emerald-500/80 disabled:opacity-40"
+              placeholder={t('app.addChecklistItem')}
+              value={checkDraft}
+              disabled={!canEdit}
+              onChange={(e) => setCheckDraft(e.target.value)}
+            />
+            <button
+              type="submit"
+              disabled={!canEdit}
+              className="rounded bg-zinc-800 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-700 disabled:opacity-40"
+            >
+              {t('common.add')}
+            </button>
+          </form>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-2 border-t border-zinc-800 pt-4">
+          <button
+            type="button"
+            disabled={!canEdit}
+            className="rounded-lg border border-red-900/50 px-3 py-2 text-sm text-red-300 hover:bg-red-950/40 disabled:opacity-40"
+            onClick={() => requestRemove()}
+          >
+            {t('common.delete')}
+          </button>
+          <button
+            type="button"
+            className="ml-auto rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+            onClick={onClose}
+          >
+            {t('common.close')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
