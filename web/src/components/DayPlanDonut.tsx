@@ -1,18 +1,16 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { partitionEodTasksByCompletion, type Task } from '@motivator/core'
+import { plannedDayCompletionWeights, type Task } from '@motivator/core'
 
-/** Кольцо: доля закрытых задач среди запланированных на календарный день (та же логика, что в ритуале EOD). */
-function PlanCompletionRing({ done, remaining }: { done: number; remaining: number }) {
-  const total = done + remaining
+/** Кольцо: доля выполненных единиц прогресса (задачи и пункты чек-листа). */
+function PlanCompletionRing({ frac, empty }: { frac: number; empty: boolean }) {
   const size = 136
   const stroke = 11
   const cx = size / 2
   const cy = size / 2
   const r = cx - stroke / 2 - 2
   const circ = 2 * Math.PI * r
-  const frac = total === 0 ? 0 : done / total
-  const dashDone = frac * circ
+  const dashDone = empty ? 0 : frac * circ
   const dashRest = circ - dashDone
 
   return (
@@ -32,7 +30,7 @@ function PlanCompletionRing({ done, remaining }: { done: number; remaining: numb
         strokeWidth={stroke}
         strokeLinecap="round"
       />
-      {total > 0 ? (
+      {!empty ? (
         <circle
           cx={cx}
           cy={cy}
@@ -60,24 +58,27 @@ function PlanCompletionRing({ done, remaining }: { done: number; remaining: numb
 }
 
 export type DayPlanDonutProps = {
-  tasks: Task[]
+  /** Задачи плана на день — как в списке на экране (после фильтров). */
+  plannedTasksForDay: Task[]
   /** Локальный календарный день вкладки «День» */
   dayKey: string
 }
 
-export function DayPlanDonut({ tasks, dayKey }: DayPlanDonutProps) {
+export function DayPlanDonut({ plannedTasksForDay, dayKey }: DayPlanDonutProps) {
   const { t } = useTranslation()
 
-  const { completed, remaining } = useMemo(
-    () => partitionEodTasksByCompletion(tasks, dayKey),
-    [tasks, dayKey],
+  const { doneUnits, totalUnits } = useMemo(
+    () => plannedDayCompletionWeights(plannedTasksForDay, dayKey),
+    [plannedTasksForDay, dayKey],
   )
-  const plannedTotal = completed.length + remaining.length
+
+  const empty = totalUnits === 0
+  const frac = empty ? 0 : doneUnits / totalUnits
 
   const ariaLabel =
-    plannedTotal === 0
+    empty
       ? t('eod.chartEmptyPlan')
-      : t('eod.chartSummary', { done: completed.length, total: plannedTotal })
+      : t('eod.chartSummary', { done: doneUnits, total: totalUnits })
 
   return (
     <div
@@ -88,11 +89,11 @@ export function DayPlanDonut({ tasks, dayKey }: DayPlanDonutProps) {
       <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
         {t('eod.chartTitle')}
       </p>
-      <PlanCompletionRing done={completed.length} remaining={remaining.length} />
+      <PlanCompletionRing frac={frac} empty={empty} />
       <p className="max-w-[14rem] text-center text-xs leading-snug text-zinc-400">
-        {plannedTotal === 0
+        {empty
           ? t('eod.chartEmptyPlan')
-          : t('eod.chartSummary', { done: completed.length, total: plannedTotal })}
+          : t('eod.chartSummary', { done: doneUnits, total: totalUnits })}
       </p>
     </div>
   )

@@ -99,8 +99,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Vault drafts; on `/app` one draft — inline strip, several — “Drafts” button with count and list modal.',
       },
       {
-        ru: 'Вкладка «День»: рядом с планом — кольцо доли задач по плану на календарный день (та же логика, что ритуал EOD); на узком экране блок с диаграммой выше списка.',
-        en: 'Day tab: ring for share of planned-for-day tasks closed (same logic as EOD ritual); on narrow screens the chart stacks above the list.',
+        ru: 'Вкладка «День»: рядом с планом — кольцо прогресса по плану на календарный день (весовые единицы: задача без чек-листа или пункты чек-листа; модалка EOD использует ту же функцию); на узком экране блок с диаграммой выше списка.',
+        en: 'Day tab: progress ring for the day plan (weighted units: task without checklist vs checklist items; EOD modal uses the same helper); on narrow screens the chart stacks above the list.',
       },
       {
         ru: 'Настройки: названия приоритетов, CRUD групп, смена пароля Supabase. TaskEditModal — те же правила, что при создании (`taskScheduleValidation`).',
@@ -226,6 +226,23 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
+    items: [
+      {
+        changes: [
+          {
+            ru: '«День»: кольцо прогресса учитывает **чек-листы** (пункты как отдельные единицы); совпадает со списком после фильтров; диаграмма по центру свободной области справа.',
+            en: 'Day tab: progress ring counts **checklist** items; matches filtered plan list; chart centered in the right pane.',
+          },
+          {
+            ru: 'Фильтры: выпадающие значения (группа, цвет, приоритеты, тип повтора) строятся только по задачам **текущего вида** вкладки и остальных активных фильтров.',
+            en: 'Filters: dropdown values are derived from tasks **visible in the current tab** plus cross-filtering.',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-13', en: '2026-05-13' },
     items: [

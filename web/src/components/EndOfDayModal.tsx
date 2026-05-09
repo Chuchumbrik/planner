@@ -1,6 +1,10 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { partitionEodTasksByCompletion, type Task } from '@motivator/core'
+import {
+  partitionEodTasksByCompletion,
+  plannedDayCompletionWeights,
+  type Task,
+} from '@motivator/core'
 
 const BACKLOG_PREVIEW = 6
 
@@ -24,17 +28,23 @@ function TaskLine({ task }: { task: Task }) {
   )
 }
 
-/** Круговая диаграмма: доля закрытых задач среди запланированных на день (ритуал EOD). */
-function EodPlanDonut({ done, remaining }: { done: number; remaining: number }) {
-  const total = done + remaining
+/** Круговая диаграмма: доля выполненных единиц прогресса (задачи и пункты чек-листа). */
+function EodPlanDonut({
+  doneUnits,
+  totalUnits,
+}: {
+  doneUnits: number
+  totalUnits: number
+}) {
+  const empty = totalUnits === 0
+  const frac = empty ? 0 : doneUnits / totalUnits
   const size = 112
   const stroke = 10
   const cx = size / 2
   const cy = size / 2
   const r = cx - stroke / 2 - 2
   const circ = 2 * Math.PI * r
-  const frac = total === 0 ? 0 : done / total
-  const dashDone = frac * circ
+  const dashDone = empty ? 0 : frac * circ
   const dashRest = circ - dashDone
 
   return (
@@ -55,7 +65,7 @@ function EodPlanDonut({ done, remaining }: { done: number; remaining: number }) 
           strokeWidth={stroke}
           strokeLinecap="round"
         />
-        {total > 0 ? (
+        {!empty ? (
           <circle
             cx={cx}
             cy={cy}
@@ -99,9 +109,13 @@ export function EndOfDayModal({
     [tasks, ritualDateKey],
   )
 
+  const plannedWeights = useMemo(() => {
+    const planned = [...completed, ...remaining]
+    return plannedDayCompletionWeights(planned, ritualDateKey)
+  }, [completed, remaining, ritualDateKey])
+
   const backlogShown = backlogReminder.slice(0, BACKLOG_PREVIEW)
   const backlogMoreCount = Math.max(0, backlogReminder.length - backlogShown.length)
-  const plannedTotal = completed.length + remaining.length
   const remainingClear = remaining.length === 0
 
   useEffect(() => {
@@ -161,17 +175,23 @@ export function EndOfDayModal({
           className="mt-5 flex flex-col items-center gap-1"
           role="img"
           aria-label={
-            plannedTotal === 0
+            plannedWeights.totalUnits === 0
               ? t('eod.chartEmptyPlan')
-              : t('eod.chartSummary', { done: completed.length, total: plannedTotal })
+              : t('eod.chartSummary', {
+                  done: plannedWeights.doneUnits,
+                  total: plannedWeights.totalUnits,
+                })
           }
         >
           <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{t('eod.chartTitle')}</p>
-          <EodPlanDonut done={completed.length} remaining={remaining.length} />
+          <EodPlanDonut doneUnits={plannedWeights.doneUnits} totalUnits={plannedWeights.totalUnits} />
           <p className="max-w-[16rem] text-center text-xs leading-relaxed text-zinc-400">
-            {plannedTotal === 0
+            {plannedWeights.totalUnits === 0
               ? t('eod.chartEmptyPlan')
-              : t('eod.chartSummary', { done: completed.length, total: plannedTotal })}
+              : t('eod.chartSummary', {
+                  done: plannedWeights.doneUnits,
+                  total: plannedWeights.totalUnits,
+                })}
           </p>
         </div>
 

@@ -48,6 +48,30 @@ function sortByPriorityThenTitle(a: Task, b: Task): number {
   return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
 }
 
+/**
+ * Прогресс плана на календарный день с учётом чек-листов.
+ * Задача **без** пунктов чек-листа даёт вес **1** (закрыта по {@link isMainTaskDoneForDay}).
+ * Задача **с** пунктами: вес = число пунктов; закрыто = число пунктов с `done`.
+ */
+export function plannedDayCompletionWeights(
+  plannedTasksForDay: Task[],
+  dateKey: string,
+): { doneUnits: number; totalUnits: number } {
+  let doneUnits = 0
+  let totalUnits = 0
+  for (const t of plannedTasksForDay) {
+    const items = t.checklist ?? []
+    if (items.length === 0) {
+      totalUnits += 1
+      if (isMainTaskDoneForDay(t, dateKey)) doneUnits += 1
+    } else {
+      totalUnits += items.length
+      doneUnits += items.filter((i) => i.done).length
+    }
+  }
+  return { doneUnits, totalUnits }
+}
+
 /** Выполнено / не закрыто по плану на день; бэклог отдельным списком для мягкого блока в UI. */
 export function partitionEodTasksByCompletion(
   tasks: Task[],

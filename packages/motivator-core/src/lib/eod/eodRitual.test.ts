@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   backlogTasksForEodReminder,
   partitionEodTasksByCompletion,
+  plannedDayCompletionWeights,
   taskActiveOnLocalCalendarDay,
 } from './eodRitual'
 import type { Task } from '../../vault/types'
@@ -63,6 +64,55 @@ describe('partitionEodTasksByCompletion', () => {
     const { completed, remaining } = partitionEodTasksByCompletion([done, open], day)
     expect(completed.map((t) => t.id)).toEqual(['a'])
     expect(remaining.map((t) => t.id)).toEqual(['b'])
+  })
+})
+
+describe('plannedDayCompletionWeights', () => {
+  const iso = '2026-05-09T12:00:00.000Z'
+  const ck = (done: boolean, id: string) => ({
+    id,
+    title: id,
+    done,
+    createdAt: iso,
+    updatedAt: iso,
+  })
+
+  it('counts a task without checklist as one unit', () => {
+    const day = '2026-05-09'
+    const open = baseTask({ scheduledLocalDate: day, checklist: [] })
+    const done = baseTask({ id: 'd', scheduledLocalDate: day, done: true, checklist: [] })
+    expect(plannedDayCompletionWeights([open], day)).toEqual({ doneUnits: 0, totalUnits: 1 })
+    expect(plannedDayCompletionWeights([done], day)).toEqual({ doneUnits: 1, totalUnits: 1 })
+  })
+
+  it('uses checklist items as units when checklist is non-empty', () => {
+    const day = '2026-05-09'
+    const t = baseTask({
+      scheduledLocalDate: day,
+      checklist: [
+        ck(true, 'a'),
+        ck(false, 'b'),
+        ck(true, 'c'),
+        ck(false, 'd'),
+      ],
+    })
+    expect(plannedDayCompletionWeights([t], day)).toEqual({ doneUnits: 2, totalUnits: 4 })
+  })
+
+  it('sums multiple tasks', () => {
+    const day = '2026-05-09'
+    const a = baseTask({
+      id: 'a',
+      scheduledLocalDate: day,
+      checklist: [ck(true, '1'), ck(true, '2')],
+    })
+    const b = baseTask({
+      id: 'b',
+      scheduledLocalDate: day,
+      done: true,
+      checklist: [],
+    })
+    expect(plannedDayCompletionWeights([a, b], day)).toEqual({ doneUnits: 3, totalUnits: 3 })
   })
 })
 

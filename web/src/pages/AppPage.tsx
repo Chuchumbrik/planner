@@ -9,6 +9,7 @@ import { WeekGrid } from '@/components/WeekGrid'
 import { TaskEditModal } from '@/components/TaskEditModal'
 import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
+import { tasksVisibleInPlannerView } from '@/lib/plannerFilterScope'
 import {
   DEFAULT_GROUP_ID,
   PRIORITY_RANKS,
@@ -100,6 +101,21 @@ function passesRepeatFilter(
   if (mode === 'all') return true
   const has = Boolean(task.recurrence)
   return mode === 'recurring' ? has : !has
+}
+
+function matchesFiltersExcept(
+  task: Task,
+  exclude: 'group' | 'color' | 'priority' | 'repeat',
+  filterGroupId: string | 'all',
+  priorityEnabled: Set<PriorityRank>,
+  filterColor: TaskColorKey | 'all',
+  filterRepeats: 'all' | 'recurring' | 'nonRecurring',
+): boolean {
+  if (exclude !== 'group' && filterGroupId !== 'all' && task.groupId !== filterGroupId) return false
+  if (exclude !== 'priority' && !priorityEnabled.has(task.priorityRank)) return false
+  if (exclude !== 'color' && filterColor !== 'all' && task.colorKey !== filterColor) return false
+  if (exclude !== 'repeat' && !passesRepeatFilter(task, filterRepeats)) return false
+  return true
 }
 
 function AppPageInner() {
@@ -221,20 +237,144 @@ function AppPageInner() {
     [vault.groups],
   )
 
-  /** Цвета меток, которые реально есть у задач в vault */
-  const taskColorKeysInUse = useMemo(() => {
+  const weekDays = useMemo(() => weekDayKeys(weekStartMonday), [weekStartMonday])
+
+  const monthMatrix = useMemo(
+    () => monthWeekMatrix(monthYear, monthIndex),
+    [monthYear, monthIndex],
+  )
+
+  /** Задачи текущего вида (день / неделя / месяц) — источник опций фильтров. */
+  const tasksScopedForFilters = useMemo(
+    () =>
+      tasksVisibleInPlannerView(vault.tasks, view, {
+        selectedDay,
+        weekDays,
+        monthYear,
+        monthIndex,
+      }),
+    [vault.tasks, view, selectedDay, weekDays, monthYear, monthIndex],
+  )
+
+  const groupIdsForFilterUi = useMemo(() => {
+    const ids = new Set<string>()
+    for (const t of tasksScopedForFilters) {
+      if (
+        !matchesFiltersExcept(
+          t,
+          'group',
+          filterGroupId,
+          priorityEnabled,
+          filterColor,
+          filterRepeats,
+        )
+      )
+        continue
+      ids.add(t.groupId)
+    }
+    return ids
+  }, [
+    tasksScopedForFilters,
+    filterGroupId,
+    priorityEnabled,
+    filterColor,
+    filterRepeats,
+  ])
+
+  const colorKeysForFilterUi = useMemo(() => {
     const set = new Set<TaskColorKey>()
-    for (const x of vault.tasks) {
-      set.add(x.colorKey)
+    for (const t of tasksScopedForFilters) {
+      if (
+        !matchesFiltersExcept(
+          t,
+          'color',
+          filterGroupId,
+          priorityEnabled,
+          filterColor,
+          filterRepeats,
+        )
+      )
+        continue
+      set.add(t.colorKey)
     }
     return [...set].sort((a, b) => a.localeCompare(b))
-  }, [vault.tasks])
+  }, [
+    tasksScopedForFilters,
+    filterGroupId,
+    priorityEnabled,
+    filterColor,
+    filterRepeats,
+  ])
+
+  const priorityRanksForFilterMenu = useMemo(() => {
+    const ranks = new Set<PriorityRank>()
+    for (const t of tasksScopedForFilters) {
+      if (
+        !matchesFiltersExcept(
+          t,
+          'priority',
+          filterGroupId,
+          priorityEnabled,
+          filterColor,
+          filterRepeats,
+        )
+      )
+        continue
+      ranks.add(t.priorityRank)
+    }
+    const list = PRIORITY_RANKS.filter((r) => ranks.has(r))
+    return list.length > 0 ? list : PRIORITY_RANKS
+  }, [
+    tasksScopedForFilters,
+    filterGroupId,
+    priorityEnabled,
+    filterColor,
+    filterRepeats,
+  ])
+
+  const repeatKindsInScope = useMemo(() => {
+    let rec = false
+    let non = false
+    for (const t of tasksScopedForFilters) {
+      if (
+        !matchesFiltersExcept(
+          t,
+          'repeat',
+          filterGroupId,
+          priorityEnabled,
+          filterColor,
+          filterRepeats,
+        )
+      )
+        continue
+      if (t.recurrence) rec = true
+      else non = true
+    }
+    return { rec, non }
+  }, [
+    tasksScopedForFilters,
+    filterGroupId,
+    priorityEnabled,
+    filterColor,
+    filterRepeats,
+  ])
 
   useEffect(() => {
-    if (filterColor !== 'all' && !taskColorKeysInUse.includes(filterColor)) {
+    if (filterColor !== 'all' && !colorKeysForFilterUi.includes(filterColor)) {
       setFilterColor('all')
     }
-  }, [filterColor, taskColorKeysInUse])
+  }, [filterColor, colorKeysForFilterUi])
+
+  useEffect(() => {
+    if (filterGroupId !== 'all' && !groupIdsForFilterUi.has(filterGroupId)) {
+      setFilterGroupId('all')
+    }
+  }, [filterGroupId, groupIdsForFilterUi])
+
+  useEffect(() => {
+    if (filterRepeats === 'recurring' && !repeatKindsInScope.rec) setFilterRepeats('all')
+    if (filterRepeats === 'nonRecurring' && !repeatKindsInScope.non) setFilterRepeats('all')
+  }, [filterRepeats, repeatKindsInScope])
 
   const filteredVaultTasks = useMemo(
     () =>
@@ -262,13 +402,6 @@ function AppPageInner() {
     list.sort(sortBacklogTasks)
     return list
   }, [filteredVaultTasks])
-
-  const weekDays = useMemo(() => weekDayKeys(weekStartMonday), [weekStartMonday])
-
-  const monthMatrix = useMemo(
-    () => monthWeekMatrix(monthYear, monthIndex),
-    [monthYear, monthIndex],
-  )
 
   const taskCountByDay = useMemo(() => {
     const map: Record<string, number> = {}
@@ -523,11 +656,13 @@ function AppPageInner() {
                   }
                 >
                   <option value="all">{t('app.filterAllGroups')}</option>
-                  {sortedGroups.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
+                  {sortedGroups
+                    .filter((g) => groupIdsForFilterUi.has(g.id))
+                    .map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
                 </select>
               </label>
 
@@ -554,7 +689,7 @@ function AppPageInner() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
-                        {PRIORITY_RANKS.map((r) => (
+                        {priorityRanksForFilterMenu.map((r) => (
                           <label
                             key={r}
                             className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
@@ -597,7 +732,7 @@ function AppPageInner() {
                   }
                 >
                   <option value="all">{t('app.filterColorAll')}</option>
-                  {taskColorKeysInUse.map((key) => (
+                  {colorKeysForFilterUi.map((key) => (
                     <option key={key} value={key}>
                       {t(`app.colorName.${key}`)}
                     </option>
@@ -617,8 +752,12 @@ function AppPageInner() {
                   }
                 >
                   <option value="all">{t('app.filterRepeatsAll')}</option>
-                  <option value="recurring">{t('app.filterRepeatsRecurring')}</option>
-                  <option value="nonRecurring">{t('app.filterRepeatsNonRecurring')}</option>
+                  {repeatKindsInScope.rec ? (
+                    <option value="recurring">{t('app.filterRepeatsRecurring')}</option>
+                  ) : null}
+                  {repeatKindsInScope.non ? (
+                    <option value="nonRecurring">{t('app.filterRepeatsNonRecurring')}</option>
+                  ) : null}
                 </select>
               </label>
             </div>
@@ -756,11 +895,8 @@ function AppPageInner() {
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               {t('app.sectionPlanned')}
             </h2>
-            <div className="flex flex-col gap-6 lg:flex-row-reverse lg:items-start lg:justify-end lg:gap-10">
-              <aside className="flex shrink-0 justify-center lg:w-[13rem] lg:justify-end lg:pt-0.5">
-                <DayPlanDonut tasks={vault.tasks} dayKey={selectedDay} />
-              </aside>
-              <div className="min-w-0 flex-1 lg:max-w-lg">
+            <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-10">
+              <div className="min-w-0 w-full lg:max-w-lg lg:shrink-0">
                 {plannedForDay.length === 0 ? (
                   <p className="rounded-lg border border-dashed border-zinc-700 px-4 py-8 text-center text-sm text-zinc-500">
                     {t('app.emptyPlannedDay')}
@@ -788,6 +924,9 @@ function AppPageInner() {
                     ))}
                   </ul>
                 )}
+              </div>
+              <div className="flex w-full min-w-0 flex-1 justify-center lg:min-h-[1px] lg:justify-center lg:pt-0.5">
+                <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
               </div>
             </div>
           </section>
