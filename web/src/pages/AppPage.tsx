@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
+import { PeriodPlanDonut } from '@/components/PeriodPlanDonut'
 import { EndOfDayModal } from '@/components/EndOfDayModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
@@ -22,8 +23,9 @@ import {
   shiftWeekStartMonday,
   startOfWeekMonday,
   isMainTaskDoneForDay,
-  taskHasOccurrenceOnDate,
+  plannedPeriodProgress,
   taskOccursOnDate,
+  tasksScheduledForPlannerDay,
   weekDayKeys,
   withTaskPatch,
   type PriorityRank,
@@ -244,6 +246,17 @@ function AppPageInner() {
     [monthYear, monthIndex],
   )
 
+  const monthDayKeysForPlan = useMemo(() => {
+    const keys: string[] = []
+    for (const row of monthMatrix) {
+      for (const cell of row) {
+        if ('dateKey' in cell) keys.push(cell.dateKey)
+      }
+    }
+    keys.sort()
+    return keys
+  }, [monthMatrix])
+
   /** Задачи текущего вида (день / неделя / месяц) — источник опций фильтров. */
   const tasksScopedForFilters = useMemo(
     () =>
@@ -387,13 +400,20 @@ function AppPageInner() {
   )
 
   const plannedForDay = useMemo(() => {
-    const list = filteredVaultTasks.filter((x) => {
-      if (x.scheduledLocalDate === null && !x.recurrence) return false
-      return taskHasOccurrenceOnDate(x, selectedDay)
-    })
+    const list = tasksScheduledForPlannerDay(filteredVaultTasks, selectedDay)
     list.sort((a, b) => sortDayPlan(a, b, selectedDay))
     return list
   }, [filteredVaultTasks, selectedDay])
+
+  const weekPlanProgress = useMemo(
+    () => plannedPeriodProgress(filteredVaultTasks, weekDays, todayKeyApp),
+    [filteredVaultTasks, weekDays, todayKeyApp],
+  )
+
+  const monthPlanProgress = useMemo(
+    () => plannedPeriodProgress(filteredVaultTasks, monthDayKeysForPlan, todayKeyApp),
+    [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp],
+  )
 
   const backlogTasks = useMemo(() => {
     const list = filteredVaultTasks.filter(
@@ -997,14 +1017,27 @@ function AppPageInner() {
               {t('app.weekThis')}
             </button>
           </div>
-          <WeekGrid
-            weekDays={weekDays}
-            tasks={filteredVaultTasks}
-            priorityLabels={vault.priorityLabels}
-            locale={locale}
-            canEdit={canEdit}
-            onTaskClick={(id, day) => openTaskEditor(id, day)}
-          />
+          <div className="mx-auto flex w-full max-w-5xl flex-col-reverse gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
+            <div className="min-w-0 flex-1">
+              <WeekGrid
+                weekDays={weekDays}
+                tasks={filteredVaultTasks}
+                priorityLabels={vault.priorityLabels}
+                locale={locale}
+                canEdit={canEdit}
+                onTaskClick={(id, day) => openTaskEditor(id, day)}
+              />
+            </div>
+            {weekPlanProgress.plannedTaskCount > 0 ? (
+              <div className="flex shrink-0 justify-center lg:w-[min(100%,280px)] lg:justify-end lg:pt-1">
+                <PeriodPlanDonut
+                  progress={weekPlanProgress}
+                  title={t('app.periodPlanWeekRingTitle')}
+                  subtitle={`${weekDays[0]} — ${weekDays[6]}`}
+                />
+              </div>
+            ) : null}
+          </div>
         </section>
       )}
 
@@ -1051,17 +1084,28 @@ function AppPageInner() {
               {t('app.monthThis')}
             </button>
           </div>
-          <div className="mx-auto w-full max-w-md">
-            <MonthCalendar
-              matrix={monthMatrix}
-              taskCountByDay={taskCountByDay}
-              locale={locale}
-              canEdit={canEdit}
-              onPickDay={(dateKey) => {
-                setSelectedDay(dateKey)
-                setView('day')
-              }}
-            />
+          <div className="mx-auto flex w-full max-w-5xl flex-col-reverse items-stretch gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
+            <div className="mx-auto w-full max-w-md min-w-0 flex-1 lg:mx-0">
+              <MonthCalendar
+                matrix={monthMatrix}
+                taskCountByDay={taskCountByDay}
+                locale={locale}
+                canEdit={canEdit}
+                onPickDay={(dateKey) => {
+                  setSelectedDay(dateKey)
+                  setView('day')
+                }}
+              />
+            </div>
+            {monthPlanProgress.plannedTaskCount > 0 ? (
+              <div className="flex shrink-0 justify-center lg:w-[min(100%,280px)] lg:justify-end lg:pt-1">
+                <PeriodPlanDonut
+                  progress={monthPlanProgress}
+                  title={t('app.periodPlanMonthRingTitle')}
+                  subtitle={monthLabel(monthYear, monthIndex, locale)}
+                />
+              </div>
+            ) : null}
           </div>
         </section>
       )}

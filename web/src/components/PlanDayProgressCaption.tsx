@@ -5,12 +5,12 @@ import type { PlannedDayProgress } from '@motivator/core'
 export function getPlanProgressLabels(progress: PlannedDayProgress, locale: string) {
   const pctRaw = (progress.doneFraction / progress.plannedTaskCount) * 100
   const pctStr = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(pctRaw)
-  const doneStr = new Intl.NumberFormat(locale, {
+  const doneSumStr = new Intl.NumberFormat(locale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(progress.doneFraction)
-  const totalStr = String(progress.plannedTaskCount)
-  return { pctStr, doneStr, totalStr }
+  const taskCountStr = String(progress.plannedTaskCount)
+  return { pctStr, doneSumStr, taskCountStr }
 }
 
 type Props = {
@@ -50,7 +50,10 @@ export function PlanDayProgressCaption({ progress, emptyClassName }: Props) {
         {t('eod.chartPercentLine', { pct: labels.pctStr })}
       </p>
       <p className="text-[11px] leading-snug text-zinc-400">
-        {t('eod.chartTaskFraction', { done: labels.doneStr, total: labels.totalStr })}
+        {t('eod.chartTaskFraction', {
+          doneSum: labels.doneSumStr,
+          taskCount: labels.taskCountStr,
+        })}
       </p>
     </div>
   )

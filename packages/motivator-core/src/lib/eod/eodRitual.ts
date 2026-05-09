@@ -1,5 +1,5 @@
 import type { Task } from '../../vault/types'
-import { isMainTaskDoneForDay } from '../recurrence'
+import { isMainTaskDoneForDay, taskHasOccurrenceOnDate } from '../recurrence'
 import { localDateKey } from '../localDate'
 import {
   recurrenceInstanceScheduledOnDate,
@@ -78,6 +78,38 @@ export function plannedDayCompletionWeights(
     doneFraction += taskCompletionFractionForDay(t, dateKey)
   }
   return { doneFraction, plannedTaskCount: plannedTasksForDay.length }
+}
+
+/**
+ * Задачи с вхождением на календарный день — то же правило, что список «План на день» в веб-клиенте
+ * (`scheduledLocalDate` / повтор, без бэклога).
+ */
+export function tasksScheduledForPlannerDay(tasks: Task[], dateKey: string): Task[] {
+  return tasks.filter((x) => {
+    if (x.scheduledLocalDate === null && !x.recurrence) return false
+    return taskHasOccurrenceOnDate(x, dateKey)
+  })
+}
+
+/**
+ * Прогресс за **несколько календарных дней**: суммируются те же доли, что {@link plannedDayCompletionWeights}
+ * по каждому дню. Учитываются только даты **`dayKey <= todayKey`** (будущие дни периода не раздувают знаменатель).
+ */
+export function plannedPeriodProgress(
+  tasks: Task[],
+  periodDayKeys: string[],
+  todayKey: string,
+): PlannedDayProgress {
+  let doneFraction = 0
+  let plannedTaskCount = 0
+  for (const d of periodDayKeys) {
+    if (d > todayKey) continue
+    const planned = tasksScheduledForPlannerDay(tasks, d)
+    const w = plannedDayCompletionWeights(planned, d)
+    doneFraction += w.doneFraction
+    plannedTaskCount += w.plannedTaskCount
+  }
+  return { doneFraction, plannedTaskCount }
 }
 
 /** Выполнено / не закрыто по плану на день; бэклог отдельным списком для мягкого блока в UI. */

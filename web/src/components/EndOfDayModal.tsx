@@ -7,6 +7,7 @@ import {
   type Task,
 } from '@motivator/core'
 import { getPlanProgressLabels, PlanDayProgressCaption } from '@/components/PlanDayProgressCaption'
+import { PlanProgressRing } from '@/components/PlanProgressRing'
 
 const BACKLOG_PREVIEW = 6
 
@@ -34,57 +35,9 @@ function TaskLine({ task }: { task: Task }) {
 function EodPlanDonut({ progress }: { progress: PlannedDayProgress }) {
   const empty = progress.plannedTaskCount === 0
   const frac = empty ? 0 : progress.doneFraction / progress.plannedTaskCount
-  const size = 112
-  const stroke = 10
-  const cx = size / 2
-  const cy = size / 2
-  const r = cx - stroke / 2 - 2
-  const circ = 2 * Math.PI * r
-  const dashDone = empty ? 0 : frac * circ
-  const dashRest = circ - dashDone
-
   return (
     <div className="flex flex-col items-center">
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="shrink-0"
-        aria-hidden
-      >
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          stroke="rgb(39 39 42)"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-        />
-        {!empty ? (
-          <circle
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
-            stroke="rgb(5 150 105)"
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={`${dashDone} ${dashRest}`}
-            transform={`rotate(-90 ${cx} ${cy})`}
-          />
-        ) : (
-          <circle
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
-            stroke="rgb(63 63 70)"
-            strokeWidth={stroke}
-            strokeDasharray="6 8"
-          />
-        )}
-      </svg>
+      <PlanProgressRing frac={frac} empty={empty} size={112} stroke={10} />
     </div>
   )
 }

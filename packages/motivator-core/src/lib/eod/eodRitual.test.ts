@@ -3,7 +3,9 @@ import {
   backlogTasksForEodReminder,
   partitionEodTasksByCompletion,
   plannedDayCompletionWeights,
+  plannedPeriodProgress,
   taskActiveOnLocalCalendarDay,
+  tasksScheduledForPlannerDay,
 } from './eodRitual'
 import type { Task } from '../../vault/types'
 import { DEFAULT_GROUP_ID } from '../../vault/types'
@@ -129,6 +131,56 @@ describe('plannedDayCompletionWeights', () => {
     const r = plannedDayCompletionWeights([a, b], day)
     expect(r.plannedTaskCount).toBe(2)
     expect(r.doneFraction).toBeCloseTo(1.25)
+  })
+})
+
+describe('tasksScheduledForPlannerDay', () => {
+  it('includes one-off scheduled on that day', () => {
+    const day = '2026-05-09'
+    const t = baseTask({ scheduledLocalDate: day })
+    expect(tasksScheduledForPlannerDay([t], day).map((x) => x.id)).toEqual(['t1'])
+    expect(tasksScheduledForPlannerDay([t], '2026-05-10')).toHaveLength(0)
+  })
+
+  it('excludes backlog without recurrence', () => {
+    const t = baseTask({ scheduledLocalDate: null })
+    expect(tasksScheduledForPlannerDay([t], '2026-05-09')).toHaveLength(0)
+  })
+})
+
+describe('plannedPeriodProgress', () => {
+  const iso = '2026-05-09T12:00:00.000Z'
+  const ck = (done: boolean, id: string) => ({
+    id,
+    title: id,
+    done,
+    createdAt: iso,
+    updatedAt: iso,
+  })
+
+  it('sums planned task-days for each day until today; skips future days', () => {
+    const today = '2026-05-14'
+    const period = ['2026-05-12', '2026-05-13', '2026-05-14', '2026-05-15']
+    const t12 = baseTask({ id: 'd12', scheduledLocalDate: '2026-05-12', checklist: [] })
+    const t13 = baseTask({
+      id: 'd13',
+      scheduledLocalDate: '2026-05-13',
+      checklist: [ck(true, '1'), ck(false, '2')],
+    })
+    const t14 = baseTask({ id: 'd14', scheduledLocalDate: '2026-05-14', done: true, checklist: [] })
+    const t15 = baseTask({ id: 'd15', scheduledLocalDate: '2026-05-15', checklist: [] })
+    const r = plannedPeriodProgress([t12, t13, t14, t15], period, today)
+    expect(r.plannedTaskCount).toBe(3)
+    expect(r.doneFraction).toBeCloseTo(1.5)
+  })
+
+  it('counts a one-off only on the day it is scheduled', () => {
+    const today = '2026-05-10'
+    const period = ['2026-05-09', '2026-05-10']
+    const a = baseTask({ scheduledLocalDate: '2026-05-09', checklist: [] })
+    const r = plannedPeriodProgress([a], period, today)
+    expect(r.plannedTaskCount).toBe(1)
+    expect(r.doneFraction).toBe(0)
   })
 })
 
