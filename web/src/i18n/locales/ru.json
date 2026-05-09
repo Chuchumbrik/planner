@@ -39,7 +39,8 @@
     "eisenhowerQ2": "Важно, не срочно",
     "eisenhowerQ3": "Срочно, не важно",
     "eisenhowerQ4": "Не срочно и не важно",
-    "emptyQuadrant": "Пусто"
+    "emptyQuadrant": "Пусто",
+    "dragHandle": "Перетащить задачу"
   },
   "settings": {
     "title": "Настройки",

@@ -39,7 +39,8 @@
     "eisenhowerQ2": "Important, not urgent",
     "eisenhowerQ3": "Urgent, not important",
     "eisenhowerQ4": "Neither urgent nor important",
-    "emptyQuadrant": "Empty"
+    "emptyQuadrant": "Empty",
+    "dragHandle": "Drag task"
   },
   "settings": {
     "title": "Settings",

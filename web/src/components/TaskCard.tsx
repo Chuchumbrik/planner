@@ -68,7 +68,7 @@ export function TaskCard({
   const borderClass = TASK_LEFT_BORDER[task.colorKey] ?? TASK_LEFT_BORDER.zinc
 
   return (
-    <li
+    <div
       className={`rounded-lg border border-zinc-800 bg-zinc-900/60 ${borderClass} border-l-4 pl-2`}
     >
       <div className="flex items-start gap-3 px-2 py-2.5 pr-2">
@@ -228,6 +228,6 @@ export function TaskCard({
           </button>
         </form>
       </div>
-    </li>
+    </div>
   )
 }
