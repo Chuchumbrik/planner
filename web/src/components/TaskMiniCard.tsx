@@ -23,6 +23,8 @@ type Props = {
   canEdit: boolean
   /** День карточки (YYYY-MM-DD); для повторов нужен, чтобы отмечать вхождение за день */
   occurrenceDayKey?: string
+  /** false — только просмотр состояния галочки (выполнение только для календарного «сегодня») */
+  completionToggleAllowed?: boolean
   onToggle: () => void
   onOpen: () => void
   /** Отметка пунктов чек-листа с карточки (день / бэклог) */
@@ -36,6 +38,7 @@ export function TaskMiniCard({
   priorityLabels,
   canEdit,
   occurrenceDayKey,
+  completionToggleAllowed = true,
   onToggle,
   onOpen,
   onToggleChecklistItem,
@@ -98,6 +101,14 @@ export function TaskMiniCard({
 
   const timeSnip = formatTimeSnippet(task, t)
 
+  const toggleDoneDisabled =
+    !canEdit || blockCompleteMain || !completionToggleAllowed
+  const toggleDoneTitle = blockCompleteMain
+    ? t('app.completeParentAfterChecklist')
+    : !completionToggleAllowed
+      ? t('app.completionOnlyToday')
+      : undefined
+
   const shellClass = [
     'rounded-lg border bg-zinc-900/60 border-l-4 transition-colors',
     pendingHere ? 'animate-dc-pending border-amber-700/50 ring-1 ring-amber-600/25' : 'border-zinc-800',
@@ -111,14 +122,14 @@ export function TaskMiniCard({
     <div className={shellClass} style={{ borderLeftColor: leftAccent }}>
       <div className="flex items-start gap-2 px-3 py-2">
         <label
-          className={`shrink-0 cursor-pointer pt-0.5 ${blockCompleteMain && canEdit ? 'cursor-not-allowed' : ''}`}
-          title={blockCompleteMain ? t('app.completeParentAfterChecklist') : undefined}
+          className={`shrink-0 pt-0.5 ${toggleDoneDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          title={toggleDoneTitle}
           onClick={(e) => e.stopPropagation()}
         >
           <input
             type="checkbox"
             checked={mainDone}
-            disabled={!canEdit || blockCompleteMain}
+            disabled={toggleDoneDisabled}
             onChange={() => onToggle()}
             aria-label={t('app.toggleTaskDone')}
             className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"

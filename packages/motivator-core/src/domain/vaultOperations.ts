@@ -8,6 +8,7 @@ import {
   effectiveDoubleConfirmGraceMin,
   effectiveDoubleConfirmIntervalMin,
 } from '../lib/doubleConfirm'
+import { localDateKey } from '../lib/localDate'
 import {
   DEFAULT_GROUP_ID,
   type CreateTaskInput,
@@ -133,9 +134,11 @@ export function applyToggleTask(
   if (!t) return vault
   const now = deps.nowIso()
   const nowMs = Date.parse(now)
+  const todayKey = localDateKey(new Date(nowMs))
+  /** Закрывать/открывать выполнение можно только для календарного «сегодня» (локально). */
+  if (!dayOk || !occurrenceDayKey || occurrenceDayKey !== todayKey) return vault
 
   if (t.recurrence) {
-    if (!dayOk || !occurrenceDayKey) return vault
     const prevDates = t.completedOccurrenceLocalDates ?? []
     const wasDone = prevDates.includes(occurrenceDayKey)
     const wantDone = !wasDone
@@ -216,8 +219,6 @@ export function applyToggleTask(
       ),
     }
   }
-
-  if (!dayOk || !occurrenceDayKey) return vault
 
   const prevDone = t.done
   const wantDone = !prevDone

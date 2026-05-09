@@ -101,6 +101,7 @@
     "filterColor": "Цвет метки",
     "filterColorAll": "Все цвета",
     "toggleTaskDone": "Отметить выполненной",
+    "completionOnlyToday": "Отметить выполнение можно только при просмотре календарного сегодняшнего дня — переключитесь на «Сегодня».",
     "filterRepeats": "Повторы",
     "filterRepeatsAll": "Все задачи",
     "filterRepeatsRecurring": "Только повторяющиеся",

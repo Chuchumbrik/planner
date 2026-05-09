@@ -211,6 +211,8 @@ function AppPageInner() {
 
   const eodEnabled = vault.eodPreferences?.enabled !== false
   const todayKeyApp = localDateKey()
+  /** Главная галочка «выполнено» и DR-004 — только при просмотре календарного сегодня. */
+  const canToggleTaskCompletionOnDayView = selectedDay === todayKeyApp
   const eodDoneToday = Boolean(vault.eodCompletedLocalDates?.includes(todayKeyApp))
 
   const sortedGroups = useMemo(
@@ -766,6 +768,7 @@ function AppPageInner() {
                       priorityLabels={vault.priorityLabels}
                       canEdit={canEdit}
                       occurrenceDayKey={selectedDay}
+                      completionToggleAllowed={canToggleTaskCompletionOnDayView}
                       onToggle={() => void toggleTask(task.id, selectedDay)}
                       onOpen={() => openTaskEditor(task.id)}
                       onToggleChecklistItem={(itemId) =>
@@ -798,6 +801,7 @@ function AppPageInner() {
                       priorityLabels={vault.priorityLabels}
                       canEdit={canEdit}
                       occurrenceDayKey={selectedDay}
+                      completionToggleAllowed={canToggleTaskCompletionOnDayView}
                       onToggle={() => void toggleTask(task.id, selectedDay)}
                       onOpen={() => openTaskEditor(task.id)}
                       onToggleChecklistItem={(itemId) =>
@@ -933,6 +937,7 @@ function AppPageInner() {
           priorityLabels={vault.priorityLabels}
           selectedDayKey={selectedDay}
           occurrenceDayKey={occurrenceDayForEdit}
+          todayLocalDateKey={todayKeyApp}
           canEdit={canEdit}
           onApplyTaskPatch={(patch) => void patchTask(editingTask.id, patch)}
           onClose={closeTaskEditor}

@@ -101,6 +101,7 @@
     "filterColor": "Label color",
     "filterColorAll": "All colors",
     "toggleTaskDone": "Mark done",
+    "completionOnlyToday": "You can only toggle completion on calendar today — switch to Today’s day view.",
     "filterRepeats": "Repeats",
     "filterRepeatsAll": "All tasks",
     "filterRepeatsRecurring": "Repeating only",

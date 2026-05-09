@@ -96,6 +96,8 @@ type Props = {
   onRemoveChecklistItem: (itemId: string) => void
   /** Для повторяющейся задачи: переключить «выполнено» для occurrenceDayKey */
   onToggleOccurrenceForDay?: () => void
+  /** Локальный календарный «сегодня» — отметка вхождения только при совпадении с occurrenceDayKey */
+  todayLocalDateKey: string
 }
 
 export function TaskEditModal({
@@ -119,6 +121,7 @@ export function TaskEditModal({
   onToggleChecklistItem,
   onRemoveChecklistItem,
   onToggleOccurrenceForDay,
+  todayLocalDateKey,
 }: Props) {
   const { t } = useTranslation()
   const [titleDraft, setTitleDraft] = useState(task.title)
@@ -216,6 +219,8 @@ export function TaskEditModal({
     !occurrenceDoneThisDay &&
     task.checklist.length > 0 &&
     task.checklist.some((s) => !s.done)
+  const blockOccurrenceByCalendarDay =
+    Boolean(task.recurrence) && occurrenceDayKey !== todayLocalDateKey
 
   function pushRecurrencePatch(
     kind: RecurrenceUiKind,
@@ -696,12 +701,20 @@ export function TaskEditModal({
             </p>
           ) : null}
           {task.recurrence && onToggleOccurrenceForDay ? (
-            <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs text-zinc-300">
+            <label
+              className={`mt-3 flex items-start gap-2 text-xs text-zinc-300 ${
+                !canEdit || blockOccurrenceToggle || blockOccurrenceByCalendarDay
+                  ? 'cursor-not-allowed'
+                  : 'cursor-pointer'
+              }`}
+            >
               <input
                 type="checkbox"
                 className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
                 checked={occurrenceDoneThisDay}
-                disabled={!canEdit || blockOccurrenceToggle}
+                disabled={
+                  !canEdit || blockOccurrenceToggle || blockOccurrenceByCalendarDay
+                }
                 onChange={() => onToggleOccurrenceForDay()}
               />
               <span>
@@ -709,6 +722,11 @@ export function TaskEditModal({
                 {blockOccurrenceToggle ? (
                   <span className="block text-[10px] text-zinc-600">
                     {t('app.completeParentAfterChecklist')}
+                  </span>
+                ) : null}
+                {blockOccurrenceByCalendarDay ? (
+                  <span className="block text-[10px] text-zinc-600">
+                    {t('app.completionOnlyToday')}
                   </span>
                 ) : null}
               </span>
