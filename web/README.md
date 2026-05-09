@@ -77,7 +77,7 @@ npm run dev
 
 - **`priorityLabels`**: пользовательские строки для уровней **1–5**.
 - **`groups`**: проекты/группы.
-- **`tasks`**: для каждой задачи — **`priorityRank`** (1–5), **`scheduledLocalDate`** (`YYYY-MM-DD` или `null`), **`checklist`**, **`estimatedMinutes`**, **`timeMode`** (`none` | `start` | `end`), **`timeMinutesFromMidnight`**, **`recurrence`** / **`recurrenceAnchorLocalDate`** (повторение и якорная дата серии), плюс группа, цвет, заголовок, выполнено.
+- **`tasks`**: для каждой задачи — **`priorityRank`** (1–5), **`scheduledLocalDate`** (`YYYY-MM-DD` или `null`), **`checklist`**, **`estimatedMinutes`**, **`timeMode`** (`none` | `start` | `end`), **`timeMinutesFromMidnight`**, **`recurrence`** / **`recurrenceAnchorLocalDate`** (правило повтора: каждый день / каждые N дней / дни недели, и якорь серии), **`completedOccurrenceLocalDates`** — для повторов список дней, на которые отмечено выполнение вхождения (глобальный **`done`** при повторе по-прежнему может архивировать серию целиком). Идентификатор серии для отчётов (**DR-008**) совпадает с **`id`** задачи. Плюс группа, цвет, заголовок, **`done`**.
 - **`drafts`**: черновики формы создания задачи (если модальное окно закрыли без сохранения при ненулевых изменениях).
 
 Цепочка миграций: снимки **v1** … **v4** при открытии приводятся к **v5** через **`normalizeVault`** (старые vault без полей повтора получают **`recurrence: null`**, **`drafts: []`**).

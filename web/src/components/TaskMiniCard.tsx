@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { isMainTaskDoneForDay } from '@/lib/recurrence'
 import { taskBorderClass } from '@/vault/colors'
 import type { PriorityLabels, Task } from '@/vault/types'
 
@@ -19,6 +20,8 @@ type Props = {
   task: Task
   priorityLabels: PriorityLabels
   canEdit: boolean
+  /** День карточки (YYYY-MM-DD); для повторов нужен, чтобы отмечать вхождение за день */
+  occurrenceDayKey?: string
   onToggle: () => void
   onOpen: () => void
   /** Отметка пунктов чек-листа с карточки (день / бэклог) */
@@ -29,6 +32,7 @@ export function TaskMiniCard({
   task,
   priorityLabels,
   canEdit,
+  occurrenceDayKey,
   onToggle,
   onOpen,
   onToggleChecklistItem,
@@ -36,8 +40,13 @@ export function TaskMiniCard({
   const { t } = useTranslation()
   const borderClass = taskBorderClass(task.colorKey)
 
+  const mainDone =
+    task.recurrence && occurrenceDayKey
+      ? isMainTaskDoneForDay(task, occurrenceDayKey)
+      : task.done
+
   const blockCompleteMain =
-    !task.done &&
+    !mainDone &&
     task.checklist.length > 0 &&
     task.checklist.some((s) => !s.done)
 
@@ -59,7 +68,7 @@ export function TaskMiniCard({
         >
           <input
             type="checkbox"
-            checked={task.done}
+            checked={mainDone}
             disabled={!canEdit || blockCompleteMain}
             onChange={() => onToggle()}
             aria-label={t('app.toggleTaskDone')}
@@ -73,7 +82,7 @@ export function TaskMiniCard({
           onClick={() => canEdit && onOpen()}
         >
           <span
-            className={`block text-sm ${task.done ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}
+            className={`block text-sm ${mainDone ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}
           >
             {task.title}
           </span>
@@ -81,6 +90,11 @@ export function TaskMiniCard({
             <span className="rounded bg-zinc-800/80 px-1.5 py-0.5 text-zinc-400">
               {priorityLabels[task.priorityRank]}
             </span>
+            {task.recurrence ? (
+              <span className="rounded bg-violet-950/60 px-1.5 py-0.5 text-violet-300/90">
+                {t('app.recurrenceBadge')}
+              </span>
+            ) : null}
             {task.estimatedMinutes != null ? (
               <span>
                 {t('app.estimatedMinutesShort', { n: task.estimatedMinutes })}

@@ -53,7 +53,7 @@ type VaultContextValue = {
   ) => Promise<void>
   upsertDraft: (draft: TaskDraft) => Promise<void>
   deleteDraft: (draftId: string) => Promise<void>
-  toggleTask: (id: string) => Promise<void>
+  toggleTask: (id: string, occurrenceDayKey?: string) => Promise<void>
   removeTask: (id: string) => Promise<void>
   setTaskColor: (taskId: string, colorKey: TaskColorKey) => Promise<void>
   setTaskGroup: (taskId: string, groupId: string) => Promise<void>
@@ -294,6 +294,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         timeMinutesFromMidnight: timeMinutes,
         recurrence,
         recurrenceAnchorLocalDate: anchor,
+        completedOccurrenceLocalDates: [],
       }
       await pushVault({
         ...base,
@@ -356,31 +357,43 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   )
 
   const toggleTask = useCallback(
-    async (id: string) => {
+    async (id: string, occurrenceDayKey?: string) => {
+      const dayOk =
+        typeof occurrenceDayKey === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(occurrenceDayKey)
       await mutate((v) => {
         const t = v.tasks.find((x) => x.id === id)
         if (!t) return v
+        const now = new Date().toISOString()
+
+        if (t.recurrence) {
+          if (!dayOk || !occurrenceDayKey) return v
+          const prevDates = t.completedOccurrenceLocalDates ?? []
+          const wasDone = prevDates.includes(occurrenceDayKey)
+          const nextDone = !wasDone
+          if (nextDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
+            return v
+          }
+          const nextDates = nextDone
+            ? [...new Set([...prevDates, occurrenceDayKey])].sort()
+            : prevDates.filter((d) => d !== occurrenceDayKey)
+          return {
+            ...v,
+            tasks: v.tasks.map((task) =>
+              task.id === id
+                ? { ...task, completedOccurrenceLocalDates: nextDates, updatedAt: now }
+                : task,
+            ),
+          }
+        }
+
         const nextDone = !t.done
         if (nextDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
           return v
         }
-        if (nextDone && t.recurrence) {
-          if (!window.confirm(i18n.t('app.completeClearsRecurrence'))) return v
-        }
-        const now = new Date().toISOString()
-        const clearsRec = Boolean(nextDone && t.recurrence)
         return {
           ...v,
           tasks: v.tasks.map((task) =>
-            task.id === id
-              ? {
-                  ...task,
-                  done: nextDone,
-                  recurrence: clearsRec ? null : task.recurrence,
-                  recurrenceAnchorLocalDate: clearsRec ? null : task.recurrenceAnchorLocalDate,
-                  updatedAt: now,
-                }
-              : task,
+            task.id === id ? { ...task, done: nextDone, updatedAt: now } : task,
           ),
         }
       })
@@ -635,11 +648,31 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     async (taskId: string, patch: Partial<Task>) => {
       await mutate((v) => ({
         ...v,
-        tasks: v.tasks.map((t) =>
-          t.id === taskId
-            ? { ...t, ...patch, updatedAt: new Date().toISOString() }
-            : t,
-        ),
+        tasks: v.tasks.map((t) => {
+          if (t.id !== taskId) return t
+          const merged: Task = { ...t, ...patch, updatedAt: new Date().toISOString() }
+
+          if (patch.recurrence === null) {
+            merged.completedOccurrenceLocalDates = []
+            return merged
+          }
+
+          if (!merged.recurrence) return merged
+
+          const ruleChanged =
+            'recurrence' in patch &&
+            patch.recurrence !== undefined &&
+            JSON.stringify(patch.recurrence) !== JSON.stringify(t.recurrence)
+          const anchorChanged =
+            'recurrenceAnchorLocalDate' in patch &&
+            patch.recurrenceAnchorLocalDate !== t.recurrenceAnchorLocalDate
+
+          if (ruleChanged || anchorChanged) {
+            merged.completedOccurrenceLocalDates = []
+          }
+
+          return merged
+        }),
       }))
     },
     [mutate],

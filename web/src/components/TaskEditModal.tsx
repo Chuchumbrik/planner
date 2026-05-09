@@ -6,6 +6,7 @@ import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
 import { TASK_COLOR_HEX, nearestTaskColorKey, parseColorInput } from '@/vault/colors'
+import { isMainTaskDoneForDay } from '@/lib/recurrence'
 import { parseLocalDateKey } from '@/lib/localDate'
 import type {
   PriorityLabels,
@@ -56,6 +57,8 @@ type Props = {
   groups: { id: string; name: string; sortOrder: number }[]
   priorityLabels: PriorityLabels
   selectedDayKey: string
+  /** Календарный день для отметки вхождения повтора (колонка недели или выбранный день) */
+  occurrenceDayKey: string
   canEdit: boolean
   onApplyTaskPatch: (patch: Partial<Task>) => void
   onClose: () => void
@@ -70,6 +73,8 @@ type Props = {
   onAddChecklistItem: (title: string) => void
   onToggleChecklistItem: (itemId: string) => void
   onRemoveChecklistItem: (itemId: string) => void
+  /** Для повторяющейся задачи: переключить «выполнено» для occurrenceDayKey */
+  onToggleOccurrenceForDay?: () => void
 }
 
 export function TaskEditModal({
@@ -77,6 +82,7 @@ export function TaskEditModal({
   groups,
   priorityLabels,
   selectedDayKey,
+  occurrenceDayKey,
   canEdit,
   onApplyTaskPatch,
   onClose,
@@ -91,6 +97,7 @@ export function TaskEditModal({
   onAddChecklistItem,
   onToggleChecklistItem,
   onRemoveChecklistItem,
+  onToggleOccurrenceForDay,
 }: Props) {
   const { t } = useTranslation()
   const [titleDraft, setTitleDraft] = useState(task.title)
@@ -125,6 +132,15 @@ export function TaskEditModal({
   }, [task.id, task.estimatedMinutes])
 
   const sortedGroups = [...groups].sort((a, b) => a.sortOrder - b.sortOrder)
+
+  const occurrenceDoneThisDay = task.recurrence
+    ? isMainTaskDoneForDay(task, occurrenceDayKey)
+    : false
+  const blockOccurrenceToggle =
+    Boolean(task.recurrence) &&
+    !occurrenceDoneThisDay &&
+    task.checklist.length > 0 &&
+    task.checklist.some((s) => !s.done)
 
   const anchorBase =
     task.recurrenceAnchorLocalDate ?? task.scheduledLocalDate ?? selectedDayKey
@@ -404,6 +420,30 @@ export function TaskEditModal({
                 disabled={!canEdit}
               />
             </div>
+          ) : null}
+          {task.recurrence ? (
+            <p className="mt-2 text-[10px] leading-snug text-zinc-600">
+              {t('app.recurrenceEditHint')}
+            </p>
+          ) : null}
+          {task.recurrence && onToggleOccurrenceForDay ? (
+            <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs text-zinc-300">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                checked={occurrenceDoneThisDay}
+                disabled={!canEdit || blockOccurrenceToggle}
+                onChange={() => onToggleOccurrenceForDay()}
+              />
+              <span>
+                {t('app.recurrenceDoneThisDay', { date: occurrenceDayKey })}
+                {blockOccurrenceToggle ? (
+                  <span className="block text-[10px] text-zinc-600">
+                    {t('app.completeParentAfterChecklist')}
+                  </span>
+                ) : null}
+              </span>
+            </label>
           ) : null}
         </fieldset>
 

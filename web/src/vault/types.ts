@@ -65,6 +65,11 @@ export type Task = {
   recurrence: RecurrenceRule | null
   /** Первая дата серии повтора (локальный день); нужна если recurrence задан */
   recurrenceAnchorLocalDate: string | null
+  /**
+   * Для задач с повтором: локальные дни (YYYY-MM-DD), на которые отмечено выполнение вхождения.
+   * Для задач без повтора не используется (хранится пустой массив).
+   */
+  completedOccurrenceLocalDates: string[]
 }
 
 /** Черновик формы создания задачи */

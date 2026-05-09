@@ -96,7 +96,6 @@
     "informerRepeatsAll": "Repeats: all",
     "informerRepeatsOnly": "Repeats: repeating only",
     "informerRepeatsWithout": "Repeats: non-repeating only",
-    "completeClearsRecurrence": "Completing stops recurrence for this task. Continue?",
     "createTaskTitle": "New task",
     "openCreateTask": "Create task…",
     "draftsTitle": "Drafts",
@@ -109,6 +108,9 @@
     "recurrenceWeekly": "Weekly (days of week)",
     "everyNDaysLabel": "Every how many days",
     "recurrenceAnchor": "Series start (anchor date)",
+    "recurrenceBadge": "Repeats",
+    "recurrenceEditHint": "Day-by-day completion resets when you change the recurrence rule or anchor date.",
+    "recurrenceDoneThisDay": "Done on {{date}}",
     "weekdayMon": "Mon",
     "weekdayTue": "Tue",
     "weekdayWed": "Wed",
@@ -126,7 +128,7 @@
       "violet": "Violet",
       "pink": "Pink"
     },
-    "weekGridHint": "Slots show tasks with start or end time and duration (default 30 min if estimate missing). Completed tasks are hidden.",
+    "weekGridHint": "Slots show tasks with start or end time and duration (default 30 min if estimate missing). Tasks completed for that calendar day are hidden (including recurring tasks marked done that day).",
     "monthDayTasks": "Tasks this day: {{count}}"
   },
   "settings": {

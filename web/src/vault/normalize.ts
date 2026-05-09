@@ -56,6 +56,15 @@ function clampMinutes(m: number | null | undefined): number | null {
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/
 
+function normalizeCompletedOccurrenceDates(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const out: string[] = []
+  for (const x of raw) {
+    if (typeof x === 'string' && DATE_KEY.test(x)) out.push(x)
+  }
+  return [...new Set(out)].sort()
+}
+
 function normalizePriorityLabels(raw: unknown): PriorityLabels {
   const base = defaultPriorityLabels()
   if (!raw || typeof raw !== 'object') return base
@@ -265,6 +274,7 @@ function mapV3TaskToV4(t: TaskV3, prioritySystem: PrioritySystem): Task {
     timeMinutesFromMidnight: null,
     recurrence: null,
     recurrenceAnchorLocalDate: null,
+    completedOccurrenceLocalDates: [],
   }
 }
 
@@ -404,6 +414,10 @@ function repairV4(v: VaultPayloadV4): VaultPayloadV4 {
     if (recurrence && !recurrenceAnchor) recurrence = null
     if (!recurrence) recurrenceAnchor = null
 
+    const completedOccurrenceLocalDates = normalizeCompletedOccurrenceDates(
+      row.completedOccurrenceLocalDates,
+    )
+
     return {
       id: typeof t.id === 'string' ? t.id : crypto.randomUUID(),
       title: typeof t.title === 'string' ? t.title : '',
@@ -423,6 +437,8 @@ function repairV4(v: VaultPayloadV4): VaultPayloadV4 {
       timeMinutesFromMidnight: timeMinutes,
       recurrence,
       recurrenceAnchorLocalDate: recurrenceAnchor,
+      completedOccurrenceLocalDates:
+        recurrence ? completedOccurrenceLocalDates : [],
     }
   })
 

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { taskOccursOnDate } from '@/lib/recurrence'
+import { isMainTaskDoneForDay, taskOccursOnDate } from '@/lib/recurrence'
 import { taskBorderClass } from '@/vault/colors'
 import { getTaskSlotMinutes } from '@/lib/timeblocking'
 import type { PriorityLabels, Task } from '@/vault/types'
@@ -31,7 +31,8 @@ type Props = {
   priorityLabels: PriorityLabels
   locale: string
   canEdit: boolean
-  onTaskClick: (taskId: string) => void
+  /** columnDayKey — календарный день колонки (для повторов и отметки «выполнено за день») */
+  onTaskClick: (taskId: string, columnDayKey: string) => void
 }
 
 export function WeekGrid({
@@ -54,7 +55,9 @@ export function WeekGrid({
   }
 
   function unslottedTasks(day: string) {
-    return tasksForDay(day).filter((x) => getTaskSlotMinutes(x, day) == null && !x.done)
+    return tasksForDay(day).filter(
+      (x) => getTaskSlotMinutes(x, day) == null && !isMainTaskDoneForDay(x, day),
+    )
   }
 
   return (
@@ -102,7 +105,7 @@ export function WeekGrid({
                       disabled={!canEdit}
                       title={task.title}
                       className="max-w-full truncate rounded bg-zinc-800/90 px-1.5 py-0.5 text-left text-[10px] text-zinc-300 hover:bg-zinc-700 disabled:opacity-40"
-                      onClick={() => onTaskClick(task.id)}
+                      onClick={() => onTaskClick(task.id, day)}
                     >
                       {task.title}
                     </button>
@@ -164,7 +167,7 @@ export function WeekGrid({
                         title={`${task.title} · ${priorityLabels[task.priorityRank]}`}
                         className={`absolute left-0.5 right-0.5 overflow-hidden rounded border border-zinc-700/80 bg-zinc-900/95 px-1 py-0.5 text-left text-[10px] leading-tight text-zinc-100 shadow-sm hover:bg-zinc-800 disabled:opacity-40 ${border} border-l-[3px]`}
                         style={{ top, height, zIndex: 2 }}
-                        onClick={() => onTaskClick(task.id)}
+                        onClick={() => onTaskClick(task.id, day)}
                       >
                         <span className="line-clamp-3 font-medium">{task.title}</span>
                       </button>

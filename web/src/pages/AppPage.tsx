@@ -123,11 +123,25 @@ function AppPageInner() {
     () => new Set<PriorityRank>(PRIORITY_RANKS),
   )
   const [editId, setEditId] = useState<string | null>(null)
+  /** День колонки недели или выбранный день — для галочки повтора в редакторе */
+  const [editOccurrenceDayKey, setEditOccurrenceDayKey] = useState<string | null>(null)
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
+
+  const occurrenceDayForEdit = editOccurrenceDayKey ?? selectedDay
+
+  const openTaskEditor = useCallback((taskId: string, dayKey?: string) => {
+    setEditOccurrenceDayKey(dayKey ?? selectedDay)
+    setEditId(taskId)
+  }, [selectedDay])
+
+  const closeTaskEditor = useCallback(() => {
+    setEditId(null)
+    setEditOccurrenceDayKey(null)
+  }, [])
 
   useEffect(() => {
     if (!filtersPanelOpen) setOpenFilterMenu(null)
@@ -626,8 +640,9 @@ function AppPageInner() {
                       task={task}
                       priorityLabels={vault.priorityLabels}
                       canEdit={canEdit}
-                      onToggle={() => void toggleTask(task.id)}
-                      onOpen={() => setEditId(task.id)}
+                      occurrenceDayKey={selectedDay}
+                      onToggle={() => void toggleTask(task.id, selectedDay)}
+                      onOpen={() => openTaskEditor(task.id)}
                       onToggleChecklistItem={(itemId) =>
                         void toggleChecklistItem(task.id, itemId)
                       }
@@ -654,8 +669,9 @@ function AppPageInner() {
                       task={task}
                       priorityLabels={vault.priorityLabels}
                       canEdit={canEdit}
-                      onToggle={() => void toggleTask(task.id)}
-                      onOpen={() => setEditId(task.id)}
+                      occurrenceDayKey={selectedDay}
+                      onToggle={() => void toggleTask(task.id, selectedDay)}
+                      onOpen={() => openTaskEditor(task.id)}
                       onToggleChecklistItem={(itemId) =>
                         void toggleChecklistItem(task.id, itemId)
                       }
@@ -705,7 +721,7 @@ function AppPageInner() {
             priorityLabels={vault.priorityLabels}
             locale={locale}
             canEdit={canEdit}
-            onTaskClick={(id) => setEditId(id)}
+            onTaskClick={(id, day) => openTaskEditor(id, day)}
           />
         </section>
       )}
@@ -775,9 +791,10 @@ function AppPageInner() {
           groups={vault.groups}
           priorityLabels={vault.priorityLabels}
           selectedDayKey={selectedDay}
+          occurrenceDayKey={occurrenceDayForEdit}
           canEdit={canEdit}
           onApplyTaskPatch={(patch) => void patchTask(editingTask.id, patch)}
-          onClose={() => setEditId(null)}
+          onClose={closeTaskEditor}
           onRemove={() => void removeTask(editingTask.id)}
           onSetColor={(key) => void setTaskColor(editingTask.id, key)}
           onSetGroup={(gid) => void setTaskGroup(editingTask.id, gid)}
@@ -814,6 +831,11 @@ function AppPageInner() {
           }
           onRemoveChecklistItem={(itemId) =>
             void removeChecklistItem(editingTask.id, itemId)
+          }
+          onToggleOccurrenceForDay={
+            editingTask.recurrence
+              ? () => void toggleTask(editingTask.id, occurrenceDayForEdit)
+              : undefined
           }
         />
       ) : null}

@@ -19,42 +19,52 @@ export function normalizeWeekdays(raw: number[]): number[] {
   return [...s].sort((a, b) => a - b)
 }
 
+/** Основная галочка «выполнено» для календарного дня (повтор — по вхождению, иначе task.done). */
+export function isMainTaskDoneForDay(task: Task, dateKey: string): boolean {
+  if (!task.recurrence) return task.done
+  return (task.completedOccurrenceLocalDates ?? []).includes(dateKey)
+}
+
 /** Задача «видна» в этот календарный день (план и календарь). */
 export function taskOccursOnDate(task: Task, dateKey: string): boolean {
   if (task.done) return false
 
-  if (!task.recurrence) {
-    return task.scheduledLocalDate === dateKey
+  if (task.recurrence) {
+    if ((task.completedOccurrenceLocalDates ?? []).includes(dateKey)) return false
+    const anchor = task.recurrenceAnchorLocalDate
+    if (!anchor) return false
+
+    if (dateKey < anchor) return false
+
+    const rule = task.recurrence
+    if (rule.kind === 'daily') {
+      return true
+    }
+
+    if (rule.kind === 'everyNDays') {
+      const n = Math.max(1, Math.floor(rule.n))
+      const d = calendarDaysBetween(anchor, dateKey)
+      return d >= 0 && d % n === 0
+    }
+
+    if (rule.kind === 'weekly') {
+      const dt = parseLocalDateKey(dateKey)
+      if (!dt) return false
+      const wd = dt.getDay()
+      return rule.weekdays.includes(wd)
+    }
+
+    return false
   }
 
-  const anchor = task.recurrenceAnchorLocalDate
-  if (!anchor) return false
-
-  if (dateKey < anchor) return false
-
-  const rule = task.recurrence
-  if (rule.kind === 'daily') {
-    return true
-  }
-
-  if (rule.kind === 'everyNDays') {
-    const n = Math.max(1, Math.floor(rule.n))
-    const d = calendarDaysBetween(anchor, dateKey)
-    return d >= 0 && d % n === 0
-  }
-
-  if (rule.kind === 'weekly') {
-    const dt = parseLocalDateKey(dateKey)
-    if (!dt) return false
-    const wd = dt.getDay()
-    return rule.weekdays.includes(wd)
-  }
-
-  return false
+  return task.scheduledLocalDate === dateKey
 }
 
-/** Серия для отчётов: стабильный id из правила повтора и якоря */
+/**
+ * Идентификатор серии повторов для отчётов и агрегаций (**DR-008**): одна сущность Task в vault
+ * представляет всю серию; ключ группировки стабилен при смене заголовка и совпадает с `task.id`.
+ */
 export function recurrenceSeriesId(task: Task): string | null {
   if (!task.recurrence || !task.recurrenceAnchorLocalDate) return null
-  return `${task.recurrenceAnchorLocalDate}:${JSON.stringify(task.recurrence)}:${task.title.slice(0, 40)}`
+  return task.id
 }
