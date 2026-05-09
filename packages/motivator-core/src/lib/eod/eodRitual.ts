@@ -1,17 +1,17 @@
 import type { Task } from '../../vault/types'
 import { isMainTaskDoneForDay } from '../recurrence'
 import { localDateKey } from '../localDate'
-import { recurrenceInstanceScheduledOnDate } from '../reporting/vaultAnalytics'
+import {
+  recurrenceInstanceScheduledOnDate,
+  tasksPlannedForLocalDay,
+} from '../reporting/vaultAnalytics'
 
 /** Локальный календарный день для ISO-времени задачи (createdAt / updatedAt). */
 export function isoToLocalDateKey(iso: string): string {
   return localDateKey(new Date(iso))
 }
 
-/**
- * Задача «активна» в указанный календарный день по [[DR-002]]:
- * создана / изменена в этот день или имела план (слот повтора или разовая дата) на этот день.
- */
+/** Эвристика «активности» по дате (created/updated/план). Для списков EOD используйте {@link tasksPlannedForEodRitual}. */
 export function taskActiveOnLocalCalendarDay(task: Task, dateKey: string): boolean {
   if (isoToLocalDateKey(task.createdAt) === dateKey) return true
   if (isoToLocalDateKey(task.updatedAt) === dateKey) return true
@@ -20,11 +20,27 @@ export function taskActiveOnLocalCalendarDay(task: Task, dateKey: string): boole
   return false
 }
 
-/** Отбор задач для ритуала: флаг участия + активность за день ([[DR-002]]). */
+/** План на календарный день + участие в ритуале (как `tasksPlannedForLocalDay`, без ложных попаданий по `updatedAt`). */
+export function tasksPlannedForEodRitual(tasks: Task[], dateKey: string): Task[] {
+  return tasksPlannedForLocalDay(tasks, dateKey).filter((t) => t.includeInEodRitual !== false)
+}
+
+/** Синоним {@link tasksPlannedForEodRitual} (совместимость). */
 export function tasksEligibleForEod(tasks: Task[], dateKey: string): Task[] {
-  return tasks.filter(
-    (t) => t.includeInEodRitual !== false && taskActiveOnLocalCalendarDay(t, dateKey),
-  )
+  return tasksPlannedForEodRitual(tasks, dateKey)
+}
+
+/** Бэклог (разовые без даты), незавершённые — только напоминание, не блок «не закрыто за день». */
+export function backlogTasksForEodReminder(tasks: Task[]): Task[] {
+  return tasks
+    .filter(
+      (t) =>
+        t.includeInEodRitual !== false &&
+        !t.recurrence &&
+        t.scheduledLocalDate === null &&
+        !t.done,
+    )
+    .sort(sortByPriorityThenTitle)
 }
 
 function sortByPriorityThenTitle(a: Task, b: Task): number {
@@ -32,15 +48,12 @@ function sortByPriorityThenTitle(a: Task, b: Task): number {
   return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
 }
 
-/**
- * Разделение на выполненные и оставшиеся за день — порядок DR-002:
- * сначала блок «выполнено», затем «не выполнено».
- */
+/** Выполнено / не закрыто по плану на день; бэклог отдельным списком для мягкого блока в UI. */
 export function partitionEodTasksByCompletion(
   tasks: Task[],
   dateKey: string,
-): { completed: Task[]; remaining: Task[] } {
-  const eligible = tasksEligibleForEod(tasks, dateKey)
+): { completed: Task[]; remaining: Task[]; backlogReminder: Task[] } {
+  const eligible = tasksPlannedForEodRitual(tasks, dateKey)
   const completed: Task[] = []
   const remaining: Task[] = []
   for (const t of eligible) {
@@ -49,5 +62,6 @@ export function partitionEodTasksByCompletion(
   }
   completed.sort(sortByPriorityThenTitle)
   remaining.sort(sortByPriorityThenTitle)
-  return { completed, remaining }
+  const backlogReminder = backlogTasksForEodReminder(tasks)
+  return { completed, remaining, backlogReminder }
 }

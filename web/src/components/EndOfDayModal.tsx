@@ -1,6 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { partitionEodTasksByCompletion, type Task } from '@motivator/core'
+
+const BACKLOG_PREVIEW = 6
 
 export type EndOfDayModalProps = {
   open: boolean
@@ -33,6 +35,14 @@ export function EndOfDayModal({
 }: EndOfDayModalProps) {
   const { t } = useTranslation()
 
+  const { completed, remaining, backlogReminder } = useMemo(
+    () => partitionEodTasksByCompletion(tasks, ritualDateKey),
+    [tasks, ritualDateKey],
+  )
+
+  const backlogShown = backlogReminder.slice(0, BACKLOG_PREVIEW)
+  const backlogMoreCount = Math.max(0, backlogReminder.length - backlogShown.length)
+
   useEffect(() => {
     if (!open) return
     function onKeyDown(e: KeyboardEvent) {
@@ -46,8 +56,6 @@ export function EndOfDayModal({
   }, [open, onClose])
 
   if (!open) return null
-
-  const { completed, remaining } = partitionEodTasksByCompletion(tasks, ritualDateKey)
 
   return (
     <div
@@ -90,7 +98,7 @@ export function EndOfDayModal({
 
         <section className="animate-eod-pop mt-5 rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-emerald-400/90">
-            {t('eod.sectionDone', { count: completed.length })}
+            {t('eod.sectionPlanDone', { count: completed.length })}
           </h3>
           {completed.length === 0 ? (
             <p className="mt-2 text-sm text-zinc-500">{t('eod.emptyDone')}</p>
@@ -105,7 +113,7 @@ export function EndOfDayModal({
 
         <section className="animate-eod-soft mt-4 rounded-lg border border-amber-900/35 bg-amber-950/15 p-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400/85">
-            {t('eod.sectionRemaining', { count: remaining.length })}
+            {t('eod.sectionPlanRemaining', { count: remaining.length })}
           </h3>
           {remaining.length === 0 ? (
             <p className="mt-2 text-sm text-zinc-500">{t('eod.emptyRemaining')}</p>
@@ -116,7 +124,31 @@ export function EndOfDayModal({
               ))}
             </ul>
           )}
-          <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">{t('eod.cptHint')}</p>
+        </section>
+
+        {backlogReminder.length > 0 ? (
+          <section className="mt-4 rounded-lg border border-zinc-700/80 bg-zinc-900/40 p-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              {t('eod.sectionBacklog')} ({backlogReminder.length})
+            </h3>
+            <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">{t('eod.backlogIntro')}</p>
+            <ul className="mt-2 flex flex-col gap-1.5">
+              {backlogShown.map((task) => (
+                <TaskLine key={task.id} task={task} />
+              ))}
+            </ul>
+            {backlogMoreCount > 0 ? (
+              <p className="mt-2 text-[11px] text-zinc-500">{t('eod.backlogMore', { count: backlogMoreCount })}</p>
+            ) : null}
+          </section>
+        ) : null}
+
+        <section className="mt-4 rounded-lg border border-dashed border-zinc-700/90 bg-zinc-950/40 p-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            {t('eod.sectionOpenQuestions')}
+          </h3>
+          <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">{t('eod.openQuestionBacklogUx')}</p>
+          <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">{t('eod.cptHint')}</p>
         </section>
 
         <div className="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-zinc-800 pt-4">

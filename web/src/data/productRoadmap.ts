@@ -453,6 +453,26 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    title: { ru: 'Ритуал «Завершение дня»: поля рефлексии', en: 'End-of-day ritual: reflection inputs' },
+    summary: {
+      ru: 'После MVP: ответы на мягкие вопросы прямо в модалке, хранение в vault или отдельном слое, сводки за неделю/месяц для ретроспективы без самобичевания.',
+      en: 'Post-MVP: answer gentle prompts in the modal, persist to vault or a side channel, weekly/monthly summaries for blame-free retrospectives.',
+    },
+    detailBullets: [
+      {
+        ru: 'Вопросы из текущей подсказки CPT и расширения по продукту; экспорт или отчёт «что менялось в ответах» — по приоритету.',
+        en: 'Prompts based on current CPT-style hints and product design; export or “what changed in answers” reporting — TBD.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Диаграммы: отчёты и вкладка «День»', en: 'Charts: reports vs Day tab' },
+    summary: {
+      ru: 'На **`/app/reports`** уже есть столбчатая диаграмма по дням; компактная диаграмма на экране «День» — отдельное улучшение (часто в связке с фазой дизайна и широких экранов).',
+      en: '**`/app/reports`** already has a per-day bar chart; a compact chart on the **Day** tab is a separate enhancement (often tied to the design / wide-screen phase).',
+    },
+  },
+  {
     title: { ru: 'Презентационная страница (лендинг)', en: 'Marketing / landing page' },
     summary: {
       ru: 'Публичная страница о приложении: зачем оно, базовые возможности, новости — и вход в регистрацию без открытия планировщика.',
