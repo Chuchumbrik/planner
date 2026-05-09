@@ -482,8 +482,12 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
         en: 'Role-gated server-side (`app_metadata.motivator_role`: **admin**, **beta_tester**); section title and items — TBD at implementation.',
       },
       {
-        ru: 'Примеры настроек (не обязательный полный список): ускорение или отключение ожиданий по DR-004, фиксация «сегодня» / тестовая дата для календаря, показ отладочных подписей, ослабление debounce синка для проверки конфликтов, экспорт последних операций с vault на клиенте.',
-        en: 'Possible options (examples): shorten/disable DR-004 wait windows, pinned “today” or test date for calendar views, debug labels, relaxed sync debounce for conflict testing, export recent client-side vault ops.',
+        ru: 'Поле выбора **«какую дату считать сегодня»** (override системной): вместо текущей даты ОС приложение везде берёт выбранную — план и бэклог на день, ритуал EOD, отчёты, стрики, просрочки; можно ставить задачи на любой день, отмечать выполнение или нет и проверять, как считает логика.',
+        en: '**“Treat as today”** date picker (overrides system clock): the chosen local date replaces “now” everywhere day logic applies — day/backlog, EOD ritual, reports, streaks, overdue rules; plan tasks for any date, mark done or skip, and verify calculations.',
+      },
+      {
+        ru: 'Другие примеры настроек (не полный список): ускорение или отключение ожиданий по DR-004, показ отладочных подписей, ослабление debounce синка для проверки конфликтов, экспорт последних операций с vault на клиенте.',
+        en: 'Other possible options (examples): shorten/disable DR-004 wait windows, debug labels, relaxed sync debounce for conflict testing, export recent client-side vault ops.',
       },
       {
         ru: 'Предпочтительно хранить QA-флаги **локально** (например `localStorage`) или в профиле без записи в зашифрованный vault — чтобы тестовые режимы не утекали в бэкапы и не мешали обычным пользователям.',
