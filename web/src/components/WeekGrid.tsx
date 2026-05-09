@@ -3,7 +3,7 @@ import {
   getTaskSlotMinutes,
   isMainTaskDoneForDay,
   TASK_COLOR_HEX,
-  taskOccursOnDate,
+  taskHasOccurrenceOnDate,
   type PriorityLabels,
   type Task,
 } from '@motivator/core'
@@ -51,17 +51,29 @@ export function WeekGrid({
   const gridHeight = 24 * HOUR_HEIGHT_PX
 
   function tasksForDay(day: string) {
-    return tasks.filter((x) => taskOccursOnDate(x, day))
+    return tasks.filter((x) => taskHasOccurrenceOnDate(x, day))
   }
 
   function slottedTasks(day: string) {
-    return tasksForDay(day).filter((x) => getTaskSlotMinutes(x, day) != null)
+    const slotted = tasksForDay(day).filter((x) => getTaskSlotMinutes(x, day) != null)
+    return slotted.sort((a, b) => {
+      const da = isMainTaskDoneForDay(a, day)
+      const db = isMainTaskDoneForDay(b, day)
+      if (da !== db) return da ? 1 : -1
+      const sa = getTaskSlotMinutes(a, day)!.start
+      const sb = getTaskSlotMinutes(b, day)!.start
+      return sa - sb
+    })
   }
 
   function unslottedTasks(day: string) {
-    return tasksForDay(day).filter(
-      (x) => getTaskSlotMinutes(x, day) == null && !isMainTaskDoneForDay(x, day),
-    )
+    const uns = tasksForDay(day).filter((x) => getTaskSlotMinutes(x, day) == null)
+    return uns.sort((a, b) => {
+      const da = isMainTaskDoneForDay(a, day)
+      const db = isMainTaskDoneForDay(b, day)
+      if (da !== db) return da ? 1 : -1
+      return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+    })
   }
 
   return (

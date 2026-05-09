@@ -18,6 +18,8 @@ import {
   shiftLocalDateKey,
   shiftWeekStartMonday,
   startOfWeekMonday,
+  isMainTaskDoneForDay,
+  taskHasOccurrenceOnDate,
   taskOccursOnDate,
   weekDayKeys,
   withTaskPatch,
@@ -61,6 +63,20 @@ function formatDayHeading(dateKey: string, locale: string): string {
 function sortByPriorityThenTitle(a: Task, b: Task): number {
   if (a.priorityRank !== b.priorityRank) return a.priorityRank - b.priorityRank
   return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+}
+
+/** Невыполненные выше, затем по приоритету и названию. */
+function sortDayPlan(a: Task, b: Task, dayKey: string): number {
+  const aDone = isMainTaskDoneForDay(a, dayKey)
+  const bDone = isMainTaskDoneForDay(b, dayKey)
+  if (aDone !== bDone) return aDone ? 1 : -1
+  return sortByPriorityThenTitle(a, b)
+}
+
+/** Бэклог: невыполненные сверху. */
+function sortBacklogTasks(a: Task, b: Task): number {
+  if (a.done !== b.done) return a.done ? 1 : -1
+  return sortByPriorityThenTitle(a, b)
 }
 
 function taskMatchesFilters(
@@ -223,16 +239,18 @@ function AppPageInner() {
   const plannedForDay = useMemo(() => {
     const list = filteredVaultTasks.filter((x) => {
       if (x.scheduledLocalDate === null && !x.recurrence) return false
-      return taskOccursOnDate(x, selectedDay)
+      return taskHasOccurrenceOnDate(x, selectedDay)
     })
-    return list.sort(sortByPriorityThenTitle)
+    list.sort((a, b) => sortDayPlan(a, b, selectedDay))
+    return list
   }, [filteredVaultTasks, selectedDay])
 
   const backlogTasks = useMemo(() => {
     const list = filteredVaultTasks.filter(
       (x) => x.scheduledLocalDate === null && !x.recurrence,
     )
-    return list.sort(sortByPriorityThenTitle)
+    list.sort(sortBacklogTasks)
+    return list
   }, [filteredVaultTasks])
 
   const weekDays = useMemo(() => weekDayKeys(weekStartMonday), [weekStartMonday])

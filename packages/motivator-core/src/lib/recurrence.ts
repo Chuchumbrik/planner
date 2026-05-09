@@ -25,39 +25,51 @@ export function isMainTaskDoneForDay(task: Task, dateKey: string): boolean {
   return (task.completedOccurrenceLocalDates ?? []).includes(dateKey)
 }
 
-/** Задача «видна» в этот календарный день (план и календарь). */
-export function taskOccursOnDate(task: Task, dateKey: string): boolean {
-  if (task.done) return false
+/**
+ * Совпадает ли правило повтора с календарным днём (без учёта отметок выполнения).
+ * Для неповторяющихся задач не используется.
+ */
+export function recurrenceRuleMatchesDate(task: Task, dateKey: string): boolean {
+  if (!task.recurrence) return false
+  const anchor = task.recurrenceAnchorLocalDate
+  if (!anchor || dateKey < anchor) return false
 
-  if (task.recurrence) {
-    if ((task.completedOccurrenceLocalDates ?? []).includes(dateKey)) return false
-    const anchor = task.recurrenceAnchorLocalDate
-    if (!anchor) return false
+  const rule = task.recurrence
+  if (rule.kind === 'daily') return true
 
-    if (dateKey < anchor) return false
-
-    const rule = task.recurrence
-    if (rule.kind === 'daily') {
-      return true
-    }
-
-    if (rule.kind === 'everyNDays') {
-      const n = Math.max(1, Math.floor(rule.n))
-      const d = calendarDaysBetween(anchor, dateKey)
-      return d >= 0 && d % n === 0
-    }
-
-    if (rule.kind === 'weekly') {
-      const dt = parseLocalDateKey(dateKey)
-      if (!dt) return false
-      const wd = dt.getDay()
-      return rule.weekdays.includes(wd)
-    }
-
-    return false
+  if (rule.kind === 'everyNDays') {
+    const n = Math.max(1, Math.floor(rule.n))
+    const d = calendarDaysBetween(anchor, dateKey)
+    return d >= 0 && d % n === 0
   }
 
+  if (rule.kind === 'weekly') {
+    const dt = parseLocalDateKey(dateKey)
+    if (!dt) return false
+    const wd = dt.getDay()
+    return rule.weekdays.includes(wd)
+  }
+
+  return false
+}
+
+/**
+ * Есть ли у задачи слот на календарный день — **включая** уже выполненное вхождение повтора
+ * и выполненную разовую задачу с этой датой в плане (для списков «выполненные внизу»).
+ */
+export function taskHasOccurrenceOnDate(task: Task, dateKey: string): boolean {
+  if (task.recurrence) {
+    if (task.done) return false
+    return recurrenceRuleMatchesDate(task, dateKey)
+  }
   return task.scheduledLocalDate === dateKey
+}
+
+/** Задача «активна» в этот день (ещё не выполнена за этот день / этот слот). */
+export function taskOccursOnDate(task: Task, dateKey: string): boolean {
+  if (!taskHasOccurrenceOnDate(task, dateKey)) return false
+  if (!task.recurrence) return !task.done
+  return !(task.completedOccurrenceLocalDates ?? []).includes(dateKey)
 }
 
 /**

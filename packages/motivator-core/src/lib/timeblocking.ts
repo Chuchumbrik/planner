@@ -1,4 +1,4 @@
-import { taskOccursOnDate } from './recurrence'
+import { taskHasOccurrenceOnDate, taskOccursOnDate } from './recurrence'
 import type { Task } from '../vault/types'
 
 /** Если оценки нет — используем для визуализации и пересечений (минуты). */
@@ -12,10 +12,10 @@ export function getTaskSlotMinutes(
   task: Task,
   occurrenceDayKey?: string,
 ): { start: number; end: number } | null {
-  if (task.done) return null
+  if (task.recurrence && task.done) return null
   const dayKey = occurrenceDayKey ?? task.scheduledLocalDate
   if (!dayKey) return null
-  if (occurrenceDayKey && !taskOccursOnDate(task, occurrenceDayKey)) return null
+  if (!taskHasOccurrenceOnDate(task, dayKey)) return null
 
   const est = task.estimatedMinutes ?? DEFAULT_SLOT_DURATION_MIN
   if (task.timeMode === 'start' && task.timeMinutesFromMidnight != null) {
