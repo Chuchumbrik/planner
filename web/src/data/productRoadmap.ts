@@ -224,12 +224,32 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         summary: {
-          ru: 'Модалка дорожной карты: фазы **0–6** в «реализовано» (включая DR-004 и анимации карточки); дальше — план фаз **7–11**.',
-          en: 'Roadmap modal: phases **0–6** shipped (including DR-004 and card motion); next — phases **7–11** in the plan.',
+          ru: '**DR-004** и схема vault **v7**: двойное подтверждение выполнения задачи (чекбокс в создании/редактировании, второй тап по галочке на карточке, таймеры по умолчанию +10/+30 мин); просроченное ожидание снимается автоматически; короткие анимации на карточке.',
+          en: '**DR-004** and vault **v7**: double confirmation for marking done (create/edit toggles, second tap on the mini card, default +10/+30 min timers); stale pending clears automatically; brief card animations.',
         },
         plain: {
-          ru: 'В настройках есть окошко «Что сделано и планы»: один список — уже построили от фундамента до шестого шага (в том числе двойное подтверждение задач и подмигивания на карточке), второй — что запланировано дальше до большого релиза.',
-          en: 'In settings there’s a window “Shipped & plans”: one list is what we built from foundation through phase six (including double-check for tasks and gentle card motion), the other is what’s planned next toward the big release.',
+          ru: 'Если для задачи включено «второе подтверждение», одного нажатия на галочку мало: сначала загорается ожидание, потом нужно подтвердить ещё раз, пока не вышло время. Если не успел — отметка «сделано» не ставится, можно отменить ожидание или попробовать снова. Это отдельно от вечернего «закрыть день».',
+          en: 'When double confirmation is on for a task, one tap isn’t enough: the card shows a waiting state, then you confirm again before time runs out. If you miss it, it doesn’t count as done — you can cancel the wait or try again. This is separate from the evening “finish day” ritual.',
+        },
+      },
+      {
+        summary: {
+          ru: 'Дорожная карта в настройках: план до **1.0.0** — фазы **7–11** (в т.ч. отдельная фаза **7** — дизайн и адаптивность для широких и мобильных экранов); в «Идеях на потом» — черновая идея **раздела тестирования** для админов и бета-тестеров.',
+          en: 'Settings roadmap: **1.0.0** plan — phases **7–11** (including phase **7** — design & responsiveness); **Ideas for later** drafts a **testing / QA** settings section for admins and beta testers.',
+        },
+        plain: {
+          ru: 'Второй список в окне дорожной карты теперь честно показывает одиннадцать шагов до большого релиза и отдельный блок про красивый интерфейс на большом экране и телефоне. Внизу, среди идей после первой версии, появилась заметка про скрытый раздел для проверки приложения — когда дойдём до реализации.',
+          en: 'The roadmap’s plan section now lists eleven steps to the big release and calls out a dedicated pass for layout on wide and small screens. Under “Ideas for later” there’s a note about a future QA-only settings area — for when we build it.',
+        },
+      },
+      {
+        summary: {
+          ru: 'Модалка «Что сделано и планы»: фазы **0–6** в «реализовано»; перечень реализованного и релиз-ноты синхронизированы с документацией (`web/README.md`, план в Obsidian).',
+          en: '“Shipped & planned” modal: phases **0–6** under shipped; lists and release notes aligned with docs (`web/README.md`, Obsidian plan).',
+        },
+        plain: {
+          ru: 'Текст в модалке и релиз-нотах для тестеров обновлён, чтобы не расходиться с тем, что реально есть в сборке и в файлах проекта.',
+          en: 'Copy in the modal and tester-facing release notes is updated so it matches what’s actually in the build and repo docs.',
         },
       },
       {
