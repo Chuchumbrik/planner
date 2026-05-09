@@ -193,7 +193,7 @@
     "roadmapMvp": "MVP 1.0.0 plan (phases 7–11)",
     "roadmapMvpHint": "Remaining work to 1.0.0 per obsidian-motivator/17-План-реализации-MVP.md. Under each phase summary there’s an “In simple words” line. Open “Details” for bullets inside each phase.",
     "roadmapReleaseNotes": "Release notes",
-    "roadmapReleaseNotesHint": "Changelog by date — no GitHub needed. Data lives in RELEASE_NOTES_BLOCKS (productRoadmap.ts).",
+    "roadmapReleaseNotesHint": "Changelog by date — each date is its own collapsible; no GitHub needed. Data lives in RELEASE_NOTES_BLOCKS (productRoadmap.ts).",
     "roadmapMvpProgressTitle": "Roadmap to MVP 1.0.0",
     "roadmapMvpProgressCaption": "{{pct}}% · {{done}} of {{total}} roadmap phases shipped (0–6 done, 7–11 planned to release)",
     "roadmapReleaseNotePlain": "In simple words:",

@@ -276,43 +276,49 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             </summary>
             <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
               <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapReleaseNotesHint')}</p>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
                 {RELEASE_NOTES_BLOCKS.map((block, bi) => (
-                  <div key={bi}>
-                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                      {pickLocale(block.dateLabel, lang)}
-                    </p>
-                    <div className="mt-2 flex flex-col gap-4">
-                      {block.items.map((item, ii) => (
-                        <div
-                          key={ii}
-                          className="rounded-lg border border-zinc-800/90 bg-zinc-950/45 px-3 py-2.5"
-                        >
-                          <ul className="list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-zinc-300">
-                            {item.changes.map((c, ci) => (
-                              <li key={ci} className="marker:text-zinc-600">
-                                {pickLocale(c, lang)}
-                              </li>
-                            ))}
-                          </ul>
-                          {item.plainBullets?.length ? (
-                            <div className="mt-3 border-t border-zinc-800/80 pt-3">
-                              <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-600">
-                                {t('settings.roadmapReleaseNotePlain')}
-                              </p>
-                              <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-zinc-500">
-                                {item.plainBullets.map((p, pi) => (
-                                  <li key={pi} className="marker:text-zinc-700">
-                                    {pickLocale(p, lang)}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ) : null}
-                        </div>
-                      ))}
+                  <details
+                    key={bi}
+                    className="group/details rounded-lg border border-zinc-800/90 bg-zinc-950/40 [&_summary::-webkit-details-marker]:hidden"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-sky-400/90 hover:bg-zinc-900/55">
+                      <span>{pickLocale(block.dateLabel, lang)}</span>
+                      <Chevron nested />
+                    </summary>
+                    <div className="border-t border-zinc-800/80 px-3 pb-3 pt-2">
+                      <div className="flex flex-col gap-4">
+                        {block.items.map((item, ii) => (
+                          <div
+                            key={ii}
+                            className="rounded-lg border border-zinc-800/90 bg-zinc-950/45 px-3 py-2.5"
+                          >
+                            <ul className="list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-zinc-300">
+                              {item.changes.map((c, ci) => (
+                                <li key={ci} className="marker:text-zinc-600">
+                                  {pickLocale(c, lang)}
+                                </li>
+                              ))}
+                            </ul>
+                            {item.plainBullets?.length ? (
+                              <div className="mt-3 border-t border-zinc-800/80 pt-3">
+                                <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-600">
+                                  {t('settings.roadmapReleaseNotePlain')}
+                                </p>
+                                <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-zinc-500">
+                                  {item.plainBullets.map((p, pi) => (
+                                    <li key={pi} className="marker:text-zinc-700">
+                                      {pickLocale(p, lang)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  </details>
                 ))}
               </div>
             </div>

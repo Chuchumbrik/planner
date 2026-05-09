@@ -230,6 +230,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: 'Вверху модалки добавлена круговая диаграмма: процент и доля закрытых фаз дорожной карты до MVP 1.0.0 (0–6 из 0–11).',
             en: 'A donut chart at the top shows percent complete for roadmap phases toward MVP 1.0.0 (phases 0–6 of 0–11).',
           },
+          {
+            ru: 'Релиз-ноты: каждая дата — отдельная раскрывашка, чтобы быстрее находить нужный выпуск.',
+            en: 'Release notes: each date is its own collapsible section for quicker navigation.',
+          },
         ],
       },
     ],
