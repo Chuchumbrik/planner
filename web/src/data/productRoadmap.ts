@@ -227,6 +227,19 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
+    items: [
+      {
+        changes: [
+          {
+            ru: '«Идеи на потом» в краткой сводке: добавлены темы из `15-Идеи-для-развития` — feature discovery, привычки, поиск, тамагочи; обновлена карточка про диаграммы на «День».',
+            en: 'Brief summary «Ideas later»: synced missing themes from `15-Идеи-для-развития` (feature discovery, habits, search, tamagotchi); Day charts card updated.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
     items: [
       {
@@ -684,14 +697,57 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
 /**
  * Идеи после MVP: порядок сверху вниз — рамка → тематические группы → платформы.
  * Связанные пункты объединены в одну карточку с «Подробнее»; ИИ разнесён на LLM и MCP.
+ * Источник правды для расширения списка — `obsidian-motivator/15-Идеи-для-развития.md` (синхронизировать при добавлении разделов).
  */
 export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     title: { ru: 'После релиза 1.0', en: 'After the 1.0 release' },
     summary: {
-      ru: 'Всё ниже — черновой backlog без сроков и без обещаний в текущем MVP.',
-      en: 'Everything below is an informal backlog — no dates and no MVP commitment.',
+      ru: 'Всё ниже — черновой backlog без сроков и без обещаний в текущем MVP. Полный набор направлений см. также **`obsidian-motivator/15-Идеи-для-развития.md`**.',
+      en: 'Everything below is an informal backlog — no dates and no MVP commitment. See also **`obsidian-motivator/15-Идеи-для-развития.md`** for the full idea pool.',
     },
+  },
+  {
+    title: {
+      ru: 'Напоминания о неиспользованных функциях (feature discovery)',
+      en: 'Unused-feature hints (feature discovery)',
+    },
+    summary: {
+      ru: 'Мягко показывать возможности приложения, которыми пользователь ещё не пользовался — без спама; учёт событий в клиенте (`localStorage` / vault), контекстные подсказки и отключение в настройках.',
+      en: 'Gently surface features the user hasn’t tried yet — no spam; client-side event hints (`localStorage` / vault), contextual nudges, opt-out in settings.',
+    },
+    detailBullets: [
+      {
+        ru: 'Черновик в **`obsidian-motivator/15-Идеи-для-развития.md`**, §1.',
+        en: 'Draft in **`obsidian-motivator/15-Идеи-для-развития.md`**, §1.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Область «Привычки»', en: 'A dedicated «Habits» area' },
+    summary: {
+      ru: 'Сущность отличная от разовых задач: повторы с собственным потоком и, возможно, моделью в vault; вопросы про идентичность, частоту и лимит времени на день.',
+      en: 'An entity distinct from one-off tasks: repeats with their own flow and possibly vault schema; prompts about identity, cadence, and daily time budget.',
+    },
+    detailBullets: [
+      {
+        ru: 'Связь с end-of-day, отчётами и push — после ядра MVP; см. **`15-Идеи-для-развития.md`**, §2.',
+        en: 'Ties to EOD, reports, push — post-core MVP; see **`15-Идеи-для-развития.md`**, §2.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Поиск по задачам', en: 'Task search' },
+    summary: {
+      ru: 'Поле поиска по загруженному vault: заголовок, при необходимости группа, теги, текст чек-листа — только на клиенте, без отправки запросов на сервер в явном виде.',
+      en: 'Search field over the decrypted vault: title, optionally group/tags/checklist text — client-only; no plaintext search queries to the server.',
+    },
+    detailBullets: [
+      {
+        ru: 'Дебаунс и опционально индекс в памяти при росте данных — см. **`15-Идеи-для-развития.md`**, §3.',
+        en: 'Debounce and optional in-memory index as data grows — see **`15-Идеи-для-развития.md`**, §3.',
+      },
+    ],
   },
   {
     title: { ru: 'Раздел «Тестирование» в настройках', en: 'Settings: testing / QA tools' },
@@ -734,8 +790,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     title: { ru: 'Диаграммы: отчёты и вкладка «День»', en: 'Charts: reports vs Day tab' },
     summary: {
-      ru: 'На **`/app/reports`** уже есть столбчатая диаграмма по дням; компактная диаграмма на экране «День» — отдельное улучшение (часто в связке с фазой дизайна и широких экранов).',
-      en: '**`/app/reports`** already has a per-day bar chart; a compact chart on the **Day** tab is a separate enhancement (often tied to the design / wide-screen phase).',
+      ru: '**`/app/reports`** — столбчатая диаграмма по дням; вкладка **«День»** — кольцо прогресса плана (**реализовано**). Дальнейшие визуализации (тренды, сравнение периодов) — по приоритету после 1.0.',
+      en: '**`/app/reports`** — per-day bar chart; **Day** tab — plan progress ring (**shipped**). Further charts (trends, period compare) — prioritized post-1.0.',
     },
   },
   {
@@ -840,6 +896,19 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       ru: 'Очки, уровни, награды — только после отдельной продуктовой проработки.',
       en: 'Points, levels, badges — only after a dedicated product pass.',
     },
+  },
+  {
+    title: { ru: 'Персонаж-тамагочи и группы', en: 'Tamagotchi-style character & groups' },
+    summary: {
+      ru: 'Мягкая геймификация **без давления**: персонаж, потребности (настроение, «кормление» и т.д.), привязка к **группам задач** — что усиливает персонажа при выполнении; опционально отключить в настройках.',
+      en: 'Soft gamification **without punishment**: a character with needs, **task-group** hooks for what “feeds” the avatar — all optional and disable-able.',
+    },
+    detailBullets: [
+      {
+        ru: 'Не превращать планировщик в игру; не наказывать за пропуски. Черновик — **`15-Идеи-для-развития.md`**, §5.',
+        en: 'Don’t turn the planner into a game; no penalties for misses. Draft — **`15-Идеи-для-развития.md`**, §5.',
+      },
+    ],
   },
   {
     title: { ru: 'Нагрузка и рабочее время', en: 'Workload and working hours' },
