@@ -395,7 +395,26 @@ export function CreateTaskModal({
 
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-zinc-400">
+          {!snap.backlogOnly ? (
+            <LocalDatePickerField
+              label={t('app.plannedDate')}
+              value={snap.scheduledLocalDate}
+              onChange={(v) =>
+                setSnap((s) => ({
+                  ...s,
+                  scheduledLocalDate: v,
+                  anchorLocalDate:
+                    s.recurrenceKind !== 'none'
+                      ? v || s.anchorLocalDate
+                      : s.anchorLocalDate,
+                }))
+              }
+              disabled={!canEdit}
+            />
+          ) : null}
+          <label
+            className={`flex cursor-pointer items-center gap-2 text-xs text-zinc-400 ${snap.backlogOnly ? 'mt-2' : 'mt-3'}`}
+          >
             <input
               type="checkbox"
               checked={snap.backlogOnly}
@@ -410,25 +429,6 @@ export function CreateTaskModal({
             />
             {t('app.addToBacklog')}
           </label>
-          {!snap.backlogOnly ? (
-            <div className="mt-2">
-              <LocalDatePickerField
-                label={t('app.plannedDate')}
-                value={snap.scheduledLocalDate}
-                onChange={(v) =>
-                  setSnap((s) => ({
-                    ...s,
-                    scheduledLocalDate: v,
-                    anchorLocalDate:
-                      s.recurrenceKind !== 'none'
-                        ? v || s.anchorLocalDate
-                        : s.anchorLocalDate,
-                  }))
-                }
-                disabled={!canEdit}
-              />
-            </div>
-          ) : null}
         </fieldset>
 
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
