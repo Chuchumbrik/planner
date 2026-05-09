@@ -243,24 +243,11 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       {
         changes: [
           {
-            ru: '«Неделя»: выравнивание заголовков дней и сетки слотов — **одна сетка + subgrid**, без смещения колонок из‑за скролла.',
-            en: 'Week tab: day headers align with the slot grid via **one grid + subgrid** (no column drift from scroll/padding).',
+            ru: 'Фильтры вида: **информер** скрыт, пока все фильтры в состоянии по умолчанию (все группы, все приоритеты, любой цвет, любые повторы).',
+            en: 'View filters: **informer** hidden while every filter is at its default (all groups, all priorities, any color, any repeats).',
           },
         ],
       },
-      {
-        changes: [
-          {
-            ru: '«Краткая сводка» — релиз-ноты: **одна раскрывашка на календарную дату**; даты **в будущем не показываются**; несколько коммитов за день — **отдельные вложенные блоки** под одной датой.',
-            en: 'Brief summary release notes: **one collapsible per calendar date**; **future dates hidden**; multiple commits the same day appear as **nested blocks** under that date.',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-20', en: '2026-05-20' },
-    items: [
       {
         changes: [
           {
@@ -269,11 +256,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-19', en: '2026-05-19' },
-    items: [
       {
         changes: [
           {
@@ -282,11 +264,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-18', en: '2026-05-18' },
-    items: [
       {
         changes: [
           {
@@ -299,11 +276,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-17', en: '2026-05-17' },
-    items: [
       {
         changes: [
           {
@@ -316,11 +288,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-16', en: '2026-05-16' },
-    items: [
       {
         changes: [
           {
@@ -329,11 +296,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
-    items: [
       {
         changes: [
           {
@@ -342,11 +304,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
-    items: [
       {
         changes: [
           {
@@ -359,11 +316,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-13', en: '2026-05-13' },
-    items: [
       {
         changes: [
           {
@@ -384,11 +336,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
-    items: [
       {
         changes: [
           {
@@ -409,11 +356,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
-    items: [
       {
         changes: [
           {
@@ -444,11 +386,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
-    items: [
       {
         changes: [
           {
@@ -514,16 +451,27 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
         plainBullets: [
           {
-            ru: 'Таблица возможностей и контракт vault отражают сборку; релиз-ноты датированы для истории.',
-            en: 'Feature table and vault contract match the build; dated notes keep history.',
+            ru: 'Таблица возможностей и контракт vault отражают сборку; релиз-ноты ведутся по датам в одном дне — без лишних календарных блоков «из будущего».',
+            en: 'Feature table and vault contract match the build; release notes stay dated within the release day — no extra future calendar blocks.',
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
-    items: [
+      {
+        changes: [
+          {
+            ru: '«Неделя»: выравнивание заголовков дней и сетки слотов — **одна сетка + subgrid**, без смещения колонок из‑за скролла.',
+            en: 'Week tab: day headers align with the slot grid via **one grid + subgrid** (no column drift from scroll/padding).',
+          },
+        ],
+      },
+      {
+        changes: [
+          {
+            ru: '«Краткая сводка» — релиз-ноты: **одна раскрывашка на календарную дату**; несколько коммитов за день — **отдельные вложенные блоки**; в `productRoadmap` у релиз-нотов **нет дат позже дня выпуска**.',
+            en: 'Brief summary: **one collapsible per calendar date**; multiple commits the same day are **nested blocks**; `productRoadmap` release notes **do not use dates after the release day**.',
+          },
+        ],
+      },
       {
         changes: [
           {

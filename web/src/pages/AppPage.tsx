@@ -521,6 +521,15 @@ function AppPageInner() {
     t,
   ])
 
+  /** Информер нужен только когда что-то отличается от «всё по умолчанию». */
+  const filtersInformerActive = useMemo(() => {
+    if (filterGroupId !== 'all') return true
+    if (priorityEnabled.size !== PRIORITY_RANKS.length) return true
+    if (filterColor !== 'all') return true
+    if (filterRepeats !== 'all') return true
+    return false
+  }, [filterGroupId, priorityEnabled, filterColor, filterRepeats])
+
   function handleTab(next: 'day' | 'week' | 'month') {
     setView(next)
     if (next === 'week') setWeekStartMonday(startOfWeekMonday(selectedDay))
@@ -784,7 +793,7 @@ function AppPageInner() {
           </div>
         ) : null}
 
-        {!filtersPanelOpen ? (
+        {!filtersPanelOpen && filtersInformerActive ? (
           <div
             className="rounded-lg border border-cyan-800/55 bg-cyan-950/45 px-3 py-2 text-xs leading-relaxed text-cyan-100/95 shadow-sm"
             role="status"
