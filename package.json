@@ -2,6 +2,9 @@
   "name": "planner-workspace",
   "private": true,
   "workspaces": ["web", "packages/motivator-core"],
+  "overrides": {
+    "vite": "7.3.3"
+  },
   "scripts": {
     "test": "npm run test -w @motivator/core",
     "dev": "npm run dev -w web",
