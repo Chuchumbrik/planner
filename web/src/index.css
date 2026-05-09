@@ -40,3 +40,7 @@ body {
 .task-color-disclosure[open] > summary .task-color-disclosure-chevron {
   transform: rotate(180deg);
 }
+
+.task-time-disclosure[open] > summary .task-time-disclosure-chevron {
+  transform: rotate(180deg);
+}

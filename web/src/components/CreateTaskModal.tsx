@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
+import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
+import { minutesToTimeInput, timeInputToMinutes } from '@/lib/timeClock'
 import { TASK_COLOR_HEX, nearestTaskColorKey, parseColorInput } from '@/vault/colors'
 import type {
   CreateTaskInput,
@@ -14,23 +16,6 @@ import type {
 } from '@/vault/types'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS } from '@/vault/types'
 import { mergeEstimateParts, splitEstimateMinutes } from '@/lib/estimateInput'
-
-function minutesToTimeInput(m: number): string {
-  const h = Math.floor(m / 60)
-  const min = m % 60
-  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
-}
-
-function timeInputToMinutes(v: string): number | null {
-  if (!v.trim()) return null
-  const [hs, ms] = v.split(':')
-  const h = Number(hs)
-  const min = Number(ms)
-  if (Number.isNaN(h) || Number.isNaN(min)) return null
-  const total = h * 60 + min
-  if (total < 0 || total > 1439) return null
-  return total
-}
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
@@ -568,63 +553,28 @@ export function CreateTaskModal({
           <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
         </div>
 
-        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
-          <legend className="px-1 text-xs text-zinc-500">{t('app.timeSection')}</legend>
-          <div className="flex flex-col gap-2">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
-              <input
-                type="radio"
-                name="createtimemode"
-                checked={snap.timeMode === 'none'}
-                disabled={!canEdit}
-                onChange={() => setSnap((s) => ({ ...s, timeMode: 'none', timeClock: '' }))}
-              />
-              {t('app.timeNone')}
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
-              <input
-                type="radio"
-                name="createtimemode"
-                checked={snap.timeMode === 'start'}
-                disabled={!canEdit}
-                onChange={() =>
-                  setSnap((s) => ({
-                    ...s,
-                    timeMode: 'start',
-                    timeClock: s.timeClock || minutesToTimeInput(9 * 60),
-                  }))
-                }
-              />
-              {t('app.timeStart')}
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
-              <input
-                type="radio"
-                name="createtimemode"
-                checked={snap.timeMode === 'end'}
-                disabled={!canEdit}
-                onChange={() =>
-                  setSnap((s) => ({
-                    ...s,
-                    timeMode: 'end',
-                    timeClock: s.timeClock || minutesToTimeInput(18 * 60),
-                  }))
-                }
-              />
-              {t('app.timeEnd')}
-            </label>
-          </div>
-          <label className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('app.timeClock')}</span>
-            <input
-              type="time"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
-              disabled={!canEdit || snap.timeMode === 'none'}
-              value={snap.timeMode === 'none' ? '' : snap.timeClock}
-              onChange={(e) => setSnap((s) => ({ ...s, timeClock: e.target.value }))}
-            />
-          </label>
-        </fieldset>
+        <TaskTimeAccordion
+          timeMode={snap.timeMode}
+          timeClock={snap.timeMode === 'none' ? '' : snap.timeClock}
+          canEdit={canEdit}
+          radioName="createtimemode"
+          onModeNone={() => setSnap((s) => ({ ...s, timeMode: 'none', timeClock: '' }))}
+          onModeStart={() =>
+            setSnap((s) => ({
+              ...s,
+              timeMode: 'start',
+              timeClock: s.timeClock || minutesToTimeInput(9 * 60),
+            }))
+          }
+          onModeEnd={() =>
+            setSnap((s) => ({
+              ...s,
+              timeMode: 'end',
+              timeClock: s.timeClock || minutesToTimeInput(18 * 60),
+            }))
+          }
+          onClockChange={(value) => setSnap((s) => ({ ...s, timeClock: value }))}
+        />
 
         <div className="mt-6 flex flex-wrap gap-2 border-t border-zinc-800 pt-4">
           <button

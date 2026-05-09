@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { mergeEstimateParts, splitEstimateMinutes } from '@/lib/estimateInput'
+import { minutesToTimeInput, timeInputToMinutes } from '@/lib/timeClock'
 import { useTranslation } from 'react-i18next'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
+import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
 import { TASK_COLOR_HEX, nearestTaskColorKey, parseColorInput } from '@/vault/colors'
 import { parseLocalDateKey } from '@/lib/localDate'
@@ -13,23 +15,6 @@ import type {
   TaskTimeMode,
 } from '@/vault/types'
 import { PRIORITY_RANKS } from '@/vault/types'
-
-function minutesToTimeInput(m: number): string {
-  const h = Math.floor(m / 60)
-  const min = m % 60
-  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
-}
-
-function timeInputToMinutes(v: string): number | null {
-  if (!v.trim()) return null
-  const [hs, ms] = v.split(':')
-  const h = Number(hs)
-  const min = Number(ms)
-  if (Number.isNaN(h) || Number.isNaN(min)) return null
-  const total = h * 60 + min
-  if (total < 0 || total > 1439) return null
-  return total
-}
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
@@ -458,64 +443,29 @@ export function TaskEditModal({
           <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
         </div>
 
-        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
-          <legend className="px-1 text-xs text-zinc-500">{t('app.timeSection')}</legend>
-          <div className="flex flex-col gap-2">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
-              <input
-                type="radio"
-                name="timemode"
-                checked={task.timeMode === 'none'}
-                disabled={!canEdit}
-                onChange={() => {
-                  void onSetTimePlan('none', null)
-                  setTimeDraft('')
-                }}
-              />
-              {t('app.timeNone')}
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
-              <input
-                type="radio"
-                name="timemode"
-                checked={task.timeMode === 'start'}
-                disabled={!canEdit}
-                onChange={() => applyTime('start')}
-              />
-              {t('app.timeStart')}
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
-              <input
-                type="radio"
-                name="timemode"
-                checked={task.timeMode === 'end'}
-                disabled={!canEdit}
-                onChange={() => applyTime('end')}
-              />
-              {t('app.timeEnd')}
-            </label>
-          </div>
-          <label className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('app.timeClock')}</span>
-            <input
-              type="time"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
-              disabled={!canEdit || task.timeMode === 'none'}
-              value={
-                task.timeMode === 'none'
-                  ? ''
-                  : timeDraft ||
-                    (task.timeMinutesFromMidnight != null
-                      ? minutesToTimeInput(task.timeMinutesFromMidnight)
-                      : '')
-              }
-              onChange={(e) => setTimeDraft(e.target.value)}
-              onBlur={() => {
-                if (task.timeMode !== 'none') applyTime(task.timeMode)
-              }}
-            />
-          </label>
-        </fieldset>
+        <TaskTimeAccordion
+          timeMode={task.timeMode}
+          timeClock={
+            task.timeMode === 'none'
+              ? ''
+              : timeDraft ||
+                (task.timeMinutesFromMidnight != null
+                  ? minutesToTimeInput(task.timeMinutesFromMidnight)
+                  : '')
+          }
+          canEdit={canEdit}
+          radioName="timemode"
+          onModeNone={() => {
+            void onSetTimePlan('none', null)
+            setTimeDraft('')
+          }}
+          onModeStart={() => applyTime('start')}
+          onModeEnd={() => applyTime('end')}
+          onClockChange={(value) => setTimeDraft(value)}
+          onClockBlur={() => {
+            if (task.timeMode !== 'none') applyTime(task.timeMode)
+          }}
+        />
 
         <div className="mt-4 border-t border-zinc-800 pt-4">
           <p className="text-xs font-medium text-zinc-400">{t('app.checklistTitle')}</p>
