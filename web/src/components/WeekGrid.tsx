@@ -77,13 +77,11 @@ export function WeekGrid({
   }
 
   return (
-    <div className="w-full">
-      <div className="overflow-x-auto text-center">
-        <div className="inline-block min-w-[720px] text-left">
-        <div
-          className="grid border-b border-zinc-800 text-xs"
-          style={{ gridTemplateColumns: `56px repeat(7, minmax(0,1fr))` }}
-        >
+    <div className="w-full min-w-0">
+      <div
+        className="grid border-b border-zinc-800 text-xs"
+        style={{ gridTemplateColumns: `56px repeat(7, minmax(0,1fr))` }}
+      >
           <div className="p-2 text-zinc-600" />
           {weekDays.map((day) => {
             const { weekday, dayNum } = dayHeader(day, locale)
@@ -130,9 +128,9 @@ export function WeekGrid({
               </div>
             )
           })}
-        </div>
+      </div>
 
-        <div className="flex max-h-[min(70vh,900px)]">
+      <div className="flex min-w-0 max-h-[min(70vh,900px)] overflow-y-auto">
           <div className="sticky left-0 z-10 w-14 shrink-0 border-r border-zinc-800 bg-zinc-950 pr-1">
             <div style={{ height: gridHeight }}>
               {HOURS.map((h) => (
@@ -148,7 +146,7 @@ export function WeekGrid({
           </div>
 
           <div
-            className="grid flex-1"
+            className="grid min-w-0 flex-1"
             style={{ gridTemplateColumns: `repeat(7, minmax(0,1fr))` }}
           >
             {weekDays.map((day) => {
@@ -193,8 +191,6 @@ export function WeekGrid({
               )
             })}
           </div>
-        </div>
-        </div>
       </div>
       <p className="mt-2 shrink-0 border-t border-zinc-800 pt-2 text-[10px] leading-snug text-zinc-600">
         {t('app.weekGridHint')}

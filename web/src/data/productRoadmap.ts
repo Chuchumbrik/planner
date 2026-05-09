@@ -136,6 +136,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         ru: 'Кольцо «План недели»: сумма метрик по дням недели до сегодня (`plannedPeriodProgress`); сетка слева, кольцо справа на широком экране; на узком — кольцо выше (`flex-col-reverse`).',
         en: 'Week plan ring: sums per-day metrics through today (`plannedPeriodProgress`); grid left, ring right on wide screens; ring first on narrow (`flex-col-reverse`).',
       },
+      {
+        ru: 'Сетка недели без горизонтальной прокрутки: колонки делят ширину; вертикальная прокрутка блока с часами при `max-height`.',
+        en: 'Week grid avoids horizontal scrolling; columns flex; vertical scroll on the hour pane when height-capped.',
+      },
     ],
   },
   {
@@ -234,6 +238,23 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-18', en: '2026-05-18' },
+    items: [
+      {
+        changes: [
+          {
+            ru: '«Неделя»: таблица таймблокинга **без горизонтального скролла** — убраны фиксированная минимальная ширина и обёртка `overflow-x-auto`; колонки сжимаются в доступной ширине.',
+            en: 'Week tab: timeblocking grid **without horizontal scroll** — removed min-width wrapper and `overflow-x-auto`; columns flex to the container.',
+          },
+          {
+            ru: 'Подпись под кольцами прогресса («X из Y задач»): исправлена интерполяция i18n (`doneSumStr` / `taskCountStr`).',
+            en: 'Plan ring caption (“X of Y tasks”): fixed i18n interpolation (`doneSumStr` / `taskCountStr`).',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-17', en: '2026-05-17' },
     items: [
