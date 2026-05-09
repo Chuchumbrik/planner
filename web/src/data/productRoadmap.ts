@@ -202,8 +202,8 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
       {
-        ru: 'Версия продукта **0.6.0** (`package.json`): правило **0.N.PATCH**, **N** = последняя закрытая фаза MVP (см. `web/README.md`).',
-        en: 'Product version **0.6.0** (`package.json`): **0.N.PATCH** rule, **N** = last closed MVP phase (see `web/README.md`).',
+        ru: 'Версия продукта **0.6.1** (`package.json`): схема **`0·x·y`**, четвёртый слой — **`+git`**; ведущий **0** ≠ «только MVP» (см. `web/README.md`).',
+        en: 'Product version **0.6.1** (`package.json`): **`0·x·y`** scheme, fourth layer is **`+git`**; leading **0** ≠ “MVP-only” (see `web/README.md`).',
       },
       {
         ru: 'Модалка дорожной карты: фазы **0–6** в «реализовано»; остаток фазы 6 (DR-004, анимации по ТЗ) — в «плане».',
