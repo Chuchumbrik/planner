@@ -10,6 +10,7 @@ import {
   topOneOffMissesInWindow,
   totalCompletionMarksInRange,
 } from '@motivator/core'
+import { ReportHint } from '@/components/ReportHint'
 import { RequireVault } from '@/components/RequireVault'
 import { useVault } from '@/vault/VaultProvider'
 
@@ -102,14 +103,22 @@ function ReportsPageInner() {
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{t('reports.kpiStreak')}</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="min-w-0 flex-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+              {t('reports.kpiStreak')}
+            </p>
+            <ReportHint label={t('reports.hintKpiStreak')} />
+          </div>
           <p className="mt-1 text-2xl font-semibold text-emerald-400">{analytics.streak}</p>
           <p className="mt-2 text-[11px] leading-snug text-zinc-500">{t('reports.kpiStreakHint')}</p>
         </div>
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            {t('reports.kpiCompletionRate')}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="min-w-0 flex-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+              {t('reports.kpiCompletionRate')}
+            </p>
+            <ReportHint label={t('reports.hintKpiCompletionRate')} />
+          </div>
           <p className="mt-1 text-2xl font-semibold text-cyan-400/95">
             {t('reports.kpiCompletionRateValue', { pct })}
           </p>
@@ -118,15 +127,21 @@ function ReportsPageInner() {
           </p>
         </div>
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            {t('reports.kpiTotalMarks')}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="min-w-0 flex-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+              {t('reports.kpiTotalMarks')}
+            </p>
+            <ReportHint label={t('reports.hintKpiTotalMarks')} />
+          </div>
           <p className="mt-1 text-2xl font-semibold text-zinc-100">{analytics.totalMarks}</p>
         </div>
       </div>
 
       <section className="mb-8 rounded-lg border border-zinc-800 bg-zinc-950/60 p-4">
-        <h2 className="text-sm font-semibold text-zinc-200">{t('reports.chartTitle')}</h2>
+        <div className="flex items-start gap-2">
+          <h2 className="min-w-0 flex-1 text-sm font-semibold text-zinc-200">{t('reports.chartTitle')}</h2>
+          <ReportHint label={t('reports.hintChartDaily')} />
+        </div>
         {analytics.buckets.every((b) => b.count === 0) ? (
           <p className="mt-4 text-sm text-zinc-500">{t('reports.chartEmpty')}</p>
         ) : (
@@ -159,7 +174,12 @@ function ReportsPageInner() {
       </section>
 
       <section className="mb-6">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-200">{t('reports.failedRecurringTitle')}</h2>
+        <div className="mb-3 flex items-start gap-2">
+          <h2 className="min-w-0 flex-1 text-sm font-semibold text-zinc-200">
+            {t('reports.failedRecurringTitle')}
+          </h2>
+          <ReportHint label={t('reports.hintFailedRecurring')} />
+        </div>
         {analytics.recurringFails.length === 0 ? (
           <p className="text-sm text-zinc-500">{t('reports.emptyFailed')}</p>
         ) : (
@@ -187,7 +207,12 @@ function ReportsPageInner() {
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-200">{t('reports.failedOneOffTitle')}</h2>
+        <div className="mb-3 flex items-start gap-2">
+          <h2 className="min-w-0 flex-1 text-sm font-semibold text-zinc-200">
+            {t('reports.failedOneOffTitle')}
+          </h2>
+          <ReportHint label={t('reports.hintFailedOneOff')} />
+        </div>
         {analytics.oneOffFails.length === 0 ? (
           <p className="text-sm text-zinc-500">{t('reports.emptyFailed')}</p>
         ) : (
