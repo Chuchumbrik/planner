@@ -51,8 +51,8 @@ export function PlanDayProgressCaption({ progress, emptyClassName }: Props) {
       </p>
       <p className="text-[11px] leading-snug text-zinc-400">
         {t('eod.chartTaskFraction', {
-          doneSum: labels.doneSumStr,
-          taskCount: labels.taskCountStr,
+          doneSumStr: labels.doneSumStr,
+          taskCountStr: labels.taskCountStr,
         })}
       </p>
     </div>
