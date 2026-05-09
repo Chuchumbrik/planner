@@ -225,6 +225,9 @@
     "backlogMore": "… и ещё {{count}}",
     "chartTitle": "План на день",
     "chartSummary": "{{done}} из {{total}} закрыто по плану",
+    "chartPercentLine": "{{pct}}%",
+    "chartTaskFraction": "{{done}} / {{total}}",
+    "chartAriaProgress": "{{pct}}%. Доля выполнения по задачам: {{done}} из {{total}}.",
     "chartEmptyPlan": "Нет задач в плане на этот день — круг показывает пустой контур.",
     "finishRitual": "Завершить ритуал",
     "alreadyDone": "Ритуал за этот день уже отмечен как завершённый."

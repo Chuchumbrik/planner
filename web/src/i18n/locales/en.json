@@ -225,6 +225,9 @@
     "backlogMore": "… and {{count}} more",
     "chartTitle": "Plan for the day",
     "chartSummary": "{{done}} of {{total}} closed per plan",
+    "chartPercentLine": "{{pct}}%",
+    "chartTaskFraction": "{{done}} / {{total}}",
+    "chartAriaProgress": "{{pct}}%. Progress by task shares: {{done}} of {{total}}.",
     "chartEmptyPlan": "No tasks planned for this day — the ring shows an empty outline.",
     "finishRitual": "Finish ritual",
     "alreadyDone": "This day’s ritual is already marked complete."

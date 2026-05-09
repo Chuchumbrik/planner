@@ -77,15 +77,21 @@ describe('plannedDayCompletionWeights', () => {
     updatedAt: iso,
   })
 
-  it('counts a task without checklist as one unit', () => {
+  it('counts each planned task as one slot in the denominator', () => {
     const day = '2026-05-09'
     const open = baseTask({ scheduledLocalDate: day, checklist: [] })
     const done = baseTask({ id: 'd', scheduledLocalDate: day, done: true, checklist: [] })
-    expect(plannedDayCompletionWeights([open], day)).toEqual({ doneUnits: 0, totalUnits: 1 })
-    expect(plannedDayCompletionWeights([done], day)).toEqual({ doneUnits: 1, totalUnits: 1 })
+    expect(plannedDayCompletionWeights([open], day)).toEqual({
+      doneFraction: 0,
+      plannedTaskCount: 1,
+    })
+    expect(plannedDayCompletionWeights([done], day)).toEqual({
+      doneFraction: 1,
+      plannedTaskCount: 1,
+    })
   })
 
-  it('uses checklist items as units when checklist is non-empty', () => {
+  it('treats checklist as fractions of one task', () => {
     const day = '2026-05-09'
     const t = baseTask({
       scheduledLocalDate: day,
@@ -96,15 +102,23 @@ describe('plannedDayCompletionWeights', () => {
         ck(false, 'd'),
       ],
     })
-    expect(plannedDayCompletionWeights([t], day)).toEqual({ doneUnits: 2, totalUnits: 4 })
+    expect(plannedDayCompletionWeights([t], day)).toEqual({
+      doneFraction: 0.5,
+      plannedTaskCount: 1,
+    })
   })
 
-  it('sums multiple tasks', () => {
+  it('sums fractional contributions across tasks', () => {
     const day = '2026-05-09'
     const a = baseTask({
       id: 'a',
       scheduledLocalDate: day,
-      checklist: [ck(true, '1'), ck(true, '2')],
+      checklist: [
+        ck(true, '1'),
+        ck(false, '2'),
+        ck(false, '3'),
+        ck(false, '4'),
+      ],
     })
     const b = baseTask({
       id: 'b',
@@ -112,7 +126,9 @@ describe('plannedDayCompletionWeights', () => {
       done: true,
       checklist: [],
     })
-    expect(plannedDayCompletionWeights([a, b], day)).toEqual({ doneUnits: 3, totalUnits: 3 })
+    const r = plannedDayCompletionWeights([a, b], day)
+    expect(r.plannedTaskCount).toBe(2)
+    expect(r.doneFraction).toBeCloseTo(1.25)
   })
 })
 

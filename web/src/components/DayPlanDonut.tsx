@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { plannedDayCompletionWeights, type Task } from '@motivator/core'
+import { getPlanProgressLabels, PlanDayProgressCaption } from '@/components/PlanDayProgressCaption'
 
-/** Кольцо: доля выполненных единиц прогресса (задачи и пункты чек-листа). */
+/** Кольцо: доля суммарного прогресса по задачам плана (чек-лист как доля внутри задачи). */
 function PlanCompletionRing({ frac, empty }: { frac: number; empty: boolean }) {
   const size = 136
   const stroke = 11
@@ -65,20 +66,22 @@ export type DayPlanDonutProps = {
 }
 
 export function DayPlanDonut({ plannedTasksForDay, dayKey }: DayPlanDonutProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
-  const { doneUnits, totalUnits } = useMemo(
+  const progress = useMemo(
     () => plannedDayCompletionWeights(plannedTasksForDay, dayKey),
     [plannedTasksForDay, dayKey],
   )
 
-  const empty = totalUnits === 0
-  const frac = empty ? 0 : doneUnits / totalUnits
+  const empty = progress.plannedTaskCount === 0
+  const frac = empty ? 0 : progress.doneFraction / progress.plannedTaskCount
 
-  const ariaLabel =
-    empty
-      ? t('eod.chartEmptyPlan')
-      : t('eod.chartSummary', { done: doneUnits, total: totalUnits })
+  const ariaLabel = empty
+    ? t('eod.chartEmptyPlan')
+    : t('eod.chartAriaProgress', {
+        ...getPlanProgressLabels(progress, locale),
+      })
 
   return (
     <div
@@ -90,11 +93,13 @@ export function DayPlanDonut({ plannedTasksForDay, dayKey }: DayPlanDonutProps) 
         {t('eod.chartTitle')}
       </p>
       <PlanCompletionRing frac={frac} empty={empty} />
-      <p className="max-w-[14rem] text-center text-xs leading-snug text-zinc-400">
-        {empty
-          ? t('eod.chartEmptyPlan')
-          : t('eod.chartSummary', { done: doneUnits, total: totalUnits })}
-      </p>
+      {empty ? (
+        <p className="max-w-[14rem] text-center text-xs leading-snug text-zinc-400">
+          {t('eod.chartEmptyPlan')}
+        </p>
+      ) : (
+        <PlanDayProgressCaption progress={progress} />
+      )}
     </div>
   )
 }

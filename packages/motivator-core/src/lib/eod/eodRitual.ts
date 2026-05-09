@@ -48,28 +48,36 @@ function sortByPriorityThenTitle(a: Task, b: Task): number {
   return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
 }
 
+/** Результат расчёта прогресса плана на день для UI (доля по задачам). */
+export type PlannedDayProgress = {
+  /** Сумма вкладов задач в [0, 1]: без чек-листа — 0 или 1; с чек-листом — доля отмеченных пунктов. */
+  doneFraction: number
+  /** Число задач в плане (каждая задаёт до 1 в знаменатель). */
+  plannedTaskCount: number
+}
+
+function taskCompletionFractionForDay(task: Task, dateKey: string): number {
+  const items = task.checklist ?? []
+  if (items.length === 0) {
+    return isMainTaskDoneForDay(task, dateKey) ? 1 : 0
+  }
+  const done = items.filter((i) => i.done).length
+  return done / items.length
+}
+
 /**
- * Прогресс плана на календарный день с учётом чек-листов.
- * Задача **без** пунктов чек-листа даёт вес **1** (закрыта по {@link isMainTaskDoneForDay}).
- * Задача **с** пунктами: вес = число пунктов; закрыто = число пунктов с `done`.
+ * Прогресс плана на календарный день: **каждая задача** даёт до **1** в сумме «знаменателя».
+ * Без чек-листа — 0 или 1 по главной отметке дня; с чек-листом — доля выполненных пунктов (1 из 4 → **0,25** от этой задачи).
  */
 export function plannedDayCompletionWeights(
   plannedTasksForDay: Task[],
   dateKey: string,
-): { doneUnits: number; totalUnits: number } {
-  let doneUnits = 0
-  let totalUnits = 0
+): PlannedDayProgress {
+  let doneFraction = 0
   for (const t of plannedTasksForDay) {
-    const items = t.checklist ?? []
-    if (items.length === 0) {
-      totalUnits += 1
-      if (isMainTaskDoneForDay(t, dateKey)) doneUnits += 1
-    } else {
-      totalUnits += items.length
-      doneUnits += items.filter((i) => i.done).length
-    }
+    doneFraction += taskCompletionFractionForDay(t, dateKey)
   }
-  return { doneUnits, totalUnits }
+  return { doneFraction, plannedTaskCount: plannedTasksForDay.length }
 }
 
 /** Выполнено / не закрыто по плану на день; бэклог отдельным списком для мягкого блока в UI. */

@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next'
 import {
   partitionEodTasksByCompletion,
   plannedDayCompletionWeights,
+  type PlannedDayProgress,
   type Task,
 } from '@motivator/core'
+import { getPlanProgressLabels, PlanDayProgressCaption } from '@/components/PlanDayProgressCaption'
 
 const BACKLOG_PREVIEW = 6
 
@@ -28,16 +30,10 @@ function TaskLine({ task }: { task: Task }) {
   )
 }
 
-/** Круговая диаграмма: доля выполненных единиц прогресса (задачи и пункты чек-листа). */
-function EodPlanDonut({
-  doneUnits,
-  totalUnits,
-}: {
-  doneUnits: number
-  totalUnits: number
-}) {
-  const empty = totalUnits === 0
-  const frac = empty ? 0 : doneUnits / totalUnits
+/** Круговая диаграмма: сумма долей по задачам (чек-лист даёт долю внутри одной задачи). */
+function EodPlanDonut({ progress }: { progress: PlannedDayProgress }) {
+  const empty = progress.plannedTaskCount === 0
+  const frac = empty ? 0 : progress.doneFraction / progress.plannedTaskCount
   const size = 112
   const stroke = 10
   const cx = size / 2
@@ -102,7 +98,8 @@ export function EndOfDayModal({
   canEdit,
   onCompleteRitual,
 }: EndOfDayModalProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
   const { completed, remaining, backlogReminder } = useMemo(
     () => partitionEodTasksByCompletion(tasks, ritualDateKey),
@@ -175,24 +172,19 @@ export function EndOfDayModal({
           className="mt-5 flex flex-col items-center gap-1"
           role="img"
           aria-label={
-            plannedWeights.totalUnits === 0
+            plannedWeights.plannedTaskCount === 0
               ? t('eod.chartEmptyPlan')
-              : t('eod.chartSummary', {
-                  done: plannedWeights.doneUnits,
-                  total: plannedWeights.totalUnits,
+              : t('eod.chartAriaProgress', {
+                  ...getPlanProgressLabels(plannedWeights, locale),
                 })
           }
         >
           <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{t('eod.chartTitle')}</p>
-          <EodPlanDonut doneUnits={plannedWeights.doneUnits} totalUnits={plannedWeights.totalUnits} />
-          <p className="max-w-[16rem] text-center text-xs leading-relaxed text-zinc-400">
-            {plannedWeights.totalUnits === 0
-              ? t('eod.chartEmptyPlan')
-              : t('eod.chartSummary', {
-                  done: plannedWeights.doneUnits,
-                  total: plannedWeights.totalUnits,
-                })}
-          </p>
+          <EodPlanDonut progress={plannedWeights} />
+          <PlanDayProgressCaption
+            progress={plannedWeights}
+            emptyClassName="max-w-[16rem] text-center text-xs leading-relaxed text-zinc-400"
+          />
         </div>
 
         <section className="animate-eod-pop mt-5 rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3">

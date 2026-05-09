@@ -99,8 +99,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Vault drafts; on `/app` one draft — inline strip, several — “Drafts” button with count and list modal.',
       },
       {
-        ru: 'Вкладка «День»: рядом с планом — кольцо прогресса по плану на календарный день (весовые единицы: задача без чек-листа или пункты чек-листа; модалка EOD использует ту же функцию); на узком экране блок с диаграммой выше списка.',
-        en: 'Day tab: progress ring for the day plan (weighted units: task without checklist vs checklist items; EOD modal uses the same helper); on narrow screens the chart stacks above the list.',
+        ru: 'Вкладка «День»: кольцо прогресса — знаменатель = число задач в плане; чек-лист даёт долю внутри задачи (1 из 4 пунктов = 0,25); подпись: процент и строка «доля / задачи»; модалка EOD — та же логика.',
+        en: 'Day tab: progress ring — denominator = planned task count; checklist contributes a share inside each task (1 of 4 items = 0.25); caption shows percent and fractional line; EOD modal uses the same logic.',
       },
       {
         ru: 'Настройки: названия приоритетов, CRUD групп, смена пароля Supabase. TaskEditModal — те же правила, что при создании (`taskScheduleValidation`).',
@@ -226,6 +226,19 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-16', en: '2026-05-16' },
+    items: [
+      {
+        changes: [
+          {
+            ru: 'Кольцо «План на день» и EOD: прогресс по **задачам** (чек-лист как доля внутри задачи); подпись — процент и «выполнено по долям / число задач».',
+            en: 'Day/EOD ring: progress per **tasks** (checklist as in-task share); caption shows percent and fractional task row.',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
