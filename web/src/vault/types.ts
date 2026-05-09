@@ -35,6 +35,12 @@ export type ChecklistItem = {
 /** Время начала XOR время завершения XOR не задано */
 export type TaskTimeMode = 'none' | 'start' | 'end'
 
+/** Правило повтора задачи (якорь — recurrenceAnchorLocalDate) */
+export type RecurrenceRule =
+  | { kind: 'daily' }
+  | { kind: 'everyNDays'; n: number }
+  | { kind: 'weekly'; weekdays: number[] }
+
 export type Task = {
   id: string
   title: string
@@ -46,7 +52,7 @@ export type Task = {
   checklist: ChecklistItem[]
   priorityRank: PriorityRank
   /**
-   * null — задача только в бэклоге.
+   * null — задача только в бэклоге (для задач без повтора).
    * YYYY-MM-DD — локальный календарный день устройства.
    */
   scheduledLocalDate: string | null
@@ -55,6 +61,26 @@ export type Task = {
   timeMode: TaskTimeMode
   /** Минуты от полуночи 0–1439 при timeMode start | end */
   timeMinutesFromMidnight: number | null
+  /** null — без повтора */
+  recurrence: RecurrenceRule | null
+  /** Первая дата серии повтора (локальный день); нужна если recurrence задан */
+  recurrenceAnchorLocalDate: string | null
+}
+
+/** Черновик формы создания задачи */
+export type TaskDraft = {
+  id: string
+  updatedAt: string
+  title: string
+  groupId: string
+  colorKey: TaskColorKey
+  priorityRank: PriorityRank
+  scheduledLocalDate: string | null
+  estimatedMinutes: number | null
+  timeMode: TaskTimeMode
+  timeMinutesFromMidnight: number | null
+  recurrence: RecurrenceRule | null
+  recurrenceAnchorLocalDate: string | null
 }
 
 export type VaultPayloadV4 = {
@@ -62,6 +88,28 @@ export type VaultPayloadV4 = {
   priorityLabels: PriorityLabels
   groups: TaskGroup[]
   tasks: Task[]
+}
+
+export type VaultPayloadV5 = {
+  schemaVersion: 5
+  priorityLabels: PriorityLabels
+  groups: TaskGroup[]
+  tasks: Task[]
+  drafts: TaskDraft[]
+}
+
+/** Поля создания задачи из модального окна */
+export type CreateTaskInput = {
+  title: string
+  groupId: string
+  colorKey: TaskColorKey
+  priorityRank: PriorityRank
+  scheduledLocalDate: string | null
+  estimatedMinutes: number | null
+  timeMode: TaskTimeMode
+  timeMinutesFromMidnight: number | null
+  recurrence: RecurrenceRule | null
+  recurrenceAnchorLocalDate: string | null
 }
 
 /* ---------- Legacy v3 (миграция) ---------- */
@@ -117,7 +165,7 @@ export type VaultPayloadV1 = {
   }>
 }
 
-export type VaultPayload = VaultPayloadV4
+export type VaultPayload = VaultPayloadV5
 
 export const DEFAULT_GROUP_ID = 'grp_default'
 
@@ -131,11 +179,12 @@ export function defaultPriorityLabels(): PriorityLabels {
   }
 }
 
-export function emptyVault(): VaultPayloadV4 {
+export function emptyVault(): VaultPayloadV5 {
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     priorityLabels: defaultPriorityLabels(),
     groups: [{ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 }],
     tasks: [],
+    drafts: [],
   }
 }

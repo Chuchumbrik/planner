@@ -1,3 +1,4 @@
+import { taskOccursOnDate } from '@/lib/recurrence'
 import type { Task } from '@/vault/types'
 
 /** Если оценки нет — используем для визуализации и пересечений (минуты). */
@@ -7,12 +8,16 @@ export const DEFAULT_SLOT_DURATION_MIN = 30
  * Интервал задачи на календарном дне в минутах от полуночи [start, end).
  * null — нет отображаемого слота (нет даты, нет времени, выполнено и скрываем и т.д.).
  */
-export function getTaskSlotMinutes(task: Task): { start: number; end: number } | null {
+export function getTaskSlotMinutes(
+  task: Task,
+  occurrenceDayKey?: string,
+): { start: number; end: number } | null {
   if (task.done) return null
-  if (!task.scheduledLocalDate) return null
+  const dayKey = occurrenceDayKey ?? task.scheduledLocalDate
+  if (!dayKey) return null
+  if (occurrenceDayKey && !taskOccursOnDate(task, occurrenceDayKey)) return null
 
   const est = task.estimatedMinutes ?? DEFAULT_SLOT_DURATION_MIN
-
   if (task.timeMode === 'start' && task.timeMinutesFromMidnight != null) {
     const s = task.timeMinutesFromMidnight
     const e = s + est
@@ -38,22 +43,22 @@ export function overlapRangeMinutes(
   return Math.max(0, hi - lo)
 }
 
-/** Пересечение слотов двух задач в один день (минуты). */
-export function overlapTasksMinutes(a: Task, b: Task): number {
+/** Пересечение слотов двух задач в один календарный день (минуты). */
+export function overlapTasksMinutes(a: Task, b: Task, dayKey: string): number {
   if (a.id === b.id) return 0
-  if (!a.scheduledLocalDate || a.scheduledLocalDate !== b.scheduledLocalDate) return 0
-  const sa = getTaskSlotMinutes(a)
-  const sb = getTaskSlotMinutes(b)
+  if (!taskOccursOnDate(a, dayKey) || !taskOccursOnDate(b, dayKey)) return 0
+  const sa = getTaskSlotMinutes(a, dayKey)
+  const sb = getTaskSlotMinutes(b, dayKey)
   if (!sa || !sb) return 0
   return overlapRangeMinutes(sa, sb)
 }
 
-/** Максимальная длина пересечения слота task с любой из others (один день). */
-export function maxOverlapWithOthers(task: Task, others: Task[]): number {
+/** Максимальная длина пересечения слота task с любой из others в указанный день. */
+export function maxOverlapWithOthers(task: Task, others: Task[], dayKey: string): number {
   let max = 0
   for (const o of others) {
     if (o.id === task.id) continue
-    max = Math.max(max, overlapTasksMinutes(task, o))
+    max = Math.max(max, overlapTasksMinutes(task, o, dayKey))
   }
   return max
 }

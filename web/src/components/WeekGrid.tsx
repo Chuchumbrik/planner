@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { taskOccursOnDate } from '@/lib/recurrence'
 import { taskBorderClass } from '@/vault/colors'
 import { getTaskSlotMinutes } from '@/lib/timeblocking'
 import type { PriorityLabels, Task } from '@/vault/types'
@@ -45,15 +46,15 @@ export function WeekGrid({
   const gridHeight = 24 * HOUR_HEIGHT_PX
 
   function tasksForDay(day: string) {
-    return tasks.filter((x) => x.scheduledLocalDate === day)
+    return tasks.filter((x) => taskOccursOnDate(x, day))
   }
 
   function slottedTasks(day: string) {
-    return tasksForDay(day).filter((x) => getTaskSlotMinutes(x) != null)
+    return tasksForDay(day).filter((x) => getTaskSlotMinutes(x, day) != null)
   }
 
   function unslottedTasks(day: string) {
-    return tasksForDay(day).filter((x) => getTaskSlotMinutes(x) == null && !x.done)
+    return tasksForDay(day).filter((x) => getTaskSlotMinutes(x, day) == null && !x.done)
   }
 
   return (
@@ -146,7 +147,7 @@ export function WeekGrid({
                     />
                   ))}
                   {slotted.map((task) => {
-                    const slot = getTaskSlotMinutes(task)
+                    const slot = getTaskSlotMinutes(task, day)
                     if (!slot) return null
                     const top = (slot.start / 60) * HOUR_HEIGHT_PX
                     const height = Math.max(

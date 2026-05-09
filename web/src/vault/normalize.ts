@@ -1,3 +1,4 @@
+import { normalizeWeekdays } from '@/lib/recurrence'
 import {
   DEFAULT_GROUP_ID,
   defaultPriorityLabels,
@@ -7,8 +8,10 @@ import {
   type PriorityLabels,
   type PriorityRank,
   type PrioritySystem,
+  type RecurrenceRule,
   type Task,
   type TaskColorKey,
+  type TaskDraft,
   type TaskTimeMode,
   type TaskV2Stored,
   type TaskV3,
@@ -16,6 +19,7 @@ import {
   type VaultPayloadV2,
   type VaultPayloadV3,
   type VaultPayloadV4,
+  type VaultPayloadV5,
 } from '@/vault/types'
 
 function isColorKey(x: unknown): x is TaskColorKey {
@@ -50,6 +54,8 @@ function clampMinutes(m: number | null | undefined): number | null {
   return n
 }
 
+const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/
+
 function normalizePriorityLabels(raw: unknown): PriorityLabels {
   const base = defaultPriorityLabels()
   if (!raw || typeof raw !== 'object') return base
@@ -62,28 +68,136 @@ function normalizePriorityLabels(raw: unknown): PriorityLabels {
   return out
 }
 
-/** Приводит произвольный JSON к актуальной схеме v4 */
-export function normalizeVault(raw: unknown): VaultPayloadV4 {
+function normalizeRecurrenceRule(raw: unknown): RecurrenceRule | null {
+  if (raw == null || typeof raw !== 'object') return null
+  const r = raw as Record<string, unknown>
+  if (r.kind === 'daily') return { kind: 'daily' }
+  if (r.kind === 'everyNDays') {
+    const n = typeof r.n === 'number' && !Number.isNaN(r.n) ? Math.max(1, Math.floor(r.n)) : 1
+    return { kind: 'everyNDays', n }
+  }
+  if (r.kind === 'weekly') {
+    const wdRaw = Array.isArray(r.weekdays) ? r.weekdays : []
+    const wd = normalizeWeekdays(wdRaw.filter((x): x is number => typeof x === 'number'))
+    if (wd.length === 0) return null
+    return { kind: 'weekly', weekdays: wd }
+  }
+  return null
+}
+
+/** Приводит произвольный JSON к актуальной схеме v5 */
+export function normalizeVault(raw: unknown): VaultPayloadV5 {
   if (!raw || typeof raw !== 'object') return emptyVault()
   const o = raw as Record<string, unknown>
 
+  if (
+    o.schemaVersion === 5 &&
+    Array.isArray(o.tasks) &&
+    Array.isArray(o.groups) &&
+    Array.isArray(o.drafts)
+  ) {
+    return repairV5(o as VaultPayloadV5)
+  }
+
   if (o.schemaVersion === 4 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return repairV4(o as VaultPayloadV4)
+    return migrateV4toV5(repairV4(o as VaultPayloadV4))
   }
 
   if (o.schemaVersion === 3 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV3toV4(repairV3(o as VaultPayloadV3))
+    return migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3)))
   }
 
   if (o.schemaVersion === 2 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))
+    return migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2)))))
   }
 
   if (o.schemaVersion === 1 && Array.isArray(o.tasks)) {
-    return migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1)))))
+    return migrateV4toV5(
+      migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+    )
   }
 
   return emptyVault()
+}
+
+function migrateV4toV5(v: VaultPayloadV4): VaultPayloadV5 {
+  const r = repairV4(v)
+  return {
+    schemaVersion: 5,
+    priorityLabels: r.priorityLabels,
+    groups: r.groups,
+    tasks: r.tasks,
+    drafts: [],
+  }
+}
+
+function repairDraft(row: Record<string, unknown>, groups: { id: string }[]): TaskDraft | null {
+  const gid =
+    typeof row.groupId === 'string' && groups.some((g) => g.id === row.groupId)
+      ? row.groupId
+      : DEFAULT_GROUP_ID
+  const scheduled =
+    typeof row.scheduledLocalDate === 'string' && DATE_KEY.test(row.scheduledLocalDate)
+      ? row.scheduledLocalDate
+      : null
+  const timeMode: TaskTimeMode = isTaskTimeMode(row.timeMode) ? row.timeMode : 'none'
+  let timeMinutes = clampMinutes(
+    typeof row.timeMinutesFromMidnight === 'number' ? row.timeMinutesFromMidnight : null,
+  )
+  if (timeMode === 'none') timeMinutes = null
+
+  let est: number | null = null
+  if (typeof row.estimatedMinutes === 'number' && !Number.isNaN(row.estimatedMinutes)) {
+    const e = Math.floor(row.estimatedMinutes)
+    if (e > 0 && e <= 24 * 60) est = e
+  }
+
+  const priorityRank = isPriorityRank(row.priorityRank) ? row.priorityRank : 3
+  let recurrence = normalizeRecurrenceRule(row.recurrence)
+  let anchor =
+    typeof row.recurrenceAnchorLocalDate === 'string' &&
+    DATE_KEY.test(row.recurrenceAnchorLocalDate)
+      ? row.recurrenceAnchorLocalDate
+      : null
+  if (recurrence && !anchor) anchor = scheduled
+  if (recurrence && !anchor) recurrence = null
+
+  return {
+    id: typeof row.id === 'string' ? row.id : crypto.randomUUID(),
+    updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : nowIso(),
+    title: typeof row.title === 'string' ? row.title : '',
+    groupId: gid,
+    colorKey: isColorKey(row.colorKey) ? row.colorKey : 'zinc',
+    priorityRank,
+    scheduledLocalDate: scheduled,
+    estimatedMinutes: est,
+    timeMode,
+    timeMinutesFromMidnight: timeMinutes,
+    recurrence,
+    recurrenceAnchorLocalDate: anchor,
+  }
+}
+
+function repairV5(v: VaultPayloadV5): VaultPayloadV5 {
+  const base = repairV4({
+    schemaVersion: 4,
+    priorityLabels: v.priorityLabels,
+    groups: v.groups,
+    tasks: v.tasks,
+  })
+  const groups = base.groups
+  const draftsRaw = Array.isArray(v.drafts) ? v.drafts : []
+  const drafts: TaskDraft[] = draftsRaw
+    .map((d) => (d && typeof d === 'object' ? repairDraft(d as Record<string, unknown>, groups) : null))
+    .filter((x): x is TaskDraft => x != null)
+
+  return {
+    schemaVersion: 5,
+    priorityLabels: base.priorityLabels,
+    groups,
+    tasks: base.tasks,
+    drafts,
+  }
 }
 
 function migrateV1(v1: VaultPayloadV1): VaultPayloadV2 {
@@ -149,6 +263,8 @@ function mapV3TaskToV4(t: TaskV3, prioritySystem: PrioritySystem): Task {
     estimatedMinutes: null,
     timeMode: 'none',
     timeMinutesFromMidnight: null,
+    recurrence: null,
+    recurrenceAnchorLocalDate: null,
   }
 }
 
@@ -237,8 +353,6 @@ function repairV3(v: VaultPayloadV3): VaultPayloadV3 {
   return { schemaVersion: 3, prioritySystem, groups, tasks }
 }
 
-const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/
-
 function repairV4(v: VaultPayloadV4): VaultPayloadV4 {
   const priorityLabels = normalizePriorityLabels(v.priorityLabels)
   const groups = Array.isArray(v.groups) && v.groups.length > 0 ? [...v.groups] : emptyVault().groups
@@ -280,6 +394,16 @@ function repairV4(v: VaultPayloadV4): VaultPayloadV4 {
 
     const priorityRank = isPriorityRank(t.priorityRank) ? t.priorityRank : 3
 
+    let recurrence = normalizeRecurrenceRule(row.recurrence)
+    let recurrenceAnchor: string | null =
+      typeof row.recurrenceAnchorLocalDate === 'string' &&
+      DATE_KEY.test(row.recurrenceAnchorLocalDate)
+        ? row.recurrenceAnchorLocalDate
+        : null
+    if (recurrence && !recurrenceAnchor) recurrenceAnchor = scheduled
+    if (recurrence && !recurrenceAnchor) recurrence = null
+    if (!recurrence) recurrenceAnchor = null
+
     return {
       id: typeof t.id === 'string' ? t.id : crypto.randomUUID(),
       title: typeof t.title === 'string' ? t.title : '',
@@ -297,6 +421,8 @@ function repairV4(v: VaultPayloadV4): VaultPayloadV4 {
       estimatedMinutes: est,
       timeMode,
       timeMinutesFromMidnight: timeMinutes,
+      recurrence,
+      recurrenceAnchorLocalDate: recurrenceAnchor,
     }
   })
 

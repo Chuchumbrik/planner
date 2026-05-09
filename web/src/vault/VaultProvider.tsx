@@ -17,9 +17,11 @@ import { supabase } from '@/lib/supabase'
 import {
   DEFAULT_GROUP_ID,
   emptyVault,
+  type CreateTaskInput,
   type PriorityRank,
   type Task,
   type TaskColorKey,
+  type TaskDraft,
   type TaskGroup,
   type TaskTimeMode,
   type VaultPayload,
@@ -39,15 +41,18 @@ type VaultContextValue = {
   remoteError: string | null
   saveSeed: (seedB64: string, password: string) => Promise<void>
   lock: () => void
+  createTask: (input: CreateTaskInput) => Promise<void>
+  /** @deprecated используйте createTask */
   addTask: (
     title: string,
     opts?: {
       groupId?: string
       colorKey?: TaskColorKey
-      /** По умолчанию null — задача в бэклоге */
       scheduledLocalDate?: string | null
     },
   ) => Promise<void>
+  upsertDraft: (draft: TaskDraft) => Promise<void>
+  deleteDraft: (draftId: string) => Promise<void>
   toggleTask: (id: string) => Promise<void>
   removeTask: (id: string) => Promise<void>
   setTaskColor: (taskId: string, colorKey: TaskColorKey) => Promise<void>
@@ -67,7 +72,7 @@ type VaultContextValue = {
     mode: TaskTimeMode,
     minutesFromMidnight: number | null,
   ) => Promise<void>
-  patchTask: (taskId: string, patch: Partial<Pick<Task, 'title'>>) => Promise<void>
+  patchTask: (taskId: string, patch: Partial<Task>) => Promise<void>
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null)
@@ -244,6 +249,60 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [pushVault, remoteHydrated, vault],
   )
 
+  const createTask = useCallback(
+    async (input: CreateTaskInput) => {
+      if (!remoteHydrated) return
+      const trimmed = input.title.trim()
+      if (!trimmed) return
+      const base = vault
+      const gid =
+        input.groupId && base.groups.some((g) => g.id === input.groupId)
+          ? input.groupId
+          : DEFAULT_GROUP_ID
+      const now = new Date().toISOString()
+
+      let recurrence = input.recurrence
+      let anchor = input.recurrenceAnchorLocalDate
+      if (recurrence && !anchor) anchor = input.scheduledLocalDate
+      if (recurrence && !anchor) recurrence = null
+      if (!recurrence) anchor = null
+
+      let timeMode = input.timeMode
+      let timeMinutes = input.timeMinutesFromMidnight
+      if (timeMode === 'none') timeMinutes = null
+      if (timeMode !== 'none' && (timeMinutes == null || timeMinutes < 0 || timeMinutes > 1439)) {
+        timeMode = 'none'
+        timeMinutes = null
+      }
+
+      let est: number | null = input.estimatedMinutes
+      if (est != null && (Number.isNaN(est) || est <= 0 || est > 24 * 60)) est = null
+
+      const task: Task = {
+        id: newId(),
+        title: trimmed,
+        done: false,
+        createdAt: now,
+        updatedAt: now,
+        groupId: gid,
+        colorKey: input.colorKey ?? 'zinc',
+        checklist: [],
+        priorityRank: input.priorityRank,
+        scheduledLocalDate: input.scheduledLocalDate,
+        estimatedMinutes: est,
+        timeMode,
+        timeMinutesFromMidnight: timeMinutes,
+        recurrence,
+        recurrenceAnchorLocalDate: anchor,
+      }
+      await pushVault({
+        ...base,
+        tasks: [task, ...base.tasks],
+      })
+    },
+    [pushVault, remoteHydrated, vault],
+  )
+
   const addTask = useCallback(
     async (
       title: string,
@@ -253,39 +312,47 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         scheduledLocalDate?: string | null
       },
     ) => {
-      if (!remoteHydrated) return
-      const trimmed = title.trim()
-      if (!trimmed) return
-      const base = vault
-      const gid =
-        opts?.groupId && base.groups.some((g) => g.id === opts.groupId)
-          ? opts.groupId
-          : DEFAULT_GROUP_ID
-      const now = new Date().toISOString()
-      const scheduled =
-        opts?.scheduledLocalDate === undefined ? null : opts.scheduledLocalDate
-
-      const task: Task = {
-        id: newId(),
-        title: trimmed,
-        done: false,
-        createdAt: now,
-        updatedAt: now,
-        groupId: gid,
+      await createTask({
+        title,
+        groupId:
+          opts?.groupId && vault.groups.some((g) => g.id === opts.groupId)
+            ? opts.groupId
+            : DEFAULT_GROUP_ID,
         colorKey: opts?.colorKey ?? 'zinc',
-        checklist: [],
         priorityRank: 3,
-        scheduledLocalDate: scheduled,
+        scheduledLocalDate:
+          opts?.scheduledLocalDate === undefined ? null : opts.scheduledLocalDate,
         estimatedMinutes: null,
         timeMode: 'none',
         timeMinutesFromMidnight: null,
-      }
-      await pushVault({
-        ...base,
-        tasks: [task, ...base.tasks],
+        recurrence: null,
+        recurrenceAnchorLocalDate: null,
       })
     },
-    [pushVault, remoteHydrated, vault],
+    [createTask, vault.groups],
+  )
+
+  const upsertDraft = useCallback(
+    async (draft: TaskDraft) => {
+      await mutate((v) => {
+        const rest = v.drafts.filter((d) => d.id !== draft.id)
+        const nextDrafts = [draft, ...rest].sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+        )
+        return { ...v, drafts: nextDrafts }
+      })
+    },
+    [mutate],
+  )
+
+  const deleteDraft = useCallback(
+    async (draftId: string) => {
+      await mutate((v) => ({
+        ...v,
+        drafts: v.drafts.filter((d) => d.id !== draftId),
+      }))
+    },
+    [mutate],
   )
 
   const toggleTask = useCallback(
@@ -297,11 +364,23 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         if (nextDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
           return v
         }
+        if (nextDone && t.recurrence) {
+          if (!window.confirm(i18n.t('app.completeClearsRecurrence'))) return v
+        }
         const now = new Date().toISOString()
+        const clearsRec = Boolean(nextDone && t.recurrence)
         return {
           ...v,
           tasks: v.tasks.map((task) =>
-            task.id === id ? { ...task, done: nextDone, updatedAt: now } : task,
+            task.id === id
+              ? {
+                  ...task,
+                  done: nextDone,
+                  recurrence: clearsRec ? null : task.recurrence,
+                  recurrenceAnchorLocalDate: clearsRec ? null : task.recurrenceAnchorLocalDate,
+                  updatedAt: now,
+                }
+              : task,
           ),
         }
       })
@@ -553,7 +632,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   )
 
   const patchTask = useCallback(
-    async (taskId: string, patch: Partial<Pick<Task, 'title'>>) => {
+    async (taskId: string, patch: Partial<Task>) => {
       await mutate((v) => ({
         ...v,
         tasks: v.tasks.map((t) =>
@@ -578,7 +657,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       remoteError,
       saveSeed,
       lock,
+      createTask,
       addTask,
+      upsertDraft,
+      deleteDraft,
       toggleTask,
       removeTask,
       setTaskColor,
@@ -607,7 +689,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       remoteError,
       saveSeed,
       lock,
+      createTask,
       addTask,
+      upsertDraft,
+      deleteDraft,
       toggleTask,
       removeTask,
       setTaskColor,

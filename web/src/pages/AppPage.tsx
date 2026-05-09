@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
 import { TaskEditModal } from '@/components/TaskEditModal'
@@ -14,9 +15,10 @@ import {
   weekDayKeys,
 } from '@/lib/calendar'
 import { localDateKey, parseLocalDateKey, shiftLocalDateKey } from '@/lib/localDate'
+import { taskOccursOnDate } from '@/lib/recurrence'
 import { maxOverlapWithOthers, withTaskPatch } from '@/lib/timeblocking'
-import type { PriorityRank, Task } from '@/vault/types'
-import { PRIORITY_RANKS } from '@/vault/types'
+import type { PriorityRank, Task, TaskDraft } from '@/vault/types'
+import { DEFAULT_GROUP_ID, PRIORITY_RANKS } from '@/vault/types'
 import { useVault } from '@/vault/VaultProvider'
 
 function formatSynced(ts: number | null, locale: string): string | null {
@@ -64,6 +66,15 @@ function taskMatchesFilters(
   return true
 }
 
+function passesRepeatFilter(
+  task: Task,
+  mode: 'all' | 'recurring' | 'nonRecurring',
+): boolean {
+  if (mode === 'all') return true
+  const has = Boolean(task.recurrence)
+  return mode === 'recurring' ? has : !has
+}
+
 function AppPageInner() {
   const { t, i18n } = useTranslation()
   const {
@@ -73,7 +84,9 @@ function AppPageInner() {
     decryptFailed,
     savePending,
     lastSyncedAt,
-    addTask,
+    createTask,
+    upsertDraft,
+    deleteDraft,
     toggleTask,
     removeTask,
     setTaskColor,
@@ -89,8 +102,8 @@ function AppPageInner() {
   } = useVault()
 
   const [view, setView] = useState<'day' | 'week' | 'month'>('day')
-  const [title, setTitle] = useState('')
-  const [addToBacklog, setAddToBacklog] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [resumeDraft, setResumeDraft] = useState<TaskDraft | null>(null)
   const [selectedDay, setSelectedDay] = useState(() => localDateKey())
   const [weekStartMonday, setWeekStartMonday] = useState(() =>
     startOfWeekMonday(localDateKey()),
@@ -100,6 +113,9 @@ function AppPageInner() {
   const [monthIndex, setMonthIndex] = useState(() => _now.getMonth())
 
   const [filterGroupId, setFilterGroupId] = useState<string | 'all'>('all')
+  const [filterRepeats, setFilterRepeats] = useState<'all' | 'recurring' | 'nonRecurring'>(
+    'all',
+  )
   const [priorityEnabled, setPriorityEnabled] = useState(
     () => new Set<PriorityRank>(PRIORITY_RANKS),
   )
@@ -123,17 +139,27 @@ function AppPageInner() {
   )
 
   const filteredVaultTasks = useMemo(
-    () => vault.tasks.filter((x) => taskMatchesFilters(x, filterGroupId, priorityEnabled)),
-    [vault.tasks, filterGroupId, priorityEnabled],
+    () =>
+      vault.tasks.filter(
+        (x) =>
+          taskMatchesFilters(x, filterGroupId, priorityEnabled) &&
+          passesRepeatFilter(x, filterRepeats),
+      ),
+    [vault.tasks, filterGroupId, priorityEnabled, filterRepeats],
   )
 
   const plannedForDay = useMemo(() => {
-    const list = filteredVaultTasks.filter((x) => x.scheduledLocalDate === selectedDay)
+    const list = filteredVaultTasks.filter((x) => {
+      if (x.scheduledLocalDate === null && !x.recurrence) return false
+      return taskOccursOnDate(x, selectedDay)
+    })
     return list.sort(sortByPriorityThenTitle)
   }, [filteredVaultTasks, selectedDay])
 
   const backlogTasks = useMemo(() => {
-    const list = filteredVaultTasks.filter((x) => x.scheduledLocalDate === null)
+    const list = filteredVaultTasks.filter(
+      (x) => x.scheduledLocalDate === null && !x.recurrence,
+    )
     return list.sort(sortByPriorityThenTitle)
   }, [filteredVaultTasks])
 
@@ -146,13 +172,17 @@ function AppPageInner() {
 
   const taskCountByDay = useMemo(() => {
     const map: Record<string, number> = {}
-    for (const task of filteredVaultTasks) {
-      const d = task.scheduledLocalDate
-      if (!d) continue
-      map[d] = (map[d] ?? 0) + 1
+    const daysInMonth = new Date(monthYear, monthIndex + 1, 0).getDate()
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${monthYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      let c = 0
+      for (const task of filteredVaultTasks) {
+        if (taskOccursOnDate(task, key)) c++
+      }
+      map[key] = c
     }
     return map
-  }, [filteredVaultTasks])
+  }, [filteredVaultTasks, monthYear, monthIndex])
 
   const editingTask = editId ? vault.tasks.find((x) => x.id === editId) : undefined
 
@@ -161,11 +191,14 @@ function AppPageInner() {
       if (!editingTask) return true
       const next = withTaskPatch(editingTask, patch)
       const others = vault.tasks.filter((x) => x.id !== editingTask.id && !x.done)
-      const max = maxOverlapWithOthers(next, others)
+      const overlapDay = taskOccursOnDate(next, selectedDay)
+        ? selectedDay
+        : next.scheduledLocalDate ?? next.recurrenceAnchorLocalDate ?? selectedDay
+      const max = maxOverlapWithOthers(next, others, overlapDay)
       if (max <= 0) return true
       return window.confirm(t('app.overlapConfirm', { minutes: max }))
     },
-    [editingTask, vault.tasks, t],
+    [editingTask, vault.tasks, selectedDay, t],
   )
 
   function togglePriority(rank: PriorityRank) {
@@ -201,10 +234,17 @@ function AppPageInner() {
         }),
       )
     }
-    parts.push(t('app.informerRepeatsNote'))
+    if (filterRepeats === 'all') {
+      parts.push(t('app.informerRepeatsAll'))
+    } else if (filterRepeats === 'recurring') {
+      parts.push(t('app.informerRepeatsOnly'))
+    } else {
+      parts.push(t('app.informerRepeatsWithout'))
+    }
     return parts.join(' · ')
   }, [
     filterGroupId,
+    filterRepeats,
     vault.groups,
     vault.priorityLabels,
     priorityEnabled,
@@ -320,13 +360,96 @@ function AppPageInner() {
 
           <label className="flex flex-col gap-1 text-xs text-zinc-500">
             <span>{t('app.filterRepeats')}</span>
-            <select className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-500" disabled>
-              <option>{t('app.filterRepeatsPlaceholder')}</option>
+            <select
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+              value={filterRepeats}
+              disabled={!canEdit}
+              onChange={(e) =>
+                setFilterRepeats(e.target.value as 'all' | 'recurring' | 'nonRecurring')
+              }
+            >
+              <option value="all">{t('app.filterRepeatsAll')}</option>
+              <option value="recurring">{t('app.filterRepeatsRecurring')}</option>
+              <option value="nonRecurring">{t('app.filterRepeatsNonRecurring')}</option>
             </select>
           </label>
         </div>
         <p className="mt-3 text-xs leading-relaxed text-zinc-500">{informerLine}</p>
       </div>
+
+      <div className="mb-6 flex flex-col gap-3">
+        <button
+          type="button"
+          disabled={!canEdit}
+          className="w-full max-w-lg rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+          onClick={() => {
+            setResumeDraft(null)
+            setCreateOpen(true)
+          }}
+        >
+          {t('app.openCreateTask')}
+        </button>
+
+        {vault.drafts.length > 0 ? (
+          <section className="max-w-lg rounded-lg border border-amber-900/40 bg-amber-950/20 p-3">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-200/90">
+              {t('app.draftsTitle')}
+            </h3>
+            <ul className="flex flex-col gap-2">
+              {vault.drafts.map((d) => (
+                <li
+                  key={d.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm"
+                >
+                  <span className="min-w-0 flex-1 truncate text-zinc-200">
+                    {d.title.trim() ? d.title : t('app.draftUntitled')}
+                  </span>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      type="button"
+                      disabled={!canEdit}
+                      className="rounded border border-emerald-800 px-2 py-1 text-xs text-emerald-300 hover:bg-emerald-950/50 disabled:opacity-40"
+                      onClick={() => {
+                        setResumeDraft(d)
+                        setCreateOpen(true)
+                      }}
+                    >
+                      {t('app.draftContinue')}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!canEdit}
+                      className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
+                      onClick={() => void deleteDraft(d.id)}
+                    >
+                      {t('common.delete')}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </div>
+
+      <CreateTaskModal
+        open={createOpen}
+        selectedDayKey={selectedDay}
+        resumeDraft={resumeDraft}
+        groups={vault.groups}
+        priorityLabels={vault.priorityLabels}
+        defaultGroupId={filterGroupId !== 'all' ? filterGroupId : DEFAULT_GROUP_ID}
+        canEdit={canEdit}
+        onClose={() => {
+          setCreateOpen(false)
+          setResumeDraft(null)
+        }}
+        onSave={async (input, opts) => {
+          await createTask(input)
+          if (opts.removeDraftId) await deleteDraft(opts.removeDraftId)
+        }}
+        onPersistDraft={(d) => upsertDraft(d)}
+      />
 
       {view === 'day' && (
         <>
@@ -359,47 +482,6 @@ function AppPageInner() {
               {t('app.today')}
             </button>
           </div>
-
-          <form
-            className="mb-6 flex flex-col gap-2"
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (!canEdit) return
-              void addTask(title, {
-                groupId: filterGroupId !== 'all' ? filterGroupId : undefined,
-                scheduledLocalDate: addToBacklog ? null : selectedDay,
-              }).then(() => {
-                setTitle('')
-                setAddToBacklog(false)
-              })
-            }}
-          >
-            <div className="flex gap-2">
-              <input
-                className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-emerald-500/80 disabled:opacity-50"
-                placeholder={remoteHydrated ? t('app.newTask') : t('app.waitLoad')}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={!canEdit}
-              />
-              <button
-                type="submit"
-                disabled={!canEdit}
-                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-40"
-              >
-                {t('common.add')}
-              </button>
-            </div>
-            <label className="flex cursor-pointer items-center gap-2 text-xs text-zinc-500">
-              <input
-                type="checkbox"
-                checked={addToBacklog}
-                disabled={!canEdit}
-                onChange={(e) => setAddToBacklog(e.target.checked)}
-              />
-              {t('app.addToBacklog')}
-            </label>
-          </form>
 
           <section className="mb-8">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -561,6 +643,7 @@ function AppPageInner() {
           priorityLabels={vault.priorityLabels}
           selectedDayKey={selectedDay}
           canEdit={canEdit}
+          onApplyTaskPatch={(patch) => void patchTask(editingTask.id, patch)}
           onClose={() => setEditId(null)}
           onRemove={() => void removeTask(editingTask.id)}
           onSetColor={(key) => void setTaskColor(editingTask.id, key)}

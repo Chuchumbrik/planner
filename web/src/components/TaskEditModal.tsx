@@ -1,7 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ColorPalette } from '@/components/ColorPalette'
-import type { PriorityLabels, Task, TaskColorKey, TaskTimeMode } from '@/vault/types'
+import { parseLocalDateKey } from '@/lib/localDate'
+import type {
+  PriorityLabels,
+  RecurrenceRule,
+  Task,
+  TaskColorKey,
+  TaskTimeMode,
+} from '@/vault/types'
 import { PRIORITY_RANKS } from '@/vault/types'
 
 function minutesToTimeInput(m: number): string {
@@ -21,12 +28,48 @@ function timeInputToMinutes(v: string): number | null {
   return total
 }
 
+type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
+
+function recurrenceUiKind(task: Task): RecurrenceUiKind {
+  const r = task.recurrence
+  if (!r) return 'none'
+  if (r.kind === 'daily') return 'daily'
+  if (r.kind === 'everyNDays') return 'everyNDays'
+  return 'weekly'
+}
+
+function toggleWeekday(set: number[], d: number): number[] {
+  const has = set.includes(d)
+  if (has) return set.filter((x) => x !== d)
+  return [...set, d].sort((a, b) => a - b)
+}
+
+function buildRecurrenceRule(
+  kind: RecurrenceUiKind,
+  everyNDays: number,
+  weekdays: number[],
+): RecurrenceRule | null {
+  if (kind === 'none') return null
+  if (kind === 'daily') return { kind: 'daily' }
+  if (kind === 'everyNDays')
+    return { kind: 'everyNDays', n: Math.max(1, Math.floor(everyNDays)) }
+  const wd = [...new Set(weekdays.filter((x) => x >= 0 && x <= 6))].sort((a, b) => a - b)
+  if (wd.length === 0) return null
+  return { kind: 'weekly', weekdays: wd }
+}
+
+function defaultWeekdayFromKey(dateKey: string): number[] {
+  const dt = parseLocalDateKey(dateKey)
+  return dt ? [dt.getDay()] : [1]
+}
+
 type Props = {
   task: Task
   groups: { id: string; name: string; sortOrder: number }[]
   priorityLabels: PriorityLabels
   selectedDayKey: string
   canEdit: boolean
+  onApplyTaskPatch: (patch: Partial<Task>) => void
   onClose: () => void
   onRemove: () => void
   onSetColor: (key: TaskColorKey) => void
@@ -47,6 +90,7 @@ export function TaskEditModal({
   priorityLabels,
   selectedDayKey,
   canEdit,
+  onApplyTaskPatch,
   onClose,
   onRemove,
   onSetColor,
@@ -72,7 +116,46 @@ export function TaskEditModal({
       : '',
   )
 
+  const [everyNDaysDraft, setEveryNDaysDraft] = useState(
+    task.recurrence?.kind === 'everyNDays' ? task.recurrence.n : 2,
+  )
+
+  useEffect(() => {
+    if (task.recurrence?.kind === 'everyNDays') setEveryNDaysDraft(task.recurrence.n)
+  }, [task])
+
   const sortedGroups = [...groups].sort((a, b) => a.sortOrder - b.sortOrder)
+
+  const anchorBase =
+    task.recurrenceAnchorLocalDate ?? task.scheduledLocalDate ?? selectedDayKey
+
+  function pushRecurrencePatch(
+    kind: RecurrenceUiKind,
+    opts?: { everyN?: number; weekdays?: number[] },
+  ) {
+    let everyN =
+      opts?.everyN ??
+      (kind === 'everyNDays' && task.recurrence?.kind === 'everyNDays'
+        ? task.recurrence.n
+        : everyNDaysDraft)
+    if (kind === 'everyNDays') everyN = Math.max(1, Math.floor(everyN))
+
+    let wd =
+      opts?.weekdays ??
+      (task.recurrence?.kind === 'weekly' ? [...task.recurrence.weekdays] : [])
+    if (kind === 'weekly' && wd.length === 0) wd = defaultWeekdayFromKey(anchorBase)
+
+    const rule = buildRecurrenceRule(kind, kind === 'everyNDays' ? everyN : 2, wd)
+    if (!rule) {
+      void onApplyTaskPatch({ recurrence: null, recurrenceAnchorLocalDate: null })
+      return
+    }
+    const anchor = anchorBase || selectedDayKey
+    void onApplyTaskPatch({
+      recurrence: rule,
+      recurrenceAnchorLocalDate: anchor,
+    })
+  }
 
   function requestRemove() {
     if (task.checklist.length > 0) {
@@ -219,6 +302,93 @@ export function TaskEditModal({
           >
             {t('app.planForSelectedDay', { date: selectedDayKey })}
           </button>
+        </fieldset>
+
+        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
+          <legend className="px-1 text-xs text-zinc-500">{t('app.recurrenceSection')}</legend>
+          <select
+            className="mb-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            value={recurrenceUiKind(task)}
+            disabled={!canEdit}
+            onChange={(e) => {
+              const k = e.target.value as RecurrenceUiKind
+              pushRecurrencePatch(k)
+            }}
+          >
+            <option value="none">{t('app.recurrenceNone')}</option>
+            <option value="daily">{t('app.recurrenceDaily')}</option>
+            <option value="everyNDays">{t('app.recurrenceEveryNDays')}</option>
+            <option value="weekly">{t('app.recurrenceWeekly')}</option>
+          </select>
+
+          {task.recurrence?.kind === 'everyNDays' && (
+            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.everyNDaysLabel')}</span>
+              <input
+                type="number"
+                min={1}
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                value={everyNDaysDraft}
+                disabled={!canEdit}
+                onChange={(e) => {
+                  const n = Math.max(1, Number(e.target.value) || 1)
+                  setEveryNDaysDraft(n)
+                  pushRecurrencePatch('everyNDays', { everyN: n })
+                }}
+              />
+            </label>
+          )}
+
+          {task.recurrence?.kind === 'weekly' && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {[
+                { d: 1, label: t('app.weekdayMon') },
+                { d: 2, label: t('app.weekdayTue') },
+                { d: 3, label: t('app.weekdayWed') },
+                { d: 4, label: t('app.weekdayThu') },
+                { d: 5, label: t('app.weekdayFri') },
+                { d: 6, label: t('app.weekdaySat') },
+                { d: 0, label: t('app.weekdaySun') },
+              ].map(({ d, label }) => (
+                <button
+                  key={d}
+                  type="button"
+                  disabled={!canEdit}
+                  className={`rounded border px-2 py-1 text-[11px] disabled:opacity-40 ${
+                    task.recurrence?.kind === 'weekly' && task.recurrence.weekdays.includes(d)
+                      ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
+                      : 'border-zinc-700 text-zinc-500'
+                  }`}
+                  onClick={() => {
+                    if (task.recurrence?.kind !== 'weekly') return
+                    const next = toggleWeekday([...task.recurrence.weekdays], d)
+                    pushRecurrencePatch('weekly', { weekdays: next })
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {task.recurrence && (
+            <label className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.recurrenceAnchor')}</span>
+              <input
+                type="date"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                disabled={!canEdit}
+                value={task.recurrenceAnchorLocalDate ?? anchorBase}
+                onChange={(e) => {
+                  const v = e.target.value
+                  if (!task.recurrence) return
+                  void onApplyTaskPatch({
+                    recurrenceAnchorLocalDate: v || null,
+                  })
+                }}
+              />
+            </label>
+          )}
         </fieldset>
 
         <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
