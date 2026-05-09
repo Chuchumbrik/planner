@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ColorPalette } from '@/components/ColorPalette'
+import { LocalDatePickerField } from '@/components/LocalDatePickerField'
+import {
+  TASK_COLOR_HEX,
+  TASK_COLOR_KEYS,
+  nearestTaskColorKey,
+  parseColorInput,
+} from '@/vault/colors'
 import type {
   CreateTaskInput,
   PriorityLabels,
@@ -35,6 +41,8 @@ type Snapshot = {
   title: string
   groupId: string
   colorKey: TaskColorKey
+  /** Поле ввода HEX / отображение для пипетки */
+  colorHexInput: string
   priorityRank: number
   backlogOnly: boolean
   scheduledLocalDate: string | null
@@ -57,6 +65,7 @@ function snapshotFromDraft(d: TaskDraft, fallbackDay: string): Snapshot {
     title: d.title,
     groupId: d.groupId,
     colorKey: d.colorKey,
+    colorHexInput: TASK_COLOR_HEX[d.colorKey] ?? TASK_COLOR_HEX.zinc,
     priorityRank: d.priorityRank,
     backlogOnly: d.scheduledLocalDate === null,
     scheduledLocalDate: d.scheduledLocalDate,
@@ -76,6 +85,7 @@ function emptySnapshot(selectedDayKey: string, groupId: string): Snapshot {
     title: '',
     groupId,
     colorKey: 'zinc',
+    colorHexInput: TASK_COLOR_HEX.zinc,
     priorityRank: 3,
     backlogOnly: false,
     scheduledLocalDate: selectedDayKey,
@@ -146,6 +156,15 @@ export function CreateTaskModal({
   )
 
   const sortedGroups = useMemo(() => [...groups].sort((a, b) => a.sortOrder - b.sortOrder), [groups])
+
+  const colorPickerValue = useMemo(() => {
+    const rgb = parseColorInput(snap.colorHexInput)
+    if (rgb) {
+      const h = (n: number) => n.toString(16).padStart(2, '0')
+      return `#${h(rgb.r)}${h(rgb.g)}${h(rgb.b)}`
+    }
+    return TASK_COLOR_HEX[snap.colorKey]
+  }, [snap.colorHexInput, snap.colorKey])
 
   useEffect(() => {
     if (!open) return
@@ -302,13 +321,75 @@ export function CreateTaskModal({
           />
         </label>
 
-        <div className="mt-4">
-          <ColorPalette
-            label={t('app.color')}
-            value={snap.colorKey}
-            canEdit={canEdit}
-            onChange={(key) => setSnap((s) => ({ ...s, colorKey: key }))}
-          />
+        <div className="mt-4 space-y-2">
+          <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            <span>{t('app.color')}</span>
+            <select
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              value={snap.colorKey}
+              disabled={!canEdit}
+              onChange={(e) => {
+                const key = e.target.value as TaskColorKey
+                setSnap((s) => ({
+                  ...s,
+                  colorKey: key,
+                  colorHexInput: TASK_COLOR_HEX[key],
+                }))
+              }}
+            >
+              {TASK_COLOR_KEYS.map((key) => (
+                <option key={key} value={key}>
+                  {t(`app.colorName.${key}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.colorHexInput')}</span>
+              <input
+                type="text"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 disabled:opacity-40"
+                placeholder="#RRGGBB · rgb(…)"
+                value={snap.colorHexInput}
+                disabled={!canEdit}
+                onChange={(e) => {
+                  const v = e.target.value
+                  const rgb = parseColorInput(v)
+                  setSnap((s) => ({
+                    ...s,
+                    colorHexInput: v,
+                    colorKey: rgb ? nearestTaskColorKey(rgb) : s.colorKey,
+                  }))
+                }}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.colorPickerNative')}</span>
+              <input
+                type="color"
+                className="h-[38px] w-14 cursor-pointer rounded border border-zinc-700 bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
+                value={colorPickerValue}
+                disabled={!canEdit}
+                title={t('app.colorPickerNative')}
+                onChange={(e) => {
+                  const hex = e.target.value
+                  const rgb = parseColorInput(hex)
+                  if (rgb) {
+                    const key = nearestTaskColorKey(rgb)
+                    setSnap((s) => ({
+                      ...s,
+                      colorKey: key,
+                      colorHexInput: hex,
+                    }))
+                  }
+                }}
+              />
+            </label>
+          </div>
+          <p className="text-[10px] leading-snug text-zinc-600">
+            {t('app.colorHexHint', { name: t(`app.colorName.${snap.colorKey}`) })}
+          </p>
         </div>
 
         <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
@@ -362,25 +443,25 @@ export function CreateTaskModal({
             />
             {t('app.addToBacklog')}
           </label>
-          {!snap.backlogOnly && (
-            <label className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.plannedDate')}</span>
-              <input
-                type="date"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-                disabled={!canEdit}
-                value={snap.scheduledLocalDate ?? ''}
-                onChange={(e) => {
-                  const v = e.target.value
+          {!snap.backlogOnly ? (
+            <div className="mt-2">
+              <LocalDatePickerField
+                label={t('app.plannedDate')}
+                value={snap.scheduledLocalDate}
+                onChange={(v) =>
                   setSnap((s) => ({
                     ...s,
-                    scheduledLocalDate: v === '' ? null : v,
-                    anchorLocalDate: s.recurrenceKind !== 'none' ? v || s.anchorLocalDate : s.anchorLocalDate,
+                    scheduledLocalDate: v,
+                    anchorLocalDate:
+                      s.recurrenceKind !== 'none'
+                        ? v || s.anchorLocalDate
+                        : s.anchorLocalDate,
                   }))
-                }}
+                }
+                disabled={!canEdit}
               />
-            </label>
-          )}
+            </div>
+          ) : null}
         </fieldset>
 
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
@@ -448,18 +529,21 @@ export function CreateTaskModal({
             </div>
           )}
 
-          {snap.recurrenceKind !== 'none' && (
-            <label className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.recurrenceAnchor')}</span>
-              <input
-                type="date"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-                disabled={!canEdit}
+          {snap.recurrenceKind !== 'none' ? (
+            <div className="mt-2">
+              <LocalDatePickerField
+                label={t('app.recurrenceAnchor')}
                 value={snap.anchorLocalDate}
-                onChange={(e) => setSnap((s) => ({ ...s, anchorLocalDate: e.target.value }))}
+                onChange={(v) =>
+                  setSnap((s) => ({
+                    ...s,
+                    anchorLocalDate: v ?? s.scheduledLocalDate ?? selectedDayKey,
+                  }))
+                }
+                disabled={!canEdit}
               />
-            </label>
-          )}
+            </div>
+          ) : null}
         </fieldset>
 
         <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">

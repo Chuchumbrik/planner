@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
@@ -17,7 +17,7 @@ import {
 import { localDateKey, parseLocalDateKey, shiftLocalDateKey } from '@/lib/localDate'
 import { taskOccursOnDate } from '@/lib/recurrence'
 import { maxOverlapWithOthers, withTaskPatch } from '@/lib/timeblocking'
-import type { PriorityRank, Task, TaskDraft } from '@/vault/types'
+import type { PriorityRank, Task, TaskColorKey, TaskDraft } from '@/vault/types'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS } from '@/vault/types'
 import { useVault } from '@/vault/VaultProvider'
 
@@ -60,9 +60,11 @@ function taskMatchesFilters(
   task: Task,
   filterGroupId: string | 'all',
   priorityEnabled: Set<PriorityRank>,
+  filterColor: TaskColorKey | 'all',
 ): boolean {
   if (filterGroupId !== 'all' && task.groupId !== filterGroupId) return false
   if (!priorityEnabled.has(task.priorityRank)) return false
+  if (filterColor !== 'all' && task.colorKey !== filterColor) return false
   return true
 }
 
@@ -116,10 +118,12 @@ function AppPageInner() {
   const [filterRepeats, setFilterRepeats] = useState<'all' | 'recurring' | 'nonRecurring'>(
     'all',
   )
+  const [filterColor, setFilterColor] = useState<TaskColorKey | 'all'>('all')
   const [priorityEnabled, setPriorityEnabled] = useState(
     () => new Set<PriorityRank>(PRIORITY_RANKS),
   )
   const [editId, setEditId] = useState<string | null>(null)
+  const [filtersPanelOpen, setFiltersPanelOpen] = useState(false)
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
@@ -138,14 +142,29 @@ function AppPageInner() {
     [vault.groups],
   )
 
+  /** Цвета меток, которые реально есть у задач в vault */
+  const taskColorKeysInUse = useMemo(() => {
+    const set = new Set<TaskColorKey>()
+    for (const x of vault.tasks) {
+      set.add(x.colorKey)
+    }
+    return [...set].sort((a, b) => a.localeCompare(b))
+  }, [vault.tasks])
+
+  useEffect(() => {
+    if (filterColor !== 'all' && !taskColorKeysInUse.includes(filterColor)) {
+      setFilterColor('all')
+    }
+  }, [filterColor, taskColorKeysInUse])
+
   const filteredVaultTasks = useMemo(
     () =>
       vault.tasks.filter(
         (x) =>
-          taskMatchesFilters(x, filterGroupId, priorityEnabled) &&
+          taskMatchesFilters(x, filterGroupId, priorityEnabled, filterColor) &&
           passesRepeatFilter(x, filterRepeats),
       ),
-    [vault.tasks, filterGroupId, priorityEnabled, filterRepeats],
+    [vault.tasks, filterGroupId, priorityEnabled, filterColor, filterRepeats],
   )
 
   const plannedForDay = useMemo(() => {
@@ -215,6 +234,15 @@ function AppPageInner() {
     setPriorityEnabled(new Set(PRIORITY_RANKS))
   }
 
+  const priorityFilterSummary = useMemo(() => {
+    if (priorityEnabled.size === PRIORITY_RANKS.length) {
+      return t('app.filterPrioritiesDropdownAll')
+    }
+    return PRIORITY_RANKS.filter((r) => priorityEnabled.has(r))
+      .map((r) => vault.priorityLabels[r])
+      .join(', ')
+  }, [priorityEnabled, vault.priorityLabels, t])
+
   const informerLine = useMemo(() => {
     const parts: string[] = []
     if (filterGroupId === 'all') {
@@ -234,6 +262,13 @@ function AppPageInner() {
         }),
       )
     }
+    if (filterColor !== 'all') {
+      parts.push(
+        t('app.informerColor', {
+          name: t(`app.colorName.${filterColor}`),
+        }),
+      )
+    }
     if (filterRepeats === 'all') {
       parts.push(t('app.informerRepeatsAll'))
     } else if (filterRepeats === 'recurring') {
@@ -244,6 +279,7 @@ function AppPageInner() {
     return parts.join(' · ')
   }, [
     filterGroupId,
+    filterColor,
     filterRepeats,
     vault.groups,
     vault.priorityLabels,
@@ -307,88 +343,145 @@ function AppPageInner() {
         </div>
       )}
 
-      <div className="mb-4 rounded-lg border border-zinc-800 bg-zinc-900/30 p-3">
-        <p className="mb-2 text-xs font-medium text-zinc-400">{t('app.filtersTitle')}</p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('app.group')}</span>
-            <select
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
-              value={filterGroupId}
-              disabled={!canEdit}
-              onChange={(e) =>
-                setFilterGroupId(e.target.value === 'all' ? 'all' : e.target.value)
-              }
-            >
-              <option value="all">{t('app.filterAllGroups')}</option>
-              {sortedGroups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-          </label>
+      <div className="mb-6 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <button
+            type="button"
+            disabled={!canEdit}
+            aria-expanded={filtersPanelOpen}
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40"
+            onClick={() => setFiltersPanelOpen((v) => !v)}
+          >
+            {t('app.filterToggle')}
+            <span className="text-zinc-500" aria-hidden>
+              {filtersPanelOpen ? '▴' : '▾'}
+            </span>
+          </button>
+          <button
+            type="button"
+            disabled={!canEdit}
+            className="inline-flex shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+            onClick={() => {
+              setResumeDraft(null)
+              setCreateOpen(true)
+            }}
+          >
+            {t('app.openCreateTask')}
+          </button>
+        </div>
 
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-zinc-500">{t('app.filterPriorities')}</span>
-            <div className="flex flex-wrap gap-1">
-              {PRIORITY_RANKS.map((r) => (
-                <button
-                  key={r}
-                  type="button"
+        {filtersPanelOpen ? (
+          <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 p-3 shadow-inner">
+            <p className="mb-3 text-xs font-medium text-zinc-400">{t('app.filtersTitle')}</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+                <span>{t('app.group')}</span>
+                <select
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  value={filterGroupId}
                   disabled={!canEdit}
-                  className={`rounded border px-2 py-1 text-xs disabled:opacity-40 ${
-                    priorityEnabled.has(r)
-                      ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                      : 'border-zinc-700 text-zinc-500 line-through'
-                  }`}
-                  onClick={() => togglePriority(r)}
+                  onChange={(e) =>
+                    setFilterGroupId(e.target.value === 'all' ? 'all' : e.target.value)
+                  }
                 >
-                  {vault.priorityLabels[r]}
-                </button>
-              ))}
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="rounded border border-zinc-600 px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-800 disabled:opacity-40"
-                onClick={() => selectAllPriorities()}
-              >
-                {t('app.filterPrioritiesAllShort')}
-              </button>
+                  <option value="all">{t('app.filterAllGroups')}</option>
+                  {sortedGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="flex min-w-[11rem] flex-col gap-1 text-xs text-zinc-500">
+                <span>{t('app.filterPriorities')}</span>
+                <details className="relative">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white [&::-webkit-details-marker]:hidden">
+                    <span className="min-w-0 flex-1 truncate">{priorityFilterSummary}</span>
+                    <span className="shrink-0 text-zinc-500" aria-hidden>
+                      ▾
+                    </span>
+                  </summary>
+                  <div
+                    className="absolute left-0 top-full z-30 mt-1 min-w-[14rem] rounded-lg border border-zinc-700 bg-zinc-950 p-2 shadow-xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
+                      {PRIORITY_RANKS.map((r) => (
+                        <label
+                          key={r}
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={priorityEnabled.has(r)}
+                            disabled={!canEdit}
+                            onChange={() => togglePriority(r)}
+                            className="h-3.5 w-3.5 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                          />
+                          <span>{vault.priorityLabels[r]}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!canEdit}
+                      className="mt-2 w-full rounded border border-zinc-700 px-2 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
+                      onClick={() => selectAllPriorities()}
+                    >
+                      {t('app.filterPrioritiesAllShort')}
+                    </button>
+                  </div>
+                </details>
+              </div>
+
+              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+                <span>{t('app.filterColor')}</span>
+                <select
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  value={filterColor}
+                  disabled={!canEdit}
+                  onChange={(e) =>
+                    setFilterColor(
+                      e.target.value === 'all' ? 'all' : (e.target.value as TaskColorKey),
+                    )
+                  }
+                >
+                  <option value="all">{t('app.filterColorAll')}</option>
+                  {taskColorKeysInUse.map((key) => (
+                    <option key={key} value={key}>
+                      {t(`app.colorName.${key}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+                <span>{t('app.filterRepeats')}</span>
+                <select
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  value={filterRepeats}
+                  disabled={!canEdit}
+                  onChange={(e) =>
+                    setFilterRepeats(e.target.value as 'all' | 'recurring' | 'nonRecurring')
+                  }
+                >
+                  <option value="all">{t('app.filterRepeatsAll')}</option>
+                  <option value="recurring">{t('app.filterRepeatsRecurring')}</option>
+                  <option value="nonRecurring">{t('app.filterRepeatsNonRecurring')}</option>
+                </select>
+              </label>
             </div>
           </div>
+        ) : null}
 
-          <label className="flex flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('app.filterRepeats')}</span>
-            <select
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
-              value={filterRepeats}
-              disabled={!canEdit}
-              onChange={(e) =>
-                setFilterRepeats(e.target.value as 'all' | 'recurring' | 'nonRecurring')
-              }
-            >
-              <option value="all">{t('app.filterRepeatsAll')}</option>
-              <option value="recurring">{t('app.filterRepeatsRecurring')}</option>
-              <option value="nonRecurring">{t('app.filterRepeatsNonRecurring')}</option>
-            </select>
-          </label>
-        </div>
-        <p className="mt-3 text-xs leading-relaxed text-zinc-500">{informerLine}</p>
-      </div>
-
-      <div className="mb-6 flex flex-col gap-3">
-        <button
-          type="button"
-          disabled={!canEdit}
-          className="w-full max-w-lg rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
-          onClick={() => {
-            setResumeDraft(null)
-            setCreateOpen(true)
-          }}
+        <div
+          className="rounded-lg border border-cyan-800/55 bg-cyan-950/45 px-3 py-2 text-xs leading-relaxed text-cyan-100/95 shadow-sm"
+          role="status"
+          aria-live="polite"
         >
-          {t('app.openCreateTask')}
-        </button>
+          {informerLine}
+        </div>
 
         {vault.drafts.length > 0 ? (
           <section className="max-w-lg rounded-lg border border-amber-900/40 bg-amber-950/20 p-3">

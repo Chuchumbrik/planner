@@ -48,9 +48,9 @@ export function TaskMiniCard({
     <div
       className={`rounded-lg border border-zinc-800 bg-zinc-900/60 ${borderClass} border-l-4`}
     >
-      <div className="flex items-start gap-2 px-3 py-2.5">
+      <div className="flex items-start gap-2 px-3 py-2">
         <label
-          className={`flex flex-1 cursor-pointer items-start gap-3 ${blockCompleteMain && canEdit ? 'cursor-not-allowed' : ''}`}
+          className={`shrink-0 cursor-pointer pt-0.5 ${blockCompleteMain && canEdit ? 'cursor-not-allowed' : ''}`}
           title={blockCompleteMain ? t('app.completeParentAfterChecklist') : undefined}
           onClick={(e) => e.stopPropagation()}
         >
@@ -59,7 +59,8 @@ export function TaskMiniCard({
             checked={task.done}
             disabled={!canEdit || blockCompleteMain}
             onChange={() => onToggle()}
-            className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+            aria-label={t('app.toggleTaskDone')}
+            className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
           />
         </label>
         <button

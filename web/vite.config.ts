@@ -1,5 +1,7 @@
+import { execSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -8,10 +10,26 @@ import { defineConfig } from 'vite'
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json') as { version: string }
 
+const rootDir = path.dirname(fileURLToPath(import.meta.url))
+
+function gitShortSha(): string {
+  try {
+    return execSync('git rev-parse --short HEAD', {
+      encoding: 'utf-8',
+      cwd: rootDir,
+    }).trim()
+  } catch {
+    return 'nogit'
+  }
+}
+
+const gitShort = gitShortSha()
+
 // https://vite.dev/config/
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_GIT_SHORT__: JSON.stringify(gitShort),
   },
   plugins: [
     react(),

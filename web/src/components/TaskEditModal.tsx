@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ColorPalette } from '@/components/ColorPalette'
+import { LocalDatePickerField } from '@/components/LocalDatePickerField'
 import { parseLocalDateKey } from '@/lib/localDate'
 import type {
   PriorityLabels,
@@ -272,19 +273,13 @@ export function TaskEditModal({
 
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
-          <label className="flex flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('app.plannedDate')}</span>
-            <input
-              type="date"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-              disabled={!canEdit}
-              value={task.scheduledLocalDate ?? ''}
-              onChange={(e) => {
-                const v = e.target.value
-                void onSetScheduledLocalDate(v === '' ? null : v)
-              }}
-            />
-          </label>
+          <LocalDatePickerField
+            label={t('app.plannedDate')}
+            value={task.scheduledLocalDate}
+            onChange={(v) => void onSetScheduledLocalDate(v)}
+            disabled={!canEdit}
+            allowClear
+          />
           <p className="mt-2 text-xs text-zinc-600">{t('app.backlogHint')}</p>
           <button
             type="button"
@@ -371,24 +366,21 @@ export function TaskEditModal({
             </div>
           )}
 
-          {task.recurrence && (
-            <label className="mt-2 flex flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.recurrenceAnchor')}</span>
-              <input
-                type="date"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-                disabled={!canEdit}
+          {task.recurrence ? (
+            <div className="mt-2">
+              <LocalDatePickerField
+                label={t('app.recurrenceAnchor')}
                 value={task.recurrenceAnchorLocalDate ?? anchorBase}
-                onChange={(e) => {
-                  const v = e.target.value
+                onChange={(v) => {
                   if (!task.recurrence) return
                   void onApplyTaskPatch({
                     recurrenceAnchorLocalDate: v || null,
                   })
                 }}
+                disabled={!canEdit}
               />
-            </label>
-          )}
+            </div>
+          ) : null}
         </fieldset>
 
         <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
