@@ -1,6 +1,11 @@
 /**
  * Контент модалки «Краткая сводка»: дорожная карта, changelog по датам, идеи, открытые вопросы.
  * Редактируйте при появлении новых фич и изменений scope MVP.
+ *
+ * Перед коммитом (вместе с `web/README.md`): новые пользовательские изменения — блок в
+ * **RELEASE_NOTES_BLOCKS** (дата сверху); при смене scope — **IMPLEMENTED_MVP_PHASES** /
+ * **MVP_PHASES_PLANNED** / **IDEAS_LATER_ENTRIES**; проверить подсказки «Открытые вопросы»
+ * в локалях (`settings.roadmapOpenQuestion*`).
  */
 
 export type LocalizedString = { ru: string; en: string }
@@ -94,6 +99,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Vault drafts; on `/app` one draft — inline strip, several — “Drafts” button with count and list modal.',
       },
       {
+        ru: 'Вкладка «День»: рядом с планом — кольцо доли задач по плану на календарный день (та же логика, что ритуал EOD); на узком экране блок с диаграммой выше списка.',
+        en: 'Day tab: ring for share of planned-for-day tasks closed (same logic as EOD ritual); on narrow screens the chart stacks above the list.',
+      },
+      {
         ru: 'Настройки: названия приоритетов, CRUD групп, смена пароля Supabase. TaskEditModal — те же правила, что при создании (`taskScheduleValidation`).',
         en: 'Settings: priority labels, group CRUD, Supabase password change. TaskEditModal — same rules as create.',
       },
@@ -177,6 +186,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         ru: 'Дальнейшие улучшения тяжёлых расчётов (worker/батчи) — в плане вместе с стабилизацией отчётов.',
         en: 'Heavy-math improvements (worker/batches) — tracked with reports hardening in the plan.',
       },
+      {
+        ru: 'Иконки подсказок у KPI, гистограммы и таблиц: при наведении краткое описание метрик (нативный `title`).',
+        en: 'Hint icons on KPIs, histogram, and tables: hover shows short metric explanations (native `title`).',
+      },
     ],
   },
   {
@@ -213,6 +226,31 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-13', en: '2026-05-13' },
+    items: [
+      {
+        changes: [
+          {
+            ru: 'Вкладка «День»: кольцо прогресса выполнения плана на день (логика как в ритуале «Завершение дня»); на широком экране список слева, диаграмма справа.',
+            en: 'Day tab: progress ring for planned-for-day completion (same logic as End-of-day ritual); on wide screens list left, chart right.',
+          },
+          {
+            ru: 'Исправлено выравнивание списка задач на широком экране (`flex-row-reverse` + выравнивание группы влево).',
+            en: 'Fixed day-plan list alignment on wide screens (`flex-row-reverse` group aligned left).',
+          },
+          {
+            ru: 'Страница «Отчёты»: иконки подсказок у KPI, столбчатой диаграммы и таблиц провалов.',
+            en: 'Reports page: hint icons for KPIs, bar chart, and missed-task tables.',
+          },
+          {
+            ru: 'Документация `web/README.md`: перед коммитом обновлять сводку и модалку «Краткая сводка» (`productRoadmap.ts`).',
+            en: '`web/README.md`: commit checklist to refresh docs and Brief summary modal (`productRoadmap.ts`).',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
