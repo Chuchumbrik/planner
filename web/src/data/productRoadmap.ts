@@ -10,6 +10,8 @@ export type RoadmapMvpPhase = {
   id: number
   title: LocalizedString
   summary: LocalizedString
+  /** Опционально: то же простым языком (как в релиз-нотах). */
+  plain?: LocalizedString
   detailBullets: LocalizedString[]
 }
 
@@ -20,16 +22,21 @@ export type RoadmapIdeaEntry = {
   detailBullets?: LocalizedString[]
 }
 
-/** Короткие релиз-ноты для тестеров без доступа к GitHub (дата + пункты). */
+/** Один пункт релиз-нотов: что изменилось + то же очень простым языком. */
+export type RoadmapReleaseNoteItem = {
+  summary: LocalizedString
+  plain: LocalizedString
+}
+
+/** Релиз-ноты по датам для тестеров без доступа к GitHub. */
 export type RoadmapReleaseNoteBlock = {
   dateLabel: LocalizedString
-  items: LocalizedString[]
+  items: RoadmapReleaseNoteItem[]
 }
 
 /**
- * Фазы 0–6 по плану MVP — **уже в сборке** (фаза 6 — первая итерация EOD и связки отчётов;
- * DR-004 и полный набор анимаций — в `MVP_PHASES_PLANNED`). Номера совпадают с
- * `obsidian-motivator/17-План-реализации-MVP.md`.
+ * Фазы 0–6 по плану MVP — **уже в сборке** (фаза 6: ритуал EOD, отчётный стрик, **DR-004**
+ * и анимации мини-карточки). Номера совпадают с `obsidian-motivator/17-План-реализации-MVP.md`.
  */
 export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
   {
@@ -174,10 +181,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
   },
   {
     id: 6,
-    title: { ru: 'Ритуал End-of-Day (первая итерация)', en: 'End-of-Day ritual (first iteration)' },
+    title: { ru: 'EOD, DR-004 и анимации', en: 'EOD, DR-004 & motion' },
     summary: {
-      ru: 'Кнопка «Завершить день», модалка DR-002, vault **v6** (`eodCompletedLocalDates`, `eodPreferences`), чекбокс участия задачи в ритуале; полный стрик DR-013 в отчётах после EOD. Лёгкая позитивная анимация блока при завершении. **Остаётся по фазе 6:** DR-004 и минимум двух пар анимаций тона по ТЗ — в блоке «план».',
-      en: '“Finish day” button, DR-002 modal, vault **v6** (`eodCompletedLocalDates`, `eodPreferences`), per-task ritual toggle; full DR-013 streak in reports after EOD. Light positive motion on completion. **Still for phase 6:** DR-004 and two tone-pair animations per spec — see planned block.',
+      ru: 'Ритуал End-of-Day (vault **v6+**, `eodCompletedLocalDates`, `eodPreferences`), стрик DR-013 с датами завершения дня; **DR-004** — двойное подтверждение «сделано» (vault **v7**), таймеры по умолчанию (+10 / +30 мин), периодический сброс просрочки на клиенте; на мини-карточке — ожидание второго шага, отмена, короткие анимации успеха и мягкого «не засчитано».',
+      en: 'End-of-Day ritual (vault **v6+**, `eodCompletedLocalDates`, `eodPreferences`), DR-013 streak with finished-day marks; **DR-004** — double confirmation for “done” (vault **v7**), default timers (+10 / +30 min), client-side expiry sweep; mini card shows second-step wait, cancel, brief success vs gentle-miss motion.',
     },
     detailBullets: [
       {
@@ -189,8 +196,12 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Tied to reports (phase 5): DR-013 streak uses EOD dates.',
       },
       {
-        ru: 'Задел под роли (`motivatorRole`, `app_metadata.motivator_role`) без ограничений UI — см. план фазы 7.',
-        en: 'Role hooks (`motivatorRole`, `app_metadata.motivator_role`) without UI gating — see phase 7 plan.',
+        ru: 'DR-004: создание и редактирование задачи, второй клик по чекбоксу в пределах окна; истечение без ответа снимает ожидание без записи выполнения.',
+        en: 'DR-004: create/edit task; second checkbox tap within the window; expiry without response clears pending without recording completion.',
+      },
+      {
+        ru: 'Задел под роли (`motivatorRole`, `app_metadata.motivator_role`) без ограничений UI — см. план фазы 8.',
+        en: 'Role hooks (`motivatorRole`, `app_metadata.motivator_role`) without UI gating — see phase 8 plan.',
       },
     ],
   },
@@ -202,24 +213,54 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
       {
-        ru: 'Версия продукта **0.6.1** (`package.json`): схема **`0·x·y`**, четвёртый слой — **`+git`**; ведущий **0** ≠ «только MVP» (см. `web/README.md`).',
-        en: 'Product version **0.6.1** (`package.json`): **`0·x·y`** scheme, fourth layer is **`+git`**; leading **0** ≠ “MVP-only” (see `web/README.md`).',
+        summary: {
+          ru: 'Версия продукта **0.6.1** (`package.json`): схема **`0·x·y`**, четвёртый слой — **`+git`**; ведущий **0** ≠ «только MVP» (см. `web/README.md`).',
+          en: 'Product version **0.6.1** (`package.json`): **`0·x·y`** scheme, fourth layer is **`+git`**; leading **0** ≠ “MVP-only” (see `web/README.md`).',
+        },
+        plain: {
+          ru: 'У программы есть «номер версии» — как имя у игрушки, чтобы не перепутать старые и новые. Первая цифра **0** не значит, что приложение плохое: мы просто ещё не дошли до большого «первого» официального выпуска **1.0.0**. К номеру приписывают короткий код из букв и цифр — чтобы знать, из какой коробки собрали эту копию.',
+          en: 'The app has a **version number** — like a nametag so we don’t mix old and new builds. The first digit **0** doesn’t mean the app is bad; we just haven’t reached the big **1.0.0** birthday yet. A short letter-number code is added so we know which “box” this copy came from.',
+        },
       },
       {
-        ru: 'Модалка дорожной карты: фазы **0–6** в «реализовано»; остаток фазы 6 (DR-004, анимации по ТЗ) — в «плане».',
-        en: 'Roadmap modal: phases **0–6** under shipped; remainder of phase 6 (DR-004, spec animations) — under planned.',
+        summary: {
+          ru: 'Модалка дорожной карты: фазы **0–6** в «реализовано» (включая DR-004 и анимации карточки); дальше — план фаз **7–11**.',
+          en: 'Roadmap modal: phases **0–6** shipped (including DR-004 and card motion); next — phases **7–11** in the plan.',
+        },
+        plain: {
+          ru: 'В настройках есть окошко «Что сделано и планы»: один список — уже построили от фундамента до шестого шага (в том числе двойное подтверждение задач и подмигивания на карточке), второй — что запланировано дальше до большого релиза.',
+          en: 'In settings there’s a window “Shipped & plans”: one list is what we built from foundation through phase six (including double-check for tasks and gentle card motion), the other is what’s planned next toward the big release.',
+        },
       },
       {
-        ru: 'Отчёты `/app/reports`: график отметок, KPI, стрик DR-013 с EOD, таблицы «часто проваленные» по DR-008.',
-        en: '`/app/reports`: completion chart, KPI, DR-013 streak with EOD, often-missed tables (DR-008).',
+        summary: {
+          ru: 'Отчёты `/app/reports`: график отметок, KPI, стрик DR-013 с EOD, таблицы «часто проваленные» по DR-008.',
+          en: '`/app/reports`: completion chart, KPI, DR-013 streak with EOD, often-missed tables (DR-008).',
+        },
+        plain: {
+          ru: 'Есть страничка «Отчёты»: там картинка-график, сколько дней ты отмечал дела, и «сколько дней подряд получалось». Если ты нажал «день закончен», это помогает считать серию верно. Есть ещё списки «что часто забывалось» — как напоминание, над чем поработать.',
+          en: 'There’s a **Reports** page: a little chart, how many days you checked things off, and a “how many days in a row” score. If you tap **day finished**, it counts your streak fairly. There are also lists of “often missed” items — like gentle reminders what to work on.',
+        },
       },
       {
-        ru: 'Создание задачи: янтарная подсказка обязательных полей; черновики — одна секция или кнопка «Черновики» с модалкой; форма не сбрасывается при смене дня/фильтра.',
-        en: 'Create task: amber required-field hints; drafts — inline strip or “Drafts” button with modal; form persists when changing day/filter.',
+        summary: {
+          ru: 'Создание задачи: янтарная подсказка обязательных полей; черновики — одна секция или кнопка «Черновики» с модалкой; форма не сбрасывается при смене дня/фильтра.',
+          en: 'Create task: amber required-field hints; drafts — inline strip or “Drafts” button with modal; form persists when changing day/filter.',
+        },
+        plain: {
+          ru: 'Когда ты создаёшь новое дело, программа жёлтым подсказывает, что нужно заполнить обязательно. Если ты начал и закрыл окно не сохранив — можно вернуться к черновику (один показывается сразу, много — по кнопке «Черновики»). Если ты просто переключил день или фильтр, то то, что ты уже набрал, не пропадает само.',
+          en: 'When you make a new task, hints in amber show what you must fill in. If you started and closed without saving, you can come back to a draft (one shows inline; many drafts open from a **Drafts** button). If you only switch the day or filter, what you typed doesn’t vanish.',
+        },
       },
       {
-        ru: 'Неделя и карточки: полоска цвета через HEX палитры; время в селектах часы/минуты; чек-лист — новые пункты в конец списка.',
-        en: 'Week & cards: color stripe via palette hex; time as hour/minute selects; checklist appends new items to the end.',
+        summary: {
+          ru: 'Неделя и карточки: полоска цвета через HEX палитры; время в селектах часы/минуты; чек-лист — новые пункты в конец списка.',
+          en: 'Week & cards: color stripe via palette hex; time as hour/minute selects; checklist appends new items to the end.',
+        },
+        plain: {
+          ru: 'В неделе у задач есть цветная полоска слева — цвет не теряется. Время выбирают двумя маленькими списками: часы и минуты. В чек-листе новые пункты всегда добавляются вниз — как новые строчки в конце списка покупок.',
+          en: 'In the week view, tasks have a colored stripe on the side — the color stays put. Time is picked with two small lists: hours and minutes. New checklist lines always go at the bottom — like new lines at the end of a shopping list.',
+        },
       },
     ],
   },
@@ -227,35 +268,55 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
 
 /**
  * Оставшийся охват до 1.0.0 (источник — `obsidian-motivator/17-План-реализации-MVP.md`).
- * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — **остаток фазы 6** и фазы 7–10.
+ * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — фазы **7–11**.
  */
 export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   {
-    id: 6,
-    title: { ru: 'Фаза 6 — остаток: DR-004 и анимации', en: 'Phase 6 — remainder: DR-004 & animations' },
+    id: 7,
+    title: { ru: 'Дизайн и адаптивность', en: 'Design & responsiveness' },
     summary: {
-      ru: 'Первая итерация EOD уже в сборке. Остаётся: **двойное подтверждение** по правилам задачи (**DR-004**) и **минимум двух пар** анимаций тона (успех / мягко при «не сделал») по ТЗ.',
-      en: 'EOD first iteration is shipped. Still to do: task **double confirmation** (**DR-004**) and **at least two pairs** of tone animations (success / gentle “not done”) per spec.',
+      ru: 'Проработка визуального слоя и макета: единый стиль, типографика и отступы; комфорт на **широких экранах** (сетка, использование ширины, читаемые колонки); полировка под **мобильные** и узкие окна (touch, навигация, модалки и формы без горизонтального скролла).',
+      en: 'Visual and layout pass: cohesive styling, typography, spacing; **wide-screen** treatment (grid, width usage, readable columns); polish for **mobile** and narrow viewports (touch targets, navigation, modals/forms without sideways scroll).',
+    },
+    plain: {
+      ru: 'Сделать интерфейс не только рабочим, но и аккуратным: чтобы на большом мониторе не было пустоты «узкой колонкой посередине без смысла» и чтобы на телефоне всё можно было нажать пальцем и прочитать без прищуривания. Это отдельный заход до финального MVP — после того как функции уже живут в приложении.',
+      en: 'Make the UI not only functional but tidy: on a large monitor avoid an accidental “tiny strip in the middle,” and on a phone keep taps comfortable and text readable. A dedicated pass before the MVP finish line — after core features already exist.',
     },
     detailBullets: [
       {
-        ru: 'DR-004 не смешивать с первой итерацией EOD — отдельный UX-поток.',
-        en: 'Keep DR-004 separate from the first EOD iteration — dedicated UX flow.',
+        ru: 'Аудит ключевых экранов (`/app`, неделя, месяц, отчёты, настройки): брейкпоинты Tailwind, предсказуемые отступы и иерархия заголовков.',
+        en: 'Audit core screens (`/app`, week, month, reports, settings): Tailwind breakpoints, consistent spacing and heading hierarchy.',
       },
       {
-        ru: 'При необходимости — доработка состава задач ритуала и КПТ-банка под финальную модель.',
-        en: 'Optional: refine ritual task set and CPT bank for the final model.',
+        ru: 'Широкие вьюпорты: осмысленное использование ширины (например вторичные колонки, ограничение `max-width`, выравнивание панелей), без поломки текущих сценариев.',
+        en: 'Large viewports: purposeful use of width (e.g. secondary columns, sensible `max-width`, panel alignment) without breaking existing flows.',
+      },
+      {
+        ru: 'Мобильные и тач: минимальные размеры зон нажатия, безопасные отступы от краёв, прокрутка модалок и длинных форм, проверка в PWA.',
+        en: 'Mobile & touch: minimum tap targets, safe area padding, modal/long-form scrolling, smoke-test in PWA.',
+      },
+      {
+        ru: 'Согласовать с существующей тёмной темой и токенами цвета; при необходимости — лёгкая дизайн-спека в репозитории (без обязательного Figma).',
+        en: 'Align with the existing dark theme and color tokens; optional lightweight design notes in-repo (Figma not mandatory).',
       },
     ],
   },
   {
-    id: 7,
+    id: 8,
     title: { ru: 'Настройки, аккаунт, юридика', en: 'Settings, account, legal' },
     summary: {
       ru: 'Настройки по блокам; пароль; seed; удаление и 30 дней; тексты; feedback; cookie. Роли и ограничения UI по permissions — отдельная доработка (см. буллеты ниже).',
       en: 'Grouped settings; password; seed; deletion & 30 days; legal; feedback; cookie. Role-based UI gating — separate pass (see bullets).',
     },
+    plain: {
+      ru: 'Собрать всё про аккаунт в понятные коробки: сменить пароль, бережно показать секретный ключ, если человек хочет уйти — объяснить что будет и как вернуться, повесить короткие тексты «кто мы и какие правила», кнопку «напишите нам», маленькое окошко про куки. Про «кто тут админ» — отдельным заходом позже. Задумать привычную «лицевую» иконку в углу экрана с менюшкой (настройки, выйти, отчёты…) — как у многих сайтов.',
+      en: 'Pack everything about your account into clear boxes: change password, gently show the secret key, if someone wants to leave — explain what happens and how to come back, short “who we are and the rules,” a **write to us** button, a tiny cookie notice. “Who is admin” — a separate pass later. Plan a familiar corner **profile** icon with a little menu (settings, sign out, reports…) — like many sites.',
+    },
     detailBullets: [
+      {
+        ru: '**Идея к проработке:** привычный паттерн «иконка аккаунта / аватар» в шапке приложения с выпадающим меню — как у большинства сервисов: оттуда короткие ссылки на **настройки**, **выход**, **отчёты**, дорожную карту / релиз-ноты при необходимости и т.д.; состав пунктов, порядок и неперегруз шапки — отдельное UX-решение.',
+        en: '**Idea to explore:** familiar **account / avatar** control in the app header with a dropdown — like most services: quick links to **settings**, **sign out**, **reports**, roadmap / release notes when needed, etc.; item list, order, and keeping the header light are a separate UX decision.',
+      },
       {
         ru: 'Отдельный экран или улучшенный поток онбординга seed (ТЗ §4).',
         en: 'Dedicated screen or improved seed onboarding flow (TZ §4).',
@@ -279,11 +340,15 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     ],
   },
   {
-    id: 8,
+    id: 9,
     title: { ru: 'Монетизация и push', en: 'Monetization & push' },
     summary: {
       ru: 'Freemium + премиум (DR-010); проверка тарифа; PWA push — по решению спринта.',
       en: 'Freemium + premium (DR-010); entitlement checks; PWA push per sprint.',
+    },
+    plain: {
+      ru: 'Когда планировщик уже не ломается от повседневной жизни — можно добавить «особый пропуск» за деньги (что именно — решит продукт) и опциональные напоминания на телефон, если человек согласился.',
+      en: 'When the planner doesn’t break in daily life — we can add a **paid extra ticket** (what exactly — product decides) and optional phone nudges if people agree.',
     },
     detailBullets: [
       {
@@ -297,11 +362,15 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     ],
   },
   {
-    id: 9,
+    id: 10,
     title: { ru: 'Offline-first', en: 'Offline-first' },
     summary: {
       ru: 'Очередь синка и конфликты по архитектурным документам.',
       en: 'Sync queue and conflicts per architecture docs.',
+    },
+    plain: {
+      ru: 'Чтобы приложение не «пропадало», если интернет ненадолго исчез, и чтобы два изменения с разных устройств не съедали друг друга — нужна аккуратная очередь сохранений и понятные правила «кто главный», когда истории разошлись.',
+      en: 'So the app doesn’t “vanish” when the internet blinks, and two edits from different devices don’t eat each other — we need a tidy save queue and clear rules for “who wins” when stories diverge.',
     },
     detailBullets: [
       {
@@ -311,11 +380,15 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     ],
   },
   {
-    id: 10,
+    id: 11,
     title: { ru: 'Релиз 1.0.0', en: '1.0.0 release' },
     summary: {
       ru: 'Чеклист ТЗ, semver 1.0.0, регрессия, деплой и документация.',
       en: 'TZ checklist, semver 1.0.0, regression, deploy and docs.',
+    },
+    plain: {
+      ru: 'Большой финиш чертежа **1.0.0**: пройти чек-лист как перед школьной контрольной, проверить всё ещё раз, выложить для людей и подложить понятные бумажки-инструкции.',
+      en: 'The big **1.0.0** finish line: run the checklist like before an exam, test everything again, ship for real people, and leave simple instruction papers.',
     },
     detailBullets: [
       {
@@ -339,6 +412,27 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     },
   },
   {
+    title: { ru: 'Раздел «Тестирование» в настройках', en: 'Settings: testing / QA tools' },
+    summary: {
+      ru: 'Отдельная секция **только для администраторов и бета-тестеров**: переключатели и вспомогательные режимы, которые упрощают проверку приложения и сценариев; обычный пользователь раздел не видит.',
+      en: 'A **settings section for admins and beta testers only**: toggles and helpers to exercise flows and validate behavior; hidden from regular users.',
+    },
+    detailBullets: [
+      {
+        ru: 'Доступ по ролям на сервере (`app_metadata.motivator_role`: **admin**, **beta_tester**); состав пунктов и название секции — при реализации.',
+        en: 'Role-gated server-side (`app_metadata.motivator_role`: **admin**, **beta_tester**); section title and items — TBD at implementation.',
+      },
+      {
+        ru: 'Примеры настроек (не обязательный полный список): ускорение или отключение ожиданий по DR-004, фиксация «сегодня» / тестовая дата для календаря, показ отладочных подписей, ослабление debounce синка для проверки конфликтов, экспорт последних операций с vault на клиенте.',
+        en: 'Possible options (examples): shorten/disable DR-004 wait windows, pinned “today” or test date for calendar views, debug labels, relaxed sync debounce for conflict testing, export recent client-side vault ops.',
+      },
+      {
+        ru: 'Предпочтительно хранить QA-флаги **локально** (например `localStorage`) или в профиле без записи в зашифрованный vault — чтобы тестовые режимы не утекали в бэкапы и не мешали обычным пользователям.',
+        en: 'Prefer **local** QA flags (e.g. `localStorage`) or non-vault prefs so test modes never leak into encrypted backups or ordinary users’ data.',
+      },
+    ],
+  },
+  {
     title: { ru: 'Презентационная страница (лендинг)', en: 'Marketing / landing page' },
     summary: {
       ru: 'Публичная страница о приложении: зачем оно, базовые возможности, новости — и вход в регистрацию без открытия планировщика.',
@@ -356,6 +450,23 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Роль **бета-тестер** (`app_metadata.motivator_role`, рядом с admin/user): закрытая волна регистраций, канал обратной связи с продактом; от обычного пользователя — расширенный доступ к экспериментальным функциям или каналу новостей (уточняется при реализации).',
         en: '**Beta tester** role (`app_metadata.motivator_role`, alongside admin/user): invite-only waves, feedback loop with product; vs regular users — optional early/experimental features or news channel (TBD at implementation).',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Опросник приоритетов', en: 'Priority survey' },
+    summary: {
+      ru: 'Узнать у пользователей, что иметь в виду в первую очередь, а что можно отложить.',
+      en: 'Ask users what to tackle first and what can wait.',
+    },
+    detailBullets: [
+      {
+        ru: 'Опрос или форма (в приложении, по ссылке или рассылке): кандидаты в улучшения с ответами вроде «скорее / позже / не важно».',
+        en: 'Survey or form (in-app, link, or email): improvement candidates with answers like “sooner / later / not important”.',
+      },
+      {
+        ru: 'Результаты — ориентир для бэклога после **1.0**, без обязательства сделать всё по голосованию.',
+        en: 'Results inform the post-**1.0** backlog — no obligation to ship everything by vote.',
       },
     ],
   },

@@ -60,6 +60,12 @@ function PhaseRow({
           <span className="text-sm font-semibold text-zinc-100">{pickLocale(phase.title, lang)}</span>
         </div>
         <p className="mt-1.5 text-xs leading-relaxed text-zinc-400">{pickLocale(phase.summary, lang)}</p>
+        {phase.plain ? (
+          <p className="mt-2 border-l-2 border-zinc-700/80 pl-3 text-xs leading-relaxed text-zinc-500">
+            <span className="font-medium text-zinc-600">{t('settings.roadmapReleaseNotePlain')} </span>
+            {pickLocale(phase.plain, lang)}
+          </p>
+        ) : null}
         {hasDetails ? (
           <details className="group/details mt-2 rounded-md border border-zinc-800/80 bg-zinc-900/35 [&_summary::-webkit-details-marker]:hidden">
             <summary
@@ -201,9 +207,17 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                     <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                       {pickLocale(block.dateLabel, lang)}
                     </p>
-                    <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400">
+                    <ul className="mt-2 list-disc space-y-3 pl-5 text-sm leading-relaxed text-zinc-400">
                       {block.items.map((item, ii) => (
-                        <li key={ii}>{pickLocale(item, lang)}</li>
+                        <li key={ii} className="marker:text-zinc-600">
+                          <p className="text-zinc-300">{pickLocale(item.summary, lang)}</p>
+                          <p className="mt-1.5 border-l-2 border-zinc-700/80 pl-3 text-xs leading-relaxed text-zinc-500">
+                            <span className="font-medium text-zinc-600">
+                              {t('settings.roadmapReleaseNotePlain')}
+                            </span>{' '}
+                            {pickLocale(item.plain, lang)}
+                          </p>
+                        </li>
                       ))}
                     </ul>
                   </div>

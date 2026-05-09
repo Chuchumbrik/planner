@@ -41,6 +41,15 @@ export type RecurrenceRule =
   | { kind: 'everyNDays'; n: number }
   | { kind: 'weekly'; weekdays: number[] }
 
+/** DR-004: второе подтверждение для локального дня (повтор или одиночная задача в контексте дня) */
+export type DoubleConfirmPending = {
+  /** YYYY-MM-DD */
+  localDate: string
+  firstStepAtIso: string
+  /** После этого момента без второго шага — не засчитываем «сделано» */
+  confirmDeadlineIso: string
+}
+
 export type Task = {
   id: string
   title: string
@@ -74,6 +83,13 @@ export type Task = {
    * Участвует во вечернем ритуале End-of-Day ([[DR-002]]). По умолчанию true.
    */
   includeInEodRitual?: boolean
+  /** DR-004: два шага перед засчитыванием «выполнено» для этого дня */
+  doubleConfirmEnabled?: boolean
+  /** Минуты до «второго пинга» (default 10) */
+  doubleConfirmIntervalMinutes?: number
+  /** Минуты после второго пинга до авто-сброса без «сделано» (default 30) */
+  doubleConfirmGraceMinutes?: number
+  doubleConfirmPending?: DoubleConfirmPending | null
 }
 
 /** Черновик формы создания задачи */
@@ -123,6 +139,16 @@ export type VaultPayloadV6 = {
   eodPreferences: EodPreferences
 }
 
+export type VaultPayloadV7 = {
+  schemaVersion: 7
+  priorityLabels: PriorityLabels
+  groups: TaskGroup[]
+  tasks: Task[]
+  drafts: TaskDraft[]
+  eodCompletedLocalDates: string[]
+  eodPreferences: EodPreferences
+}
+
 /** Поля создания задачи из модального окна */
 export type CreateTaskInput = {
   title: string
@@ -135,6 +161,9 @@ export type CreateTaskInput = {
   timeMinutesFromMidnight: number | null
   recurrence: RecurrenceRule | null
   recurrenceAnchorLocalDate: string | null
+  doubleConfirmEnabled?: boolean
+  doubleConfirmIntervalMinutes?: number | null
+  doubleConfirmGraceMinutes?: number | null
 }
 
 /* ---------- Legacy v3 (миграция) ---------- */
@@ -190,7 +219,7 @@ export type VaultPayloadV1 = {
   }>
 }
 
-export type VaultPayload = VaultPayloadV6
+export type VaultPayload = VaultPayloadV7
 
 export const DEFAULT_GROUP_ID = 'grp_default'
 
@@ -204,9 +233,9 @@ export function defaultPriorityLabels(): PriorityLabels {
   }
 }
 
-export function emptyVault(): VaultPayloadV6 {
+export function emptyVault(): VaultPayloadV7 {
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     priorityLabels: defaultPriorityLabels(),
     groups: [{ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 }],
     tasks: [],

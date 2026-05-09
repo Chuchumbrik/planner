@@ -771,6 +771,9 @@ function AppPageInner() {
                       onToggleChecklistItem={(itemId) =>
                         void toggleChecklistItem(task.id, itemId)
                       }
+                      onClearDoubleConfirm={() =>
+                        void patchTask(task.id, { doubleConfirmPending: undefined })
+                      }
                     />
                   </li>
                 ))}
@@ -799,6 +802,9 @@ function AppPageInner() {
                       onOpen={() => openTaskEditor(task.id)}
                       onToggleChecklistItem={(itemId) =>
                         void toggleChecklistItem(task.id, itemId)
+                      }
+                      onClearDoubleConfirm={() =>
+                        void patchTask(task.id, { doubleConfirmPending: undefined })
                       }
                     />
                   </li>

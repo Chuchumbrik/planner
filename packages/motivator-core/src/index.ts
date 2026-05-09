@@ -7,6 +7,7 @@ export * from './vault/types'
 export * from './vault/normalize'
 export * from './vault/colors'
 
+export * from './lib/doubleConfirm'
 export * from './lib/cryptoVault'
 export * from './lib/recurrence'
 export * from './lib/timeblocking'

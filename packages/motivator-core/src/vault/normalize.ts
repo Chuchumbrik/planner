@@ -21,6 +21,7 @@ import {
   type VaultPayloadV4,
   type VaultPayloadV5,
   type VaultPayloadV6,
+  type VaultPayloadV7,
 } from './types'
 
 function isColorKey(x: unknown): x is TaskColorKey {
@@ -108,10 +109,19 @@ function normalizeRecurrenceRule(raw: unknown): RecurrenceRule | null {
   return null
 }
 
-/** Приводит произвольный JSON к актуальной схеме v6 */
-export function normalizeVault(raw: unknown): VaultPayloadV6 {
+/** Приводит произвольный JSON к актуальной схеме v7 */
+export function normalizeVault(raw: unknown): VaultPayloadV7 {
   if (!raw || typeof raw !== 'object') return emptyVault()
   const o = raw as Record<string, unknown>
+
+  if (
+    o.schemaVersion === 7 &&
+    Array.isArray(o.tasks) &&
+    Array.isArray(o.groups) &&
+    Array.isArray(o.drafts)
+  ) {
+    return repairV7(o as VaultPayloadV7)
+  }
 
   if (
     o.schemaVersion === 6 &&
@@ -119,7 +129,7 @@ export function normalizeVault(raw: unknown): VaultPayloadV6 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return repairV6(o as VaultPayloadV6)
+    return migrateV6toV7(repairV6(o as VaultPayloadV6))
   }
 
   if (
@@ -128,38 +138,101 @@ export function normalizeVault(raw: unknown): VaultPayloadV6 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return repairV6(migrateV5toV6(repairV5(o as VaultPayloadV5)))
+    return migrateV6toV7(repairV6(migrateV5toV6(repairV5(o as VaultPayloadV5))))
   }
 
   if (o.schemaVersion === 4 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return repairV6(migrateV5toV6(migrateV4toV5(repairV4(o as VaultPayloadV4))))
+    return migrateV6toV7(repairV6(migrateV5toV6(migrateV4toV5(repairV4(o as VaultPayloadV4)))))
   }
 
   if (o.schemaVersion === 3 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return repairV6(
-      migrateV5toV6(migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3)))),
+    return migrateV6toV7(
+      repairV6(migrateV5toV6(migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3))))),
     )
   }
 
   if (o.schemaVersion === 2 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return repairV6(
-      migrateV5toV6(
-        migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))),
+    return migrateV6toV7(
+      repairV6(
+        migrateV5toV6(
+          migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))),
+        ),
       ),
     )
   }
 
   if (o.schemaVersion === 1 && Array.isArray(o.tasks)) {
-    return repairV6(
-      migrateV5toV6(
-        migrateV4toV5(
-          migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+    return migrateV6toV7(
+      repairV6(
+        migrateV5toV6(
+          migrateV4toV5(
+            migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+          ),
         ),
       ),
     )
   }
 
   return emptyVault()
+}
+
+function migrateV6toV7(v: VaultPayloadV6): VaultPayloadV7 {
+  return {
+    schemaVersion: 7,
+    priorityLabels: v.priorityLabels,
+    groups: v.groups,
+    tasks: v.tasks.map(normalizeDoubleConfirmFieldsOnTask),
+    drafts: v.drafts,
+    eodCompletedLocalDates: v.eodCompletedLocalDates,
+    eodPreferences: v.eodPreferences,
+  }
+}
+
+function normalizeDoubleConfirmFieldsOnTask(t: Task): Task {
+  if (t.doubleConfirmEnabled !== true) {
+    return {
+      ...t,
+      doubleConfirmEnabled: undefined,
+      doubleConfirmIntervalMinutes: undefined,
+      doubleConfirmGraceMinutes: undefined,
+      doubleConfirmPending: undefined,
+    }
+  }
+  let interval = t.doubleConfirmIntervalMinutes
+  let grace = t.doubleConfirmGraceMinutes
+  if (typeof interval !== 'number' || interval < 1 || interval > 24 * 60) interval = undefined
+  if (typeof grace !== 'number' || grace < 1 || grace > 24 * 60) grace = undefined
+
+  let pend = t.doubleConfirmPending ?? undefined
+  if (pend && typeof pend === 'object') {
+    const ld = pend.localDate
+    const fs = pend.firstStepAtIso
+    const dl = pend.confirmDeadlineIso
+    if (
+      typeof ld !== 'string' ||
+      !DATE_KEY.test(ld) ||
+      typeof fs !== 'string' ||
+      typeof dl !== 'string' ||
+      Number.isNaN(Date.parse(fs)) ||
+      Number.isNaN(Date.parse(dl)) ||
+      Date.parse(dl) <= Date.parse(fs)
+    ) {
+      pend = undefined
+    }
+  } else pend = undefined
+
+  return {
+    ...t,
+    doubleConfirmEnabled: true,
+    doubleConfirmIntervalMinutes: interval,
+    doubleConfirmGraceMinutes: grace,
+    doubleConfirmPending: pend,
+  }
+}
+
+function repairV7(v: VaultPayloadV7): VaultPayloadV7 {
+  const asV6 = { ...v, schemaVersion: 6 as const } as VaultPayloadV6
+  return migrateV6toV7(repairV6(asV6))
 }
 
 function migrateV5toV6(v: VaultPayloadV5): VaultPayloadV6 {

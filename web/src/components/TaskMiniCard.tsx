@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   isMainTaskDoneForDay,
@@ -26,6 +27,8 @@ type Props = {
   onOpen: () => void
   /** Отметка пунктов чек-листа с карточки (день / бэклог) */
   onToggleChecklistItem?: (itemId: string) => void
+  /** DR-004: снять ожидание второго шага без выполнения */
+  onClearDoubleConfirm?: () => void
 }
 
 export function TaskMiniCard({
@@ -36,6 +39,7 @@ export function TaskMiniCard({
   onToggle,
   onOpen,
   onToggleChecklistItem,
+  onClearDoubleConfirm,
 }: Props) {
   const { t } = useTranslation()
   const leftAccent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
@@ -45,6 +49,48 @@ export function TaskMiniCard({
       ? isMainTaskDoneForDay(task, occurrenceDayKey)
       : task.done
 
+  const pendingHere =
+    Boolean(occurrenceDayKey) &&
+    task.doubleConfirmEnabled === true &&
+    Boolean(task.doubleConfirmPending) &&
+    task.doubleConfirmPending!.localDate === occurrenceDayKey
+
+  const [nowTick, setNowTick] = useState(() => Date.now())
+  useEffect(() => {
+    if (!pendingHere) return
+    const id = window.setInterval(() => setNowTick(Date.now()), 10_000)
+    return () => window.clearInterval(id)
+  }, [pendingHere])
+
+  useEffect(() => {
+    if (pendingHere) setNowTick(Date.now())
+  }, [pendingHere, task.doubleConfirmPending?.confirmDeadlineIso])
+
+  const deadlineMs = task.doubleConfirmPending?.confirmDeadlineIso
+    ? Date.parse(task.doubleConfirmPending.confirmDeadlineIso)
+    : NaN
+  const minutesLeft =
+    pendingHere && Number.isFinite(deadlineMs)
+      ? Math.max(0, Math.ceil((deadlineMs - nowTick) / 60_000))
+      : null
+
+  const [flash, setFlash] = useState<'success' | 'soft' | null>(null)
+  const prevPendingRef = useRef(false)
+
+  useEffect(() => {
+    const wasPending = prevPendingRef.current
+    const pend = pendingHere
+    if (wasPending && !pend && occurrenceDayKey) {
+      if (mainDone) setFlash('success')
+      else setFlash('soft')
+      const tid = window.setTimeout(() => setFlash(null), 900)
+      prevPendingRef.current = pend
+      return () => window.clearTimeout(tid)
+    }
+    prevPendingRef.current = pend
+    return undefined
+  }, [pendingHere, mainDone, occurrenceDayKey])
+
   const blockCompleteMain =
     !mainDone &&
     task.checklist.length > 0 &&
@@ -52,11 +98,17 @@ export function TaskMiniCard({
 
   const timeSnip = formatTimeSnippet(task, t)
 
+  const shellClass = [
+    'rounded-lg border bg-zinc-900/60 border-l-4 transition-colors',
+    pendingHere ? 'animate-dc-pending border-amber-700/50 ring-1 ring-amber-600/25' : 'border-zinc-800',
+    flash === 'success' ? 'animate-task-done-success' : '',
+    flash === 'soft' ? 'animate-task-soft-miss' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <div
-      className="rounded-lg border border-zinc-800 bg-zinc-900/60 border-l-4"
-      style={{ borderLeftColor: leftAccent }}
-    >
+    <div className={shellClass} style={{ borderLeftColor: leftAccent }}>
       <div className="flex items-start gap-2 px-3 py-2">
         <label
           className={`shrink-0 cursor-pointer pt-0.5 ${blockCompleteMain && canEdit ? 'cursor-not-allowed' : ''}`}
@@ -92,6 +144,11 @@ export function TaskMiniCard({
                 {t('app.recurrenceBadge')}
               </span>
             ) : null}
+            {pendingHere ? (
+              <span className="rounded bg-amber-950/70 px-1.5 py-0.5 text-amber-200/95">
+                {t('app.doubleConfirmBadge')}
+              </span>
+            ) : null}
             {task.estimatedMinutes != null ? (
               <span>
                 {t('app.estimatedMinutesShort', { n: task.estimatedMinutes })}
@@ -107,6 +164,27 @@ export function TaskMiniCard({
               </span>
             ) : null}
           </span>
+          {pendingHere && minutesLeft != null ? (
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-amber-200/90">
+              <span>
+                {t('app.doubleConfirmTimeLeft', {
+                  minutes: minutesLeft,
+                })}
+              </span>
+              {canEdit && onClearDoubleConfirm ? (
+                <button
+                  type="button"
+                  className="text-amber-300 underline hover:text-amber-200"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClearDoubleConfirm()
+                  }}
+                >
+                  {t('app.doubleConfirmCancelPending')}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </button>
       </div>
       {task.checklist.length > 0 && onToggleChecklistItem ? (

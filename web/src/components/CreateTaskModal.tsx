@@ -55,6 +55,8 @@ type Snapshot = {
   everyNDays: number
   weekdays: number[]
   anchorLocalDate: string
+  /** DR-004: двойное подтверждение при отметке выполнено */
+  doubleConfirmEnabled: boolean
 }
 
 function snapshotFromDraft(d: TaskDraft, fallbackDay: string): Snapshot {
@@ -85,6 +87,7 @@ function snapshotFromDraft(d: TaskDraft, fallbackDay: string): Snapshot {
     everyNDays: d.recurrence?.kind === 'everyNDays' ? d.recurrence.n : 2,
     weekdays: d.recurrence?.kind === 'weekly' ? [...d.recurrence.weekdays] : [],
     anchorLocalDate: d.recurrenceAnchorLocalDate ?? d.scheduledLocalDate ?? fallbackDay,
+    doubleConfirmEnabled: false,
   }
 }
 
@@ -105,6 +108,7 @@ function emptySnapshot(selectedDayKey: string, groupId: string): Snapshot {
     everyNDays: 2,
     weekdays: [],
     anchorLocalDate: selectedDayKey,
+    doubleConfirmEnabled: false,
   }
 }
 
@@ -151,6 +155,7 @@ function snapshotCanonical(s: Snapshot, selectedDayKey: string): string {
     everyNDays: s.everyNDays,
     weekdays: [...s.weekdays].sort((a, b) => a - b),
     anchorLocalDate: s.anchorLocalDate.trim() || selectedDayKey,
+    doubleConfirmEnabled: s.doubleConfirmEnabled,
   })
 }
 
@@ -347,6 +352,7 @@ export function CreateTaskModal({
       timeMinutesFromMidnight: tm.minutes,
       recurrence: recurrenceFinal,
       recurrenceAnchorLocalDate: recurrenceFinal ? anchorOut : null,
+      ...(snap.doubleConfirmEnabled ? { doubleConfirmEnabled: true } : {}),
     }
 
     savedRef.current = true
@@ -740,6 +746,20 @@ export function CreateTaskModal({
             <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
           ) : null}
         </div>
+
+        <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={snap.doubleConfirmEnabled}
+            disabled={!canEdit}
+            onChange={(e) =>
+              setSnap((s) => ({ ...s, doubleConfirmEnabled: e.target.checked }))
+            }
+          />
+          <span className="leading-snug">{t('app.doubleConfirmEnable')}</span>
+        </label>
+        <p className="mt-1 text-[10px] leading-snug text-zinc-600">{t('app.doubleConfirmHintShort')}</p>
 
         <TaskTimeAccordion
           timeMode={snap.timeMode}

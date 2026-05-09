@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  DOUBLE_CONFIRM_DEFAULT_GRACE_MIN,
+  DOUBLE_CONFIRM_DEFAULT_INTERVAL_MIN,
   TASK_COLOR_HEX,
   isMainTaskDoneForDay,
   mergeEstimateParts,
@@ -490,6 +492,94 @@ export function TaskEditModal({
           />
           <span className="leading-snug">{t('app.includeInEodRitual')}</span>
         </label>
+
+        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
+          <legend className="px-1 text-xs text-zinc-500">{t('app.doubleConfirmSection')}</legend>
+          <label className="flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={task.doubleConfirmEnabled === true}
+              disabled={!canEdit}
+              onChange={(e) =>
+                onApplyTaskPatch({ doubleConfirmEnabled: e.target.checked })
+              }
+            />
+            <span className="leading-snug">{t('app.doubleConfirmEnable')}</span>
+          </label>
+          <p className="mt-2 text-[10px] leading-snug text-zinc-600">{t('app.doubleConfirmHintEdit')}</p>
+
+          {task.doubleConfirmEnabled ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                <span>{t('app.doubleConfirmIntervalMin')}</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={1440}
+                  inputMode="numeric"
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                  placeholder={String(DOUBLE_CONFIRM_DEFAULT_INTERVAL_MIN)}
+                  value={task.doubleConfirmIntervalMinutes ?? ''}
+                  disabled={!canEdit}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim()
+                    if (raw === '') {
+                      onApplyTaskPatch({ doubleConfirmIntervalMinutes: undefined })
+                      return
+                    }
+                    const n = Number(raw)
+                    if (!Number.isFinite(n)) return
+                    onApplyTaskPatch({
+                      doubleConfirmIntervalMinutes: Math.min(1440, Math.max(1, Math.floor(n))),
+                    })
+                  }}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                <span>{t('app.doubleConfirmGraceMin')}</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={1440}
+                  inputMode="numeric"
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                  placeholder={String(DOUBLE_CONFIRM_DEFAULT_GRACE_MIN)}
+                  value={task.doubleConfirmGraceMinutes ?? ''}
+                  disabled={!canEdit}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim()
+                    if (raw === '') {
+                      onApplyTaskPatch({ doubleConfirmGraceMinutes: undefined })
+                      return
+                    }
+                    const n = Number(raw)
+                    if (!Number.isFinite(n)) return
+                    onApplyTaskPatch({
+                      doubleConfirmGraceMinutes: Math.min(1440, Math.max(1, Math.floor(n))),
+                    })
+                  }}
+                />
+              </label>
+            </div>
+          ) : null}
+
+          {task.doubleConfirmEnabled &&
+          task.doubleConfirmPending &&
+          task.doubleConfirmPending.localDate === occurrenceDayKey ? (
+            <div className="mt-3 rounded-md border border-amber-800/60 bg-amber-950/25 px-3 py-2 text-xs text-amber-100/90">
+              <p className="leading-snug">{t('app.doubleConfirmPendingInEditor')}</p>
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="mt-2 text-[11px] text-amber-300 underline hover:text-amber-200 disabled:opacity-40"
+                onClick={() => onApplyTaskPatch({ doubleConfirmPending: undefined })}
+              >
+                {t('app.doubleConfirmCancelPending')}
+              </button>
+            </div>
+          ) : null}
+        </fieldset>
 
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>

@@ -17,6 +17,7 @@ import {
   applyCreateTask,
   applyDeleteDraft,
   applyDeleteGroup,
+  applyExpireStaleDoubleConfirm,
   applyPatchTask,
   applyRemoveChecklistItem,
   applyRemoveTask,
@@ -335,6 +336,30 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     },
     [pushVault, remoteHydrated, vault],
   )
+
+  /** DR-004: периодически снимать просроченное ожидание второго подтверждения. */
+  useEffect(() => {
+    if (!unlocked || !remoteHydrated) return
+
+    const runExpire = () => {
+      const base = latestPayloadRef.current
+      if (!base) return
+      const next = applyExpireStaleDoubleConfirm(base, vaultDepsDefault)
+      if (next !== base) void pushVault(next)
+    }
+
+    const id = window.setInterval(runExpire, 50_000)
+    const onVis = () => {
+      if (document.visibilityState === 'visible') runExpire()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    runExpire()
+
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [unlocked, remoteHydrated, pushVault])
 
   const createTask = useCallback(
     async (input: CreateTaskInput) => {

@@ -4,6 +4,11 @@
  */
 
 import {
+  computeDoubleConfirmDeadlineIso,
+  effectiveDoubleConfirmGraceMin,
+  effectiveDoubleConfirmIntervalMin,
+} from '../lib/doubleConfirm'
+import {
   DEFAULT_GROUP_ID,
   type CreateTaskInput,
   type PriorityRank,
@@ -54,6 +59,25 @@ export function applyCreateTask(
   let est: number | null = input.estimatedMinutes
   if (est != null && (Number.isNaN(est) || est <= 0 || est > 24 * 60)) est = null
 
+  const dc =
+    input.doubleConfirmEnabled === true
+      ? {
+          doubleConfirmEnabled: true as const,
+          doubleConfirmIntervalMinutes:
+            typeof input.doubleConfirmIntervalMinutes === 'number' &&
+            input.doubleConfirmIntervalMinutes >= 1 &&
+            input.doubleConfirmIntervalMinutes <= 24 * 60
+              ? Math.floor(input.doubleConfirmIntervalMinutes)
+              : undefined,
+          doubleConfirmGraceMinutes:
+            typeof input.doubleConfirmGraceMinutes === 'number' &&
+            input.doubleConfirmGraceMinutes >= 1 &&
+            input.doubleConfirmGraceMinutes <= 24 * 60
+              ? Math.floor(input.doubleConfirmGraceMinutes)
+              : undefined,
+        }
+      : {}
+
   const task: Task = {
     id: deps.newId(),
     title: trimmed,
@@ -72,6 +96,7 @@ export function applyCreateTask(
     recurrenceAnchorLocalDate: anchor,
     completedOccurrenceLocalDates: [],
     includeInEodRitual: true,
+    ...dc,
   }
 
   return {
@@ -107,38 +132,169 @@ export function applyToggleTask(
   const t = vault.tasks.find((x) => x.id === taskId)
   if (!t) return vault
   const now = deps.nowIso()
+  const nowMs = Date.parse(now)
 
   if (t.recurrence) {
     if (!dayOk || !occurrenceDayKey) return vault
     const prevDates = t.completedOccurrenceLocalDates ?? []
     const wasDone = prevDates.includes(occurrenceDayKey)
-    const nextDone = !wasDone
-    if (nextDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
+    const wantDone = !wasDone
+
+    if (!wantDone) {
+      const nextDates = prevDates.filter((d) => d !== occurrenceDayKey)
+      const clearPend =
+        t.doubleConfirmPending?.localDate === occurrenceDayKey ? undefined : t.doubleConfirmPending
+      return {
+        ...vault,
+        tasks: vault.tasks.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                completedOccurrenceLocalDates: nextDates,
+                doubleConfirmPending: clearPend ?? undefined,
+                updatedAt: now,
+              }
+            : task,
+        ),
+      }
+    }
+
+    if (wantDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
       return vault
     }
-    const nextDates = nextDone
-      ? [...new Set([...prevDates, occurrenceDayKey])].sort()
-      : prevDates.filter((d) => d !== occurrenceDayKey)
+
+    if (!t.doubleConfirmEnabled) {
+      const nextDates = [...new Set([...prevDates, occurrenceDayKey])].sort()
+      return {
+        ...vault,
+        tasks: vault.tasks.map((task) =>
+          task.id === taskId
+            ? { ...task, completedOccurrenceLocalDates: nextDates, updatedAt: now }
+            : task,
+        ),
+      }
+    }
+
+    const pend = t.doubleConfirmPending
+    const intervalMin = effectiveDoubleConfirmIntervalMin(t)
+    const graceMin = effectiveDoubleConfirmGraceMin(t)
+
+    if (pend && pend.localDate === occurrenceDayKey) {
+      if (nowMs <= Date.parse(pend.confirmDeadlineIso)) {
+        const nextDates = [...new Set([...prevDates, occurrenceDayKey])].sort()
+        return {
+          ...vault,
+          tasks: vault.tasks.map((task) =>
+            task.id === taskId
+              ? {
+                  ...task,
+                  completedOccurrenceLocalDates: nextDates,
+                  doubleConfirmPending: undefined,
+                  updatedAt: now,
+                }
+              : task,
+          ),
+        }
+      }
+    }
+
+    const deadlineIso = computeDoubleConfirmDeadlineIso(now, intervalMin, graceMin)
     return {
       ...vault,
       tasks: vault.tasks.map((task) =>
         task.id === taskId
-          ? { ...task, completedOccurrenceLocalDates: nextDates, updatedAt: now }
+          ? {
+              ...task,
+              doubleConfirmPending: {
+                localDate: occurrenceDayKey,
+                firstStepAtIso: now,
+                confirmDeadlineIso: deadlineIso,
+              },
+              updatedAt: now,
+            }
           : task,
       ),
     }
   }
 
-  const nextDone = !t.done
-  if (nextDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
+  if (!dayOk || !occurrenceDayKey) return vault
+
+  const prevDone = t.done
+  const wantDone = !prevDone
+
+  if (!wantDone) {
+    return {
+      ...vault,
+      tasks: vault.tasks.map((task) =>
+        task.id === taskId
+          ? { ...task, done: false, doubleConfirmPending: undefined, updatedAt: now }
+          : task,
+      ),
+    }
+  }
+
+  if (wantDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
     return vault
   }
+
+  if (!t.doubleConfirmEnabled) {
+    return {
+      ...vault,
+      tasks: vault.tasks.map((task) =>
+        task.id === taskId ? { ...task, done: true, updatedAt: now } : task,
+      ),
+    }
+  }
+
+  const pend = t.doubleConfirmPending
+  const intervalMin = effectiveDoubleConfirmIntervalMin(t)
+  const graceMin = effectiveDoubleConfirmGraceMin(t)
+
+  if (pend && pend.localDate === occurrenceDayKey) {
+    if (nowMs <= Date.parse(pend.confirmDeadlineIso)) {
+      return {
+        ...vault,
+        tasks: vault.tasks.map((task) =>
+          task.id === taskId
+            ? { ...task, done: true, doubleConfirmPending: undefined, updatedAt: now }
+            : task,
+        ),
+      }
+    }
+  }
+
+  const deadlineIso = computeDoubleConfirmDeadlineIso(now, intervalMin, graceMin)
   return {
     ...vault,
     tasks: vault.tasks.map((task) =>
-      task.id === taskId ? { ...task, done: nextDone, updatedAt: now } : task,
+      task.id === taskId
+        ? {
+            ...task,
+            doubleConfirmPending: {
+              localDate: occurrenceDayKey,
+              firstStepAtIso: now,
+              confirmDeadlineIso: deadlineIso,
+            },
+            updatedAt: now,
+          }
+        : task,
     ),
   }
+}
+
+/** DR-004: снять просроченное ожидание второго шага (без записи «выполнено»). */
+export function applyExpireStaleDoubleConfirm(vault: VaultPayload, deps: VaultDeps): VaultPayload {
+  const nowMs = Date.parse(deps.nowIso())
+  let changed = false
+  const tasks = vault.tasks.map((t) => {
+    const p = t.doubleConfirmPending
+    if (!p) return t
+    if (nowMs <= Date.parse(p.confirmDeadlineIso)) return t
+    changed = true
+    return { ...t, doubleConfirmPending: undefined, updatedAt: deps.nowIso() }
+  })
+  if (!changed) return vault
+  return { ...vault, tasks }
 }
 
 export function applyRemoveTask(vault: VaultPayload, id: string): VaultPayload {
@@ -406,6 +562,10 @@ export function applyPatchTask(
     tasks: vault.tasks.map((t) => {
       if (t.id !== taskId) return t
       const merged: Task = { ...t, ...patch, updatedAt: now }
+
+      if ('doubleConfirmEnabled' in patch && patch.doubleConfirmEnabled === false) {
+        merged.doubleConfirmPending = undefined
+      }
 
       if (patch.recurrence === null) {
         merged.completedOccurrenceLocalDates = []
