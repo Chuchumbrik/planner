@@ -245,16 +245,25 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /**
  * Релиз-ноты для тестеров без GitHub.
- * Правило: **дата = день, когда делались изменения** (`YYYY-MM-DD`). Новый день без блока — добавить
- * объект с `dateLabel` (обычно **в начало массива**, чтобы новее было выше). За один день несколько
+ * Правило: **дата = день, когда делались изменения** (`YYYY-MM-DD`). В модалке секции сортируются по дате **по убыванию** (более поздний календарный день **выше**); свежие записи должны иметь **`dateLabel` не меньше**, чем у более старых выпусков. Новый день без блока — добавить
+ * объект с `dateLabel` (обычно **в начало массива**, чтобы новее было выше в файле). За один день несколько
  * деплоев — несколько элементов **`items`** подряд. Один выпуск: несколько правок — **`changes`**[];
  * пояснение «для людей» — **`plainBullets`**. У каждого элемента **`releasedInVersion`** — semver выпуска,
  * в котором изменения попали в сборку (как в `package.json` до `vite build`, без `+git`). Интерфейс не скрывает даты по календарю «сегодня».
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
-    dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
+    dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.20', en: '0.6.20' },
+        changes: [
+          {
+            ru: 'Исправлена **хронология** релиз-нотов в данных: свежие пункты перенесены на календарный день **2026-05-10**, чтобы при сортировке дат в модалке они шли **выше** более раннего **2026-05-09**.',
+            en: 'Fixed release-notes **chronology** in data: latest entries moved to calendar day **2026-05-10** so they sort **above** earlier **2026-05-09** in the modal.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.19', en: '0.6.19' },
         changes: [
@@ -264,11 +273,15 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
-    items: [
+      {
+        releasedInVersion: { ru: '0.6.18', en: '0.6.18' },
+        changes: [
+          {
+            ru: 'Релиз-ноты: у каждого подблока выпуска — поле **`releasedInVersion`**: semver той **сборки продукта**, в которой изменения попали к пользователю (значение как в `package.json` **до** `vite build`, без суффикса `+git`); в модалке — строка **«Версия выпуска»**.',
+            en: 'Release notes: each release sub-block has **`releasedInVersion`** — the **product semver** where the changes reached users (same as `package.json` **before** `vite build`, no `+git` suffix); the modal shows **Released in**.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
         changes: [
@@ -347,15 +360,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
-      {
-        releasedInVersion: { ru: '0.6.18', en: '0.6.18' },
-        changes: [
-          {
-            ru: 'Релиз-ноты: у каждого подблока выпуска — поле **`releasedInVersion`**: semver той **сборки продукта**, в которой изменения попали к пользователю (значение как в `package.json` **до** `vite build`, без суффикса `+git`); в модалке — строка **«Версия выпуска»**.',
-            en: 'Release notes: each release sub-block has **`releasedInVersion`** — the **product semver** where the changes reached users (same as `package.json` **before** `vite build`, no `+git` suffix); the modal shows **Released in**.',
-          },
-        ],
-      },
       {
         releasedInVersion: { ru: '0.6.15', en: '0.6.15' },
         changes: [
