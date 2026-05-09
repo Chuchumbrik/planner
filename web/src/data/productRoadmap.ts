@@ -238,6 +238,19 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
+    items: [
+      {
+        changes: [
+          {
+            ru: '«Краткая сводка» — релиз-ноты: **одна раскрывашка на календарную дату**; даты **в будущем не показываются**; несколько коммитов за день — **отдельные вложенные блоки** под одной датой.',
+            en: 'Brief summary release notes: **one collapsible per calendar date**; **future dates hidden**; multiple commits the same day appear as **nested blocks** under that date.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-20', en: '2026-05-20' },
     items: [
       {

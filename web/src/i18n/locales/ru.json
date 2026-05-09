@@ -196,7 +196,7 @@
     "roadmapMvp": "План на MVP 1.0.0 (фазы 7–11)",
     "roadmapMvpHint": "Оставшийся объём до 1.0.0 по obsidian-motivator/17-План-реализации-MVP.md. Под каждым резюме фазы — блок «Простыми словами». Раскрывайте «Подробнее» для списка работ внутри фазы.",
     "roadmapReleaseNotes": "Релиз-ноты",
-    "roadmapReleaseNotesHint": "Список изменений по датам — каждая дата сворачивается отдельно; без доступа к GitHub. Данные в RELEASE_NOTES_BLOCKS (productRoadmap.ts).",
+    "roadmapReleaseNotesHint": "Список по календарным датам (не показываются будущие дни). Несколько коммитов за один день — отдельные блоки внутри одной даты. Без доступа к GitHub. Данные: RELEASE_NOTES_BLOCKS (productRoadmap.ts).",
     "roadmapMvpProgressTitle": "План до MVP 1.0.0",
     "roadmapMvpProgressCaption": "{{pct}}% · закрыто {{done}} из {{total}} фаз дорожной карты (фазы 0–6 готовы, 7–11 в плане до релиза)",
     "roadmapReleaseNotePlain": "Простыми словами:",
