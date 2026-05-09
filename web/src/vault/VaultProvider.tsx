@@ -17,11 +17,13 @@ import { supabase } from '@/lib/supabase'
 import {
   DEFAULT_GROUP_ID,
   emptyVault,
+  type EisenhowerQuadrant,
+  type PriorityLevel,
+  type PrioritySystem,
   type Task,
   type TaskColorKey,
   type TaskGroup,
   type VaultPayload,
-  type VaultPayloadV2,
 } from '@/vault/types'
 
 const SEED_KEY = 'motivator_seed_b64'
@@ -49,16 +51,18 @@ type VaultContextValue = {
   addGroup: (name: string) => Promise<void>
   renameGroup: (groupId: string, name: string) => Promise<void>
   deleteGroup: (groupId: string) => Promise<void>
+  setPrioritySystem: (mode: PrioritySystem) => Promise<void>
+  setTaskPriorityLevel: (taskId: string, level: PriorityLevel) => Promise<void>
+  setTaskEisenhowerQuadrant: (
+    taskId: string,
+    quadrant: EisenhowerQuadrant | null,
+  ) => Promise<void>
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null)
 
 function newId(): string {
   return crypto.randomUUID()
-}
-
-function ensureV2(v: VaultPayload): VaultPayloadV2 {
-  return v.schemaVersion === 2 ? v : normalizeVault(v)
 }
 
 export function VaultProvider({ children }: { children: ReactNode }) {
@@ -119,12 +123,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const pushVault = useCallback(
     async (next: VaultPayload) => {
-      const v2 = ensureV2(next)
-      setVault(v2)
+      const normalized = normalizeVault(next as unknown)
+      setVault(normalized)
       if (!cryptoKey || !session?.user || !supabase) return
       setSavePending(true)
       try {
-        const json = JSON.stringify(v2)
+        const json = JSON.stringify(normalized)
         const ciphertext = await encryptUtf8(json, cryptoKey)
         const nextVersion = versionRef.current + 1
         const { error } = await supabase.from('user_vault').upsert(
@@ -222,10 +226,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, [cryptoKey, session])
 
   const mutate = useCallback(
-    async (fn: (v: VaultPayloadV2) => VaultPayloadV2) => {
+    async (fn: (v: VaultPayload) => VaultPayload) => {
       if (!remoteHydrated) return
-      const base = ensureV2(vault)
-      await pushVault(fn(base))
+      await pushVault(fn(vault))
     },
     [pushVault, remoteHydrated, vault],
   )
@@ -235,7 +238,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       if (!remoteHydrated) return
       const trimmed = title.trim()
       if (!trimmed) return
-      const base = ensureV2(vault)
+      const base = vault
       const gid =
         opts?.groupId && base.groups.some((g) => g.id === opts.groupId)
           ? opts.groupId
@@ -250,6 +253,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         groupId: gid,
         colorKey: opts?.colorKey ?? 'zinc',
         subtasks: [],
+        priorityLevel: 2,
+        eisenhowerQuadrant: null,
       }
       await pushVault({
         ...base,
@@ -421,6 +426,45 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
+  const setPrioritySystem = useCallback(
+    async (mode: PrioritySystem) => {
+      await mutate((v) => ({ ...v, prioritySystem: mode }))
+    },
+    [mutate],
+  )
+
+  const setTaskPriorityLevel = useCallback(
+    async (taskId: string, level: PriorityLevel) => {
+      await mutate((v) => ({
+        ...v,
+        tasks: v.tasks.map((t) =>
+          t.id === taskId
+            ? { ...t, priorityLevel: level, updatedAt: new Date().toISOString() }
+            : t,
+        ),
+      }))
+    },
+    [mutate],
+  )
+
+  const setTaskEisenhowerQuadrant = useCallback(
+    async (taskId: string, quadrant: EisenhowerQuadrant | null) => {
+      await mutate((v) => ({
+        ...v,
+        tasks: v.tasks.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                eisenhowerQuadrant: quadrant,
+                updatedAt: new Date().toISOString(),
+              }
+            : t,
+        ),
+      }))
+    },
+    [mutate],
+  )
+
   const value = useMemo(
     () => ({
       ready,
@@ -444,6 +488,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       addGroup,
       renameGroup,
       deleteGroup,
+      setPrioritySystem,
+      setTaskPriorityLevel,
+      setTaskEisenhowerQuadrant,
     }),
     [
       ready,
@@ -467,6 +514,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       addGroup,
       renameGroup,
       deleteGroup,
+      setPrioritySystem,
+      setTaskPriorityLevel,
+      setTaskEisenhowerQuadrant,
     ],
   )
 

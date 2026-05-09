@@ -1,7 +1,23 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TASK_COLOR_KEYS, TASK_LEFT_BORDER } from '@/vault/colors'
-import type { Task, TaskColorKey, TaskGroup } from '@/vault/types'
+import {
+  EISENHOWER_QUADRANTS,
+  type EisenhowerQuadrant,
+  type PriorityLevel,
+  type PrioritySystem,
+  type Task,
+  type TaskColorKey,
+  type TaskGroup,
+} from '@/vault/types'
+
+const EISENHOWER_LABEL: Record<EisenhowerQuadrant, 'app.eisenhowerQ1' | 'app.eisenhowerQ2' | 'app.eisenhowerQ3' | 'app.eisenhowerQ4'> =
+  {
+    q1: 'app.eisenhowerQ1',
+    q2: 'app.eisenhowerQ2',
+    q3: 'app.eisenhowerQ3',
+    q4: 'app.eisenhowerQ4',
+  }
 
 const SWATCH: Record<TaskColorKey, string> = {
   zinc: 'bg-zinc-500',
@@ -17,11 +33,14 @@ const SWATCH: Record<TaskColorKey, string> = {
 type Props = {
   task: Task
   groups: TaskGroup[]
+  prioritySystem: PrioritySystem
   canEdit: boolean
   onToggle: () => void
   onRemove: () => void
   onSetColor: (key: TaskColorKey) => void
   onSetGroup: (groupId: string) => void
+  onSetPriorityLevel: (level: PriorityLevel) => void
+  onSetEisenhowerQuadrant: (q: EisenhowerQuadrant | null) => void
   onAddSubtask: (title: string) => void
   onToggleSubtask: (subId: string) => void
   onRemoveSubtask: (subId: string) => void
@@ -30,11 +49,14 @@ type Props = {
 export function TaskCard({
   task,
   groups,
+  prioritySystem,
   canEdit,
   onToggle,
   onRemove,
   onSetColor,
   onSetGroup,
+  onSetPriorityLevel,
+  onSetEisenhowerQuadrant,
   onAddSubtask,
   onToggleSubtask,
   onRemoveSubtask,
@@ -108,6 +130,44 @@ export function TaskCard({
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="border-t border-zinc-800/80 px-2 py-2">
+        <label className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+          <span className="whitespace-nowrap">{t('app.priorityShort')}</span>
+          {prioritySystem === 'levels' ? (
+            <select
+              className="max-w-[14rem] rounded border border-zinc-700 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 disabled:opacity-40"
+              value={task.priorityLevel}
+              disabled={!canEdit}
+              onChange={(e) =>
+                onSetPriorityLevel(Number(e.target.value) as PriorityLevel)
+              }
+            >
+              <option value={1}>{t('app.priorityLevel1')}</option>
+              <option value={2}>{t('app.priorityLevel2')}</option>
+              <option value={3}>{t('app.priorityLevel3')}</option>
+            </select>
+          ) : (
+            <select
+              className="max-w-[min(100%,14rem)] rounded border border-zinc-700 bg-zinc-950 px-1.5 py-1 text-xs text-zinc-200 disabled:opacity-40"
+              value={task.eisenhowerQuadrant ?? 'inbox'}
+              disabled={!canEdit}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v === 'inbox') onSetEisenhowerQuadrant(null)
+                else onSetEisenhowerQuadrant(v as EisenhowerQuadrant)
+              }}
+            >
+              <option value="inbox">{t('app.inbox')}</option>
+              {EISENHOWER_QUADRANTS.map((q) => (
+                <option key={q} value={q}>
+                  {t(EISENHOWER_LABEL[q])}
+                </option>
+              ))}
+            </select>
+          )}
+        </label>
       </div>
 
       <div className="border-t border-zinc-800/80 px-2 pb-2 pt-2">

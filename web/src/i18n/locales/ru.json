@@ -26,7 +26,20 @@
     "color": "Цвет",
     "subtasks": "Подзадачи",
     "addSubtask": "Подзадача…",
-    "goalSplitHint": "Декомпозиция: добавьте подзадачи ниже."
+    "goalSplitHint": "Декомпозиция: добавьте подзадачи ниже.",
+    "priorityShort": "Приоритет",
+    "sectionPriority1": "Приоритет 1",
+    "sectionPriority2": "Приоритет 2",
+    "sectionPriority3": "Приоритет 3",
+    "priorityLevel1": "1 — высокий",
+    "priorityLevel2": "2 — средний",
+    "priorityLevel3": "3 — низкий",
+    "inbox": "Inbox",
+    "eisenhowerQ1": "Срочно и важно",
+    "eisenhowerQ2": "Важно, не срочно",
+    "eisenhowerQ3": "Срочно, не важно",
+    "eisenhowerQ4": "Не срочно и не важно",
+    "emptyQuadrant": "Пусто"
   },
   "settings": {
     "title": "Настройки",
@@ -37,7 +50,11 @@
     "newGroupPlaceholder": "Новая группа…",
     "addGroup": "Добавить группу",
     "rename": "Имя",
-    "cannotDeleteDefault": "Группу «Общее» нельзя удалить."
+    "cannotDeleteDefault": "Группу «Общее» нельзя удалить.",
+    "prioritySystemTitle": "Система приоритетов",
+    "priorityLevelsOption": "Уровни 1–3",
+    "priorityEisenhowerOption": "Эйзенхауэр + Inbox",
+    "prioritySystemHelp": "В режиме Эйзенхауэра новые задачи попадают в Inbox, пока вы не назначите квадрант. Уровни 1–3 не зависят от матрицы — данные сохраняются при переключении режима."
   },
   "home": {
     "badge": "Мотиватор · V1",

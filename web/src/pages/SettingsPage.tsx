@@ -62,6 +62,7 @@ function SettingsPageInner() {
     addGroup,
     renameGroup,
     deleteGroup,
+    setPrioritySystem,
   } = useVault()
   const [newGroupName, setNewGroupName] = useState('')
 
@@ -81,6 +82,22 @@ function SettingsPageInner() {
       </Link>
       <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
       <p className="mt-2 text-sm text-zinc-400">{t('settings.seedHint')}</p>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-medium text-zinc-300">{t('settings.prioritySystemTitle')}</h2>
+        <select
+          className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+          value={vault.prioritySystem}
+          disabled={!canEdit}
+          onChange={(e) =>
+            void setPrioritySystem(e.target.value === 'eisenhower' ? 'eisenhower' : 'levels')
+          }
+        >
+          <option value="levels">{t('settings.priorityLevelsOption')}</option>
+          <option value="eisenhower">{t('settings.priorityEisenhowerOption')}</option>
+        </select>
+        <p className="mt-2 text-xs text-zinc-500">{t('settings.prioritySystemHelp')}</p>
+      </section>
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('common.language')}</h2>

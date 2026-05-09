@@ -56,4 +56,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  build: {
+    /** Бандл с React/i18n/Supabase одним чанком ~520 KiB; порог выше дефолтных 500 KiB */
+    chunkSizeWarningLimit: 600,
+  },
 })
