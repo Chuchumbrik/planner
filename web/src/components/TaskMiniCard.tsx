@@ -1,17 +1,19 @@
+import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
-import { isMainTaskDoneForDay, taskBorderClass, type PriorityLabels, type Task } from '@motivator/core'
+import {
+  isMainTaskDoneForDay,
+  TASK_COLOR_HEX,
+  type PriorityLabels,
+  type Task,
+} from '@motivator/core'
 
-function formatTimeSnippet(
-  t: Task,
-  modeLabelStart: string,
-  modeLabelEnd: string,
-): string | null {
-  if (t.timeMode === 'none' || t.timeMinutesFromMidnight == null) return null
-  const h = Math.floor(t.timeMinutesFromMidnight / 60)
-  const m = t.timeMinutesFromMidnight % 60
-  const clock = `${h}:${String(m).padStart(2, '0')}`
-  if (t.timeMode === 'start') return `${modeLabelStart} ${clock}`
-  return `${modeLabelEnd} ${clock}`
+function formatTimeSnippet(task: Task, t: TFunction): string | null {
+  if (task.timeMode === 'none' || task.timeMinutesFromMidnight == null) return null
+  const hours = Math.floor(task.timeMinutesFromMidnight / 60)
+  const minutes = task.timeMinutesFromMidnight % 60
+  const clockLabel = t('app.miniCardTimeHm', { hours, minutes })
+  if (task.timeMode === 'start') return `${t('app.timeStartShort')} · ${clockLabel}`
+  return `${t('app.timeEndShort')} · ${clockLabel}`
 }
 
 type Props = {
@@ -36,7 +38,7 @@ export function TaskMiniCard({
   onToggleChecklistItem,
 }: Props) {
   const { t } = useTranslation()
-  const borderClass = taskBorderClass(task.colorKey)
+  const leftAccent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
 
   const mainDone =
     task.recurrence && occurrenceDayKey
@@ -48,15 +50,12 @@ export function TaskMiniCard({
     task.checklist.length > 0 &&
     task.checklist.some((s) => !s.done)
 
-  const timeSnip = formatTimeSnippet(
-    task,
-    t('app.timeStartShort'),
-    t('app.timeEndShort'),
-  )
+  const timeSnip = formatTimeSnippet(task, t)
 
   return (
     <div
-      className={`rounded-lg border border-zinc-800 bg-zinc-900/60 ${borderClass} border-l-4`}
+      className="rounded-lg border border-zinc-800 bg-zinc-900/60 border-l-4"
+      style={{ borderLeftColor: leftAccent }}
     >
       <div className="flex items-start gap-2 px-3 py-2">
         <label

@@ -176,6 +176,8 @@ export function CreateTaskModal({
   const savedRef = useRef(false)
   const initialRef = useRef<Snapshot | null>(null)
   const draftIdRef = useRef<string | null>(null)
+  /** Чтобы не сбрасывать черновик формы при смене дня/фильтра, пока модалка уже открыта. */
+  const wasModalOpenRef = useRef(false)
 
   const [snap, setSnap] = useState<Snapshot>(() =>
     emptySnapshot(selectedDayKey, defaultGroupId),
@@ -186,7 +188,15 @@ export function CreateTaskModal({
   const sortedGroups = useMemo(() => [...groups].sort((a, b) => a.sortOrder - b.sortOrder), [groups])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      wasModalOpenRef.current = false
+      return
+    }
+
+    const justOpened = !wasModalOpenRef.current
+    wasModalOpenRef.current = true
+    if (!justOpened) return
+
     savedRef.current = false
     setCloseConfirmOpen(false)
     draftIdRef.current = resumeDraft?.id ?? null
@@ -204,16 +214,19 @@ export function CreateTaskModal({
     return snapshotCanonical(snap, selectedDayKey) !== snapshotCanonical(init, selectedDayKey)
   }, [snap, selectedDayKey])
 
+  const plannedWithEstimateRequired = useMemo(
+    () => !snap.backlogOnly && snap.scheduledLocalDate != null,
+    [snap.backlogOnly, snap.scheduledLocalDate],
+  )
+
   const estimateBlocked = useMemo(() => {
     const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
     const estMerge = mergeEstimateParts(estNorm.hours, estNorm.minutes)
-    const planned = !snap.backlogOnly && snap.scheduledLocalDate != null
-    return estMerge.invalid || (planned && estMerge.total == null)
+    return estMerge.invalid || (plannedWithEstimateRequired && estMerge.total == null)
   }, [
     snap.estimatedHours,
     snap.estimatedMinutesPart,
-    snap.backlogOnly,
-    snap.scheduledLocalDate,
+    plannedWithEstimateRequired,
   ])
 
   useEffect(() => {
@@ -242,8 +255,7 @@ export function CreateTaskModal({
       setEstimateError(t('app.estimateInvalid'))
       return
     }
-    const planned = !snap.backlogOnly && snap.scheduledLocalDate != null
-    if (planned && estMerge.total == null) {
+    if (plannedWithEstimateRequired && estMerge.total == null) {
       setEstimateError(t('app.estimateRequiredWhenPlanned'))
       return
     }
@@ -398,8 +410,21 @@ export function CreateTaskModal({
           </button>
         </div>
 
+        <p className="mt-3 rounded-lg border border-zinc-700/80 bg-zinc-900/60 px-3 py-2 text-[11px] leading-relaxed text-zinc-400">
+          <span className="font-medium text-zinc-300">{t('app.createTaskSaveRequirementsHeading')}</span>{' '}
+          {plannedWithEstimateRequired
+            ? t('app.createTaskSaveRequirementsBodyPlanned')
+            : t('app.createTaskSaveRequirementsBodyBacklog')}
+        </p>
+
         <label className="mt-3 flex flex-col gap-1 text-xs text-zinc-500">
-          <span>{t('app.taskTitle')}</span>
+          <span>
+            {t('app.taskTitle')}
+            <span className="text-amber-400/90" aria-hidden>
+              {' '}
+              *
+            </span>
+          </span>
           <input
             className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
             value={snap.title}
@@ -598,7 +623,15 @@ export function CreateTaskModal({
         </fieldset>
 
         <div className="mt-4 flex flex-col gap-2">
-          <span className="text-xs text-zinc-500">{t('app.estimatedTimeSection')}</span>
+          <span className="text-xs text-zinc-500">
+            {t('app.estimatedTimeSection')}
+            {plannedWithEstimateRequired ? (
+              <span className="text-amber-400/90" aria-hidden>
+                {' '}
+                *
+              </span>
+            ) : null}
+          </span>
           <div className="flex flex-wrap items-end gap-3">
             <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
               <span>{t('app.estimatedHours')}</span>

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import {
   getTaskSlotMinutes,
   isMainTaskDoneForDay,
-  taskBorderClass,
+  TASK_COLOR_HEX,
   taskOccursOnDate,
   type PriorityLabels,
   type Task,
@@ -162,15 +162,15 @@ export function WeekGrid({
                       ((slot.end - slot.start) / 60) * HOUR_HEIGHT_PX,
                       18,
                     )
-                    const border = taskBorderClass(task.colorKey)
+                    const accent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
                     return (
                       <button
                         key={task.id}
                         type="button"
                         disabled={!canEdit}
                         title={`${task.title} · ${priorityLabels[task.priorityRank]}`}
-                        className={`absolute left-0.5 right-0.5 overflow-hidden rounded border border-zinc-700/80 bg-zinc-900/95 px-1 py-0.5 text-left text-[10px] leading-tight text-zinc-100 shadow-sm hover:bg-zinc-800 disabled:opacity-40 ${border} border-l-[3px]`}
-                        style={{ top, height, zIndex: 2 }}
+                        className="absolute left-0.5 right-0.5 overflow-hidden rounded border border-zinc-700/80 bg-zinc-900/95 px-1 py-0.5 text-left text-[10px] leading-tight text-zinc-100 shadow-sm hover:bg-zinc-800 disabled:opacity-40 border-l-[3px]"
+                        style={{ top, height, zIndex: 2, borderLeftColor: accent }}
                         onClick={() => onTaskClick(task.id, day)}
                       >
                         <span className="line-clamp-3 font-medium">{task.title}</span>

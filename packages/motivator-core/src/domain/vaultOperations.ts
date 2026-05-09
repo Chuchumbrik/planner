@@ -201,7 +201,7 @@ export function applyAddChecklistItem(
         ? {
             ...t,
             updatedAt: now,
-            checklist: [sub, ...t.checklist],
+            checklist: [...t.checklist, sub],
           }
         : t,
     ),

@@ -1,10 +1,10 @@
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { TaskTimeMode } from '@motivator/core'
+import { minutesToTimeInput, timeInputToMinutes, type TaskTimeMode } from '@motivator/core'
 
 export type TaskTimeAccordionProps = {
   timeMode: TaskTimeMode
-  /** Значение для `<input type="time">` при `timeMode !== 'none'` */
+  /** Значение часов:минут (формат `HH:mm`) при `timeMode !== 'none'` */
   timeClock: string
   canEdit: boolean
   radioName: string
@@ -15,18 +15,15 @@ export type TaskTimeAccordionProps = {
   onClockBlur?: () => void
 }
 
-function openNativeTimePicker(el: HTMLInputElement | null) {
-  if (!el) return
-  try {
-    if (typeof el.showPicker === 'function') {
-      el.showPicker()
-      return
-    }
-  } catch {
-    /* Safari / старые браузеры */
-  }
-  el.focus()
-  el.click()
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => i)
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => i)
+
+const selectClass =
+  'w-full min-w-[5rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-40'
+
+function clockParts(clock: string): { h: number; min: number } {
+  const m = timeInputToMinutes(clock.trim() || '09:00') ?? 9 * 60
+  return { h: Math.floor(m / 60), min: m % 60 }
 }
 
 export function TaskTimeAccordion({
@@ -41,7 +38,6 @@ export function TaskTimeAccordion({
   onClockBlur,
 }: TaskTimeAccordionProps) {
   const { t } = useTranslation()
-  const timeInputRef = useRef<HTMLInputElement>(null)
 
   const summaryPreview = useMemo(() => {
     if (timeMode === 'none') return t('app.timeNone')
@@ -50,11 +46,19 @@ export function TaskTimeAccordion({
     return `${t('app.timeEnd')} · ${clock}`
   }, [timeMode, timeClock, t])
 
-  function handleFieldShellClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (timeMode === 'none' || !canEdit) return
-    const target = e.target as HTMLElement
-    if (target.closest('input[type="time"]')) return
-    openNativeTimePicker(timeInputRef.current)
+  const { h: hourVal, min: minuteVal } =
+    timeMode === 'none' ? { h: 9, min: 0 } : clockParts(timeClock)
+
+  function handleHourChange(nextH: number) {
+    const cur = timeInputToMinutes(timeClock.trim()) ?? hourVal * 60 + minuteVal
+    const keptMin = cur % 60
+    onClockChange(minutesToTimeInput(nextH * 60 + keptMin))
+  }
+
+  function handleMinuteChange(nextMin: number) {
+    const cur = timeInputToMinutes(timeClock.trim()) ?? hourVal * 60 + minuteVal
+    const keptH = Math.floor(cur / 60)
+    onClockChange(minutesToTimeInput(keptH * 60 + nextMin))
   }
 
   return (
@@ -119,31 +123,48 @@ export function TaskTimeAccordion({
           </label>
         </div>
 
-        <label className="mt-3 flex flex-col gap-1 text-xs text-zinc-500">
-          <span>{t('app.timeClock')}</span>
-          <div
-            className={`rounded-lg border border-zinc-700 bg-zinc-900 p-1 ${
-              timeMode !== 'none' && canEdit
-                ? 'cursor-pointer hover:border-zinc-600'
-                : ''
-            }`}
-            onClick={handleFieldShellClick}
-          >
-            <input
-              ref={timeInputRef}
-              type="time"
-              className="w-full cursor-pointer rounded-md border-0 bg-transparent px-2 py-2 text-base text-white outline-none ring-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-40"
+        <div
+          className="mt-3 flex flex-wrap items-end gap-3"
+          style={{ colorScheme: 'dark' }}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              onClockBlur?.()
+            }
+          }}
+        >
+          <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+            <span>{t('app.estimatedHours')}</span>
+            <select
+              aria-label={`${t('app.timeClock')} · ${t('app.estimatedHours')}`}
+              className={selectClass}
               disabled={!canEdit || timeMode === 'none'}
-              value={timeMode === 'none' ? '' : timeClock}
-              onChange={(e) => onClockChange(e.target.value)}
-              onBlur={() => onClockBlur?.()}
-              onClick={(e) => {
-                e.stopPropagation()
-                openNativeTimePicker(timeInputRef.current)
-              }}
-            />
-          </div>
-        </label>
+              value={hourVal}
+              onChange={(e) => handleHourChange(Number(e.target.value))}
+            >
+              {HOUR_OPTIONS.map((h) => (
+                <option key={h} value={h}>
+                  {String(h).padStart(2, '0')}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+            <span>{t('app.estimatedMinutesPart')}</span>
+            <select
+              aria-label={`${t('app.timeClock')} · ${t('app.estimatedMinutesPart')}`}
+              className={selectClass}
+              disabled={!canEdit || timeMode === 'none'}
+              value={minuteVal}
+              onChange={(e) => handleMinuteChange(Number(e.target.value))}
+            >
+              {MINUTE_OPTIONS.map((m) => (
+                <option key={m} value={m}>
+                  {String(m).padStart(2, '0')}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
     </details>
   )
