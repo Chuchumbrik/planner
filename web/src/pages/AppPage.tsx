@@ -319,19 +319,24 @@ function AppPageInner() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8">
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
+      <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-emerald-400/90">
             {t('app.brand')}
           </p>
           <h1 className="text-xl font-semibold text-white">{t('app.plannerTitle')}</h1>
         </div>
-        <Link
-          to="/settings"
-          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
-        >
-          {t('app.settings')}
-        </Link>
+        <div className="flex flex-col items-end gap-1">
+          <Link
+            to="/settings"
+            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
+          >
+            {t('app.settings')}
+          </Link>
+          <p className="max-w-[14rem] text-right text-xs text-zinc-500" aria-live="polite">
+            {syncHint}
+          </p>
+        </div>
       </header>
 
       <nav className="mb-4 flex flex-wrap gap-2 border-b border-zinc-800 pb-3">
@@ -350,10 +355,6 @@ function AppPageInner() {
           </button>
         ))}
       </nav>
-
-      <p className="mb-4 text-xs text-zinc-500" aria-live="polite">
-        {syncHint}
-      </p>
 
       {remoteError && (
         <div className="mb-4 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
