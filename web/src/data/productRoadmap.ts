@@ -490,6 +490,23 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    title: { ru: 'Интеграция с внешними календарями', en: 'External calendar integration' },
+    summary: {
+      ru: 'После MVP: связка с **Google Calendar**, **Outlook / Microsoft 365**, **Apple/iCloud** и системными календарями — один временной контур; варианты **ICS** (файл / подписка по защищённой ссылке).',
+      en: 'Post-MVP: tie to **Google Calendar**, **Outlook / Microsoft 365**, **Apple/iCloud**, and OS calendars — one timeline; **ICS** file or secure subscribe URL.',
+    },
+    detailBullets: [
+      {
+        ru: 'Развёрнутый черновик требований и ограничений уже есть в репозитории: **`obsidian-motivator/15-Идеи-для-развития.md`**, раздел **«Интеграция с внешними календарями»**; в объём MVP по `03-Scope-MVP-и-бэклог` не входит.',
+        en: 'Full draft lives in **`obsidian-motivator/15-Идеи-для-развития.md`** (**External calendars** section); outside MVP Scope.',
+      },
+      {
+        ru: 'При клиентском шифровании vault нужна явная политика: что синхронизируется наружу, как разруливаются конфликты с облаком календаря.',
+        en: 'With client-side vault crypto, product must define outbound fields and conflict rules vs cloud calendars.',
+      },
+    ],
+  },
+  {
     title: { ru: 'Презентационная страница (лендинг)', en: 'Marketing / landing page' },
     summary: {
       ru: 'Публичная страница о приложении: зачем оно, базовые возможности, новости — и вход в регистрацию без открытия планировщика.',
