@@ -41,3 +41,45 @@ body {
 .plan-accordion[open] > summary .plan-accordion-chevron {
   transform: rotate(180deg);
 }
+
+/* End-of-Day: лёгкая «позитивная» анимация блока выполненного */
+@keyframes eod-pop {
+  0% {
+    opacity: 0.75;
+    transform: scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-eod-pop {
+  animation: eod-pop 0.65s ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-eod-pop {
+    animation: none;
+  }
+}
+
+/* End-of-Day: мягкий акцент блока «ещё открыто» */
+@keyframes eod-soft {
+  0% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-eod-soft {
+  animation: eod-soft 1s ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-eod-soft {
+    animation: none;
+  }
+}

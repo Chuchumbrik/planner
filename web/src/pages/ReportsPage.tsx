@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import {
   aggregateRecurringMisses,
   completionDayRate,
-  consecutiveCompletionDaysEndingOn,
+  consecutiveDr013DaysEndingOn,
   dailyCompletionBuckets,
   reportsWindowKeys,
   topOneOffMissesInWindow,
@@ -37,9 +37,10 @@ function ReportsPageInner() {
   const analytics = useMemo(() => {
     const { todayKey, fromKey, toKey } = reportsWindowKeys(periodDays)
     const tasks = vault.tasks
+    const eodSet = new Set(vault.eodCompletedLocalDates ?? [])
     const buckets = dailyCompletionBuckets(tasks, fromKey, toKey)
     const rate = completionDayRate(tasks, fromKey, toKey)
-    const streak = consecutiveCompletionDaysEndingOn(tasks, todayKey)
+    const streak = consecutiveDr013DaysEndingOn(tasks, todayKey, eodSet)
     const totalMarks = totalCompletionMarksInRange(tasks, fromKey, toKey)
     const recurringFails = aggregateRecurringMisses(tasks, fromKey, toKey, todayKey)
     const oneOffFails = topOneOffMissesInWindow(tasks, fromKey, toKey, todayKey, 5)
@@ -56,7 +57,7 @@ function ReportsPageInner() {
       oneOffFails,
       maxBar,
     }
-  }, [vault.tasks, periodDays])
+  }, [vault.tasks, vault.eodCompletedLocalDates, periodDays])
 
   const pct = Math.round(analytics.rate.ratio * 100)
 

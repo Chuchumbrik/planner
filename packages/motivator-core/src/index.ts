@@ -16,5 +16,6 @@ export * from './lib/timeClock'
 export * from './lib/estimateInput'
 export * from './lib/reporting/recurringSeries'
 export * from './lib/reporting/vaultAnalytics'
+export * from './lib/eod/eodRitual'
 
 export * from './sync/constants'

@@ -20,6 +20,7 @@ import {
   type VaultPayloadV3,
   type VaultPayloadV4,
   type VaultPayloadV5,
+  type VaultPayloadV6,
 } from './types'
 
 function isColorKey(x: unknown): x is TaskColorKey {
@@ -65,6 +66,19 @@ function normalizeCompletedOccurrenceDates(raw: unknown): string[] {
   return [...new Set(out)].sort()
 }
 
+function normalizeEodCompletedDates(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const out: string[] = []
+  for (const x of raw) {
+    if (typeof x === 'string' && DATE_KEY.test(x)) out.push(x)
+  }
+  return [...new Set(out)].sort()
+}
+
+function normalizeIncludeInEodRitual(raw: unknown): boolean {
+  return raw !== false
+}
+
 function normalizePriorityLabels(raw: unknown): PriorityLabels {
   const base = defaultPriorityLabels()
   if (!raw || typeof raw !== 'object') return base
@@ -94,10 +108,19 @@ function normalizeRecurrenceRule(raw: unknown): RecurrenceRule | null {
   return null
 }
 
-/** Приводит произвольный JSON к актуальной схеме v5 */
-export function normalizeVault(raw: unknown): VaultPayloadV5 {
+/** Приводит произвольный JSON к актуальной схеме v6 */
+export function normalizeVault(raw: unknown): VaultPayloadV6 {
   if (!raw || typeof raw !== 'object') return emptyVault()
   const o = raw as Record<string, unknown>
+
+  if (
+    o.schemaVersion === 6 &&
+    Array.isArray(o.tasks) &&
+    Array.isArray(o.groups) &&
+    Array.isArray(o.drafts)
+  ) {
+    return repairV6(o as VaultPayloadV6)
+  }
 
   if (
     o.schemaVersion === 5 &&
@@ -105,28 +128,80 @@ export function normalizeVault(raw: unknown): VaultPayloadV5 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return repairV5(o as VaultPayloadV5)
+    return repairV6(migrateV5toV6(repairV5(o as VaultPayloadV5)))
   }
 
   if (o.schemaVersion === 4 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV4toV5(repairV4(o as VaultPayloadV4))
+    return repairV6(migrateV5toV6(migrateV4toV5(repairV4(o as VaultPayloadV4))))
   }
 
   if (o.schemaVersion === 3 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3)))
+    return repairV6(
+      migrateV5toV6(migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3)))),
+    )
   }
 
   if (o.schemaVersion === 2 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2)))))
+    return repairV6(
+      migrateV5toV6(
+        migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))),
+      ),
+    )
   }
 
   if (o.schemaVersion === 1 && Array.isArray(o.tasks)) {
-    return migrateV4toV5(
-      migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+    return repairV6(
+      migrateV5toV6(
+        migrateV4toV5(
+          migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+        ),
+      ),
     )
   }
 
   return emptyVault()
+}
+
+function migrateV5toV6(v: VaultPayloadV5): VaultPayloadV6 {
+  const r = repairV5(v)
+  return {
+    schemaVersion: 6,
+    priorityLabels: r.priorityLabels,
+    groups: r.groups,
+    tasks: r.tasks.map((t) => ({
+      ...t,
+      includeInEodRitual: normalizeIncludeInEodRitual(t.includeInEodRitual),
+    })),
+    drafts: r.drafts,
+    eodCompletedLocalDates: [],
+    eodPreferences: { enabled: true },
+  }
+}
+
+function repairV6(v: VaultPayloadV6): VaultPayloadV6 {
+  const r5 = repairV5({
+    schemaVersion: 5,
+    priorityLabels: v.priorityLabels,
+    groups: v.groups,
+    tasks: v.tasks,
+    drafts: v.drafts,
+  })
+  const eodOn =
+    v.eodPreferences && typeof v.eodPreferences === 'object' && v.eodPreferences.enabled === false
+      ? false
+      : true
+  return {
+    schemaVersion: 6,
+    priorityLabels: r5.priorityLabels,
+    groups: r5.groups,
+    tasks: r5.tasks.map((t) => ({
+      ...t,
+      includeInEodRitual: normalizeIncludeInEodRitual(t.includeInEodRitual),
+    })),
+    drafts: r5.drafts,
+    eodCompletedLocalDates: normalizeEodCompletedDates(v.eodCompletedLocalDates),
+    eodPreferences: { enabled: eodOn },
+  }
 }
 
 function migrateV4toV5(v: VaultPayloadV4): VaultPayloadV5 {
@@ -439,6 +514,7 @@ function repairV4(v: VaultPayloadV4): VaultPayloadV4 {
       recurrenceAnchorLocalDate: recurrenceAnchor,
       completedOccurrenceLocalDates:
         recurrence ? completedOccurrenceLocalDates : [],
+      includeInEodRitual: normalizeIncludeInEodRitual(row.includeInEodRitual),
     }
   })
 

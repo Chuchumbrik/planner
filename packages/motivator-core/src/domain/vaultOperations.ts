@@ -71,6 +71,7 @@ export function applyCreateTask(
     recurrence,
     recurrenceAnchorLocalDate: anchor,
     completedOccurrenceLocalDates: [],
+    includeInEodRitual: true,
   }
 
   return {
@@ -376,6 +377,20 @@ export function applySetTaskTimePlan(
         updatedAt: now,
       }
     }),
+  }
+}
+
+export function applyCompleteEodForLocalDate(vault: VaultPayload, dateKey: string): VaultPayload {
+  if (!LOCAL_DATE_KEY_PATTERN.test(dateKey)) return vault
+  const prev = vault.eodCompletedLocalDates ?? []
+  const next = [...new Set([...prev, dateKey])].sort()
+  return { ...vault, eodCompletedLocalDates: next }
+}
+
+export function applySetEodEnabled(vault: VaultPayload, enabled: boolean): VaultPayload {
+  return {
+    ...vault,
+    eodPreferences: { enabled },
   }
 }
 

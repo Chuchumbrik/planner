@@ -70,6 +70,10 @@ export type Task = {
    * Для задач без повтора не используется (хранится пустой массив).
    */
   completedOccurrenceLocalDates: string[]
+  /**
+   * Участвует во вечернем ритуале End-of-Day ([[DR-002]]). По умолчанию true.
+   */
+  includeInEodRitual?: boolean
 }
 
 /** Черновик формы создания задачи */
@@ -101,6 +105,22 @@ export type VaultPayloadV5 = {
   groups: TaskGroup[]
   tasks: Task[]
   drafts: TaskDraft[]
+}
+
+/** Глобальные настройки ритуала End-of-Day ([[DR-002]]) */
+export type EodPreferences = {
+  enabled: boolean
+}
+
+export type VaultPayloadV6 = {
+  schemaVersion: 6
+  priorityLabels: PriorityLabels
+  groups: TaskGroup[]
+  tasks: Task[]
+  drafts: TaskDraft[]
+  /** Локальные дни (YYYY-MM-DD), когда пользователь завершил ритуал EOD */
+  eodCompletedLocalDates: string[]
+  eodPreferences: EodPreferences
 }
 
 /** Поля создания задачи из модального окна */
@@ -170,7 +190,7 @@ export type VaultPayloadV1 = {
   }>
 }
 
-export type VaultPayload = VaultPayloadV5
+export type VaultPayload = VaultPayloadV6
 
 export const DEFAULT_GROUP_ID = 'grp_default'
 
@@ -184,12 +204,14 @@ export function defaultPriorityLabels(): PriorityLabels {
   }
 }
 
-export function emptyVault(): VaultPayloadV5 {
+export function emptyVault(): VaultPayloadV6 {
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     priorityLabels: defaultPriorityLabels(),
     groups: [{ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 }],
     tasks: [],
     drafts: [],
+    eodCompletedLocalDates: [],
+    eodPreferences: { enabled: true },
   }
 }

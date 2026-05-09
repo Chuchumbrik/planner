@@ -1,23 +1,15 @@
 /**
- * Контент модалки «реализовано / MVP / идеи» в настройках.
+ * Контент модалки «реализовано / план / релиз-ноты / идеи» в настройках.
  * Редактируйте при появлении новых фич и изменений scope MVP.
  */
 
 export type LocalizedString = { ru: string; en: string }
 
-export type RoadmapImplementedBlock = {
-  /** ISO-дата или короткая подпись периода */
-  dateLabel: LocalizedString
-  items: LocalizedString[]
-}
-
-/** Одна фаза плана MVP (см. obsidian-motivator/17-План-реализации-MVP.md). */
+/** Одна фаза MVP (реализованные и плановые используют одну форму). */
 export type RoadmapMvpPhase = {
   id: number
   title: LocalizedString
-  /** Короткая строка в общем списке фаз */
   summary: LocalizedString
-  /** Детальные пункты — в дополнительной раскрывашке */
   detailBullets: LocalizedString[]
 }
 
@@ -28,104 +20,40 @@ export type RoadmapIdeaEntry = {
   detailBullets?: LocalizedString[]
 }
 
-/** Уже есть в текущей веб-сборке (хронология сверху — новее). */
-export const IMPLEMENTED_BLOCKS: RoadmapImplementedBlock[] = [
-  {
-    dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
-    items: [
-      {
-        ru: 'Фаза 5 MVP: страница `/app/reports` — отчёты на клиенте (DR-007): график отметок, KPI, «часто проваленные» (DR-008); полный стрик DR-013 — после End-of-Day (фаза 6). Расчёты в `@motivator/core` (`vaultAnalytics`).',
-        en: 'MVP phase 5: `/app/reports` — client-side reports (DR-007): completion chart, KPI, often-missed (DR-008); full DR-013 streak after End-of-Day (phase 6). Logic in `@motivator/core` (`vaultAnalytics`).',
-      },
-      {
-        ru: 'Модалка создания задачи: подсказка обязательных полей для «Сохранить» в стиле блока черновиков (янтарь).',
-        en: 'Create-task modal: required-field hint for Save styled like the drafts strip (amber).',
-      },
-      {
-        ru: 'Черновики на /app: один черновик — компактная секция; несколько — кнопка «Черновики» со счётчиком и модальное окно со списком.',
-        en: 'Drafts on /app: one draft — inline section; several — “Drafts” button with count and modal list.',
-      },
-      {
-        ru: 'Форма создания не сбрасывается при смене выбранного дня или фильтра группы, пока модалка открыта (цвет и поля сохраняются).',
-        en: 'Create form does not reset when changing selected day or group filter while the modal is open.',
-      },
-      {
-        ru: 'Цвет задачи: полоска на мини-карточке и в недельной сетке через опорный HEX палитры (Tailwind не теряет классы из core).',
-        en: 'Task color stripe on mini card and week grid via palette hex (Tailwind keeps core-driven colors).',
-      },
-      {
-        ru: 'Блок «Время»: часы и минуты двумя списками в стиле UI вместо нативного time-picker; мини-карточка показывает время как часы:минуты.',
-        en: 'Time block: hour/minute dropdowns instead of native picker; mini card shows clock as hours:minutes.',
-      },
-      {
-        ru: 'Чек-лист: новые пункты в конец списка; отметки на мини-карточке дня/бэклога.',
-        en: 'Checklist: new items append; toggles reflected on day/backlog mini cards.',
-      },
-    ],
-  },
-  {
-    dateLabel: {
-      ru: '2026 · ранняя веб-сборка (pre‑MVP)',
-      en: '2026 · early web build (pre‑MVP)',
-    },
-    items: [
-      {
-        ru: 'Локализация i18next (ru/en), переключатель языка в настройках, ключ в localStorage.',
-        en: 'i18next (ru/en), language toggle in settings, localStorage key.',
-      },
-      {
-        ru: 'Клиентское шифрование vault (AES‑GCM + PBKDF2), схема v5, debounced синхронизация ciphertext с Supabase.',
-        en: 'Client-side vault encryption (AES-GCM + PBKDF2), schema v5, debounced ciphertext sync with Supabase.',
-      },
-      {
-        ru: 'Вкладки «День» / «Неделя» / «Месяц»; бэклог и план на дату; фильтры (группа, приоритеты, цвет, повторы) и информер при свёрнутой панели.',
-        en: 'Day / Week / Month tabs; backlog and planned day; filters (group, priorities, color, repeats) and informer when panel collapsed.',
-      },
-      {
-        ru: 'Задачи: приоритет 1–5, группы, цвет и HEX/пипетка, оценка в часах и минутах, время начала или окончания (или без времени), пересечение слотов с подтверждением.',
-        en: 'Tasks: priority 1–5, groups, color + hex/eyedropper, estimate h+m, start or end time (or none), slot overlap confirmation.',
-      },
-      {
-        ru: 'Повторы: каждый день / каждые N дней / дни недели; якорь серии; отметки выполнения по вхождениям (completedOccurrenceLocalDates); DR-008 id серии.',
-        en: 'Recurrence: daily / every N days / weekdays; series anchor; per-occurrence completions; DR-008 series id.',
-      },
-      {
-        ru: 'Черновики формы создания в vault; настройки названий приоритетов и CRUD групп; смена пароля Supabase; PWA (manifest + service worker).',
-        en: 'Create-task drafts in vault; priority labels and group CRUD; Supabase password change; PWA (manifest + SW).',
-      },
-      {
-        ru: 'Редактирование задачи (TaskEditModal): те же правила расписания и валидации, что и при создании (taskScheduleValidation).',
-        en: 'Task edit modal: same schedule rules and validation as create (taskScheduleValidation).',
-      },
-    ],
-  },
-]
+/** Короткие релиз-ноты для тестеров без доступа к GitHub (дата + пункты). */
+export type RoadmapReleaseNoteBlock = {
+  dateLabel: LocalizedString
+  items: LocalizedString[]
+}
 
-/** Оставшиеся фазы до релиза 1.0.0 по плану (источник правды — `obsidian-motivator/17-План-реализации-MVP.md`). */
-export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
+/**
+ * Фазы 0–5 по плану MVP — **уже в сборке**. Совпадают с номерами в
+ * `obsidian-motivator/17-План-реализации-MVP.md`; детали перенесены из блока «план».
+ */
+export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
   {
     id: 0,
     title: { ru: 'Фундамент', en: 'Foundation' },
     summary: {
-      ru: 'Схема vault, миграции, клиентское шифрование, Web+PWA, базовая локализация.',
-      en: 'Vault schema, migrations, client encryption, Web+PWA, baseline i18n.',
+      ru: 'Схема vault, миграции, клиентское шифрование, Web+PWA, базовая локализация — в прод-сборке.',
+      en: 'Vault schema, migrations, client encryption, Web+PWA, baseline i18n — shipped.',
     },
     detailBullets: [
       {
-        ru: 'Целевая версия схемы vault: план/backlog, слоты, оценка, повторы, приоритеты 1–5, чек-лист, группы, черновики создания.',
-        en: 'Target vault schema: plan/backlog, slots, estimate, repeats, priorities 1–5, checklist, groups, create-form drafts.',
+        ru: 'Целевая схема vault: план/backlog, слоты, оценка, повторы, приоритеты 1–5, чек-лист, группы, черновики создания.',
+        en: 'Target vault schema: plan/backlog, slots, estimate, repeats, priorities 1–5, checklist, groups, create drafts.',
       },
       {
         ru: 'Цепочка миграций на клиенте; при необходимости таблица соответствия полей для старых данных.',
-        en: 'Client-side migration chain; field mapping table for legacy data if needed.',
+        en: 'Client-side migration chain; field mapping for legacy data when needed.',
       },
       {
-        ru: 'Клиентское шифрование (DR-005/006), паритет с VAULT_CRYPTO_CONTRACT.',
-        en: 'Client-side crypto (DR-005/006), parity with VAULT_CRYPTO_CONTRACT.',
+        ru: 'Клиентское шифрование (DR-005/006), паритет с VAULT_CRYPTO_CONTRACT; debounced синхронизация ciphertext с Supabase.',
+        en: 'Client-side crypto (DR-005/006), VAULT_CRYPTO_CONTRACT parity; debounced ciphertext sync with Supabase.',
       },
       {
-        ru: 'Сборка Web + PWA (manifest, service worker); каркас i18n ru/en по Scope.',
-        en: 'Web + PWA build (manifest, SW); ru/en i18n skeleton per Scope.',
+        ru: 'Сборка Web + PWA (manifest, service worker); i18next ru/en, переключатель в настройках, ключ в localStorage.',
+        en: 'Web + PWA (manifest, SW); i18next ru/en, settings toggle, localStorage key.',
       },
     ],
   },
@@ -133,21 +61,33 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     id: 1,
     title: { ru: 'Ядро задачи и «День»', en: 'Core task & Day' },
     summary: {
-      ru: 'Сущности задачи/группа/цвет, экран дня, бэклог, приоритеты, оценка, время, черновики.',
-      en: 'Task/group/color entities, Day screen, backlog, priorities, estimate, time, drafts.',
+      ru: 'День и бэклог, сущность задачи, приоритеты, оценка, время, черновики, модалки создания и редактирования.',
+      en: 'Day & backlog, task entity, priorities, estimate, time, drafts, create/edit modals.',
     },
     detailBullets: [
       {
-        ru: 'Разделение просмотра (мини-карточка) и редактирования (модалка); палитра цвета.',
-        en: 'Separate browse (mini card) vs edit (modal); color palette.',
+        ru: 'Разделение просмотра (мини-карточка) и редактирования (модалка); палитра цвета, HEX и пипетка.',
+        en: 'Browse (mini card) vs edit (modal); color palette, HEX and eyedropper.',
       },
       {
-        ru: 'Чек-лист «план работы»; локальная дата устройства; секция Backlog внутри Today.',
-        en: 'Work-plan checklist; device-local date; Backlog inside Today.',
+        ru: 'Чек-лист «план работы»: новые пункты в конец; отметки на мини-карточке дня и бэклога.',
+        en: 'Work checklist: new items append; toggles on day/backlog mini cards.',
       },
       {
-        ru: 'Приоритеты 1–5 с названиями; оценка времени; время начала XOR окончания; модалка создания и черновики.',
-        en: 'Priorities 1–5 with labels; time estimate; start XOR end time; create modal & drafts.',
+        ru: 'Приоритеты 1–5 с названиями в vault; оценка часы+минуты; время начала XOR окончания (или без времени); пересечение слотов с подтверждением.',
+        en: 'Priorities 1–5 with vault labels; estimate h+m; start XOR end time (or none); slot overlap confirmation.',
+      },
+      {
+        ru: 'Модалка создания: подсказка обязательных полей для «Сохранить» (янтарный стиль); форма не сбрасывается при смене дня/фильтра группы, пока окно открыто.',
+        en: 'Create modal: required-field hint for Save (amber); form persists when changing day/group filter while open.',
+      },
+      {
+        ru: 'Черновики в vault; на `/app` один черновик — компактная секция, несколько — кнопка «Черновики» со счётчиком и модалка списка.',
+        en: 'Vault drafts; on `/app` one draft — inline strip, several — “Drafts” button with count and list modal.',
+      },
+      {
+        ru: 'Настройки: названия приоритетов, CRUD групп, смена пароля Supabase. TaskEditModal — те же правила, что при создании (`taskScheduleValidation`).',
+        en: 'Settings: priority labels, group CRUD, Supabase password change. TaskEditModal — same rules as create.',
       },
     ],
   },
@@ -155,17 +95,25 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     id: 2,
     title: { ru: 'Неделя (таймблокинг)', en: 'Week (timeblocking)' },
     summary: {
-      ru: 'Сетка дни × часы, освобождение слота при завершении, пересечения с подтверждением.',
-      en: 'Day×hour grid, slot release on complete, overlaps with confirmation.',
+      ru: 'Сетка дни × часы, задачи в слотах, предупреждение о пересечениях; полоска цвета и время на сетке.',
+      en: 'Day×hour grid, tasks in slots, overlap warning; color stripe and time on grid.',
     },
     detailBullets: [
       {
         ru: 'Задачи в реальных слотах по правилам ТЗ (старт + оценка → конец или режим «к времени завершения»).',
-        en: 'Tasks in real slots per TZ rules (start + estimate → end or “due time” mode).',
+        en: 'Tasks in real slots per spec (start + estimate → end or “due time” mode).',
       },
       {
         ru: 'Мягкое предупреждение при пересечении с другой задачей на тот же день.',
-        en: 'Soft warning when overlapping another task on the same day.',
+        en: 'Soft warning when overlapping another task the same day.',
+      },
+      {
+        ru: 'Блок «Время»: часы и минуты двумя списками вместо нативного time-picker; мини-карточка — время как часы:минуты.',
+        en: 'Time block: hour/minute dropdowns; mini card shows clock as hours:minutes.',
+      },
+      {
+        ru: 'Цвет задачи: полоска на мини-карточке и в недельной сетке через опорный HEX палитры (Tailwind не теряет классы из core).',
+        en: 'Task color stripe on mini card and week grid via palette hex (Tailwind keeps core-driven colors).',
       },
     ],
   },
@@ -173,17 +121,17 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     id: 3,
     title: { ru: 'Месяц, фильтры', en: 'Month & filters' },
     summary: {
-      ru: 'Календарь месяца с отметками; фильтры вида и информер.',
-      en: 'Month calendar with markers; view filters and informer.',
+      ru: 'Календарь месяца с отметками; фильтры вида и информер при свёрнутой панели.',
+      en: 'Month calendar with markers; view filters and informer when panel collapsed.',
     },
     detailBullets: [
       {
-        ru: 'Фильтры: группа, приоритеты, повторы (и прочее из ТЗ для месяца).',
-        en: 'Filters: group, priorities, repeats (and other TZ fields for month).',
+        ru: 'Вкладка «Месяц»; фильтры: группа, приоритеты, цвет, повторы (по ТЗ).',
+        en: 'Month tab; filters: group, priorities, color, repeats (per spec).',
       },
       {
-        ru: 'Информер активных условий фильтрации (сводка охвата).',
-        en: 'Informer summarizing active filter conditions.',
+        ru: 'Информер активных условий фильтрации, когда панель фильтров свернута.',
+        en: 'Informer for active filter conditions when the filter panel is collapsed.',
       },
     ],
   },
@@ -191,13 +139,13 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     id: 4,
     title: { ru: 'Повторы', en: 'Recurrence' },
     summary: {
-      ru: 'Типы повторов из ТЗ; якорь серии; отметки по вхождениям; DR-008 для отчётов.',
-      en: 'TZ recurrence types; series anchor; per-occurrence marks; DR-008 for reporting.',
+      ru: 'Типы повторов из ТЗ, якорь серии, отметки по вхождениям, DR-008 для отчётов.',
+      en: 'Spec recurrence types, series anchor, per-occurrence marks, DR-008 for reports.',
     },
     detailBullets: [
       {
-        ru: 'Каждый день / каждые N дней / дни недели; связь с отчётами и идентификатором серии.',
-        en: 'Daily / every N days / weekdays; linkage to reports and series id.',
+        ru: 'Каждый день / каждые N дней / дни недели; отметки выполнения по вхождениям; идентификатор серии для отчётов.',
+        en: 'Daily / every N days / weekdays; per-occurrence completions; series id for reporting.',
       },
     ],
   },
@@ -205,20 +153,52 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     id: 5,
     title: { ru: 'Отчёты на клиенте', en: 'Client-side reports' },
     summary: {
-      ru: 'Аналитика после расшифровки (DR-007); стрик DR-013 после EOD; «часто проваленные» (DR-008). Первая версия `/app/reports` уже в сборке.',
-      en: 'Analytics after decrypt (DR-007); DR-013 streak after EOD; often missed (DR-008). First `/app/reports` iteration shipped.',
+      ru: 'Страница `/app/reports`: аналитика после расшифровки (DR-007), KPI и диаграммы; «часто проваленные» (DR-008). Полный стрик DR-013 — после ритуала End-of-Day (фаза 6).',
+      en: '`/app/reports`: analytics after decrypt (DR-007), KPI and charts; often-missed (DR-008). Full DR-013 streak after End-of-Day (phase 6).',
     },
     detailBullets: [
       {
-        ru: 'Доли, диаграммы по периодам; при необходимости worker/батчи для тяжёлых расчётов (DR-007).',
-        en: 'Shares and period charts; optional worker/batches for heavy math (DR-007).',
+        ru: 'Окно 7 / 30 календарных дней; столбчатая диаграмма по дням; расчёты в `@motivator/core` (`vaultAnalytics`).',
+        en: '7 / 30-day windows; bar chart by day; logic in `@motivator/core` (`vaultAnalytics`).',
       },
       {
-        ru: 'Полный стрик по DR-013 возможен после ритуала End-of-Day (фаза 6).',
-        en: 'Full DR-013 streak once End-of-Day ritual exists (phase 6).',
+        ru: 'Таблицы часто проваленных: повторы по серии и разовые задачи в окне; стрик DR-013 в интерфейсе с пометкой до внедрения EOD.',
+        en: 'Often-missed tables: repeats by series and one-off tasks in window; DR-013 streak UI until EOD lands.',
+      },
+      {
+        ru: 'Дальнейшие улучшения тяжёлых расчётов (worker/батчи) — в плане вместе с стабилизацией отчётов.',
+        en: 'Heavy-math improvements (worker/batches) — tracked with reports hardening in the plan.',
       },
     ],
   },
+]
+
+/** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). */
+export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
+    items: [
+      {
+        ru: 'Отчёты `/app/reports`: график отметок, KPI, блок стрика DR-013 (полное значение после EOD — в фазе 6), таблицы «часто проваленные» по DR-008.',
+        en: '`/app/reports`: completion chart, KPI, DR-013 streak block (full value after EOD in phase 6), often-missed tables (DR-008).',
+      },
+      {
+        ru: 'Создание задачи: янтарная подсказка обязательных полей; черновики — одна секция или кнопка «Черновики» с модалкой; форма не сбрасывается при смене дня/фильтра.',
+        en: 'Create task: amber required-field hints; drafts — inline strip or “Drafts” button with modal; form persists when changing day/filter.',
+      },
+      {
+        ru: 'Неделя и карточки: полоска цвета через HEX палитры; время в селектах часы/минуты; чек-лист — новые пункты в конец списка.',
+        en: 'Week & cards: color stripe via palette hex; time as hour/minute selects; checklist appends new items to the end.',
+      },
+    ],
+  },
+]
+
+/**
+ * Оставшиеся фазы до релиза 1.0.0 (источник правды — `obsidian-motivator/17-План-реализации-MVP.md`).
+ * Фазы 0–5 см. в `IMPLEMENTED_MVP_PHASES`.
+ */
+export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   {
     id: 6,
     title: { ru: 'Двойное подтверждение, EOD, анимации', en: 'Double-check, EOD, motion' },
@@ -235,14 +215,18 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
         ru: 'Анимации: пара «успех» и пара «мягко при не выполнено» — по ТЗ MVP.',
         en: 'Animations: success pair and gentle “not done” pair — per MVP spec.',
       },
+      {
+        ru: 'После EOD — полный учёт стрика DR-013 в отчётах (связь с фазой 5).',
+        en: 'After EOD — full DR-013 streak in reports (ties to phase 5).',
+      },
     ],
   },
   {
     id: 7,
     title: { ru: 'Настройки, аккаунт, юридика', en: 'Settings, account, legal' },
     summary: {
-      ru: 'Настройки по блокам; пароль; seed; удаление аккаунта и 30 дней; тексты; кнопка обратной связи; согласие на cookie.',
-      en: 'Grouped settings; password; seed; account deletion + 30 days; legal copy; feedback entry; cookie consent.',
+      ru: 'Настройки по блокам; пароль; seed; удаление и 30 дней; тексты; feedback; cookie; роли user/admin; дорожная карта только для админов; промоут админов.',
+      en: 'Grouped settings; password; seed; deletion & 30 days; legal; feedback; cookie; user/admin roles; roadmap for admins only; promote admins.',
     },
     detailBullets: [
       {
@@ -261,19 +245,35 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
         ru: 'Cookie: баннер или плашка, сохранение выбора, ссылки на политику; согласовать с DR-006 и юрисдикцией.',
         en: 'Cookie: banner or bar, persist choice, link to policy; align with DR-006 and jurisdiction.',
       },
+      {
+        ru: 'Permissions: группы **пользователь** и **администратор** (источник на сервере — Supabase metadata / таблица ролей + RLS).',
+        en: 'Permissions: **user** vs **admin** groups (server-side source — Supabase metadata / roles table + RLS).',
+      },
+      {
+        ru: 'Модалка «Что сделано и планы» (`productRoadmap`) — кнопка видна **только администраторам**.',
+        en: '“Shipped & roadmap” modal (`productRoadmap`) — entry button **admins only**.',
+      },
+      {
+        ru: 'Администраторы: **назначение новых админов** (Edge Function / Dashboard на первом этапе), без самопроизвольного повышения с клиента.',
+        en: 'Admins: **promote new admins** (Edge Function / Dashboard early on), no client-only elevation.',
+      },
     ],
   },
   {
     id: 8,
     title: { ru: 'Монетизация и push', en: 'Monetization & push' },
     summary: {
-      ru: 'Freemium (DR-010); PWA push — если остаются в релизе по решению спринта.',
-      en: 'Freemium (DR-010); PWA push if still in release per sprint decision.',
+      ru: 'Freemium + премиум (DR-010); проверка тарифа; PWA push — по решению спринта.',
+      en: 'Freemium + premium (DR-010); entitlement checks; PWA push per sprint.',
     },
     detailBullets: [
       {
-        ru: 'После стабилизации ядра планирования и отчётов.',
-        en: 'After core planning and reports are stable.',
+        ru: 'Бесплатный уровень и платный **premium** (лимиты или функции — по продукту); связка с учёткой после ядра планирования.',
+        en: 'Free tier and paid **premium** (limits or features — product call); billing tied after core planning ships.',
+      },
+      {
+        ru: 'После стабилизации отчётов и ритуалов — чтобы не блокировать MVP-трек.',
+        en: 'After reports and rituals stabilize — avoids blocking the MVP track.',
       },
     ],
   },
@@ -307,67 +307,113 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   },
 ]
 
-/** После MVP — тематические блоки с развёрнутым текстом под раскрывашкой */
+/**
+ * Идеи после MVP: порядок сверху вниз — рамка → тематические группы → платформы.
+ * Связанные пункты объединены в одну карточку с «Подробнее»; ИИ разнесён на LLM и MCP.
+ */
 export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
-    title: { ru: 'Продукт после 1.0 (v1.1+)', en: 'Post-1.0 (v1.1+)' },
+    title: { ru: 'После релиза 1.0', en: 'After the 1.0 release' },
     summary: {
-      ru: 'Глобальные цели, шаблоны задач, подсказки long-press, геймификация — вне текущего MVP.',
-      en: 'Global goals, task templates, long-press hints, gamification — outside current MVP.',
+      ru: 'Всё ниже — черновой backlog без сроков и без обещаний в текущем MVP.',
+      en: 'Everything below is an informal backlog — no dates and no MVP commitment.',
     },
   },
   {
-    title: { ru: 'Анти-выгорание (мягко)', en: 'Anti-burnout (soft)' },
+    title: { ru: 'Цели и шаблоны', en: 'Goals and templates' },
     summary: {
-      ru: 'Предупреждение при слишком длинных оценках подряд без жёсткой блокировки.',
-      en: 'Nudge on very long back-to-back estimates without hard blocking.',
-    },
-  },
-  {
-    title: { ru: 'Рабочие часы в настройках', en: 'Working hours in settings' },
-    summary: {
-      ru: '«Остаток дня» для предупреждений оценки вместо грубого календарного дня.',
-      en: '“Rest of working day” for estimate hints instead of raw calendar day.',
-    },
-  },
-  {
-    title: { ru: 'Нативные клиенты', en: 'Native clients' },
-    summary: {
-      ru: 'iOS/Android и паритет крипто по VAULT_CRYPTO_CONTRACT — при ресурсах.',
-      en: 'iOS/Android and crypto parity per VAULT_CRYPTO_CONTRACT — when resources allow.',
-    },
-  },
-  {
-    title: { ru: 'Режимы экрана «День»', en: 'Alternate Day views' },
-    summary: {
-      ru: 'Помимо списка — таймлайн по часам, переключение режимов, компактные варианты.',
-      en: 'Besides list — hourly timeline, mode toggle, compact layouts.',
+      ru: 'Два разных направления планирования «над» отдельными задачами.',
+      en: 'Two distinct directions for planning above single tasks.',
     },
     detailBullets: [
       {
-        ru: 'Вертикальная шкала дня (аналог колонки недели): слоты по времени и блок «без времени».',
-        en: 'Vertical day scale (like week column): timed slots and an “untimed” strip.',
+        ru: 'Глобальные цели: горизонт квартал/год, связь с календарём и планом.',
+        en: 'Global goals: quarter/year horizon, linkage to calendar and plan.',
       },
       {
-        ru: 'Сохранение предпочтения вида в localStorage или настройках.',
-        en: 'Persist view preference in localStorage or settings.',
+        ru: 'Шаблоны задач: сохранённые заготовки полей для быстрого создания похожих задач.',
+        en: 'Task templates: saved field presets to spawn similar tasks quickly.',
       },
     ],
   },
   {
-    title: { ru: 'ИИ через API', en: 'AI via API' },
+    title: { ru: 'Жесты: long-press', en: 'Gestures: long-press' },
     summary: {
-      ru: 'Подключение внешних моделей по API (собственный ключ, выбор провайдера) для подсказок по задачам и календарю — только после отдельной продуктовой и privacy-оценки.',
-      en: 'External LLMs via API (BYOK, provider choice) for task/calendar hints — only after product & privacy review.',
+      ru: 'Дополнительные действия или контекстное меню по долгому нажатию на карточки и элементы.',
+      en: 'Extra actions or a context menu on long-press for cards and controls.',
+    },
+  },
+  {
+    title: { ru: 'Геймификация', en: 'Gamification' },
+    summary: {
+      ru: 'Очки, уровни, награды — только после отдельной продуктовой проработки.',
+      en: 'Points, levels, badges — only after a dedicated product pass.',
+    },
+  },
+  {
+    title: { ru: 'Нагрузка и рабочее время', en: 'Workload and working hours' },
+    summary: {
+      ru: 'Мягкие подсказки, чтобы не перегружать день, без жёстких запретов.',
+      en: 'Soft hints to avoid overload — no hard blocking.',
     },
     detailBullets: [
       {
-        ru: 'Клиентское шифрование vault: в промпт уходит только то, что пользователь явно разрешил; без автоматической выгрузки vault.',
-        en: 'Client-side vault encryption: only user-consented context goes to prompts; no automatic full vault export.',
+        ru: 'Анти-выгорание: предупреждение при слишком длинных оценках подряд.',
+        en: 'Anti-burnout: nudge when back-to-back estimates look too heavy.',
       },
       {
-        ru: 'Возможное сосуществование с MCP (отдельная идея в документации продукта): прямой API и контекстный протокол — разные слои.',
-        en: 'May coexist with MCP (separate idea in product docs): direct API vs contextual protocol as different layers.',
+        ru: 'Рабочие часы в настройках: «остаток рабочего дня» для подсказок оценки вместо границы календарного дня.',
+        en: 'Working hours in settings: “rest of workday” for estimate hints vs raw midnight boundary.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Нативные клиенты', en: 'Native clients' },
+    summary: {
+      ru: 'Отдельные приложения iOS/Android при наличии ресурсов; крипто — паритет с VAULT_CRYPTO_CONTRACT.',
+      en: 'Dedicated iOS/Android apps when resources allow; crypto parity with VAULT_CRYPTO_CONTRACT.',
+    },
+  },
+  {
+    title: { ru: 'Экран «День»: другие виды', en: 'Day screen: alternate views' },
+    summary: {
+      ru: 'Помимо списка — таймлайн по часам, компактные режимы, переключатель вида.',
+      en: 'Beyond the list — hourly timeline, compact modes, view toggle.',
+    },
+    detailBullets: [
+      {
+        ru: 'Вертикальная шкала дня (как колонка недели): слоты по времени и блок «без времени».',
+        en: 'Vertical day scale (like a week column): timed slots plus an “untimed” strip.',
+      },
+      {
+        ru: 'Запоминание выбранного вида в localStorage или в настройках.',
+        en: 'Persist the chosen view in localStorage or settings.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Подсказки через LLM (API)', en: 'LLM hints (API)' },
+    summary: {
+      ru: 'Внешние модели по API, свой ключ и провайдер — только после продуктовой и privacy-оценки.',
+      en: 'External models via API, BYOK — only after product & privacy review.',
+    },
+    detailBullets: [
+      {
+        ru: 'При клиентском шифровании vault в промпт попадает только явно разрешённый контекст; без автоматической выгрузки vault.',
+        en: 'With client-side vault encryption, only explicitly allowed context goes to prompts — no automatic full vault export.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'MCP и контекстные ассистенты', en: 'MCP & contextual assistants' },
+    summary: {
+      ru: 'Интеграции через Model Context Protocol или аналоги — отдельный слой от «сырого» HTTP API к LLM.',
+      en: 'Integrations via MCP or similar — a different layer from direct LLM HTTP APIs.',
+    },
+    detailBullets: [
+      {
+        ru: 'Может сосуществовать с подсказками через API; протокол контекста и прямой вызов модели — разные сценарии для продукта и безопасности.',
+        en: 'Can coexist with API-based hints; contextual protocol vs raw model calls differ for product and safety.',
       },
     ],
   },

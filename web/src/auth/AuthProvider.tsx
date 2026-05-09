@@ -8,11 +8,14 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { isMotivatorAdmin } from '@/lib/motivatorRole'
 import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 
 type AuthContextValue = {
   session: Session | null
   loading: boolean
+  /** Роль из Supabase `app_metadata.motivator_role`; кнопка дорожной карты и блок админов завязаны на это. */
+  isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (
     email: string,
@@ -89,7 +92,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ session, loading, signIn, signUp, signOut, updatePassword }),
+    () => ({
+      session,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      updatePassword,
+      isAdmin: isMotivatorAdmin(session),
+    }),
     [session, loading, signIn, signUp, signOut, updatePassword],
   )
 
@@ -99,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         value={{
           session: null,
           loading: false,
+          isAdmin: false,
           signIn: async () => ({
             error: new Error('Задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY'),
           }),

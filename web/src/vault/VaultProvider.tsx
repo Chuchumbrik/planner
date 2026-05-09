@@ -13,6 +13,7 @@ import { useAuth } from '@/auth/AuthProvider'
 import {
   applyAddChecklistItem,
   applyAddGroup,
+  applyCompleteEodForLocalDate,
   applyCreateTask,
   applyDeleteDraft,
   applyDeleteGroup,
@@ -26,6 +27,7 @@ import {
   applySetTaskGroup,
   applySetTaskPriorityRank,
   applySetTaskScheduledLocalDate,
+  applySetEodEnabled,
   applySetTaskTimePlan,
   applyToggleChecklistItem,
   applyToggleTask,
@@ -102,6 +104,8 @@ type VaultContextValue = {
     minutesFromMidnight: number | null,
   ) => Promise<void>
   patchTask: (taskId: string, patch: Partial<Task>) => Promise<void>
+  completeEodForLocalDate: (dateKey: string) => Promise<void>
+  setEodEnabled: (enabled: boolean) => Promise<void>
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null)
@@ -505,6 +509,20 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
+  const completeEodForLocalDate = useCallback(
+    async (dateKey: string) => {
+      await mutate((v) => applyCompleteEodForLocalDate(v, dateKey))
+    },
+    [mutate],
+  )
+
+  const setEodEnabled = useCallback(
+    async (enabled: boolean) => {
+      await mutate((v) => applySetEodEnabled(v, enabled))
+    },
+    [mutate],
+  )
+
   const value = useMemo(
     () => ({
       ready,
@@ -537,6 +555,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       setTaskEstimatedMinutes,
       setTaskTimePlan,
       patchTask,
+      completeEodForLocalDate,
+      setEodEnabled,
     }),
     [
       ready,
@@ -569,6 +589,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       setTaskEstimatedMinutes,
       setTaskTimePlan,
       patchTask,
+      completeEodForLocalDate,
+      setEodEnabled,
     ],
   )
 

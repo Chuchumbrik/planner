@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
+import { EndOfDayModal } from '@/components/EndOfDayModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
 import { TaskEditModal } from '@/components/TaskEditModal'
@@ -124,6 +125,7 @@ function AppPageInner() {
     setTaskEstimatedMinutes,
     setTaskTimePlan,
     patchTask,
+    completeEodForLocalDate,
   } = useVault()
 
   const [view, setView] = useState<'day' | 'week' | 'month'>('day')
@@ -150,6 +152,7 @@ function AppPageInner() {
   const [editOccurrenceDayKey, setEditOccurrenceDayKey] = useState<string | null>(null)
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false)
   const [draftsModalOpen, setDraftsModalOpen] = useState(false)
+  const [eodOpen, setEodOpen] = useState(false)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
 
@@ -205,6 +208,10 @@ function AppPageInner() {
         : t('app.syncReady')
 
   const canEdit = remoteHydrated && !decryptFailed
+
+  const eodEnabled = vault.eodPreferences?.enabled !== false
+  const todayKeyApp = localDateKey()
+  const eodDoneToday = Boolean(vault.eodCompletedLocalDates?.includes(todayKeyApp))
 
   const sortedGroups = useMemo(
     () => [...vault.groups].sort((a, b) => a.sortOrder - b.sortOrder),
@@ -420,6 +427,20 @@ function AppPageInner() {
             >
               {t('app.reportsNav')}
             </Link>
+            {eodEnabled ? (
+              <button
+                type="button"
+                disabled={!canEdit}
+                className={`rounded-lg border px-3 py-1.5 text-sm hover:border-zinc-500 disabled:opacity-40 ${
+                  eodDoneToday
+                    ? 'border-emerald-800 text-emerald-300'
+                    : 'border-violet-700 text-violet-200'
+                }`}
+                onClick={() => setEodOpen(true)}
+              >
+                {t('app.eodNav')}
+              </button>
+            ) : null}
             <Link
               to="/settings"
               className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
@@ -887,6 +908,16 @@ function AppPageInner() {
           </div>
         </section>
       )}
+
+      <EndOfDayModal
+        open={eodOpen}
+        onClose={() => setEodOpen(false)}
+        ritualDateKey={todayKeyApp}
+        tasks={vault.tasks}
+        alreadyCompleted={eodDoneToday}
+        canEdit={canEdit}
+        onCompleteRitual={() => completeEodForLocalDate(todayKeyApp)}
+      />
 
       {editingTask ? (
         <TaskEditModal

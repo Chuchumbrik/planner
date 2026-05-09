@@ -44,6 +44,50 @@ export function taskCompletedOnLocalDay(task: Task, dateKey: string): boolean {
   return Boolean(task.done && task.scheduledLocalDate === dateKey)
 }
 
+/** Задачи с планом на календарный день (разовые с датой или вхождение повтора). */
+export function tasksPlannedForLocalDay(tasks: Task[], dateKey: string): Task[] {
+  const out: Task[] = []
+  for (const task of tasks) {
+    if (task.recurrence) {
+      if (recurrenceInstanceScheduledOnDate(task, dateKey)) out.push(task)
+    } else if (task.scheduledLocalDate === dateKey) {
+      out.push(task)
+    }
+  }
+  return out
+}
+
+/**
+ * Успешный календарный день для стрика [[DR-013]]: EOD завершён и
+ * (нет задач в плане на день ИЛИ есть ≥1 выполненная из плана на день).
+ */
+export function dr013DaySuccessful(
+  tasks: Task[],
+  dateKey: string,
+  eodCompletedDates: Set<string>,
+): boolean {
+  if (!eodCompletedDates.has(dateKey)) return false
+  const planned = tasksPlannedForLocalDay(tasks, dateKey)
+  if (planned.length === 0) return true
+  return planned.some((t) => taskCompletedOnLocalDay(t, dateKey))
+}
+
+/** Стрик DR-013: подряд идущие успешные дни, заканчивающиеся на lastDayKey. */
+export function consecutiveDr013DaysEndingOn(
+  tasks: Task[],
+  lastDayKey: string,
+  eodCompletedDates: Set<string>,
+): number {
+  let streak = 0
+  let d = lastDayKey
+  for (;;) {
+    if (!dr013DaySuccessful(tasks, d, eodCompletedDates)) break
+    streak += 1
+    d = shiftLocalDateKey(d, -1)
+  }
+  return streak
+}
+
 /** Пропуск вхождения: слот был по расписанию, день уже прошёл, отметки на этот день нет. */
 export function isMissedOccurrenceOnDate(task: Task, dateKey: string, todayKey: string): boolean {
   if (dateKey >= todayKey) return false

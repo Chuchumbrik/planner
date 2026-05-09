@@ -480,6 +480,17 @@ export function TaskEditModal({
           </select>
         </label>
 
+        <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={task.includeInEodRitual !== false}
+            disabled={!canEdit}
+            onChange={(e) => onApplyTaskPatch({ includeInEodRitual: e.target.checked })}
+          />
+          <span className="leading-snug">{t('app.includeInEodRitual')}</span>
+        </label>
+
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
           <LocalDatePickerField

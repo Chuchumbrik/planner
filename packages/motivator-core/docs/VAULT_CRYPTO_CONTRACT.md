@@ -46,7 +46,7 @@ RLS: доступ только к строке с `user_id = auth.uid()`.
 
 ## Открытый текст
 
-После расшифровки — **UTF-8** строка, являющаяся `JSON.stringify` объекта vault. Минимальная актуальная схема — **`schemaVersion: 5`** (см. `packages/motivator-core/src/vault/types.ts`). Любая запись должна проходить через **`normalizeVault`** (`packages/motivator-core/src/vault/normalize.ts`) после парсинга JSON.
+После расшифровки — **UTF-8** строка, являющаяся `JSON.stringify` объекта vault. Минимальная актуальная схема — **`schemaVersion: 6`** (поля ритуала EOD и предпочтений см. `packages/motivator-core/src/vault/types.ts`). Любая запись должна проходить через **`normalizeVault`** (`packages/motivator-core/src/vault/normalize.ts`) после парсинга JSON.
 
 ## Золотой вектор PBKDF2 (проверка паритета)
 

@@ -2,8 +2,9 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   IDEAS_LATER_ENTRIES,
-  IMPLEMENTED_BLOCKS,
+  IMPLEMENTED_MVP_PHASES,
   MVP_PHASES_PLANNED,
+  RELEASE_NOTES_BLOCKS,
   type LocalizedString,
   type RoadmapIdeaEntry,
   type RoadmapMvpPhase,
@@ -29,14 +30,31 @@ function Chevron({ nested }: { nested?: boolean }) {
   )
 }
 
-function PhaseRow({ phase, lang }: { phase: RoadmapMvpPhase; lang: string }) {
+function PhaseRow({
+  phase,
+  lang,
+  variant,
+}: {
+  phase: RoadmapMvpPhase
+  lang: string
+  /** shipped — те же карточки, что в «плане», но бейдж в тоне блока «реализовано» */
+  variant: 'shipped' | 'planned'
+}) {
   const { t } = useTranslation()
   const hasDetails = phase.detailBullets.length > 0
+  const badgeClass =
+    variant === 'shipped'
+      ? 'text-emerald-500/90'
+      : 'text-amber-500/85'
+  const detailsAccent =
+    variant === 'shipped'
+      ? 'text-emerald-400/85'
+      : 'text-amber-400/85'
   return (
     <li className="rounded-lg border border-zinc-800/90 bg-zinc-950/50">
       <div className="px-3 py-2.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-amber-500/85">
+          <span className={`text-[11px] font-semibold uppercase tracking-wide ${badgeClass}`}>
             {t('settings.roadmapPhaseBadge', { n: phase.id })}
           </span>
           <span className="text-sm font-semibold text-zinc-100">{pickLocale(phase.title, lang)}</span>
@@ -44,7 +62,9 @@ function PhaseRow({ phase, lang }: { phase: RoadmapMvpPhase; lang: string }) {
         <p className="mt-1.5 text-xs leading-relaxed text-zinc-400">{pickLocale(phase.summary, lang)}</p>
         {hasDetails ? (
           <details className="group/details mt-2 rounded-md border border-zinc-800/80 bg-zinc-900/35 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-xs font-medium text-emerald-400/85 hover:bg-zinc-900/55">
+            <summary
+              className={`flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-xs font-medium hover:bg-zinc-900/55 ${detailsAccent}`}
+            >
               <span>{t('settings.roadmapExpandDetails')}</span>
               <Chevron nested />
             </summary>
@@ -143,21 +163,13 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
               <span>{t('settings.roadmapImplemented')}</span>
               <Chevron />
             </summary>
-            <div className="border-t border-zinc-800 px-3 pb-4 pt-1">
-              <div className="flex flex-col gap-5 pt-3">
-                {IMPLEMENTED_BLOCKS.map((block, bi) => (
-                  <div key={bi}>
-                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                      {pickLocale(block.dateLabel, lang)}
-                    </p>
-                    <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400">
-                      {block.items.map((item, ii) => (
-                        <li key={ii}>{pickLocale(item, lang)}</li>
-                      ))}
-                    </ul>
-                  </div>
+            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapImplementedHint')}</p>
+              <ol className="flex flex-col gap-2">
+                {IMPLEMENTED_MVP_PHASES.map((phase) => (
+                  <PhaseRow key={phase.id} phase={phase} lang={lang} variant="shipped" />
                 ))}
-              </div>
+              </ol>
             </div>
           </details>
 
@@ -170,9 +182,33 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
               <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapMvpHint')}</p>
               <ol className="flex flex-col gap-2">
                 {MVP_PHASES_PLANNED.map((phase) => (
-                  <PhaseRow key={phase.id} phase={phase} lang={lang} />
+                  <PhaseRow key={phase.id} phase={phase} lang={lang} variant="planned" />
                 ))}
               </ol>
+            </div>
+          </details>
+
+          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-sky-400/95 hover:bg-zinc-900/80">
+              <span>{t('settings.roadmapReleaseNotes')}</span>
+              <Chevron />
+            </summary>
+            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapReleaseNotesHint')}</p>
+              <div className="flex flex-col gap-5">
+                {RELEASE_NOTES_BLOCKS.map((block, bi) => (
+                  <div key={bi}>
+                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                      {pickLocale(block.dateLabel, lang)}
+                    </p>
+                    <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400">
+                      {block.items.map((item, ii) => (
+                        <li key={ii}>{pickLocale(item, lang)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
           </details>
 
