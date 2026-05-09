@@ -5,8 +5,8 @@ import { partitionEodTasksByCompletion, type Task } from '@motivator/core'
 /** Кольцо: доля закрытых задач среди запланированных на календарный день (та же логика, что в ритуале EOD). */
 function PlanCompletionRing({ done, remaining }: { done: number; remaining: number }) {
   const total = done + remaining
-  const size = 112
-  const stroke = 10
+  const size = 136
+  const stroke = 11
   const cx = size / 2
   const cy = size / 2
   const r = cx - stroke / 2 - 2

@@ -756,8 +756,8 @@ function AppPageInner() {
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               {t('app.sectionPlanned')}
             </h2>
-            <div className="flex flex-col gap-6 lg:flex-row-reverse lg:items-start lg:gap-10">
-              <aside className="flex shrink-0 justify-center lg:w-[11rem] lg:justify-end lg:pt-0.5">
+            <div className="flex flex-col gap-6 lg:flex-row-reverse lg:items-start lg:justify-end lg:gap-10">
+              <aside className="flex shrink-0 justify-center lg:w-[13rem] lg:justify-end lg:pt-0.5">
                 <DayPlanDonut tasks={vault.tasks} dayKey={selectedDay} />
               </aside>
               <div className="min-w-0 flex-1 lg:max-w-lg">
