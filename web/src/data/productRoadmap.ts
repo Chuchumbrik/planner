@@ -99,8 +99,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Vault drafts; on `/app` one draft — inline strip, several — “Drafts” button with count and list modal.',
       },
       {
-        ru: 'Вкладка «День»: кольцо прогресса — знаменатель = число задач в плане; чек-лист даёт долю внутри задачи (1 из 4 пунктов = 0,25); подпись: процент и строка «доля / задачи»; модалка EOD — та же логика.',
-        en: 'Day tab: progress ring — denominator = planned task count; checklist contributes a share inside each task (1 of 4 items = 0.25); caption shows percent and fractional line; EOD modal uses the same logic.',
+        ru: 'Вкладка «День»: кольцо прогресса — знаменатель = число задач в плане; список и кольцо согласованы через **`tasksScheduledForPlannerDay`**; чек-лист даёт долю внутри задачи (1 из 4 пунктов = 0,25); подпись: процент и строка про **число задач**; списки модалки EOD — по **`tasksPlannedForLocalDay`** (отбор для ритуала).',
+        en: 'Day tab: ring denominator = planned task count; list and ring aligned via **`tasksScheduledForPlannerDay`**; checklist share inside a task (1 of 4 = 0.25); caption references **task count**; EOD modal lists use **`tasksPlannedForLocalDay`** (ritual scope).',
       },
       {
         ru: 'Настройки: названия приоритетов, CRUD групп, смена пароля Supabase. TaskEditModal — те же правила, что при создании (`taskScheduleValidation`).',
@@ -132,6 +132,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         ru: 'Цвет задачи: полоска на мини-карточке и в недельной сетке через опорный HEX палитры (Tailwind не теряет классы из core).',
         en: 'Task color stripe on mini card and week grid via palette hex (Tailwind keeps core-driven colors).',
       },
+      {
+        ru: 'Кольцо «План недели»: сумма метрик по дням недели до сегодня (`plannedPeriodProgress`); сетка слева, кольцо справа на широком экране; на узком — кольцо выше (`flex-col-reverse`).',
+        en: 'Week plan ring: sums per-day metrics through today (`plannedPeriodProgress`); grid left, ring right on wide screens; ring first on narrow (`flex-col-reverse`).',
+      },
     ],
   },
   {
@@ -149,6 +153,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
       {
         ru: 'Информер активных условий фильтрации, когда панель фильтров свернута.',
         en: 'Informer for active filter conditions when the filter panel is collapsed.',
+      },
+      {
+        ru: 'Кольцо «План месяца»: те же правила по дням месяца до сегодня; календарь и кольцо в контейнере `max-w-5xl` по центру; скрывается без задач в плане в охвате.',
+        en: 'Month plan ring: same rules for month days through today; calendar + ring in a centered `max-w-5xl` container; hidden when no planned tasks in scope.',
       },
     ],
   },
@@ -226,6 +234,23 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-17', en: '2026-05-17' },
+    items: [
+      {
+        changes: [
+          {
+            ru: '«Неделя» и «Месяц»: кольцо прогресса плана за период — та же логика долей, что у «Дня» (**`plannedPeriodProgress`** в `@motivator/core`); в сумму входят только календарные дни **до сегодня включительно**; фильтры вида как у списков; блок скрыт, если в охвате нет задач в плане.',
+            en: 'Week & Month tabs: period plan-progress ring — same share logic as Day (**`plannedPeriodProgress`** in `@motivator/core`); only calendar days **through today**; view filters match task lists; section hidden when no planned tasks in scope.',
+          },
+          {
+            ru: '«День»: список плана и кольцо используют общий отбор **`tasksScheduledForPlannerDay`**; подпись под кольцом явно про **число задач**, не пункты чек-листа.',
+            en: 'Day tab: plan list and ring both use **`tasksScheduledForPlannerDay`**; caption shows **task count**, not checklist rows.',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-16', en: '2026-05-16' },
     items: [
@@ -803,8 +828,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     title: { ru: 'Диаграммы: отчёты и вкладка «День»', en: 'Charts: reports vs Day tab' },
     summary: {
-      ru: '**`/app/reports`** — столбчатая диаграмма по дням; вкладка **«День»** — кольцо прогресса плана (**реализовано**). Дальнейшие визуализации (тренды, сравнение периодов) — по приоритету после 1.0.',
-      en: '**`/app/reports`** — per-day bar chart; **Day** tab — plan progress ring (**shipped**). Further charts (trends, period compare) — prioritized post-1.0.',
+      ru: '**`/app/reports`** — столбчатая диаграмма по дням; вкладки **«День»**, **«Неделя»**, **«Месяц»** — кольца прогресса плана (**реализовано**). Дальнейшие визуализации (тренды, сравнение периодов) — по приоритету после 1.0.',
+      en: '**`/app/reports`** — per-day bar chart; **Day**, **Week**, and **Month** tabs — plan progress rings (**shipped**). Further charts (trends, period compare) — prioritized post-1.0.',
     },
   },
   {
