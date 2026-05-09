@@ -1,5 +1,5 @@
 /**
- * Контент модалки «реализовано / план / релиз-ноты / идеи» в настройках.
+ * Контент модалки «Краткая сводка»: дорожная карта, changelog по датам, идеи, открытые вопросы.
  * Редактируйте при появлении новых фич и изменений scope MVP.
  */
 
@@ -22,10 +22,10 @@ export type RoadmapIdeaEntry = {
   detailBullets?: LocalizedString[]
 }
 
-/** Один пункт релиз-нотов: что изменилось + то же очень простым языком. */
+/** Одна запись за дату: список изменений + опционально пункты «простыми словами». */
 export type RoadmapReleaseNoteItem = {
-  summary: LocalizedString
-  plain: LocalizedString
+  changes: LocalizedString[]
+  plainBullets?: LocalizedString[]
 }
 
 /** Релиз-ноты по датам для тестеров без доступа к GitHub. */
@@ -211,20 +211,61 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
   },
 ]
 
-/** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). */
+/** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
+    items: [
+      {
+        changes: [
+          {
+            ru: 'Релиз-ноты в «Краткая сводка» переведены на формат списка изменений (пункты по датам вместо длинных абзацев).',
+            en: 'Release notes in Brief summary are now changelog-style bullet lists per date instead of long paragraphs.',
+          },
+          {
+            ru: 'При каждом открытии модалки все раскрывающиеся секции по умолчанию свёрнуты.',
+            en: 'Every time the modal opens, all collapsible sections start collapsed.',
+          },
+          {
+            ru: 'Вверху модалки добавлена круговая диаграмма: процент и доля закрытых фаз дорожной карты до MVP 1.0.0 (0–6 из 0–11).',
+            en: 'A donut chart at the top shows percent complete for roadmap phases toward MVP 1.0.0 (phases 0–6 of 0–11).',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
       {
-        summary: {
-          ru: '**Настройки → Краткая сводка:** пятый блок **«Открытые вопросы»** (перенесено из модалки завершения дня). **Завершение дня:** круговая диаграмма выполнения по плану; блок «не закрыто (0)» подсвечивается зелёным, если долга нет; после ритуала кнопка в шапке планировщика — **«Отчёт за сегодня»**.',
-          en: '**Settings → Brief summary:** fifth section **Open questions** (moved from End-of-day). **End of day:** donut chart for plan completion; “not closed (0)” block goes green when nothing is due; after the ritual the planner header shows **Today\'s report**.',
-        },
-        plain: {
-          ru: 'Текст «открытых вопросов» теперь рядом с дорожной картой, а не в вечернем окне — чтобы вечернее окно было про итог дня. Зелёная «нулевая» строка и новая подпись кнопки убирают ощущение, что день всё ещё «не закрыт».',
-          en: 'Open questions sit next to the roadmap instead of the evening modal so the ritual stays focused on the day. A green zero row and the renamed header button avoid implying the day is still unfinished.',
-        },
+        changes: [
+          {
+            ru: 'Настройки: в «Краткая сводка» добавлен пятый блок «Открытые вопросы» (перенесено из модалки завершения дня).',
+            en: 'Settings: fifth section “Open questions” in Brief summary (moved from End-of-day modal).',
+          },
+          {
+            ru: 'Завершение дня: круговая диаграмма доли задач, закрытых по плану на день.',
+            en: 'End of day: donut chart for share of planned-for-day tasks completed.',
+          },
+          {
+            ru: 'Блок «не закрыто (0)» отображается в зелёном стиле, если по плану не осталось незакрытых задач.',
+            en: '“Not closed (0)” section uses success styling when nothing is left open per plan.',
+          },
+          {
+            ru: 'После отметки ритуала кнопка в шапке планировщика: «Отчёт за сегодня».',
+            en: 'After completing the ritual, the planner header shows “Today’s report”.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Открытые продуктовые вопросы перенесены из вечернего окна в сводку — вечернее окно про итог дня.',
+            en: 'Product “open questions” moved out of the evening modal so the ritual stays about the day’s outcome.',
+          },
+          {
+            ru: 'Зелёный блок при нуле и новая подпись кнопки уменьшают ощущение, что день «ещё не закрыт».',
+            en: 'Green zero-state and the renamed button reduce the feeling that the day is still unfinished.',
+          },
+        ],
       },
     ],
   },
@@ -232,34 +273,74 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
     items: [
       {
-        summary: {
-          ru: '**Ритуал «Завершение дня»:** списки по **плану на день** (исправлено: задача не попадает в «не закрыто» только из‑за редактирования сегодня); **бэклог** — отдельный блок «на заметку»; заголовок для **ru** на русском; блок **«Открытые вопросы»**.',
-          en: '**End-of-day ritual:** lists follow **planned-for-day** tasks (fix: no stray rows from “edited today”); **backlog** FYI section; **ru** title localized; **Open questions** block.',
-        },
-        plain: {
-          ru: 'Логика совпадает с отчётами: в основные списки попадает только то, что было запланировано на эту дату (разовая задача на день или вхождение повтора). Бэклог показывается отдельно и не считается «долгом за день».',
-          en: 'Same rule as reports: main lists only include what was actually planned for that date. Backlog is shown separately and isn’t framed as “unfinished for the day.”',
-        },
+        changes: [
+          {
+            ru: 'Ритуал «Завершение дня»: списки строятся только по задачам, запланированным на этот календарный день.',
+            en: 'End-of-day ritual: lists only include tasks planned for that calendar day.',
+          },
+          {
+            ru: 'Исправление: задача не попадает в «не закрыто» только из‑за редактирования в тот же день.',
+            en: 'Fix: a task is not listed as “not closed” solely because it was edited today.',
+          },
+          {
+            ru: 'Бэклог — отдельный блок «на заметку», не как долг за день.',
+            en: 'Backlog is a separate FYI block, not framed as same-day debt.',
+          },
+          {
+            ru: 'Заголовок модалки для локали ru отображается на русском.',
+            en: 'Russian locale shows a Russian modal title.',
+          },
+          {
+            ru: 'Добавлен блок «Открытые вопросы» в модалке завершения дня (позже перенесён в «Краткая сводка»).',
+            en: '“Open questions” block in End-of-day (later moved to Brief summary).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Те же правила, что в отчётах: в основные списки попадает только запланированное на дату; бэклог отдельно.',
+            en: 'Same as reports: main lists match what was planned for the date; backlog is separate.',
+          },
+        ],
       },
       {
-        summary: {
-          ru: '**Идеи после MVP** в дорожной карте: **внешние календари** (черновик в `obsidian-motivator/15-Идеи-для-развития.md`), **цвет метки с названием и описанием**; ранее — раздел тестирования для admin/beta, поля рефлексии EOD, мини-диаграмма на «День».',
-          en: '**Ideas for later:** **external calendars** (draft in Obsidian), **color labels with name & description**; plus QA settings, EOD reflection fields, Day mini-chart entries.',
-        },
-        plain: {
-          ru: 'В модалке — короткие карточки; подробный текст по интеграции с Google/Outlook/Apple остаётся в Obsidian §4.',
-          en: 'The modal shows short cards; full calendar-integration notes stay in Obsidian §4.',
-        },
+        changes: [
+          {
+            ru: 'В дорожной карте обновлены «Идеи на потом»: внешние календари (черновик в Obsidian §4).',
+            en: 'Ideas for later: external calendars (draft in Obsidian §4).',
+          },
+          {
+            ru: 'Идея: цвет метки с названием и описанием.',
+            en: 'Idea: color labels with name and description.',
+          },
+          {
+            ru: 'Задел: раздел тестирования для admin/beta, поля рефлексии EOD, мини-диаграмма на вкладке «День».',
+            en: 'Draft ideas: QA settings for admin/beta, EOD reflection fields, Day tab mini-chart.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В модалке — короткие карточки; подробности интеграции с календарями — в репозитории Obsidian.',
+            en: 'The modal shows short cards; full calendar-integration draft stays in Obsidian.',
+          },
+        ],
       },
       {
-        summary: {
-          ru: 'Синхронизация **документации**: `web/README.md` (в т.ч. четыре вкладки дорожной карты), тексты в этом файле и релиз-ноты для тестеров.',
-          en: '**Docs sync:** `web/README.md` (incl. four roadmap tabs), copy in this file, and tester-facing release notes.',
-        },
-        plain: {
-          ru: 'Таблица возможностей и контракт vault отражают текущую сборку; релиз-ноты датированы для истории.',
-          en: 'Feature table and vault contract match the build; release notes are dated for history.',
-        },
+        changes: [
+          {
+            ru: 'Синхронизированы web/README.md, тексты в productRoadmap.ts и релиз-ноты для тестеров.',
+            en: 'Synced web/README.md, productRoadmap.ts copy, and tester-facing release notes.',
+          },
+          {
+            ru: 'Описание вкладок дорожной карты в README приведено к актуальной модалке.',
+            en: 'README roadmap tabs description matches the current modal.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Таблица возможностей и контракт vault отражают сборку; релиз-ноты датированы для истории.',
+            en: 'Feature table and vault contract match the build; dated notes keep history.',
+          },
+        ],
       },
     ],
   },
@@ -267,74 +348,142 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
       {
-        summary: {
-          ru: 'Версия продукта **0.6.1** (`package.json`): схема **`0·x·y`**, четвёртый слой — **`+git`**; ведущий **0** ≠ «только MVP» (см. `web/README.md`).',
-          en: 'Product version **0.6.1** (`package.json`): **`0·x·y`** scheme, fourth layer is **`+git`**; leading **0** ≠ “MVP-only” (see `web/README.md`).',
-        },
-        plain: {
-          ru: 'У программы есть «номер версии» — как имя у игрушки, чтобы не перепутать старые и новые. Первая цифра **0** не значит, что приложение плохое: мы просто ещё не дошли до большого «первого» официального выпуска **1.0.0**. К номеру приписывают короткий код из букв и цифр — чтобы знать, из какой коробки собрали эту копию.',
-          en: 'The app has a **version number** — like a nametag so we don’t mix old and new builds. The first digit **0** doesn’t mean the app is bad; we just haven’t reached the big **1.0.0** birthday yet. A short letter-number code is added so we know which “box” this copy came from.',
-        },
+        changes: [
+          {
+            ru: 'Версия продукта 0.6.1 в package.json; схема 0·x·y и суффикс +git для сборки.',
+            en: 'Product version 0.6.1 in package.json; 0·x·y scheme and +git build suffix.',
+          },
+          {
+            ru: 'Ведущий 0 в версии не означает «только MVP» — см. web/README.md.',
+            en: 'Leading 0 does not mean “MVP-only” — see web/README.md.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Номер версии помогает отличать сборки; первая цифра 0 — эпоха нумерации до 1.0.0, не оценка качества.',
+            en: 'Version tags builds; leading 0 is the pre-1.0.0 numbering era, not a quality score.',
+          },
+        ],
       },
       {
-        summary: {
-          ru: '**DR-004** и схема vault **v7**: двойное подтверждение выполнения задачи (чекбокс в создании/редактировании, второй тап по галочке на карточке, таймеры по умолчанию +10/+30 мин); просроченное ожидание снимается автоматически; короткие анимации на карточке.',
-          en: '**DR-004** and vault **v7**: double confirmation for marking done (create/edit toggles, second tap on the mini card, default +10/+30 min timers); stale pending clears automatically; brief card animations.',
-        },
-        plain: {
-          ru: 'Если для задачи включено «второе подтверждение», одного нажатия на галочку мало: сначала загорается ожидание, потом нужно подтвердить ещё раз, пока не вышло время. Если не успел — отметка «сделано» не ставится, можно отменить ожидание или попробовать снова. Это отдельно от вечернего «закрыть день».',
-          en: 'When double confirmation is on for a task, one tap isn’t enough: the card shows a waiting state, then you confirm again before time runs out. If you miss it, it doesn’t count as done — you can cancel the wait or try again. This is separate from the evening “finish day” ritual.',
-        },
+        changes: [
+          {
+            ru: 'DR-004 и схема vault v7: двойное подтверждение «сделано» в создании/редактировании и на мини-карточке.',
+            en: 'DR-004 and vault v7: double confirmation for done in editors and on the mini card.',
+          },
+          {
+            ru: 'Таймеры по умолчанию +10 / +30 мин; просроченное ожидание снимается автоматически.',
+            en: 'Default +10 / +30 min timers; stale pending clears automatically.',
+          },
+          {
+            ru: 'Короткие анимации на карточке при успехе и мягком пропуске.',
+            en: 'Brief card animations for success vs soft miss.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Один тап по галочке недостаточен: нужно второе подтверждение в окне времени или отмена ожидания.',
+            en: 'One tap is not enough: confirm again within the window or cancel the wait.',
+          },
+        ],
       },
       {
-        summary: {
-          ru: 'Дорожная карта в настройках: план до **1.0.0** — фазы **7–11** (в т.ч. отдельная фаза **7** — дизайн и адаптивность для широких и мобильных экранов); в «Идеях на потом» — черновая идея **раздела тестирования** для админов и бета-тестеров.',
-          en: 'Settings roadmap: **1.0.0** plan — phases **7–11** (including phase **7** — design & responsiveness); **Ideas for later** drafts a **testing / QA** settings section for admins and beta testers.',
-        },
-        plain: {
-          ru: 'Второй список в окне дорожной карты теперь честно показывает одиннадцать шагов до большого релиза и отдельный блок про красивый интерфейс на большом экране и телефоне. Внизу, среди идей после первой версии, появилась заметка про скрытый раздел для проверки приложения — когда дойдём до реализации.',
-          en: 'The roadmap’s plan section now lists eleven steps to the big release and calls out a dedicated pass for layout on wide and small screens. Under “Ideas for later” there’s a note about a future QA-only settings area — for when we build it.',
-        },
+        changes: [
+          {
+            ru: 'Дорожная карта в настройках: до 1.0.0 остаются фазы 7–11 (включая фазу 7 — дизайн и адаптивность).',
+            en: 'Settings roadmap: phases 7–11 remain until 1.0.0 (incl. phase 7 — design & responsiveness).',
+          },
+          {
+            ru: 'В «Идеях на потом» — черновик раздела тестирования для админов и бета-тестеров.',
+            en: 'Ideas for later: draft QA/testing section for admins and beta testers.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'План до релиза показан как одиннадцать шагов; отдельно отмечена полировка под широкий и узкий экран.',
+            en: 'The plan lists eleven steps to release plus layout polish for wide and small screens.',
+          },
+        ],
       },
       {
-        summary: {
-          ru: 'Модалка «Что сделано и планы»: фазы **0–6** в «реализовано»; перечень реализованного и релиз-ноты синхронизированы с документацией (`web/README.md`, план в Obsidian).',
-          en: '“Shipped & planned” modal: phases **0–6** under shipped; lists and release notes aligned with docs (`web/README.md`, Obsidian plan).',
-        },
-        plain: {
-          ru: 'Текст в модалке и релиз-нотах для тестеров обновлён, чтобы не расходиться с тем, что реально есть в сборке и в файлах проекта.',
-          en: 'Copy in the modal and tester-facing release notes is updated so it matches what’s actually in the build and repo docs.',
-        },
+        changes: [
+          {
+            ru: 'Модалка дорожной карты: фазы 0–6 в блоке «Уже реализовано».',
+            en: 'Roadmap modal: phases 0–6 under Shipped.',
+          },
+          {
+            ru: 'Тексты синхронизированы с web/README.md и планом в Obsidian.',
+            en: 'Copy aligned with web/README.md and the Obsidian plan.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Релиз-ноты для тестеров совпадают со сборкой и репозиторием.',
+            en: 'Tester-facing notes match the build and repo.',
+          },
+        ],
       },
       {
-        summary: {
-          ru: 'Отчёты `/app/reports`: график отметок, KPI, стрик DR-013 с EOD, таблицы «часто проваленные» по DR-008.',
-          en: '`/app/reports`: completion chart, KPI, DR-013 streak with EOD, often-missed tables (DR-008).',
-        },
-        plain: {
-          ru: 'Есть страничка «Отчёты»: там картинка-график, сколько дней ты отмечал дела, и «сколько дней подряд получалось». Если ты нажал «день закончен», это помогает считать серию верно. Есть ещё списки «что часто забывалось» — как напоминание, над чем поработать.',
-          en: 'There’s a **Reports** page: a little chart, how many days you checked things off, and a “how many days in a row” score. If you tap **day finished**, it counts your streak fairly. There are also lists of “often missed” items — like gentle reminders what to work on.',
-        },
+        changes: [
+          {
+            ru: 'Страница /app/reports: график отметок, KPI, стрик DR-013 с EOD.',
+            en: '/app/reports: completion chart, KPIs, DR-013 streak with EOD.',
+          },
+          {
+            ru: 'Таблицы «часто проваленные» по DR-008.',
+            en: 'Often-missed tables (DR-008).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Отчёты помогают видеть серию дней и задачи, которые часто срываются.',
+            en: 'Reports show streaks and tasks that often slip.',
+          },
+        ],
       },
       {
-        summary: {
-          ru: 'Создание задачи: янтарная подсказка обязательных полей; черновики — одна секция или кнопка «Черновики» с модалкой; форма не сбрасывается при смене дня/фильтра.',
-          en: 'Create task: amber required-field hints; drafts — inline strip or “Drafts” button with modal; form persists when changing day/filter.',
-        },
-        plain: {
-          ru: 'Когда ты создаёшь новое дело, программа жёлтым подсказывает, что нужно заполнить обязательно. Если ты начал и закрыл окно не сохранив — можно вернуться к черновику (один показывается сразу, много — по кнопке «Черновики»). Если ты просто переключил день или фильтр, то то, что ты уже набрал, не пропадает само.',
-          en: 'When you make a new task, hints in amber show what you must fill in. If you started and closed without saving, you can come back to a draft (one shows inline; many drafts open from a **Drafts** button). If you only switch the day or filter, what you typed doesn’t vanish.',
-        },
+        changes: [
+          {
+            ru: 'Создание задачи: янтарная подсказка обязательных полей для сохранения.',
+            en: 'Create task: amber hints for required fields before save.',
+          },
+          {
+            ru: 'Черновики: одна секция или кнопка «Черновики» с модалкой списка.',
+            en: 'Drafts: inline strip or Drafts button with list modal.',
+          },
+          {
+            ru: 'Форма не сбрасывается при смене дня или фильтра группы, пока модалка открыта.',
+            en: 'Form persists when changing day or group filter while the modal is open.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Черновик можно продолжить позже; переключение дня не стирает набранный текст.',
+            en: 'Drafts can be resumed; switching the day does not wipe typed text.',
+          },
+        ],
       },
       {
-        summary: {
-          ru: 'Неделя и карточки: полоска цвета через HEX палитры; время в селектах часы/минуты; чек-лист — новые пункты в конец списка.',
-          en: 'Week & cards: color stripe via palette hex; time as hour/minute selects; checklist appends new items to the end.',
-        },
-        plain: {
-          ru: 'В неделе у задач есть цветная полоска слева — цвет не теряется. Время выбирают двумя маленькими списками: часы и минуты. В чек-листе новые пункты всегда добавляются вниз — как новые строчки в конце списка покупок.',
-          en: 'In the week view, tasks have a colored stripe on the side — the color stays put. Time is picked with two small lists: hours and minutes. New checklist lines always go at the bottom — like new lines at the end of a shopping list.',
-        },
+        changes: [
+          {
+            ru: 'Неделя и карточки: полоска цвета через HEX палитры.',
+            en: 'Week and cards: color stripe via palette hex.',
+          },
+          {
+            ru: 'Время: селекты часы и минуты.',
+            en: 'Time: hour and minute selects.',
+          },
+          {
+            ru: 'Чек-лист: новые пункты добавляются в конец списка.',
+            en: 'Checklist: new items append to the end.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Цвет стабильно виден в сетке; время без нативного time-picker.',
+            en: 'Color stays visible in the grid; time without native time-picker.',
+          },
+        ],
       },
     ],
   },

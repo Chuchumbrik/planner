@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   IDEAS_LATER_ENTRIES,
@@ -17,6 +17,50 @@ function pickLocale(s: LocalizedString, lang: string): string {
 export type ProductRoadmapModalProps = {
   open: boolean
   onClose: () => void
+}
+
+/** Доля закрытых фаз 0–6 от всех фаз дорожной карты до 1.0.0 (0–6 + 7–11). */
+function MvpProgressRing({ shipped, total }: { shipped: number; total: number }) {
+  const frac = total === 0 ? 0 : shipped / total
+  const size = 120
+  const stroke = 10
+  const cx = size / 2
+  const cy = size / 2
+  const r = cx - stroke / 2 - 2
+  const circ = 2 * Math.PI * r
+  const dashDone = frac * circ
+  const dashRest = circ - dashDone
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="shrink-0"
+      aria-hidden
+    >
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke="rgb(39 39 42)"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+      />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke="rgb(5 150 105)"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={`${dashDone} ${dashRest}`}
+        transform={`rotate(-90 ${cx} ${cy})`}
+      />
+    </svg>
+  )
 }
 
 function Chevron({ nested }: { nested?: boolean }) {
@@ -117,6 +161,13 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
   const { t, i18n } = useTranslation()
   const lang = i18n.language === 'en' ? 'en' : 'ru'
 
+  const { mvpPct, phasesShipped, phasesTotal } = useMemo(() => {
+    const shipped = IMPLEMENTED_MVP_PHASES.length
+    const total = shipped + MVP_PHASES_PLANNED.length
+    const pct = total === 0 ? 0 : Math.round((shipped / total) * 100)
+    return { mvpPct: pct, phasesShipped: shipped, phasesTotal: total }
+  }, [])
+
   useEffect(() => {
     if (!open) return
     function onKeyDown(e: KeyboardEvent) {
@@ -163,8 +214,32 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
           </button>
         </div>
 
+        <div
+          className="mt-6 rounded-lg border border-zinc-700/80 bg-zinc-900/40 px-4 py-4"
+          role="img"
+          aria-label={t('settings.roadmapMvpProgressCaption', {
+            pct: mvpPct,
+            done: phasesShipped,
+            total: phasesTotal,
+          })}
+        >
+          <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+            {t('settings.roadmapMvpProgressTitle')}
+          </p>
+          <div className="mt-3 flex flex-col items-center gap-2">
+            <MvpProgressRing shipped={phasesShipped} total={phasesTotal} />
+            <p className="max-w-sm text-center text-sm leading-snug text-zinc-400">
+              {t('settings.roadmapMvpProgressCaption', {
+                pct: mvpPct,
+                done: phasesShipped,
+                total: phasesTotal,
+              })}
+            </p>
+          </div>
+        </div>
+
         <div className="mt-6 flex flex-col gap-3">
-          <details open className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
+          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-emerald-400/95 hover:bg-zinc-900/80">
               <span>{t('settings.roadmapImplemented')}</span>
               <Chevron />
@@ -201,25 +276,42 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             </summary>
             <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
               <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapReleaseNotesHint')}</p>
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-6">
                 {RELEASE_NOTES_BLOCKS.map((block, bi) => (
                   <div key={bi}>
                     <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                       {pickLocale(block.dateLabel, lang)}
                     </p>
-                    <ul className="mt-2 list-disc space-y-3 pl-5 text-sm leading-relaxed text-zinc-400">
+                    <div className="mt-2 flex flex-col gap-4">
                       {block.items.map((item, ii) => (
-                        <li key={ii} className="marker:text-zinc-600">
-                          <p className="text-zinc-300">{pickLocale(item.summary, lang)}</p>
-                          <p className="mt-1.5 border-l-2 border-zinc-700/80 pl-3 text-xs leading-relaxed text-zinc-500">
-                            <span className="font-medium text-zinc-600">
-                              {t('settings.roadmapReleaseNotePlain')}
-                            </span>{' '}
-                            {pickLocale(item.plain, lang)}
-                          </p>
-                        </li>
+                        <div
+                          key={ii}
+                          className="rounded-lg border border-zinc-800/90 bg-zinc-950/45 px-3 py-2.5"
+                        >
+                          <ul className="list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-zinc-300">
+                            {item.changes.map((c, ci) => (
+                              <li key={ci} className="marker:text-zinc-600">
+                                {pickLocale(c, lang)}
+                              </li>
+                            ))}
+                          </ul>
+                          {item.plainBullets?.length ? (
+                            <div className="mt-3 border-t border-zinc-800/80 pt-3">
+                              <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-600">
+                                {t('settings.roadmapReleaseNotePlain')}
+                              </p>
+                              <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-zinc-500">
+                                {item.plainBullets.map((p, pi) => (
+                                  <li key={pi} className="marker:text-zinc-700">
+                                    {pickLocale(p, lang)}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null}
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 ))}
               </div>
