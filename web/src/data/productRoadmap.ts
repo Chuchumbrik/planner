@@ -2,9 +2,10 @@
  * Контент модалки «Краткая сводка»: дорожная карта, changelog по датам, идеи, открытые вопросы.
  *
  * Жёсткое правило репозитория: перед **любым** коммитом обновлять этот файл и `web/README.md`
- * (см. `.cursor/rules/pre-commit-docs-roadmap.mdc`). Минимум — **RELEASE_NOTES_BLOCKS** при
- * изменениях для пользователя; при чисто внутренних коммитах — краткая строка в последнем блоке
- * или новый блок с датой, чтобы сводка не отставала от истории git.
+ * (см. `.cursor/rules/pre-commit-docs-roadmap.mdc`). Релиз-ноты — **`RELEASE_NOTES_BLOCKS`**:
+ * дата = день изменений; новый день — новый блок с `dateLabel`; за день несколько выпусков —
+ * несколько элементов **`items`**; в одном выпуске несколько правок — массив **`changes`**;
+ * суть простым языком — **`plainBullets`** (в UI под раскрывашкой). По календарю строки не скрываются.
  */
 
 export type LocalizedString = { ru: string; en: string }
@@ -26,13 +27,20 @@ export type RoadmapIdeaEntry = {
   detailBullets?: LocalizedString[]
 }
 
-/** Одна запись за дату: список изменений + опционально пункты «простыми словами». */
+/**
+ * Один выпуск за календарный день (отдельный блок в UI под датой): список правок +
+ * опционально пояснения простым языком под раскрывашкой «Подробности простым языком».
+ */
 export type RoadmapReleaseNoteItem = {
+  /** Версия приложения (`package.json` на момент выпуска), в которой вышли перечисленные изменения; без суффикса +git. */
+  releasedInVersion: LocalizedString
+  /** Пункты изменений (технические допустимы); несколько правок — несколько элементов массива. */
   changes: LocalizedString[]
+  /** Суть для пользователя без погружения в код; в модалке — отдельная раскрывашка. */
   plainBullets?: LocalizedString[]
 }
 
-/** Релиз-ноты по датам для тестеров без доступа к GitHub. */
+/** Одна календарная дата: один заголовок-раскрывашка в UI; несколько объектов с одной датой склеиваются в один день. */
 export type RoadmapReleaseNoteBlock = {
   dateLabel: LocalizedString
   items: RoadmapReleaseNoteItem[]
@@ -235,158 +243,34 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
   },
 ]
 
-/** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
+/**
+ * Релиз-ноты для тестеров без GitHub.
+ * Правило: **дата = день, когда делались изменения** (`YYYY-MM-DD`). Новый день без блока — добавить
+ * объект с `dateLabel` (обычно **в начало массива**, чтобы новее было выше). За один день несколько
+ * деплоев — несколько элементов **`items`** подряд. Один выпуск: несколько правок — **`changes`**[];
+ * пояснение «для людей» — **`plainBullets`**. У каждого элемента **`releasedInVersion`** — semver выпуска,
+ * в котором изменения попали в сборку (как в `package.json` до `vite build`, без `+git`). Интерфейс не скрывает даты по календарю «сегодня».
+ */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.19', en: '0.6.19' },
         changes: [
           {
-            ru: 'Фильтры вида: **информер** скрыт, пока все фильтры в состоянии по умолчанию (все группы, все приоритеты, любой цвет, любые повторы).',
-            en: 'View filters: **informer** hidden while every filter is at its default (all groups, all priorities, any color, any repeats).',
+            ru: 'Документация и «Краткая сводка»: обновлены **README**, правило **pre-commit** и тексты модалки; релиз-ноты — обязательное **`releasedInVersion`** на подблок и строка **«Версия выпуска»** в UI.',
+            en: 'Docs and Brief summary: **README**, **pre-commit** rule, and modal copy updated; release notes require **`releasedInVersion`** per sub-block plus **Released in** in the UI.',
           },
         ],
       },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
+    items: [
       {
-        changes: [
-          {
-            ru: '«Неделя»: вертикальный скролл сетки часов — **тёмная** полоса (класс `week-grid-v-scroll`), резерв под трек (`scrollbar-gutter: stable`), правый отступ у колонок дней — чтобы полоса не перекрывала последний день недели.',
-            en: 'Week tab: vertical scroll on the hour grid — **dark** scrollbar (`week-grid-v-scroll`), gutter reservation (`scrollbar-gutter: stable`), right padding on day columns so the track does not cover the last weekday.',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: 'Процесс: зафиксировано **обязательное** обновление `web/README.md` и модалки «Краткая сводка» (`productRoadmap.ts`) перед **любым** коммитом — правило в `.cursor/rules/pre-commit-docs-roadmap.mdc` и в README.',
-            en: 'Process: **mandatory** updates to `web/README.md` and the Brief summary modal (`productRoadmap.ts`) before **every** commit — see `.cursor/rules/pre-commit-docs-roadmap.mdc` and README.',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: '«Неделя»: таблица таймблокинга **без горизонтального скролла** — убраны фиксированная минимальная ширина и обёртка `overflow-x-auto`; колонки сжимаются в доступной ширине.',
-            en: 'Week tab: timeblocking grid **without horizontal scroll** — removed min-width wrapper and `overflow-x-auto`; columns flex to the container.',
-          },
-          {
-            ru: 'Подпись под кольцами прогресса («X из Y задач»): исправлена интерполяция i18n (`doneSumStr` / `taskCountStr`).',
-            en: 'Plan ring caption (“X of Y tasks”): fixed i18n interpolation (`doneSumStr` / `taskCountStr`).',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: '«Неделя» и «Месяц»: кольцо прогресса плана за период — та же логика долей, что у «Дня» (**`plannedPeriodProgress`** в `@motivator/core`); в сумму входят только календарные дни **до сегодня включительно**; фильтры вида как у списков; блок скрыт, если в охвате нет задач в плане.',
-            en: 'Week & Month tabs: period plan-progress ring — same share logic as Day (**`plannedPeriodProgress`** in `@motivator/core`); only calendar days **through today**; view filters match task lists; section hidden when no planned tasks in scope.',
-          },
-          {
-            ru: '«День»: список плана и кольцо используют общий отбор **`tasksScheduledForPlannerDay`**; подпись под кольцом явно про **число задач**, не пункты чек-листа.',
-            en: 'Day tab: plan list and ring both use **`tasksScheduledForPlannerDay`**; caption shows **task count**, not checklist rows.',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: 'Кольцо «План на день» и EOD: прогресс по **задачам** (чек-лист как доля внутри задачи); подпись — процент и «выполнено по долям / число задач».',
-            en: 'Day/EOD ring: progress per **tasks** (checklist as in-task share); caption shows percent and fractional task row.',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: '«Идеи на потом» в краткой сводке: добавлены темы из `15-Идеи-для-развития` — feature discovery, привычки, поиск, тамагочи; обновлена карточка про диаграммы на «День».',
-            en: 'Brief summary «Ideas later»: synced missing themes from `15-Идеи-для-развития` (feature discovery, habits, search, tamagotchi); Day charts card updated.',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: '«День»: кольцо прогресса учитывает **чек-листы** (пункты как отдельные единицы); совпадает со списком после фильтров; диаграмма по центру свободной области справа.',
-            en: 'Day tab: progress ring counts **checklist** items; matches filtered plan list; chart centered in the right pane.',
-          },
-          {
-            ru: 'Фильтры: выпадающие значения (группа, цвет, приоритеты, тип повтора) строятся только по задачам **текущего вида** вкладки и остальных активных фильтров.',
-            en: 'Filters: dropdown values are derived from tasks **visible in the current tab** plus cross-filtering.',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: 'Вкладка «День»: кольцо прогресса выполнения плана на день (логика как в ритуале «Завершение дня»); на широком экране список слева, диаграмма справа.',
-            en: 'Day tab: progress ring for planned-for-day completion (same logic as End-of-day ritual); on wide screens list left, chart right.',
-          },
-          {
-            ru: 'Исправлено выравнивание списка задач на широком экране (`flex-row-reverse` + выравнивание группы влево).',
-            en: 'Fixed day-plan list alignment on wide screens (`flex-row-reverse` group aligned left).',
-          },
-          {
-            ru: 'Страница «Отчёты»: иконки подсказок у KPI, столбчатой диаграммы и таблиц провалов.',
-            en: 'Reports page: hint icons for KPIs, bar chart, and missed-task tables.',
-          },
-          {
-            ru: 'Документация `web/README.md`: перед коммитом обновлять сводку и модалку «Краткая сводка» (`productRoadmap.ts`).',
-            en: '`web/README.md`: commit checklist to refresh docs and Brief summary modal (`productRoadmap.ts`).',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: 'Релиз-ноты в «Краткая сводка» переведены на формат списка изменений (пункты по датам вместо длинных абзацев).',
-            en: 'Release notes in Brief summary are now changelog-style bullet lists per date instead of long paragraphs.',
-          },
-          {
-            ru: 'При каждом открытии модалки все раскрывающиеся секции по умолчанию свёрнуты.',
-            en: 'Every time the modal opens, all collapsible sections start collapsed.',
-          },
-          {
-            ru: 'Вверху модалки добавлена круговая диаграмма: процент и доля закрытых фаз дорожной карты до MVP 1.0.0 (0–6 из 0–11).',
-            en: 'A donut chart at the top shows percent complete for roadmap phases toward MVP 1.0.0 (phases 0–6 of 0–11).',
-          },
-          {
-            ru: 'Релиз-ноты: каждая дата — отдельная раскрывашка, чтобы быстрее находить нужный выпуск.',
-            en: 'Release notes: each date is its own collapsible section for quicker navigation.',
-          },
-        ],
-      },
-      {
-        changes: [
-          {
-            ru: 'Настройки: в «Краткая сводка» добавлен пятый блок «Открытые вопросы» (перенесено из модалки завершения дня).',
-            en: 'Settings: fifth section “Open questions” in Brief summary (moved from End-of-day modal).',
-          },
-          {
-            ru: 'Завершение дня: круговая диаграмма доли задач, закрытых по плану на день.',
-            en: 'End of day: donut chart for share of planned-for-day tasks completed.',
-          },
-          {
-            ru: 'Блок «не закрыто (0)» отображается в зелёном стиле, если по плану не осталось незакрытых задач.',
-            en: '“Not closed (0)” section uses success styling when nothing is left open per plan.',
-          },
-          {
-            ru: 'После отметки ритуала кнопка в шапке планировщика: «Отчёт за сегодня».',
-            en: 'After completing the ritual, the planner header shows “Today’s report”.',
-          },
-        ],
-        plainBullets: [
-          {
-            ru: 'Открытые продуктовые вопросы перенесены из вечернего окна в сводку — вечернее окно про итог дня.',
-            en: 'Product “open questions” moved out of the evening modal so the ritual stays about the day’s outcome.',
-          },
-          {
-            ru: 'Зелёный блок при нуле и новая подпись кнопки уменьшают ощущение, что день «ещё не закрыт».',
-            en: 'Green zero-state and the renamed button reduce the feeling that the day is still unfinished.',
-          },
-        ],
-      },
-      {
+        releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
         changes: [
           {
             ru: 'Ритуал «Завершение дня»: списки строятся только по задачам, запланированным на этот календарный день.',
@@ -417,6 +301,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
         changes: [
           {
             ru: 'В дорожной карте обновлены «Идеи на потом»: внешние календари (черновик в Obsidian §4).',
@@ -439,6 +324,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.6', en: '0.6.6' },
         changes: [
           {
             ru: 'Синхронизированы web/README.md, тексты в productRoadmap.ts и релиз-ноты для тестеров.',
@@ -451,12 +337,208 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
         plainBullets: [
           {
-            ru: 'Таблица возможностей и контракт vault отражают сборку; релиз-ноты ведутся по датам в одном дне — без лишних календарных блоков «из будущего».',
-            en: 'Feature table and vault contract match the build; release notes stay dated within the release day — no extra future calendar blocks.',
+            ru: 'Таблица возможностей и контракт vault отражают сборку; релиз-ноты группируются по календарным датам.',
+            en: 'Feature table and vault contract match the build; release notes are grouped by calendar date.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.6.18', en: '0.6.18' },
+        changes: [
+          {
+            ru: 'Релиз-ноты: у каждого подблока выпуска — поле **`releasedInVersion`**: semver той **сборки продукта**, в которой изменения попали к пользователю (значение как в `package.json` **до** `vite build`, без суффикса `+git`); в модалке — строка **«Версия выпуска»**.',
+            en: 'Release notes: each release sub-block has **`releasedInVersion`** — the **product semver** where the changes reached users (same as `package.json` **before** `vite build`, no `+git` suffix); the modal shows **Released in**.',
           },
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.15', en: '0.6.15' },
+        changes: [
+          {
+            ru: 'Правила релиз-нотов: **дата в данных = календарный день изменений**; если блока с этой датой ещё нет — добавить объект с `dateLabel` (новые даты обычно **первыми в массиве**). За один день несколько выпусков — несколько элементов **`items`**; в одном выпуске несколько правок — массив **`changes`**; суть без кода — **`plainBullets`** (в модалке под раскрывашкой «Подробности простым языком»). Записи **не скрываются** по дате относительно «сегодня».',
+            en: 'Release notes policy: **data date = calendar day of work**; if no block exists for that day, add one with `dateLabel` (new dates usually **first in the array**). Multiple releases per day — multiple **`items`**; multiple edits in one release — **`changes`**; plain-language gist — **`plainBullets`** (collapsible in the modal). Entries are **not hidden** relative to “today”.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В «Краткая сводка» видна та же хронология, что в файле: новее — выше. Не нужно «дождаться дня», чтобы запись появилась в списке.',
+            en: 'Brief summary shows the same timeline as the file—newer above. You do not wait for a calendar day for an entry to appear.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.14', en: '0.6.14' },
+        changes: [
+          {
+            ru: 'Релиз-ноты: восстановлена отдельная календарная дата **2026-05-10** (раньше ошибочно всё лежало только под 09.05).',
+            en: 'Release notes: restored calendar date **2026-05-10** (was incorrectly merged only under 05-09).',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.13', en: '0.6.13' },
+        changes: [
+          {
+            ru: 'Фильтры вида: **информер** скрыт, пока все фильтры в состоянии по умолчанию (все группы, все приоритеты, любой цвет, любые повторы).',
+            en: 'View filters: **informer** hidden while every filter is at its default (all groups, all priorities, any color, any repeats).',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.12', en: '0.6.12' },
+        changes: [
+          {
+            ru: '«Неделя»: вертикальный скролл сетки часов — **тёмная** полоса (класс `week-grid-v-scroll`), резерв под трек (`scrollbar-gutter: stable`), правый отступ у колонок дней — чтобы полоса не перекрывала последний день недели.',
+            en: 'Week tab: vertical scroll on the hour grid — **dark** scrollbar (`week-grid-v-scroll`), gutter reservation (`scrollbar-gutter: stable`), right padding on day columns so the track does not cover the last weekday.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.11', en: '0.6.11' },
+        changes: [
+          {
+            ru: 'Процесс: зафиксировано **обязательное** обновление `web/README.md` и модалки «Краткая сводка» (`productRoadmap.ts`) перед **любым** коммитом — правило в `.cursor/rules/pre-commit-docs-roadmap.mdc` и в README.',
+            en: 'Process: **mandatory** updates to `web/README.md` and the Brief summary modal (`productRoadmap.ts`) before **every** commit — see `.cursor/rules/pre-commit-docs-roadmap.mdc` and README.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.11', en: '0.6.11' },
+        changes: [
+          {
+            ru: '«Неделя»: таблица таймблокинга **без горизонтального скролла** — убраны фиксированная минимальная ширина и обёртка `overflow-x-auto`; колонки сжимаются в доступной ширине.',
+            en: 'Week tab: timeblocking grid **without horizontal scroll** — removed min-width wrapper and `overflow-x-auto`; columns flex to the container.',
+          },
+          {
+            ru: 'Подпись под кольцами прогресса («X из Y задач»): исправлена интерполяция i18n (`doneSumStr` / `taskCountStr`).',
+            en: 'Plan ring caption (“X of Y tasks”): fixed i18n interpolation (`doneSumStr` / `taskCountStr`).',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.10', en: '0.6.10' },
+        changes: [
+          {
+            ru: '«Неделя» и «Месяц»: кольцо прогресса плана за период — та же логика долей, что у «Дня» (**`plannedPeriodProgress`** в `@motivator/core`); в сумму входят только календарные дни **до сегодня включительно**; фильтры вида как у списков; блок скрыт, если в охвате нет задач в плане.',
+            en: 'Week & Month tabs: period plan-progress ring — same share logic as Day (**`plannedPeriodProgress`** in `@motivator/core`); only calendar days **through today**; view filters match task lists; section hidden when no planned tasks in scope.',
+          },
+          {
+            ru: '«День»: список плана и кольцо используют общий отбор **`tasksScheduledForPlannerDay`**; подпись под кольцом явно про **число задач**, не пункты чек-листа.',
+            en: 'Day tab: plan list and ring both use **`tasksScheduledForPlannerDay`**; caption shows **task count**, not checklist rows.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.10', en: '0.6.10' },
+        changes: [
+          {
+            ru: 'Кольцо «План на день» и EOD: прогресс по **задачам** (чек-лист как доля внутри задачи); подпись — процент и «выполнено по долям / число задач».',
+            en: 'Day/EOD ring: progress per **tasks** (checklist as in-task share); caption shows percent and fractional task row.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.9', en: '0.6.9' },
+        changes: [
+          {
+            ru: '«Идеи на потом» в краткой сводке: добавлены темы из `15-Идеи-для-развития` — feature discovery, привычки, поиск, тамагочи; обновлена карточка про диаграммы на «День».',
+            en: 'Brief summary «Ideas later»: synced missing themes from `15-Идеи-для-развития` (feature discovery, habits, search, tamagotchi); Day charts card updated.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.9', en: '0.6.9' },
+        changes: [
+          {
+            ru: '«День»: кольцо прогресса учитывает **чек-листы** (пункты как отдельные единицы); совпадает со списком после фильтров; диаграмма по центру свободной области справа.',
+            en: 'Day tab: progress ring counts **checklist** items; matches filtered plan list; chart centered in the right pane.',
+          },
+          {
+            ru: 'Фильтры: выпадающие значения (группа, цвет, приоритеты, тип повтора) строятся только по задачам **текущего вида** вкладки и остальных активных фильтров.',
+            en: 'Filters: dropdown values are derived from tasks **visible in the current tab** plus cross-filtering.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.8', en: '0.6.8' },
+        changes: [
+          {
+            ru: 'Вкладка «День»: кольцо прогресса выполнения плана на день (логика как в ритуале «Завершение дня»); на широком экране список слева, диаграмма справа.',
+            en: 'Day tab: progress ring for planned-for-day completion (same logic as End-of-day ritual); on wide screens list left, chart right.',
+          },
+          {
+            ru: 'Исправлено выравнивание списка задач на широком экране (`flex-row-reverse` + выравнивание группы влево).',
+            en: 'Fixed day-plan list alignment on wide screens (`flex-row-reverse` group aligned left).',
+          },
+          {
+            ru: 'Страница «Отчёты»: иконки подсказок у KPI, столбчатой диаграммы и таблиц провалов.',
+            en: 'Reports page: hint icons for KPIs, bar chart, and missed-task tables.',
+          },
+          {
+            ru: 'Документация `web/README.md`: перед коммитом обновлять сводку и модалку «Краткая сводка» (`productRoadmap.ts`).',
+            en: '`web/README.md`: commit checklist to refresh docs and Brief summary modal (`productRoadmap.ts`).',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.7', en: '0.6.7' },
+        changes: [
+          {
+            ru: 'Релиз-ноты в «Краткая сводка» переведены на формат списка изменений (пункты по датам вместо длинных абзацев).',
+            en: 'Release notes in Brief summary are now changelog-style bullet lists per date instead of long paragraphs.',
+          },
+          {
+            ru: 'При каждом открытии модалки все раскрывающиеся секции по умолчанию свёрнуты.',
+            en: 'Every time the modal opens, all collapsible sections start collapsed.',
+          },
+          {
+            ru: 'Вверху модалки добавлена круговая диаграмма: процент и доля закрытых фаз дорожной карты до MVP 1.0.0 (0–6 из 0–11).',
+            en: 'A donut chart at the top shows percent complete for roadmap phases toward MVP 1.0.0 (phases 0–6 of 0–11).',
+          },
+          {
+            ru: 'Релиз-ноты: каждая дата — отдельная раскрывашка, чтобы быстрее находить нужный выпуск.',
+            en: 'Release notes: each date is its own collapsible section for quicker navigation.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.6', en: '0.6.6' },
+        changes: [
+          {
+            ru: 'Настройки: в «Краткая сводка» добавлен пятый блок «Открытые вопросы» (перенесено из модалки завершения дня).',
+            en: 'Settings: fifth section “Open questions” in Brief summary (moved from End-of-day modal).',
+          },
+          {
+            ru: 'Завершение дня: круговая диаграмма доли задач, закрытых по плану на день.',
+            en: 'End of day: donut chart for share of planned-for-day tasks completed.',
+          },
+          {
+            ru: 'Блок «не закрыто (0)» отображается в зелёном стиле, если по плану не осталось незакрытых задач.',
+            en: '“Not closed (0)” section uses success styling when nothing is left open per plan.',
+          },
+          {
+            ru: 'После отметки ритуала кнопка в шапке планировщика: «Отчёт за сегодня».',
+            en: 'After completing the ritual, the planner header shows “Today’s report”.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Открытые продуктовые вопросы перенесены из вечернего окна в сводку — вечернее окно про итог дня.',
+            en: 'Product “open questions” moved out of the evening modal so the ritual stays about the day’s outcome.',
+          },
+          {
+            ru: 'Зелёный блок при нуле и новая подпись кнопки уменьшают ощущение, что день «ещё не закрыт».',
+            en: 'Green zero-state and the renamed button reduce the feeling that the day is still unfinished.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.12', en: '0.6.12' },
         changes: [
           {
             ru: '«Неделя»: выравнивание заголовков дней и сетки слотов — **одна сетка + subgrid**, без смещения колонок из‑за скролла.',
@@ -465,14 +547,16 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.15', en: '0.6.15' },
         changes: [
           {
-            ru: '«Краткая сводка» — релиз-ноты: **одна раскрывашка на календарную дату**; несколько коммитов за день — **отдельные вложенные блоки**; в `productRoadmap` у релиз-нотов **нет дат позже дня выпуска**.',
-            en: 'Brief summary: **one collapsible per calendar date**; multiple commits the same day are **nested blocks**; `productRoadmap` release notes **do not use dates after the release day**.',
+            ru: '«Краткая сводка» — релиз-ноты: **одна раскрывашка на календарную дату**; за день несколько выпусков — **несколько блоков** (`items`); у блока — **`releasedInVersion`** (semver выпуска); в блоке несколько правок — **список** (`changes`); подробности простым языком — **`plainBullets`** под раскрывашкой; по календарю **не фильтруем**.',
+            en: 'Brief summary release notes: **one collapsible per calendar date**; multiple releases per day — **multiple blocks** (`items`); each block has **`releasedInVersion`** (ship semver); several edits in one block — **list** (`changes`); plain-language notes — **`plainBullets`** under a collapsible; **no calendar filtering**.',
           },
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
         changes: [
           {
             ru: 'Версия продукта 0.6.1 в package.json; схема 0·x·y и суффикс +git для сборки.',
@@ -491,6 +575,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
         changes: [
           {
             ru: 'DR-004 и схема vault v7: двойное подтверждение «сделано» в создании/редактировании и на мини-карточке.',
@@ -513,6 +598,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
         changes: [
           {
             ru: 'Дорожная карта в настройках: до 1.0.0 остаются фазы 7–11 (включая фазу 7 — дизайн и адаптивность).',
@@ -531,6 +617,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
         changes: [
           {
             ru: 'Модалка дорожной карты: фазы 0–6 в блоке «Уже реализовано».',
@@ -549,6 +636,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.2', en: '0.6.2' },
         changes: [
           {
             ru: 'Страница /app/reports: график отметок, KPI, стрик DR-013 с EOD.',
@@ -567,6 +655,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.3', en: '0.6.3' },
         changes: [
           {
             ru: 'Создание задачи: янтарная подсказка обязательных полей для сохранения.',
@@ -589,6 +678,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.4', en: '0.6.4' },
         changes: [
           {
             ru: 'Неделя и карточки: полоска цвета через HEX палитры.',

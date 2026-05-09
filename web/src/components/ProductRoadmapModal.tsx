@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { localDateKey } from '@motivator/core'
 import {
   IDEAS_LATER_ENTRIES,
   IMPLEMENTED_MVP_PHASES,
@@ -16,23 +15,21 @@ function pickLocale(s: LocalizedString, lang: string): string {
   return lang === 'en' ? s.en : s.ru
 }
 
-/** Ключ даты `YYYY-MM-DD` для сравнения с «сегодня» (локальный календарь). */
+/** Ключ даты `YYYY-MM-DD` для группировки (локальный календарь в строке). */
 function blockDateKey(block: RoadmapReleaseNoteBlock): string {
   return block.dateLabel.ru.trim()
 }
 
 /**
- * Релиз-ноты: не показывать даты в будущем; один заголовок даты — все коммиты за день
- * (каждый элемент `RELEASE_NOTES_BLOCKS` с этой датой = отдельный вложенный блок).
+ * Релиз-ноты: группировка по календарной дате, без скрытия по «сегодня».
+ * Несколько объектов с одной `dateLabel` в данных дают несколько сегментов под одной раскрывашкой (несколько деплоев за день).
  */
 function groupReleaseNotesForUi(
   blocks: RoadmapReleaseNoteBlock[],
-  todayKey: string,
 ): { dateKey: string; dateLabel: LocalizedString; segments: RoadmapReleaseNoteBlock[] }[] {
   const byDay = new Map<string, RoadmapReleaseNoteBlock[]>()
   for (const block of blocks) {
     const key = blockDateKey(block)
-    if (key > todayKey) continue
     const list = byDay.get(key) ?? []
     list.push(block)
     byDay.set(key, list)
@@ -199,10 +196,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
     return { mvpPct: pct, phasesShipped: shipped, phasesTotal: total }
   }, [])
 
-  const releaseNotesByDay = useMemo(
-    () => groupReleaseNotesForUi(RELEASE_NOTES_BLOCKS, localDateKey()),
-    [],
-  )
+  const releaseNotesByDay = useMemo(() => groupReleaseNotesForUi(RELEASE_NOTES_BLOCKS), [])
 
   useEffect(() => {
     if (!open) return
@@ -339,6 +333,11 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                                   key={ii}
                                   className="rounded-lg border border-zinc-800/90 bg-zinc-950/45 px-3 py-2.5"
                                 >
+                                  <p className="mb-2 text-[11px] font-medium tabular-nums text-zinc-400">
+                                    {t('settings.roadmapReleaseNoteShippedIn', {
+                                      version: pickLocale(item.releasedInVersion, lang),
+                                    })}
+                                  </p>
                                   <ul className="list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-zinc-300">
                                     {item.changes.map((c, ci) => (
                                       <li key={ci} className="marker:text-zinc-600">
@@ -347,18 +346,24 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                                     ))}
                                   </ul>
                                   {item.plainBullets?.length ? (
-                                    <div className="mt-3 border-t border-zinc-800/80 pt-3">
-                                      <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-600">
-                                        {t('settings.roadmapReleaseNotePlain')}
-                                      </p>
-                                      <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-zinc-500">
-                                        {item.plainBullets.map((p, pi) => (
-                                          <li key={pi} className="marker:text-zinc-700">
-                                            {pickLocale(p, lang)}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
+                                    <details className="group/details mt-3 rounded-md border border-zinc-800/80 bg-zinc-900/35 [&_summary::-webkit-details-marker]:hidden">
+                                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-2 text-xs font-medium text-sky-400/85 hover:bg-zinc-900/55">
+                                        <span>{t('settings.roadmapReleaseNotePlainDetails')}</span>
+                                        <Chevron nested />
+                                      </summary>
+                                      <div className="border-t border-zinc-800/80 px-3 pb-3 pt-2">
+                                        <p className="text-[11px] leading-relaxed text-zinc-500">
+                                          {t('settings.roadmapReleaseNotePlainLead')}
+                                        </p>
+                                        <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-zinc-400">
+                                          {item.plainBullets.map((p, pi) => (
+                                            <li key={pi} className="marker:text-zinc-600">
+                                              {pickLocale(p, lang)}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </details>
                                   ) : null}
                                 </div>
                               ))}
