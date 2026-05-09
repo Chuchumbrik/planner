@@ -752,7 +752,7 @@ function AppPageInner() {
               {t('app.monthThis')}
             </button>
           </div>
-          <div className="max-w-md">
+          <div className="mx-auto w-full max-w-md">
             <MonthCalendar
               matrix={monthMatrix}
               taskCountByDay={taskCountByDay}
