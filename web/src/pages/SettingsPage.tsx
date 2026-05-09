@@ -24,7 +24,7 @@ function GroupRow({
   const [name, setName] = useState(initialName)
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+    <div className="flex flex-wrap items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2">
       <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-zinc-500">
         <span>{t('settings.rename')}</span>
         <input
@@ -42,7 +42,7 @@ function GroupRow({
         <button
           type="button"
           disabled={!canEdit}
-          className="shrink-0 rounded border border-red-900/50 px-2 py-1 text-xs text-red-300 hover:bg-red-950/40 disabled:opacity-40"
+          className="shrink-0 self-end rounded border border-red-900/50 px-2 py-1 text-xs text-red-300 hover:bg-red-950/40 disabled:opacity-40"
           onClick={() => onDelete()}
         >
           {t('common.delete')}
