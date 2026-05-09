@@ -22,12 +22,19 @@ import {
   type TaskTimeMode,
 } from '@motivator/core'
 import {
+  MAX_TASK_TITLE_CHARS,
   normalizeEstimatePair,
   reconcileEstimateAfterHoursEdit,
   reconcileEstimateAfterMinutesEdit,
   sanitizeEveryNDaysInput,
   sanitizeTaskTitleInput,
 } from '@/lib/fieldSanitize'
+import {
+  computeFloatingEstimateDayWarning,
+  computeRecurrenceAnchorPastError,
+  computeTaskScheduleValidationError,
+  type TaskScheduleValidationFields,
+} from '@/lib/taskScheduleValidation'
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
@@ -147,6 +154,20 @@ function snapshotCanonical(s: Snapshot, selectedDayKey: string): string {
   })
 }
 
+function resolveCreateRecurrenceAnchor(
+  snap: Snapshot,
+  selectedDayKey: string,
+): { recurrenceFinal: RecurrenceRule | null; anchorOut: string | null } {
+  const recurrence = buildRecurrenceRule(snap.recurrenceKind, snap.everyNDays, snap.weekdays)
+  let anchor = snap.anchorLocalDate.trim()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(anchor)) anchor = selectedDayKey
+  const scheduled = snap.backlogOnly ? null : snap.scheduledLocalDate
+  let anchorOut: string | null = recurrence ? anchor : null
+  if (recurrence && !anchorOut) anchorOut = scheduled ?? selectedDayKey
+  const recurrenceFinal = recurrence && anchorOut ? recurrence : null
+  return { recurrenceFinal, anchorOut }
+}
+
 export type CreateTaskModalProps = {
   open: boolean
   selectedDayKey: string
@@ -229,6 +250,40 @@ export function CreateTaskModal({
     plannedWithEstimateRequired,
   ])
 
+  const validationFields = useMemo(
+    (): TaskScheduleValidationFields => ({
+      backlogOnly: snap.backlogOnly,
+      scheduledLocalDate: snap.scheduledLocalDate,
+      timeMode: snap.timeMode,
+      timeClock: snap.timeMode === 'none' ? '' : snap.timeClock,
+      estimatedHours: snap.estimatedHours,
+      estimatedMinutesPart: snap.estimatedMinutesPart,
+      plannedWithEstimateRequired,
+    }),
+    [snap, plannedWithEstimateRequired],
+  )
+
+  const scheduleValidationError = useMemo(
+    () => computeTaskScheduleValidationError(validationFields, t),
+    [validationFields, t],
+  )
+
+  const { recurrenceFinal: recurrenceResolved, anchorOut: anchorResolved } = useMemo(
+    () => resolveCreateRecurrenceAnchor(snap, selectedDayKey),
+    [snap, selectedDayKey],
+  )
+
+  const anchorValidationError = useMemo(
+    () =>
+      computeRecurrenceAnchorPastError(anchorResolved, Boolean(recurrenceResolved), t),
+    [anchorResolved, recurrenceResolved, t],
+  )
+
+  const floatingEstimateWarning = useMemo(
+    () => computeFloatingEstimateDayWarning(validationFields, t),
+    [validationFields, t],
+  )
+
   useEffect(() => {
     setEstimateError(null)
   }, [
@@ -236,6 +291,8 @@ export function CreateTaskModal({
     snap.estimatedMinutesPart,
     snap.backlogOnly,
     snap.scheduledLocalDate,
+    snap.timeMode,
+    snap.timeClock,
   ])
 
   function parseTimeForSubmit(): { mode: TaskTimeMode; minutes: number | null } {
@@ -259,20 +316,22 @@ export function CreateTaskModal({
       setEstimateError(t('app.estimateRequiredWhenPlanned'))
       return
     }
+
+    const schedErr = computeTaskScheduleValidationError(validationFields, t)
+    if (schedErr) {
+      setEstimateError(schedErr)
+      return
+    }
+
+    const { recurrenceFinal, anchorOut } = resolveCreateRecurrenceAnchor(snap, selectedDayKey)
+    const anchorErr = computeRecurrenceAnchorPastError(anchorOut, Boolean(recurrenceFinal), t)
+    if (anchorErr) {
+      setEstimateError(anchorErr)
+      return
+    }
     setEstimateError(null)
 
-    const recurrence = buildRecurrenceRule(
-      snap.recurrenceKind,
-      snap.everyNDays,
-      snap.weekdays,
-    )
-    let anchor = snap.anchorLocalDate.trim()
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(anchor)) anchor = selectedDayKey
-
     const scheduled = snap.backlogOnly ? null : snap.scheduledLocalDate
-    let anchorOut: string | null = recurrence ? anchor : null
-    if (recurrence && !anchorOut) anchorOut = scheduled ?? selectedDayKey
-    const recurrenceFinal = recurrence && anchorOut ? recurrence : null
 
     const tm = parseTimeForSubmit()
     const input: CreateTaskInput = {
@@ -310,17 +369,8 @@ export function CreateTaskModal({
       return
     }
     if (isDirty && canEdit) {
-      const recurrence = buildRecurrenceRule(
-        snap.recurrenceKind,
-        snap.everyNDays,
-        snap.weekdays,
-      )
-      let anchor = snap.anchorLocalDate.trim()
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(anchor)) anchor = selectedDayKey
       const scheduled = snap.backlogOnly ? null : snap.scheduledLocalDate
-      let anchorOut: string | null = recurrence ? anchor : null
-      if (recurrence && !anchorOut) anchorOut = scheduled ?? selectedDayKey
-      const recurrenceFinal = recurrence && anchorOut ? recurrence : null
+      const { recurrenceFinal, anchorOut } = resolveCreateRecurrenceAnchor(snap, selectedDayKey)
 
       const tm = parseTimeForSubmit()
       const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
@@ -410,19 +460,24 @@ export function CreateTaskModal({
           </button>
         </div>
 
-        <p className="mt-3 rounded-lg border border-zinc-700/80 bg-zinc-900/60 px-3 py-2 text-[11px] leading-relaxed text-zinc-400">
-          <span className="font-medium text-zinc-300">{t('app.createTaskSaveRequirementsHeading')}</span>{' '}
+        <p className="mt-3 rounded-lg border border-amber-900/40 bg-amber-950/25 px-3 py-2 text-[11px] leading-relaxed text-amber-100/90">
+          <span className="font-medium text-amber-200/95">{t('app.createTaskSaveRequirementsHeading')}</span>{' '}
           {plannedWithEstimateRequired
             ? t('app.createTaskSaveRequirementsBodyPlanned')
             : t('app.createTaskSaveRequirementsBodyBacklog')}
         </p>
 
         <label className="mt-3 flex flex-col gap-1 text-xs text-zinc-500">
-          <span>
-            {t('app.taskTitle')}
-            <span className="text-amber-400/90" aria-hidden>
-              {' '}
-              *
+          <span className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              {t('app.taskTitle')}
+              <span className="text-amber-400/90" aria-hidden>
+                {' '}
+                *
+              </span>
+            </span>
+            <span className="font-normal text-zinc-600">
+              {snap.title.length}/{MAX_TASK_TITLE_CHARS}
             </span>
           </span>
           <input
@@ -680,10 +735,10 @@ export function CreateTaskModal({
               />
             </label>
           </div>
-          {estimateError ? (
-            <p className="text-xs text-red-400">{estimateError}</p>
-          ) : null}
           <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
+          {floatingEstimateWarning ? (
+            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
+          ) : null}
         </div>
 
         <TaskTimeAccordion
@@ -709,10 +764,22 @@ export function CreateTaskModal({
           onClockChange={(value) => setSnap((s) => ({ ...s, timeClock: value }))}
         />
 
-        <div className="mt-6 flex flex-wrap gap-2 border-t border-zinc-800 pt-4">
+        <div className="mt-6 flex flex-col gap-3 border-t border-zinc-800 pt-4">
+          {scheduleValidationError || anchorValidationError || estimateError ? (
+            <p className="text-xs text-red-400" role="alert">
+              {scheduleValidationError ?? anchorValidationError ?? estimateError}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={!canEdit || !snap.title.trim() || estimateBlocked}
+            disabled={
+              !canEdit ||
+              !snap.title.trim() ||
+              estimateBlocked ||
+              !!scheduleValidationError ||
+              !!anchorValidationError
+            }
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
             onClick={() => void handleSave()}
           >
@@ -725,6 +792,7 @@ export function CreateTaskModal({
           >
             {t('common.cancel')}
           </button>
+          </div>
         </div>
       </div>
       </div>

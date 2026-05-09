@@ -63,6 +63,29 @@ export function normalizeEstimatePair(
 }
 
 /**
+ * Итог оценки после нормализации строк часов/минут: сумма в минутах или «нет оценки».
+ * `invalid` — некорректный ввод (в т.ч. минуты > 59, сумма > 24 ч).
+ */
+export function mergeEstimateParts(
+  hoursRaw: string,
+  minutesRaw: string,
+): { invalid: boolean; total: number | null } {
+  const hClean = hoursRaw.trim()
+  const mClean = minutesRaw.trim()
+  if (hClean === '' && mClean === '') return { invalid: false, total: null }
+
+  const h = hClean === '' ? 0 : parseInt(hClean, 10)
+  const m = mClean === '' ? 0 : parseInt(mClean, 10)
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return { invalid: true, total: null }
+  if (h < 0 || m < 0 || m > 59) return { invalid: true, total: null }
+
+  const total = h * 60 + m
+  if (total <= 0) return { invalid: false, total: null }
+  if (total > MAX_ESTIMATE_TOTAL_MINUTES) return { invalid: true, total: null }
+  return { invalid: false, total }
+}
+
+/**
  * «Каждые N дней»: только цифры, min 1, max MAX_EVERY_N_DAYS. Пустой ввод → 1.
  */
 export function sanitizeEveryNDaysInput(raw: string): number {

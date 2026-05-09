@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { RequireVault } from '@/components/RequireVault'
 import { APP_VERSION } from '@/version'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank } from '@motivator/core'
@@ -107,6 +108,7 @@ function SettingsPageInner() {
   const [pwBusy, setPwBusy] = useState(false)
   const [pwError, setPwError] = useState<string | null>(null)
   const [pwSuccess, setPwSuccess] = useState(false)
+  const [roadmapOpen, setRoadmapOpen] = useState(false)
 
   const canEdit = remoteHydrated && !decryptFailed
   const hasEmailLogin = Boolean(session?.user?.email)
@@ -183,6 +185,18 @@ function SettingsPageInner() {
           <option value="en">{t('common.langEn')}</option>
         </select>
       </section>
+
+      <section className="mt-8 rounded-lg border border-dashed border-zinc-700/90 bg-zinc-900/25 px-4 py-4">
+        <button
+          type="button"
+          className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 hover:border-zinc-500 hover:bg-zinc-800"
+          onClick={() => setRoadmapOpen(true)}
+        >
+          {t('settings.roadmapTempButton')}
+        </button>
+      </section>
+
+      <ProductRoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} />
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('settings.accountPasswordTitle')}</h2>

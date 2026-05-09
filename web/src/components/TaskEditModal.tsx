@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   TASK_COLOR_HEX,
   isMainTaskDoneForDay,
@@ -17,6 +17,7 @@ import {
   type TaskTimeMode,
 } from '@motivator/core'
 import {
+  MAX_TASK_TITLE_CHARS,
   normalizeEstimatePair,
   reconcileEstimateAfterHoursEdit,
   reconcileEstimateAfterMinutesEdit,
@@ -24,6 +25,12 @@ import {
   sanitizeEveryNDaysInput,
   sanitizeTaskTitleInput,
 } from '@/lib/fieldSanitize'
+import {
+  computeFloatingEstimateDayWarning,
+  computeRecurrenceAnchorPastError,
+  computeTaskScheduleValidationError,
+  type TaskScheduleValidationFields,
+} from '@/lib/taskScheduleValidation'
 import { useTranslation } from 'react-i18next'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
@@ -117,6 +124,7 @@ export function TaskEditModal({
   const [estHoursDraft, setEstHoursDraft] = useState('')
   const [estMinutesDraft, setEstMinutesDraft] = useState('')
   const [estFieldError, setEstFieldError] = useState<string | null>(null)
+  const [commitGateError, setCommitGateError] = useState<string | null>(null)
   const [timeDraft, setTimeDraft] = useState(
     task.timeMinutesFromMidnight != null
       ? minutesToTimeInput(task.timeMinutesFromMidnight)
@@ -149,6 +157,55 @@ export function TaskEditModal({
 
   const sortedGroups = [...groups].sort((a, b) => a.sortOrder - b.sortOrder)
 
+  const anchorBase =
+    task.recurrenceAnchorLocalDate ?? task.scheduledLocalDate ?? selectedDayKey
+
+  const effectiveTimeClock = useMemo(() => {
+    if (task.timeMode === 'none') return ''
+    if (timeDraft.trim() !== '') return timeDraft
+    if (task.timeMinutesFromMidnight != null) return minutesToTimeInput(task.timeMinutesFromMidnight)
+    return ''
+  }, [task.timeMode, task.timeMinutesFromMidnight, timeDraft])
+
+  const validationFields = useMemo(
+    (): TaskScheduleValidationFields => ({
+      backlogOnly: task.scheduledLocalDate === null,
+      scheduledLocalDate: task.scheduledLocalDate,
+      timeMode: task.timeMode,
+      timeClock: effectiveTimeClock,
+      estimatedHours: estHoursDraft,
+      estimatedMinutesPart: estMinutesDraft,
+      plannedWithEstimateRequired: task.scheduledLocalDate != null,
+    }),
+    [
+      task.scheduledLocalDate,
+      task.timeMode,
+      effectiveTimeClock,
+      estHoursDraft,
+      estMinutesDraft,
+    ],
+  )
+
+  const scheduleValidationError = useMemo(
+    () => computeTaskScheduleValidationError(validationFields, t),
+    [validationFields, t],
+  )
+
+  const anchorValidationError = useMemo(() => {
+    if (!task.recurrence) return null
+    const anchorStr = task.recurrenceAnchorLocalDate ?? anchorBase
+    return computeRecurrenceAnchorPastError(anchorStr, true, t)
+  }, [task.recurrence, task.recurrenceAnchorLocalDate, anchorBase, t])
+
+  const floatingEstimateWarning = useMemo(
+    () => computeFloatingEstimateDayWarning(validationFields, t),
+    [validationFields, t],
+  )
+
+  useEffect(() => {
+    if (!scheduleValidationError && !anchorValidationError) setCommitGateError(null)
+  }, [scheduleValidationError, anchorValidationError])
+
   const occurrenceDoneThisDay = task.recurrence
     ? isMainTaskDoneForDay(task, occurrenceDayKey)
     : false
@@ -157,9 +214,6 @@ export function TaskEditModal({
     !occurrenceDoneThisDay &&
     task.checklist.length > 0 &&
     task.checklist.some((s) => !s.done)
-
-  const anchorBase =
-    task.recurrenceAnchorLocalDate ?? task.scheduledLocalDate ?? selectedDayKey
 
   function pushRecurrencePatch(
     kind: RecurrenceUiKind,
@@ -183,6 +237,12 @@ export function TaskEditModal({
       return
     }
     const anchor = anchorBase || selectedDayKey
+    const anchorErr = computeRecurrenceAnchorPastError(anchor, true, t)
+    if (anchorErr) {
+      setCommitGateError(anchorErr)
+      return
+    }
+    setCommitGateError(null)
     void onApplyTaskPatch({
       recurrence: rule,
       recurrenceAnchorLocalDate: anchor,
@@ -223,22 +283,107 @@ export function TaskEditModal({
       setEstMinutesDraft(p.minutes)
       return
     }
+    const merged: TaskScheduleValidationFields = {
+      backlogOnly: task.scheduledLocalDate === null,
+      scheduledLocalDate: task.scheduledLocalDate,
+      timeMode: task.timeMode,
+      timeClock: effectiveTimeClock,
+      estimatedHours: norm.hours,
+      estimatedMinutesPart: norm.minutes,
+      plannedWithEstimateRequired: task.scheduledLocalDate != null,
+    }
+    const schedErr = computeTaskScheduleValidationError(merged, t)
+    if (schedErr) {
+      setCommitGateError(schedErr)
+      const p = splitEstimateMinutes(task.estimatedMinutes)
+      setEstHoursDraft(p.hours)
+      setEstMinutesDraft(p.minutes)
+      return
+    }
     setEstFieldError(null)
+    setCommitGateError(null)
     void onSetEstimatedMinutes(r.total)
+  }
+
+  function guardedSetScheduledLocalDate(date: string | null) {
+    const merged: TaskScheduleValidationFields = {
+      backlogOnly: date === null,
+      scheduledLocalDate: date,
+      timeMode: task.timeMode,
+      timeClock: effectiveTimeClock,
+      estimatedHours: estHoursDraft,
+      estimatedMinutesPart: estMinutesDraft,
+      plannedWithEstimateRequired: date != null,
+    }
+    const err = computeTaskScheduleValidationError(merged, t)
+    if (err) {
+      setCommitGateError(err)
+      return
+    }
+    setCommitGateError(null)
+    void onSetScheduledLocalDate(date)
   }
 
   function applyTime(mode: TaskTimeMode) {
     if (mode === 'none') {
+      const merged: TaskScheduleValidationFields = {
+        backlogOnly: task.scheduledLocalDate === null,
+        scheduledLocalDate: task.scheduledLocalDate,
+        timeMode: 'none',
+        timeClock: '',
+        estimatedHours: estHoursDraft,
+        estimatedMinutesPart: estMinutesDraft,
+        plannedWithEstimateRequired: task.scheduledLocalDate != null,
+      }
+      const err = computeTaskScheduleValidationError(merged, t)
+      if (err) {
+        setCommitGateError(err)
+        return
+      }
+      setCommitGateError(null)
       void onSetTimePlan('none', null)
       setTimeDraft('')
       return
     }
     let m = timeInputToMinutes(timeDraft)
     if (m == null) {
-      m = 9 * 60
+      m = mode === 'start' ? 9 * 60 : 18 * 60
       setTimeDraft(minutesToTimeInput(m))
     }
+    const clockStr = minutesToTimeInput(m)
+    const merged: TaskScheduleValidationFields = {
+      backlogOnly: task.scheduledLocalDate === null,
+      scheduledLocalDate: task.scheduledLocalDate,
+      timeMode: mode,
+      timeClock: clockStr,
+      estimatedHours: estHoursDraft,
+      estimatedMinutesPart: estMinutesDraft,
+      plannedWithEstimateRequired: task.scheduledLocalDate != null,
+    }
+    const err = computeTaskScheduleValidationError(merged, t)
+    if (err) {
+      setCommitGateError(err)
+      return
+    }
+    setCommitGateError(null)
     void onSetTimePlan(mode, m)
+  }
+
+  function guardedAnchorChange(v: string | null) {
+    const anchorCandidate = (v ?? anchorBase).trim()
+    const resolved =
+      anchorCandidate && /^\d{4}-\d{2}-\d{2}$/.test(anchorCandidate)
+        ? anchorCandidate
+        : anchorBase
+    const err = computeRecurrenceAnchorPastError(resolved, true, t)
+    if (err) {
+      setCommitGateError(err)
+      return
+    }
+    setCommitGateError(null)
+    void onApplyTaskPatch({
+      recurrenceAnchorLocalDate: v || null,
+    })
   }
 
   return (
@@ -263,7 +408,12 @@ export function TaskEditModal({
         </div>
 
         <label className="mt-3 flex flex-col gap-1 text-xs text-zinc-500">
-          <span>{t('app.taskTitle')}</span>
+          <span className="flex flex-wrap items-center justify-between gap-2">
+            <span>{t('app.taskTitle')}</span>
+            <span className="font-normal text-zinc-600">
+              {titleDraft.length}/{MAX_TASK_TITLE_CHARS}
+            </span>
+          </span>
           <input
             className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
             value={titleDraft}
@@ -335,7 +485,7 @@ export function TaskEditModal({
           <LocalDatePickerField
             label={t('app.plannedDate')}
             value={task.scheduledLocalDate}
-            onChange={(v) => void onSetScheduledLocalDate(v)}
+            onChange={(v) => guardedSetScheduledLocalDate(v)}
             disabled={!canEdit}
             allowClear
           />
@@ -344,7 +494,7 @@ export function TaskEditModal({
             type="button"
             disabled={!canEdit}
             className="mt-2 rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
-            onClick={() => void onSetScheduledLocalDate(null)}
+            onClick={() => guardedSetScheduledLocalDate(null)}
           >
             {t('app.moveToBacklog')}
           </button>
@@ -352,7 +502,7 @@ export function TaskEditModal({
             type="button"
             disabled={!canEdit}
             className="mt-2 ml-2 rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
-            onClick={() => void onSetScheduledLocalDate(selectedDayKey)}
+            onClick={() => guardedSetScheduledLocalDate(selectedDayKey)}
           >
             {t('app.planForSelectedDay', { date: selectedDayKey })}
           </button>
@@ -433,9 +583,7 @@ export function TaskEditModal({
                 value={task.recurrenceAnchorLocalDate ?? anchorBase}
                 onChange={(v) => {
                   if (!task.recurrence) return
-                  void onApplyTaskPatch({
-                    recurrenceAnchorLocalDate: v || null,
-                  })
+                  guardedAnchorChange(v)
                 }}
                 disabled={!canEdit}
               />
@@ -509,6 +657,9 @@ export function TaskEditModal({
           </div>
           {estFieldError ? <p className="text-xs text-red-400">{estFieldError}</p> : null}
           <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
+          {floatingEstimateWarning ? (
+            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
+          ) : null}
         </div>
 
         <TaskTimeAccordion
@@ -595,7 +746,13 @@ export function TaskEditModal({
           </form>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2 border-t border-zinc-800 pt-4">
+        <div className="mt-6 flex flex-col gap-3 border-t border-zinc-800 pt-4">
+          {commitGateError || scheduleValidationError || anchorValidationError ? (
+            <p className="text-xs text-red-400" role="alert">
+              {commitGateError ?? scheduleValidationError ?? anchorValidationError}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
           <button
             type="button"
             disabled={!canEdit}
@@ -611,6 +768,7 @@ export function TaskEditModal({
           >
             {t('common.close')}
           </button>
+          </div>
         </div>
       </div>
     </div>

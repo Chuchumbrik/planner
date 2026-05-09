@@ -133,6 +133,7 @@ function AppPageInner() {
   /** День колонки недели или выбранный день — для галочки повтора в редакторе */
   const [editOccurrenceDayKey, setEditOccurrenceDayKey] = useState<string | null>(null)
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false)
+  const [draftsModalOpen, setDraftsModalOpen] = useState(false)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
 
@@ -165,6 +166,19 @@ function AppPageInner() {
     document.addEventListener('mousedown', handlePointerDown)
     return () => document.removeEventListener('mousedown', handlePointerDown)
   }, [openFilterMenu])
+
+  useEffect(() => {
+    if (vault.drafts.length <= 1) setDraftsModalOpen(false)
+  }, [vault.drafts.length])
+
+  useEffect(() => {
+    if (!draftsModalOpen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setDraftsModalOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [draftsModalOpen])
 
   const syncHint = !remoteHydrated
     ? t('app.syncLoadingVault')
@@ -337,6 +351,39 @@ function AppPageInner() {
       }
     }
   }
+
+  const draftListItems = vault.drafts.map((d) => (
+    <li
+      key={d.id}
+      className="flex flex-wrap items-center justify-between gap-2 rounded border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm"
+    >
+      <span className="min-w-0 flex-1 truncate text-zinc-200">
+        {d.title.trim() ? d.title : t('app.draftUntitled')}
+      </span>
+      <div className="flex shrink-0 gap-2">
+        <button
+          type="button"
+          disabled={!canEdit}
+          className="rounded border border-emerald-800 px-2 py-1 text-xs text-emerald-300 hover:bg-emerald-950/50 disabled:opacity-40"
+          onClick={() => {
+            setResumeDraft(d)
+            setCreateOpen(true)
+            setDraftsModalOpen(false)
+          }}
+        >
+          {t('app.draftContinue')}
+        </button>
+        <button
+          type="button"
+          disabled={!canEdit}
+          className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
+          onClick={() => void deleteDraft(d.id)}
+        >
+          {t('common.delete')}
+        </button>
+      </div>
+    </li>
+  ))
 
   return (
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8">
@@ -538,45 +585,69 @@ function AppPageInner() {
           </div>
         ) : null}
 
-        {vault.drafts.length > 0 ? (
+        {vault.drafts.length === 1 ? (
           <section className="max-w-lg rounded-lg border border-amber-900/40 bg-amber-950/20 p-3">
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-200/90">
               {t('app.draftsTitle')}
             </h3>
-            <ul className="flex flex-col gap-2">
-              {vault.drafts.map((d) => (
-                <li
-                  key={d.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm"
+            <ul className="flex flex-col gap-2">{draftListItems}</ul>
+          </section>
+        ) : vault.drafts.length > 1 ? (
+          <>
+            <div className="max-w-lg">
+              <button
+                type="button"
+                disabled={!canEdit}
+                aria-haspopup="dialog"
+                aria-expanded={draftsModalOpen}
+                title={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
+                className="inline-flex w-full items-center justify-between gap-3 rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-left text-sm font-medium text-amber-200 hover:bg-amber-950/35 disabled:opacity-40 sm:w-auto sm:justify-start"
+                onClick={() => setDraftsModalOpen(true)}
+              >
+                <span>{t('app.draftsTitle')}</span>
+                <span
+                  className="inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-amber-600/90 px-1.5 text-xs font-semibold text-amber-950"
+                  aria-hidden
                 >
-                  <span className="min-w-0 flex-1 truncate text-zinc-200">
-                    {d.title.trim() ? d.title : t('app.draftUntitled')}
-                  </span>
-                  <div className="flex shrink-0 gap-2">
+                  {vault.drafts.length}
+                </span>
+              </button>
+            </div>
+            {draftsModalOpen ? (
+              <div
+                className="fixed inset-0 z-[55] flex items-center justify-center bg-black/60 p-4"
+                role="presentation"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setDraftsModalOpen(false)
+                }}
+              >
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="drafts-modal-title"
+                  className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-800 px-4 py-3">
+                    <h2 id="drafts-modal-title" className="text-sm font-semibold text-amber-200/90">
+                      {t('app.draftsTitle')}
+                    </h2>
                     <button
                       type="button"
-                      disabled={!canEdit}
-                      className="rounded border border-emerald-800 px-2 py-1 text-xs text-emerald-300 hover:bg-emerald-950/50 disabled:opacity-40"
-                      onClick={() => {
-                        setResumeDraft(d)
-                        setCreateOpen(true)
-                      }}
+                      className="rounded px-2 py-1 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                      aria-label={t('common.close')}
+                      onClick={() => setDraftsModalOpen(false)}
                     >
-                      {t('app.draftContinue')}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!canEdit}
-                      className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
-                      onClick={() => void deleteDraft(d.id)}
-                    >
-                      {t('common.delete')}
+                      ✕
                     </button>
                   </div>
-                </li>
-              ))}
-            </ul>
-          </section>
+                  <ul className="scrollbar-site flex max-h-[min(70vh,28rem)] flex-col gap-2 overflow-y-auto p-3">
+                    {draftListItems}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
+          </>
         ) : null}
       </div>
 
