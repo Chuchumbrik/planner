@@ -65,18 +65,33 @@ export function TaskCard({
   const [subDraft, setSubDraft] = useState('')
   const sortedGroups = [...groups].sort((a, b) => a.sortOrder - b.sortOrder)
 
+  const blockCompleteMain =
+    !task.done &&
+    task.subtasks.length > 0 &&
+    task.subtasks.some((s) => !s.done)
+
   const borderClass = TASK_LEFT_BORDER[task.colorKey] ?? TASK_LEFT_BORDER.zinc
+
+  function requestRemove() {
+    if (task.subtasks.length > 0) {
+      if (!window.confirm(t('app.confirmDeleteTaskWithSubtasks'))) return
+    }
+    onRemove()
+  }
 
   return (
     <div
       className={`rounded-lg border border-zinc-800 bg-zinc-900/60 ${borderClass} border-l-4 pl-2`}
     >
       <div className="flex items-start gap-3 px-2 py-2.5 pr-2">
-        <label className="flex flex-1 cursor-pointer items-start gap-3">
+        <label
+          className={`flex flex-1 items-start gap-3 ${blockCompleteMain && canEdit ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          title={blockCompleteMain ? t('app.completeParentAfterSubtasks') : undefined}
+        >
           <input
             type="checkbox"
             checked={task.done}
-            disabled={!canEdit}
+            disabled={!canEdit || blockCompleteMain}
             onChange={() => onToggle()}
             className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
           />
@@ -90,7 +105,7 @@ export function TaskCard({
           type="button"
           disabled={!canEdit}
           className="shrink-0 text-xs text-red-400/90 hover:text-red-300 disabled:opacity-40"
-          onClick={() => onRemove()}
+          onClick={() => requestRemove()}
         >
           {t('common.delete')}
         </button>

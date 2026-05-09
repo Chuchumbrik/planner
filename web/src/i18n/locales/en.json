@@ -40,7 +40,9 @@
     "eisenhowerQ3": "Urgent, not important",
     "eisenhowerQ4": "Neither urgent nor important",
     "emptyQuadrant": "Empty",
-    "dragHandle": "Drag task"
+    "dragHandle": "Drag task",
+    "completeParentAfterSubtasks": "Complete all subtasks first",
+    "confirmDeleteTaskWithSubtasks": "This task has subtasks. Delete it and all subtasks?"
   },
   "settings": {
     "title": "Settings",

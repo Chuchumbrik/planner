@@ -40,7 +40,9 @@
     "eisenhowerQ3": "Срочно, не важно",
     "eisenhowerQ4": "Не срочно и не важно",
     "emptyQuadrant": "Пусто",
-    "dragHandle": "Перетащить задачу"
+    "dragHandle": "Перетащить задачу",
+    "completeParentAfterSubtasks": "Сначала отметьте все подзадачи выполненными",
+    "confirmDeleteTaskWithSubtasks": "У задачи есть подзадачи. Удалить задачу вместе с ними?"
   },
   "settings": {
     "title": "Настройки",

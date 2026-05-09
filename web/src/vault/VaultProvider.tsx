@@ -267,11 +267,21 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const toggleTask = useCallback(
     async (id: string) => {
       await mutate((v) => {
+        const t = v.tasks.find((x) => x.id === id)
+        if (!t) return v
+        const nextDone = !t.done
+        if (
+          nextDone &&
+          t.subtasks.length > 0 &&
+          t.subtasks.some((s) => !s.done)
+        ) {
+          return v
+        }
         const now = new Date().toISOString()
         return {
           ...v,
-          tasks: v.tasks.map((t) =>
-            t.id === id ? { ...t, done: !t.done, updatedAt: now } : t,
+          tasks: v.tasks.map((task) =>
+            task.id === id ? { ...task, done: nextDone, updatedAt: now } : task,
           ),
         }
       })
