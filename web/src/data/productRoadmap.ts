@@ -203,12 +203,51 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         ru: 'Задел под роли (`motivatorRole`, `app_metadata.motivator_role`) без ограничений UI — см. план фазы 8.',
         en: 'Role hooks (`motivatorRole`, `app_metadata.motivator_role`) without UI gating — see phase 8 plan.',
       },
+      {
+        ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; секция **«Открытые вопросы»** (продуктовые допущения и отложенная рефлексия).',
+        en: '**End-of-day** modal: sections use **planned-for-day** tasks only; backlog is a separate FYI strip; **ru** locale gets a Russian title; **Open questions** section for product notes and deferred reflection.',
+      },
     ],
   },
 ]
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
+    items: [
+      {
+        summary: {
+          ru: '**Ритуал «Завершение дня»:** списки по **плану на день** (исправлено: задача не попадает в «не закрыто» только из‑за редактирования сегодня); **бэклог** — отдельный блок «на заметку»; заголовок для **ru** на русском; блок **«Открытые вопросы»**.',
+          en: '**End-of-day ritual:** lists follow **planned-for-day** tasks (fix: no stray rows from “edited today”); **backlog** FYI section; **ru** title localized; **Open questions** block.',
+        },
+        plain: {
+          ru: 'Логика совпадает с отчётами: в основные списки попадает только то, что было запланировано на эту дату (разовая задача на день или вхождение повтора). Бэклог показывается отдельно и не считается «долгом за день».',
+          en: 'Same rule as reports: main lists only include what was actually planned for that date. Backlog is shown separately and isn’t framed as “unfinished for the day.”',
+        },
+      },
+      {
+        summary: {
+          ru: '**Идеи после MVP** в дорожной карте: **внешние календари** (черновик в `obsidian-motivator/15-Идеи-для-развития.md`), **цвет метки с названием и описанием**; ранее — раздел тестирования для admin/beta, поля рефлексии EOD, мини-диаграмма на «День».',
+          en: '**Ideas for later:** **external calendars** (draft in Obsidian), **color labels with name & description**; plus QA settings, EOD reflection fields, Day mini-chart entries.',
+        },
+        plain: {
+          ru: 'В модалке — короткие карточки; подробный текст по интеграции с Google/Outlook/Apple остаётся в Obsidian §4.',
+          en: 'The modal shows short cards; full calendar-integration notes stay in Obsidian §4.',
+        },
+      },
+      {
+        summary: {
+          ru: 'Синхронизация **документации**: `web/README.md` (в т.ч. четыре вкладки дорожной карты), тексты в этом файле и релиз-ноты для тестеров.',
+          en: '**Docs sync:** `web/README.md` (incl. four roadmap tabs), copy in this file, and tester-facing release notes.',
+        },
+        plain: {
+          ru: 'Таблица возможностей и контракт vault отражают текущую сборку; релиз-ноты датированы для истории.',
+          en: 'Feature table and vault contract match the build; release notes are dated for history.',
+        },
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
