@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
+import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { EndOfDayModal } from '@/components/EndOfDayModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
@@ -755,33 +756,40 @@ function AppPageInner() {
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               {t('app.sectionPlanned')}
             </h2>
-            {plannedForDay.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-zinc-700 px-4 py-8 text-center text-sm text-zinc-500">
-                {t('app.emptyPlannedDay')}
-              </p>
-            ) : (
-              <ul className="flex max-w-lg flex-col gap-3">
-                {plannedForDay.map((task) => (
-                  <li key={task.id} className="list-none">
-                    <TaskMiniCard
-                      task={task}
-                      priorityLabels={vault.priorityLabels}
-                      canEdit={canEdit}
-                      occurrenceDayKey={selectedDay}
-                      completionToggleAllowed={canToggleTaskCompletionOnDayView}
-                      onToggle={() => void toggleTask(task.id, selectedDay)}
-                      onOpen={() => openTaskEditor(task.id)}
-                      onToggleChecklistItem={(itemId) =>
-                        void toggleChecklistItem(task.id, itemId)
-                      }
-                      onClearDoubleConfirm={() =>
-                        void patchTask(task.id, { doubleConfirmPending: undefined })
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="flex flex-col gap-6 lg:flex-row-reverse lg:items-start lg:gap-10">
+              <aside className="flex shrink-0 justify-center lg:w-[11rem] lg:justify-end lg:pt-0.5">
+                <DayPlanDonut tasks={vault.tasks} dayKey={selectedDay} />
+              </aside>
+              <div className="min-w-0 flex-1 lg:max-w-lg">
+                {plannedForDay.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-zinc-700 px-4 py-8 text-center text-sm text-zinc-500">
+                    {t('app.emptyPlannedDay')}
+                  </p>
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {plannedForDay.map((task) => (
+                      <li key={task.id} className="list-none">
+                        <TaskMiniCard
+                          task={task}
+                          priorityLabels={vault.priorityLabels}
+                          canEdit={canEdit}
+                          occurrenceDayKey={selectedDay}
+                          completionToggleAllowed={canToggleTaskCompletionOnDayView}
+                          onToggle={() => void toggleTask(task.id, selectedDay)}
+                          onOpen={() => openTaskEditor(task.id)}
+                          onToggleChecklistItem={(itemId) =>
+                            void toggleChecklistItem(task.id, itemId)
+                          }
+                          onClearDoubleConfirm={() =>
+                            void patchTask(task.id, { doubleConfirmPending: undefined })
+                          }
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </section>
 
           <section>
