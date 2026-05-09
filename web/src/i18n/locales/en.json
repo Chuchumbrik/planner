@@ -142,6 +142,16 @@
     "priorityLabelsTitle": "Priority labels (1–5)",
     "priorityLabelsHelp": "Shown on tasks and filters. Stored in your encrypted vault.",
     "priorityLevelLabel": "Level {{rank}}",
+    "accountPasswordTitle": "Sign-in password",
+    "accountPasswordHelp": "For Supabase email login. Your current password is verified before setting a new one.",
+    "currentPassword": "Current password",
+    "newPasswordField": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "changePasswordSubmit": "Update password",
+    "passwordChanged": "Password updated.",
+    "passwordMismatch": "New passwords do not match.",
+    "passwordTooShort": "New password must be at least 6 characters.",
+    "passwordSameAsOld": "New password matches the current one.",
     "appVersion": "App version {{version}}"
   },
   "home": {

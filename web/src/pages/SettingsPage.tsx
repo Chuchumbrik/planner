@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
@@ -85,9 +85,11 @@ function PriorityLabelField({
   )
 }
 
+const MIN_ACCOUNT_PASSWORD_LEN = 6
+
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
-  const { signOut } = useAuth()
+  const { signOut, session, updatePassword } = useAuth()
   const {
     lock,
     vault,
@@ -99,12 +101,49 @@ function SettingsPageInner() {
     setPriorityLabel,
   } = useVault()
   const [newGroupName, setNewGroupName] = useState('')
+  const [pwCurrent, setPwCurrent] = useState('')
+  const [pwNew, setPwNew] = useState('')
+  const [pwConfirm, setPwConfirm] = useState('')
+  const [pwBusy, setPwBusy] = useState(false)
+  const [pwError, setPwError] = useState<string | null>(null)
+  const [pwSuccess, setPwSuccess] = useState(false)
 
   const canEdit = remoteHydrated && !decryptFailed
+  const hasEmailLogin = Boolean(session?.user?.email)
 
   async function handleSignOut() {
     lock()
     await signOut()
+  }
+
+  async function handlePasswordSubmit(e: FormEvent) {
+    e.preventDefault()
+    setPwError(null)
+    setPwSuccess(false)
+    if (!hasEmailLogin) return
+    if (pwNew !== pwConfirm) {
+      setPwError(t('settings.passwordMismatch'))
+      return
+    }
+    if (pwNew.length < MIN_ACCOUNT_PASSWORD_LEN) {
+      setPwError(t('settings.passwordTooShort'))
+      return
+    }
+    if (pwNew === pwCurrent) {
+      setPwError(t('settings.passwordSameAsOld'))
+      return
+    }
+    setPwBusy(true)
+    const { error } = await updatePassword(pwCurrent, pwNew)
+    setPwBusy(false)
+    if (error) {
+      setPwError(error.message)
+      return
+    }
+    setPwSuccess(true)
+    setPwCurrent('')
+    setPwNew('')
+    setPwConfirm('')
   }
 
   const sortedGroups = [...vault.groups].sort((a, b) => a.sortOrder - b.sortOrder)
@@ -143,6 +182,63 @@ function SettingsPageInner() {
           <option value="ru">{t('common.langRu')}</option>
           <option value="en">{t('common.langEn')}</option>
         </select>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-medium text-zinc-300">{t('settings.accountPasswordTitle')}</h2>
+        <p className="mt-2 text-xs text-zinc-500">{t('settings.accountPasswordHelp')}</p>
+        <form className="mt-4 flex flex-col gap-3" onSubmit={(e) => void handlePasswordSubmit(e)}>
+          <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            <span>{t('settings.currentPassword')}</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              value={pwCurrent}
+              disabled={!canEdit || !hasEmailLogin || pwBusy}
+              onChange={(e) => setPwCurrent(e.target.value)}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            <span>{t('settings.newPasswordField')}</span>
+            <input
+              type="password"
+              autoComplete="new-password"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              value={pwNew}
+              disabled={!canEdit || !hasEmailLogin || pwBusy}
+              onChange={(e) => setPwNew(e.target.value)}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            <span>{t('settings.confirmNewPassword')}</span>
+            <input
+              type="password"
+              autoComplete="new-password"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              value={pwConfirm}
+              disabled={!canEdit || !hasEmailLogin || pwBusy}
+              onChange={(e) => setPwConfirm(e.target.value)}
+            />
+          </label>
+          {pwError ? (
+            <p className="text-xs text-red-400" role="alert">
+              {pwError}
+            </p>
+          ) : null}
+          {pwSuccess ? (
+            <p className="text-xs text-emerald-400/90" role="status">
+              {t('settings.passwordChanged')}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            disabled={!canEdit || !hasEmailLogin || pwBusy}
+            className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+          >
+            {pwBusy ? t('common.loading') : t('settings.changePasswordSubmit')}
+          </button>
+        </form>
       </section>
 
       <section className="mt-8">

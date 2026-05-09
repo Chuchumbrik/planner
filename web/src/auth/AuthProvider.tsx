@@ -19,6 +19,11 @@ type AuthContextValue = {
     password: string,
   ) => Promise<{ error: Error | null; session: Session | null }>
   signOut: () => Promise<void>
+  /** Проверка текущего пароля через повторный вход, затем Supabase `updateUser`. */
+  updatePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<{ error: Error | null }>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -65,9 +70,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }, [])
 
+  const updatePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      if (!supabase) return { error: new Error('Supabase не настроен') }
+      const email = session?.user?.email
+      if (!email) return { error: new Error('Нет email в сессии') }
+
+      const { error: verifyErr } = await supabase.auth.signInWithPassword({
+        email,
+        password: currentPassword,
+      })
+      if (verifyErr) return { error: new Error(verifyErr.message) }
+
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      return { error: error ? new Error(error.message) : null }
+    },
+    [session?.user?.email],
+  )
+
   const value = useMemo(
-    () => ({ session, loading, signIn, signUp, signOut }),
-    [session, loading, signIn, signUp, signOut],
+    () => ({ session, loading, signIn, signUp, signOut, updatePassword }),
+    [session, loading, signIn, signUp, signOut, updatePassword],
   )
 
   if (!isSupabaseConfigured) {
@@ -84,6 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             session: null,
           }),
           signOut: async () => {},
+          updatePassword: async () => ({
+            error: new Error('Задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY'),
+          }),
         }}
       >
         {children}

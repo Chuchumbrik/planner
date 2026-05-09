@@ -142,6 +142,16 @@
     "priorityLabelsTitle": "Названия приоритетов (1–5)",
     "priorityLabelsHelp": "Эти подписи показываются в задачах и фильтрах. Хранятся в зашифрованном vault.",
     "priorityLevelLabel": "Уровень {{rank}}",
+    "accountPasswordTitle": "Пароль входа",
+    "accountPasswordHelp": "Для входа по email в Supabase. Сначала проверяется текущий пароль, затем задаётся новый.",
+    "currentPassword": "Текущий пароль",
+    "newPasswordField": "Новый пароль",
+    "confirmNewPassword": "Повторите новый пароль",
+    "changePasswordSubmit": "Сменить пароль",
+    "passwordChanged": "Пароль обновлён.",
+    "passwordMismatch": "Новые пароли не совпадают.",
+    "passwordTooShort": "Новый пароль — не короче 6 символов.",
+    "passwordSameAsOld": "Новый пароль совпадает с текущим.",
     "appVersion": "Версия приложения {{version}}"
   },
   "home": {
