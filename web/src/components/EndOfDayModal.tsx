@@ -24,6 +24,65 @@ function TaskLine({ task }: { task: Task }) {
   )
 }
 
+/** Круговая диаграмма: доля закрытых задач среди запланированных на день (ритуал EOD). */
+function EodPlanDonut({ done, remaining }: { done: number; remaining: number }) {
+  const total = done + remaining
+  const size = 112
+  const stroke = 10
+  const cx = size / 2
+  const cy = size / 2
+  const r = cx - stroke / 2 - 2
+  const circ = 2 * Math.PI * r
+  const frac = total === 0 ? 0 : done / total
+  const dashDone = frac * circ
+  const dashRest = circ - dashDone
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="shrink-0"
+        aria-hidden
+      >
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke="rgb(39 39 42)"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+        />
+        {total > 0 ? (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke="rgb(5 150 105)"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${dashDone} ${dashRest}`}
+            transform={`rotate(-90 ${cx} ${cy})`}
+          />
+        ) : (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke="rgb(63 63 70)"
+            strokeWidth={stroke}
+            strokeDasharray="6 8"
+          />
+        )}
+      </svg>
+    </div>
+  )
+}
+
 export function EndOfDayModal({
   open,
   onClose,
@@ -42,6 +101,8 @@ export function EndOfDayModal({
 
   const backlogShown = backlogReminder.slice(0, BACKLOG_PREVIEW)
   const backlogMoreCount = Math.max(0, backlogReminder.length - backlogShown.length)
+  const plannedTotal = completed.length + remaining.length
+  const remainingClear = remaining.length === 0
 
   useEffect(() => {
     if (!open) return
@@ -96,6 +157,24 @@ export function EndOfDayModal({
           </p>
         ) : null}
 
+        <div
+          className="mt-5 flex flex-col items-center gap-1"
+          role="img"
+          aria-label={
+            plannedTotal === 0
+              ? t('eod.chartEmptyPlan')
+              : t('eod.chartSummary', { done: completed.length, total: plannedTotal })
+          }
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{t('eod.chartTitle')}</p>
+          <EodPlanDonut done={completed.length} remaining={remaining.length} />
+          <p className="max-w-[16rem] text-center text-xs leading-relaxed text-zinc-400">
+            {plannedTotal === 0
+              ? t('eod.chartEmptyPlan')
+              : t('eod.chartSummary', { done: completed.length, total: plannedTotal })}
+          </p>
+        </div>
+
         <section className="animate-eod-pop mt-5 rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-emerald-400/90">
             {t('eod.sectionPlanDone', { count: completed.length })}
@@ -111,12 +190,24 @@ export function EndOfDayModal({
           )}
         </section>
 
-        <section className="animate-eod-soft mt-4 rounded-lg border border-amber-900/35 bg-amber-950/15 p-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400/85">
+        <section
+          className={`mt-4 rounded-lg border p-3 ${
+            remainingClear
+              ? 'animate-eod-pop border-emerald-900/40 bg-emerald-950/20'
+              : 'animate-eod-soft border-amber-900/35 bg-amber-950/15'
+          }`}
+        >
+          <h3
+            className={`text-xs font-semibold uppercase tracking-wide ${
+              remainingClear ? 'text-emerald-400/90' : 'text-amber-400/85'
+            }`}
+          >
             {t('eod.sectionPlanRemaining', { count: remaining.length })}
           </h3>
           {remaining.length === 0 ? (
-            <p className="mt-2 text-sm text-zinc-500">{t('eod.emptyRemaining')}</p>
+            <p className={`mt-2 text-sm ${remainingClear ? 'text-emerald-200/85' : 'text-zinc-500'}`}>
+              {t('eod.emptyRemaining')}
+            </p>
           ) : (
             <ul className="mt-2 flex flex-col gap-1.5">
               {remaining.map((task) => (
@@ -142,14 +233,6 @@ export function EndOfDayModal({
             ) : null}
           </section>
         ) : null}
-
-        <section className="mt-4 rounded-lg border border-dashed border-zinc-700/90 bg-zinc-950/40 p-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            {t('eod.sectionOpenQuestions')}
-          </h3>
-          <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">{t('eod.openQuestionBacklogUx')}</p>
-          <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">{t('eod.cptHint')}</p>
-        </section>
 
         <div className="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-zinc-800 pt-4">
           <button

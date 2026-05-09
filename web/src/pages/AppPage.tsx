@@ -438,7 +438,7 @@ function AppPageInner() {
                 }`}
                 onClick={() => setEodOpen(true)}
               >
-                {t('app.eodNav')}
+                {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
               </button>
             ) : null}
             <Link

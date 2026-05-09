@@ -240,6 +240,18 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
               </ul>
             </div>
           </details>
+
+          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-orange-400/95 hover:bg-zinc-900/80">
+              <span>{t('settings.roadmapOpenQuestions')}</span>
+              <Chevron />
+            </summary>
+            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapOpenQuestionsHint')}</p>
+              <p className="text-sm leading-relaxed text-zinc-400">{t('settings.roadmapOpenQuestionBacklogUx')}</p>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-500">{t('settings.roadmapOpenQuestionCpt')}</p>
+            </div>
+          </details>
         </div>
 
         <div className="mt-6 flex justify-end border-t border-zinc-800 pt-4">

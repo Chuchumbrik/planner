@@ -204,8 +204,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Role hooks (`motivatorRole`, `app_metadata.motivator_role`) without UI gating — see phase 8 plan.',
       },
       {
-        ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; секция **«Открытые вопросы»** (продуктовые допущения и отложенная рефлексия).',
-        en: '**End-of-day** modal: sections use **planned-for-day** tasks only; backlog is a separate FYI strip; **ru** locale gets a Russian title; **Open questions** section for product notes and deferred reflection.',
+        ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; круговая диаграмма доли закрытых задач по плану; продуктовые **«Открытые вопросы»** перенесены в модалку **«Краткая сводка»** (настройки).',
+        en: '**End-of-day** modal: **planned-for-day** tasks only; backlog FYI strip; **ru** title localized; donut chart for share of planned tasks closed; **Open questions** product notes live under **Brief summary** in settings.',
       },
     ],
   },
@@ -213,6 +213,21 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
+    items: [
+      {
+        summary: {
+          ru: '**Настройки → Краткая сводка:** пятый блок **«Открытые вопросы»** (перенесено из модалки завершения дня). **Завершение дня:** круговая диаграмма выполнения по плану; блок «не закрыто (0)» подсвечивается зелёным, если долга нет; после ритуала кнопка в шапке планировщика — **«Отчёт за сегодня»**.',
+          en: '**Settings → Brief summary:** fifth section **Open questions** (moved from End-of-day). **End of day:** donut chart for plan completion; “not closed (0)” block goes green when nothing is due; after the ritual the planner header shows **Today\'s report**.',
+        },
+        plain: {
+          ru: 'Текст «открытых вопросов» теперь рядом с дорожной картой, а не в вечернем окне — чтобы вечернее окно было про итог дня. Зелёная «нулевая» строка и новая подпись кнопки убирают ощущение, что день всё ещё «не закрыт».',
+          en: 'Open questions sit next to the roadmap instead of the evening modal so the ritual stays focused on the day. A green zero row and the renamed header button avoid implying the day is still unfinished.',
+        },
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
     items: [
