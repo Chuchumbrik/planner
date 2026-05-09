@@ -15,5 +15,6 @@ export * from './lib/localDate'
 export * from './lib/timeClock'
 export * from './lib/estimateInput'
 export * from './lib/reporting/recurringSeries'
+export * from './lib/reporting/vaultAnalytics'
 
 export * from './sync/constants'

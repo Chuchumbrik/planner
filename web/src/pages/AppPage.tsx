@@ -395,12 +395,20 @@ function AppPageInner() {
           <h1 className="text-xl font-semibold text-white">{t('app.plannerTitle')}</h1>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <Link
-            to="/settings"
-            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
-          >
-            {t('app.settings')}
-          </Link>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Link
+              to="/app/reports"
+              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
+            >
+              {t('app.reportsNav')}
+            </Link>
+            <Link
+              to="/settings"
+              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
+            >
+              {t('app.settings')}
+            </Link>
+          </div>
           <p className="max-w-[14rem] text-right text-xs text-zinc-500" aria-live="polite">
             {syncHint}
           </p>

@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  BACKLOG_ITEMS,
+  IDEAS_LATER_ITEMS,
   IMPLEMENTED_BLOCKS,
+  MVP_PLANNED_ITEMS,
   type LocalizedString,
 } from '@/data/productRoadmap'
 
@@ -13,6 +14,17 @@ function pickLocale(s: LocalizedString, lang: string): string {
 export type ProductRoadmapModalProps = {
   open: boolean
   onClose: () => void
+}
+
+function Chevron() {
+  return (
+    <span
+      className="text-[10px] text-zinc-500 transition-transform duration-200 group-open:rotate-180"
+      aria-hidden
+    >
+      ▾
+    </span>
+  )
 }
 
 export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps) {
@@ -36,14 +48,18 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
   return (
     <div
       className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-4 sm:items-center"
-      role="dialog"
-      aria-modal
-      aria-labelledby="roadmap-modal-title"
+      role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="scrollbar-site max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-600 bg-zinc-950 p-4 shadow-2xl">
+      <div
+        role="dialog"
+        aria-modal
+        aria-labelledby="roadmap-modal-title"
+        className="scrollbar-site max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-600 bg-zinc-950 p-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 id="roadmap-modal-title" className="text-base font-semibold text-zinc-100">
@@ -53,7 +69,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
           </div>
           <button
             type="button"
-            className="shrink-0 text-zinc-500 hover:text-zinc-300"
+            className="shrink-0 rounded px-1 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
             onClick={onClose}
             aria-label={t('common.close')}
           >
@@ -61,36 +77,60 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
           </button>
         </div>
 
-        <section className="mt-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-emerald-500/90">
-            {t('settings.roadmapImplemented')}
-          </h3>
-          <div className="mt-3 flex flex-col gap-5">
-            {IMPLEMENTED_BLOCKS.map((block, bi) => (
-              <div key={bi}>
-                <p className="text-sm font-medium text-zinc-300">
-                  {pickLocale(block.dateLabel, lang)}
-                </p>
-                <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400">
-                  {block.items.map((item, ii) => (
-                    <li key={ii}>{pickLocale(item, lang)}</li>
-                  ))}
-                </ul>
+        <div className="mt-6 flex flex-col gap-3">
+          <details open className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-emerald-400/95 hover:bg-zinc-900/80">
+              <span>{t('settings.roadmapImplemented')}</span>
+              <Chevron />
+            </summary>
+            <div className="border-t border-zinc-800 px-3 pb-4 pt-1">
+              <div className="flex flex-col gap-5 pt-3">
+                {IMPLEMENTED_BLOCKS.map((block, bi) => (
+                  <div key={bi}>
+                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                      {pickLocale(block.dateLabel, lang)}
+                    </p>
+                    <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400">
+                      {block.items.map((item, ii) => (
+                        <li key={ii}>{pickLocale(item, lang)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          </details>
 
-        <section className="mt-8 border-t border-zinc-800 pt-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-500/90">
-            {t('settings.roadmapBacklog')}
-          </h3>
-          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400">
-            {BACKLOG_ITEMS.map((item, i) => (
-              <li key={i}>{pickLocale(item, lang)}</li>
-            ))}
-          </ul>
-        </section>
+          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-amber-400/95 hover:bg-zinc-900/80">
+              <span>{t('settings.roadmapMvp')}</span>
+              <Chevron />
+            </summary>
+            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapMvpHint')}</p>
+              <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400">
+                {MVP_PLANNED_ITEMS.map((item, i) => (
+                  <li key={i}>{pickLocale(item, lang)}</li>
+                ))}
+              </ul>
+            </div>
+          </details>
+
+          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-violet-400/95 hover:bg-zinc-900/80">
+              <span>{t('settings.roadmapIdeas')}</span>
+              <Chevron />
+            </summary>
+            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapIdeasHint')}</p>
+              <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-400">
+                {IDEAS_LATER_ITEMS.map((item, i) => (
+                  <li key={i}>{pickLocale(item, lang)}</li>
+                ))}
+              </ul>
+            </div>
+          </details>
+        </div>
 
         <div className="mt-6 flex justify-end border-t border-zinc-800 pt-4">
           <button

@@ -5,6 +5,7 @@ import { AppPage } from '@/pages/AppPage'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
+import { ReportsPage } from '@/pages/ReportsPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 
 export function App() {
@@ -34,6 +35,10 @@ export function App() {
         <Route
           path="/app"
           element={session ? <AppPage /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/app/reports"
+          element={session ? <ReportsPage /> : <Navigate to="/login" replace />}
         />
         <Route
           path="/settings"

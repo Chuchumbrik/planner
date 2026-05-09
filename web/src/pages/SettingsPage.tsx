@@ -152,9 +152,18 @@ function SettingsPageInner() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
-      <Link className="mb-6 text-sm text-emerald-400 hover:text-emerald-300" to="/app">
-        {t('settings.back')}
-      </Link>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <Link className="text-sm text-emerald-400 hover:text-emerald-300" to="/app">
+          {t('settings.back')}
+        </Link>
+        <button
+          type="button"
+          className="shrink-0 rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-100 hover:border-zinc-500 hover:bg-zinc-800"
+          onClick={() => setRoadmapOpen(true)}
+        >
+          {t('settings.roadmapTempButton')}
+        </button>
+      </div>
       <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
       <p className="mt-2 text-sm text-zinc-400">{t('settings.seedHint')}</p>
 
@@ -184,16 +193,6 @@ function SettingsPageInner() {
           <option value="ru">{t('common.langRu')}</option>
           <option value="en">{t('common.langEn')}</option>
         </select>
-      </section>
-
-      <section className="mt-8 rounded-lg border border-dashed border-zinc-700/90 bg-zinc-900/25 px-4 py-4">
-        <button
-          type="button"
-          className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 hover:border-zinc-500 hover:bg-zinc-800"
-          onClick={() => setRoadmapOpen(true)}
-        >
-          {t('settings.roadmapTempButton')}
-        </button>
       </section>
 
       <ProductRoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} />
