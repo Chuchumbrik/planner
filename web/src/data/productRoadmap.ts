@@ -473,6 +473,23 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     },
   },
   {
+    title: { ru: 'Цвет метки — как мини-группа (название и описание)', en: 'Label color as a mini-group (name & description)' },
+    summary: {
+      ru: 'После MVP: настройка **цветовых меток** не только как оттенок на карточке, а как сущность со **своим названием и описанием** (по смыслу близко к группе проектов, но привязка к цвету): одна точка настроек, текст в подсказках и при фильтрации.',
+      en: 'Post-MVP: **color labels** become more than a swatch — each has an optional **display name and description** (group-like semantics tied to a color): centralized settings, copy in tooltips and when filtering.',
+    },
+    detailBullets: [
+      {
+        ru: 'Данные в vault: таблица или расширение схемы «ключ цвета → подпись, описание»; миграция с текущей фиксированной палитры в `@motivator/core`.',
+        en: 'Vault payload: map **color key → label, description**; migrate from today’s fixed palette in `@motivator/core`.',
+      },
+      {
+        ru: 'Связать с фильтром по цвету, легендой месяца и отчётами, чтобы описание работало в интерфейсе, а не только в настройках.',
+        en: 'Wire into color filters, month legend, and reports so the text surfaces where users look.',
+      },
+    ],
+  },
+  {
     title: { ru: 'Презентационная страница (лендинг)', en: 'Marketing / landing page' },
     summary: {
       ru: 'Публичная страница о приложении: зачем оно, базовые возможности, новости — и вход в регистрацию без открытия планировщика.',
