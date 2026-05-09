@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
-import {
-  TASK_COLOR_HEX,
-  TASK_COLOR_KEYS,
-  nearestTaskColorKey,
-  parseColorInput,
-} from '@/vault/colors'
+import { TaskColorAccordion } from '@/components/TaskColorAccordion'
+import { TASK_COLOR_HEX, nearestTaskColorKey, parseColorInput } from '@/vault/colors'
 import type {
   CreateTaskInput,
   PriorityLabels,
@@ -167,15 +163,6 @@ export function CreateTaskModal({
 
   const sortedGroups = useMemo(() => [...groups].sort((a, b) => a.sortOrder - b.sortOrder), [groups])
 
-  const colorPickerValue = useMemo(() => {
-    const rgb = parseColorInput(snap.colorHexInput)
-    if (rgb) {
-      const h = (n: number) => n.toString(16).padStart(2, '0')
-      return `#${h(rgb.r)}${h(rgb.g)}${h(rgb.b)}`
-    }
-    return TASK_COLOR_HEX[snap.colorKey]
-  }, [snap.colorHexInput, snap.colorKey])
-
   useEffect(() => {
     if (!open) return
     savedRef.current = false
@@ -333,7 +320,7 @@ export function CreateTaskModal({
         if (e.target === e.currentTarget) void handleDismiss()
       }}
     >
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
+      <div className="scrollbar-site max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-sm font-semibold text-zinc-200">{t('app.createTaskTitle')}</h2>
           <button
@@ -355,76 +342,37 @@ export function CreateTaskModal({
           />
         </label>
 
-        <div className="mt-4 space-y-2">
-          <label className="flex flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('app.color')}</span>
-            <select
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-              value={snap.colorKey}
-              disabled={!canEdit}
-              onChange={(e) => {
-                const key = e.target.value as TaskColorKey
-                setSnap((s) => ({
-                  ...s,
-                  colorKey: key,
-                  colorHexInput: TASK_COLOR_HEX[key],
-                }))
-              }}
-            >
-              {TASK_COLOR_KEYS.map((key) => (
-                <option key={key} value={key}>
-                  {t(`app.colorName.${key}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.colorHexInput')}</span>
-              <input
-                type="text"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 disabled:opacity-40"
-                placeholder="#RRGGBB · rgb(…)"
-                value={snap.colorHexInput}
-                disabled={!canEdit}
-                onChange={(e) => {
-                  const v = e.target.value
-                  const rgb = parseColorInput(v)
-                  setSnap((s) => ({
-                    ...s,
-                    colorHexInput: v,
-                    colorKey: rgb ? nearestTaskColorKey(rgb) : s.colorKey,
-                  }))
-                }}
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.colorPickerNative')}</span>
-              <input
-                type="color"
-                className="h-[38px] w-14 cursor-pointer rounded border border-zinc-700 bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
-                value={colorPickerValue}
-                disabled={!canEdit}
-                title={t('app.colorPickerNative')}
-                onChange={(e) => {
-                  const hex = e.target.value
-                  const rgb = parseColorInput(hex)
-                  if (rgb) {
-                    const key = nearestTaskColorKey(rgb)
-                    setSnap((s) => ({
-                      ...s,
-                      colorKey: key,
-                      colorHexInput: hex,
-                    }))
-                  }
-                }}
-              />
-            </label>
-          </div>
-          <p className="text-[10px] leading-snug text-zinc-600">
-            {t('app.colorHexHint', { name: t(`app.colorName.${snap.colorKey}`) })}
-          </p>
-        </div>
+        <TaskColorAccordion
+          colorKey={snap.colorKey}
+          colorHexInput={snap.colorHexInput}
+          canEdit={canEdit}
+          onPickKey={(key) =>
+            setSnap((s) => ({
+              ...s,
+              colorKey: key,
+              colorHexInput: TASK_COLOR_HEX[key],
+            }))
+          }
+          onHexInputChange={(raw) => {
+            const rgb = parseColorInput(raw)
+            setSnap((s) => ({
+              ...s,
+              colorHexInput: raw,
+              colorKey: rgb ? nearestTaskColorKey(rgb) : s.colorKey,
+            }))
+          }}
+          onNativePick={(hex) => {
+            const rgb = parseColorInput(hex)
+            if (rgb) {
+              const key = nearestTaskColorKey(rgb)
+              setSnap((s) => ({
+                ...s,
+                colorKey: key,
+                colorHexInput: hex,
+              }))
+            }
+          }}
+        />
 
         <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
           <span>{t('app.group')}</span>

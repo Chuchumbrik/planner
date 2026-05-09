@@ -28,6 +28,7 @@
     "colorHexInput": "Color code",
     "colorHexHint": "Stored as palette swatch: {{name}} (nearest to your input).",
     "colorPickerNative": "Picker",
+    "colorSwatchesHint": "Recently picked colors first, then the full palette. HEX and the native picker stay in sync with the swatches.",
     "priorityShort": "Priority",
     "today": "Today",
     "addToBacklog": "Add to backlog (no date)",

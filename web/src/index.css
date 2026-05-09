@@ -10,3 +10,33 @@ body {
     Roboto,
     sans-serif;
 }
+
+/* Скроллбар в стиле тёмной темы (модалки и пр.) */
+.scrollbar-site {
+  scrollbar-width: thin;
+  scrollbar-color: #52525b #18181b;
+}
+
+.scrollbar-site::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.scrollbar-site::-webkit-scrollbar-track {
+  background: #18181b;
+  border-radius: 9999px;
+}
+
+.scrollbar-site::-webkit-scrollbar-thumb {
+  background: #52525b;
+  border-radius: 9999px;
+  border: 2px solid #18181b;
+}
+
+.scrollbar-site::-webkit-scrollbar-thumb:hover {
+  background: #71717a;
+}
+
+.task-color-disclosure[open] > summary .task-color-disclosure-chevron {
+  transform: rotate(180deg);
+}

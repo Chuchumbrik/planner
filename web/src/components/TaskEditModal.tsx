@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { mergeEstimateParts, splitEstimateMinutes } from '@/lib/estimateInput'
 import { useTranslation } from 'react-i18next'
-import { ColorPalette } from '@/components/ColorPalette'
+import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
+import { TASK_COLOR_HEX, nearestTaskColorKey, parseColorInput } from '@/vault/colors'
 import { parseLocalDateKey } from '@/lib/localDate'
 import type {
   PriorityLabels,
@@ -121,10 +122,15 @@ export function TaskEditModal({
   const [everyNDaysDraft, setEveryNDaysDraft] = useState(
     task.recurrence?.kind === 'everyNDays' ? task.recurrence.n : 2,
   )
+  const [colorHexDraft, setColorHexDraft] = useState(() => TASK_COLOR_HEX[task.colorKey])
 
   useEffect(() => {
     if (task.recurrence?.kind === 'everyNDays') setEveryNDaysDraft(task.recurrence.n)
   }, [task])
+
+  useEffect(() => {
+    setColorHexDraft(TASK_COLOR_HEX[task.colorKey])
+  }, [task.id, task.colorKey])
 
   useEffect(() => {
     const p = splitEstimateMinutes(task.estimatedMinutes)
@@ -224,7 +230,7 @@ export function TaskEditModal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
+      <div className="scrollbar-site max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-sm font-semibold text-zinc-200">{t('app.editTask')}</h2>
           <button
@@ -247,14 +253,28 @@ export function TaskEditModal({
           />
         </label>
 
-        <div className="mt-4">
-          <ColorPalette
-            label={t('app.color')}
-            value={task.colorKey}
-            canEdit={canEdit}
-            onChange={onSetColor}
-          />
-        </div>
+        <TaskColorAccordion
+          colorKey={task.colorKey}
+          colorHexInput={colorHexDraft}
+          canEdit={canEdit}
+          onPickKey={(key) => {
+            onSetColor(key)
+            setColorHexDraft(TASK_COLOR_HEX[key])
+          }}
+          onHexInputChange={(raw) => {
+            setColorHexDraft(raw)
+            const rgb = parseColorInput(raw)
+            if (rgb) onSetColor(nearestTaskColorKey(rgb))
+          }}
+          onNativePick={(hex) => {
+            const rgb = parseColorInput(hex)
+            if (rgb) {
+              const key = nearestTaskColorKey(rgb)
+              onSetColor(key)
+              setColorHexDraft(hex)
+            }
+          }}
+        />
 
         <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
           <span>{t('app.group')}</span>
