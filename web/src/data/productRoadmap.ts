@@ -1,11 +1,10 @@
 /**
  * Контент модалки «Краткая сводка»: дорожная карта, changelog по датам, идеи, открытые вопросы.
- * Редактируйте при появлении новых фич и изменений scope MVP.
  *
- * Перед коммитом (вместе с `web/README.md`): новые пользовательские изменения — блок в
- * **RELEASE_NOTES_BLOCKS** (дата сверху); при смене scope — **IMPLEMENTED_MVP_PHASES** /
- * **MVP_PHASES_PLANNED** / **IDEAS_LATER_ENTRIES**; проверить подсказки «Открытые вопросы»
- * в локалях (`settings.roadmapOpenQuestion*`).
+ * Жёсткое правило репозитория: перед **любым** коммитом обновлять этот файл и `web/README.md`
+ * (см. `.cursor/rules/pre-commit-docs-roadmap.mdc`). Минимум — **RELEASE_NOTES_BLOCKS** при
+ * изменениях для пользователя; при чисто внутренних коммитах — краткая строка в последнем блоке
+ * или новый блок с датой, чтобы сводка не отставала от истории git.
  */
 
 export type LocalizedString = { ru: string; en: string }
@@ -238,6 +237,19 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /** Блоки релиз-нотов (обновляйте при значимых деплоях для тестеров). Каждая запись — список коротких пунктов. */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-19', en: '2026-05-19' },
+    items: [
+      {
+        changes: [
+          {
+            ru: 'Процесс: зафиксировано **обязательное** обновление `web/README.md` и модалки «Краткая сводка» (`productRoadmap.ts`) перед **любым** коммитом — правило в `.cursor/rules/pre-commit-docs-roadmap.mdc` и в README.',
+            en: 'Process: **mandatory** updates to `web/README.md` and the Brief summary modal (`productRoadmap.ts`) before **every** commit — see `.cursor/rules/pre-commit-docs-roadmap.mdc` and README.',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-18', en: '2026-05-18' },
     items: [
