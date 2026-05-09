@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { RequireVault } from '@/components/RequireVault'
 import { APP_VERSION } from '@/version'
-import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank } from '@/vault/types'
+import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank } from '@motivator/core'
 import { useVault } from '@/vault/VaultProvider'
 
 function GroupRow({
@@ -112,7 +112,7 @@ function SettingsPageInner() {
   const hasEmailLogin = Boolean(session?.user?.email)
 
   async function handleSignOut() {
-    lock()
+    await lock()
     await signOut()
   }
 

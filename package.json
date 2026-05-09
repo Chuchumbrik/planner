@@ -1,0 +1,10 @@
+{
+  "name": "planner-workspace",
+  "private": true,
+  "workspaces": ["web", "packages/motivator-core"],
+  "scripts": {
+    "test": "npm run test -w @motivator/core",
+    "dev": "npm run dev -w web",
+    "build": "npm run build -w web"
+  }
+}

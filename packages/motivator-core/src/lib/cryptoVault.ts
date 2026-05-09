@@ -1,4 +1,11 @@
-const PBKDF2_ITERATIONS = 310_000
+/** Итерации PBKDF2 (контракт для совместимости с нативными клиентами — см. docs/VAULT_CRYPTO_CONTRACT.md). */
+export const PBKDF2_ITERATIONS = 310_000
+
+/** AES-GCM IV длина в байтах (фиксированная длина для Web Crypto AES-GCM). */
+export const AES_GCM_IV_LENGTH_BYTES = 12
+
+/** Длина ключа AES-256 в битах. */
+export const AES_256_KEY_BITS = 256
 
 function bytesToB64(bytes: ArrayBuffer | Uint8Array): string {
   const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
@@ -27,16 +34,20 @@ function asBufferSource(data: Uint8Array): BufferSource {
   return new Uint8Array(data.buffer, data.byteOffset, data.byteLength) as BufferSource
 }
 
-export async function deriveAesKey(seedB64: string, password: string): Promise<CryptoKey> {
+/**
+ * Сырой материал AES-256 (32 байта) после PBKDF2.
+ * Совпадает с ключом из `deriveAesKey`; используется в контракт-тестах (ключ не extractable).
+ */
+export async function deriveAes256RawKey(seedB64: string, password: string): Promise<Uint8Array> {
   const salt = b64ToBytes(seedB64)
   const baseKey = await crypto.subtle.importKey(
     'raw',
     asBufferSource(utf8(password)),
     { name: 'PBKDF2' },
     false,
-    ['deriveBits', 'deriveKey'],
+    ['deriveBits'],
   )
-  return crypto.subtle.deriveKey(
+  const bits = await crypto.subtle.deriveBits(
     {
       name: 'PBKDF2',
       salt: asBufferSource(salt),
@@ -44,6 +55,16 @@ export async function deriveAesKey(seedB64: string, password: string): Promise<C
       hash: 'SHA-256',
     },
     baseKey,
+    AES_256_KEY_BITS,
+  )
+  return new Uint8Array(bits)
+}
+
+export async function deriveAesKey(seedB64: string, password: string): Promise<CryptoKey> {
+  const raw = await deriveAes256RawKey(seedB64, password)
+  return crypto.subtle.importKey(
+    'raw',
+    asBufferSource(raw),
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt', 'decrypt'],
@@ -52,7 +73,7 @@ export async function deriveAesKey(seedB64: string, password: string): Promise<C
 
 /** Формат: ivB64.ciphertextB64 */
 export async function encryptUtf8(plaintext: string, key: CryptoKey): Promise<string> {
-  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const iv = crypto.getRandomValues(new Uint8Array(AES_GCM_IV_LENGTH_BYTES))
   const ct = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv: asBufferSource(iv) },
     key,

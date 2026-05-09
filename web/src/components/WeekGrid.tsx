@@ -1,8 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { isMainTaskDoneForDay, taskOccursOnDate } from '@/lib/recurrence'
-import { taskBorderClass } from '@/vault/colors'
-import { getTaskSlotMinutes } from '@/lib/timeblocking'
-import type { PriorityLabels, Task } from '@/vault/types'
+import {
+  getTaskSlotMinutes,
+  isMainTaskDoneForDay,
+  taskBorderClass,
+  taskOccursOnDate,
+  type PriorityLabels,
+  type Task,
+} from '@motivator/core'
 
 const HOUR_HEIGHT_PX = 36
 const HOURS = Array.from({ length: 24 }, (_, i) => i)

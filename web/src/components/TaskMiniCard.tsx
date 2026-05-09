@@ -1,7 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { isMainTaskDoneForDay } from '@/lib/recurrence'
-import { taskBorderClass } from '@/vault/colors'
-import type { PriorityLabels, Task } from '@/vault/types'
+import { isMainTaskDoneForDay, taskBorderClass, type PriorityLabels, type Task } from '@motivator/core'
 
 function formatTimeSnippet(
   t: Task,

@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { monthLabel, monthWeekMatrix } from '@/lib/calendar'
-import { localDateKey, parseLocalDateKey } from '@/lib/localDate'
+import { localDateKey, monthLabel, monthWeekMatrix, parseLocalDateKey } from '@motivator/core'
 
 function formatDateShort(dateKey: string, locale: string): string {
   const dt = parseLocalDateKey(dateKey)

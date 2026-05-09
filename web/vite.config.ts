@@ -79,6 +79,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      '@motivator/core': path.resolve(__dirname, '../packages/motivator-core/src/index.ts'),
     },
   },
   build: {

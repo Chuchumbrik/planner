@@ -1,4 +1,4 @@
-import { normalizeWeekdays } from '@/lib/recurrence'
+import { normalizeWeekdays } from '../lib/recurrence'
 import {
   DEFAULT_GROUP_ID,
   defaultPriorityLabels,
@@ -20,7 +20,7 @@ import {
   type VaultPayloadV3,
   type VaultPayloadV4,
   type VaultPayloadV5,
-} from '@/vault/types'
+} from './types'
 
 function isColorKey(x: unknown): x is TaskColorKey {
   return (

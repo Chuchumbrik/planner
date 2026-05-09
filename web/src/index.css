@@ -37,10 +37,7 @@ body {
   background: #71717a;
 }
 
-.task-color-disclosure[open] > summary .task-color-disclosure-chevron {
-  transform: rotate(180deg);
-}
-
-.task-time-disclosure[open] > summary .task-time-disclosure-chevron {
+/* Раскрывающиеся блоки (цвет, время) — поворот шеврона при open */
+.plan-accordion[open] > summary .plan-accordion-chevron {
   transform: rotate(180deg);
 }

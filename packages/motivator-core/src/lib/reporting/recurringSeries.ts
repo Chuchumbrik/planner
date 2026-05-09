@@ -1,5 +1,5 @@
-import { recurrenceSeriesId } from '@/lib/recurrence'
-import type { Task } from '@/vault/types'
+import { recurrenceSeriesId } from '../recurrence'
+import type { Task } from '../../vault/types'
 
 /**
  * Ключ группировки для «часто проваленных» и других отчётов по повторяющимся задачам (**DR-008**).

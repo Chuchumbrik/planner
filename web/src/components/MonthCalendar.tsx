@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import type { MonthMatrixCell } from '@/lib/calendar'
+import type { MonthMatrixCell } from '@motivator/core'
 
 type Props = {
   matrix: MonthMatrixCell[][]

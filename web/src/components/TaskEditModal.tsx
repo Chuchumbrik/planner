@@ -1,21 +1,33 @@
 import { useEffect, useState } from 'react'
-import { mergeEstimateParts, splitEstimateMinutes } from '@/lib/estimateInput'
-import { minutesToTimeInput, timeInputToMinutes } from '@/lib/timeClock'
+import {
+  TASK_COLOR_HEX,
+  isMainTaskDoneForDay,
+  mergeEstimateParts,
+  minutesToTimeInput,
+  nearestTaskColorKey,
+  parseColorInput,
+  parseLocalDateKey,
+  splitEstimateMinutes,
+  timeInputToMinutes,
+  PRIORITY_RANKS,
+  type PriorityLabels,
+  type RecurrenceRule,
+  type Task,
+  type TaskColorKey,
+  type TaskTimeMode,
+} from '@motivator/core'
+import {
+  normalizeEstimatePair,
+  reconcileEstimateAfterHoursEdit,
+  reconcileEstimateAfterMinutesEdit,
+  sanitizeChecklistItemInput,
+  sanitizeEveryNDaysInput,
+  sanitizeTaskTitleInput,
+} from '@/lib/fieldSanitize'
 import { useTranslation } from 'react-i18next'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
-import { TASK_COLOR_HEX, nearestTaskColorKey, parseColorInput } from '@/vault/colors'
-import { isMainTaskDoneForDay } from '@/lib/recurrence'
-import { parseLocalDateKey } from '@/lib/localDate'
-import type {
-  PriorityLabels,
-  RecurrenceRule,
-  Task,
-  TaskColorKey,
-  TaskTimeMode,
-} from '@/vault/types'
-import { PRIORITY_RANKS } from '@/vault/types'
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
@@ -117,6 +129,10 @@ export function TaskEditModal({
   const [colorHexDraft, setColorHexDraft] = useState(() => TASK_COLOR_HEX[task.colorKey])
 
   useEffect(() => {
+    setTitleDraft(sanitizeTaskTitleInput(task.title))
+  }, [task.id])
+
+  useEffect(() => {
     if (task.recurrence?.kind === 'everyNDays') setEveryNDaysDraft(task.recurrence.n)
   }, [task])
 
@@ -184,11 +200,14 @@ export function TaskEditModal({
   function handleBlurTitle() {
     const trimmed = titleDraft.trim()
     if (trimmed && trimmed !== task.title) onTitleCommit(trimmed)
-    else setTitleDraft(task.title)
+    else setTitleDraft(sanitizeTaskTitleInput(task.title))
   }
 
   function commitEstimate() {
-    const r = mergeEstimateParts(estHoursDraft, estMinutesDraft)
+    const norm = normalizeEstimatePair(estHoursDraft, estMinutesDraft)
+    setEstHoursDraft(norm.hours)
+    setEstMinutesDraft(norm.minutes)
+    const r = mergeEstimateParts(norm.hours, norm.minutes)
     if (r.invalid) {
       setEstFieldError(t('app.estimateInvalid'))
       const p = splitEstimateMinutes(task.estimatedMinutes)
@@ -249,7 +268,7 @@ export function TaskEditModal({
             className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
             value={titleDraft}
             disabled={!canEdit}
-            onChange={(e) => setTitleDraft(e.target.value)}
+            onChange={(e) => setTitleDraft(sanitizeTaskTitleInput(e.target.value))}
             onBlur={() => handleBlurTitle()}
           />
         </label>
@@ -360,13 +379,14 @@ export function TaskEditModal({
             <label className="flex flex-col gap-1 text-xs text-zinc-500">
               <span>{t('app.everyNDaysLabel')}</span>
               <input
-                type="number"
-                min={1}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
                 className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-                value={everyNDaysDraft}
+                value={String(everyNDaysDraft)}
                 disabled={!canEdit}
                 onChange={(e) => {
-                  const n = Math.max(1, Number(e.target.value) || 1)
+                  const n = sanitizeEveryNDaysInput(e.target.value)
                   setEveryNDaysDraft(n)
                   pushRecurrencePatch('everyNDays', { everyN: n })
                 }}
@@ -460,7 +480,11 @@ export function TaskEditModal({
                 placeholder="0"
                 value={estHoursDraft}
                 disabled={!canEdit}
-                onChange={(e) => setEstHoursDraft(e.target.value)}
+                onChange={(e) => {
+                  const p = reconcileEstimateAfterHoursEdit(e.target.value, estMinutesDraft)
+                  setEstHoursDraft(p.hours)
+                  setEstMinutesDraft(p.minutes)
+                }}
                 onBlur={() => commitEstimate()}
               />
             </label>
@@ -474,7 +498,11 @@ export function TaskEditModal({
                 placeholder="0"
                 value={estMinutesDraft}
                 disabled={!canEdit}
-                onChange={(e) => setEstMinutesDraft(e.target.value)}
+                onChange={(e) => {
+                  const p = reconcileEstimateAfterMinutesEdit(estHoursDraft, e.target.value)
+                  setEstHoursDraft(p.hours)
+                  setEstMinutesDraft(p.minutes)
+                }}
                 onBlur={() => commitEstimate()}
               />
             </label>
@@ -553,7 +581,9 @@ export function TaskEditModal({
               placeholder={t('app.addChecklistItem')}
               value={checkDraft}
               disabled={!canEdit}
-              onChange={(e) => setCheckDraft(e.target.value)}
+              onChange={(e) =>
+                setCheckDraft(sanitizeChecklistItemInput(e.target.value))
+              }
             />
             <button
               type="submit"

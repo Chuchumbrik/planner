@@ -1,4 +1,4 @@
-import type { TaskColorKey } from '@/vault/types'
+import type { TaskColorKey } from './types'
 
 /** Левая полоска задачи (Tailwind классы) */
 export const TASK_LEFT_BORDER: Record<TaskColorKey, string> = {

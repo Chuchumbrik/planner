@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { TaskTimeMode } from '@/vault/types'
+import type { TaskTimeMode } from '@motivator/core'
 
 export type TaskTimeAccordionProps = {
   timeMode: TaskTimeMode
@@ -58,21 +58,34 @@ export function TaskTimeAccordion({
   }
 
   return (
-    <details className="task-time-disclosure mt-4 rounded-lg border border-zinc-800 bg-zinc-900/30 open:bg-zinc-900/50">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm text-zinc-200 [&::-webkit-details-marker]:hidden">
-        <span className="flex min-w-0 flex-col gap-0.5">
-          <span className="truncate font-medium">{t('app.timeSection')}</span>
-          <span className="truncate text-xs text-zinc-500">{summaryPreview}</span>
+    <details className="plan-accordion group mt-4 rounded-lg border border-zinc-800 bg-zinc-900/60 open:border-zinc-700/90">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-zinc-900/80 [&::-webkit-details-marker]:hidden">
+        <span className="flex min-w-0 flex-col gap-0.5 text-left">
+          <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            {t('app.timeSection')}
+          </span>
+          <span className="truncate text-sm text-zinc-200">{summaryPreview}</span>
         </span>
         <span
-          className="task-time-disclosure-chevron shrink-0 text-zinc-500 transition-transform duration-150"
+          className="plan-accordion-chevron shrink-0 text-zinc-500 transition-transform duration-150 ease-out group-open:text-zinc-400"
           aria-hidden
         >
-          ▾
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
         </span>
       </summary>
 
-      <div className="border-t border-zinc-800 px-3 pb-3 pt-2">
+      <div className="border-t border-zinc-800/90 px-3 pb-3 pt-3">
         <div className="flex flex-col gap-2">
           <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
             <input

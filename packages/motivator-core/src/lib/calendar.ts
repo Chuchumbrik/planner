@@ -1,4 +1,4 @@
-import { localDateKey, parseLocalDateKey, shiftLocalDateKey } from '@/lib/localDate'
+import { localDateKey, parseLocalDateKey, shiftLocalDateKey } from './localDate'
 
 /** Понедельник недели, в которую входит день key (локальный календарь). */
 export function startOfWeekMonday(key: string): string {

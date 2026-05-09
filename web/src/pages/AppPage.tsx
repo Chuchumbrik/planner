@@ -8,17 +8,24 @@ import { TaskEditModal } from '@/components/TaskEditModal'
 import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
 import {
+  DEFAULT_GROUP_ID,
+  PRIORITY_RANKS,
+  localDateKey,
+  maxOverlapWithOthers,
   monthLabel,
   monthWeekMatrix,
+  parseLocalDateKey,
+  shiftLocalDateKey,
   shiftWeekStartMonday,
   startOfWeekMonday,
+  taskOccursOnDate,
   weekDayKeys,
-} from '@/lib/calendar'
-import { localDateKey, parseLocalDateKey, shiftLocalDateKey } from '@/lib/localDate'
-import { taskOccursOnDate } from '@/lib/recurrence'
-import { maxOverlapWithOthers, withTaskPatch } from '@/lib/timeblocking'
-import type { PriorityRank, Task, TaskColorKey, TaskDraft } from '@/vault/types'
-import { DEFAULT_GROUP_ID, PRIORITY_RANKS } from '@/vault/types'
+  withTaskPatch,
+  type PriorityRank,
+  type Task,
+  type TaskColorKey,
+  type TaskDraft,
+} from '@motivator/core'
 import { useVault } from '@/vault/VaultProvider'
 
 function formatSynced(ts: number | null, locale: string): string | null {

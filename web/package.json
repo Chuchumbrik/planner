@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@motivator/core": "file:../packages/motivator-core",
     "@supabase/supabase-js": "^2.105.4",
     "i18next": "^26.0.10",
     "react": "^19.2.5",

@@ -18,7 +18,8 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@motivator/core": ["../packages/motivator-core/src/index.ts"]
     },
 
     /* Linting */

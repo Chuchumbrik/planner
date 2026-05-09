@@ -1,5 +1,5 @@
-import { parseLocalDateKey } from '@/lib/localDate'
-import type { Task } from '@/vault/types'
+import { parseLocalDateKey } from './localDate'
+import type { Task } from '../vault/types'
 
 /** Разница в календарных днях между двумя датами YYYY-MM-DD (локально). */
 export function calendarDaysBetween(anchorKey: string, dateKey: string): number {

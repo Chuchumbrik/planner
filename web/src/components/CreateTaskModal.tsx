@@ -1,21 +1,33 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
-import { minutesToTimeInput, timeInputToMinutes } from '@/lib/timeClock'
-import { TASK_COLOR_HEX, nearestTaskColorKey, parseColorInput } from '@/vault/colors'
-import type {
-  CreateTaskInput,
-  PriorityLabels,
-  RecurrenceRule,
-  TaskColorKey,
-  TaskDraft,
-  TaskGroup,
-  TaskTimeMode,
-} from '@/vault/types'
-import { DEFAULT_GROUP_ID, PRIORITY_RANKS } from '@/vault/types'
-import { mergeEstimateParts, splitEstimateMinutes } from '@/lib/estimateInput'
+import {
+  DEFAULT_GROUP_ID,
+  PRIORITY_RANKS,
+  TASK_COLOR_HEX,
+  mergeEstimateParts,
+  minutesToTimeInput,
+  nearestTaskColorKey,
+  parseColorInput,
+  splitEstimateMinutes,
+  timeInputToMinutes,
+  type CreateTaskInput,
+  type PriorityLabels,
+  type RecurrenceRule,
+  type TaskColorKey,
+  type TaskDraft,
+  type TaskGroup,
+  type TaskTimeMode,
+} from '@motivator/core'
+import {
+  normalizeEstimatePair,
+  reconcileEstimateAfterHoursEdit,
+  reconcileEstimateAfterMinutesEdit,
+  sanitizeEveryNDaysInput,
+  sanitizeTaskTitleInput,
+} from '@/lib/fieldSanitize'
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
@@ -111,6 +123,30 @@ function toggleWeekday(set: number[], d: number): number[] {
   return [...set, d].sort((a, b) => a - b)
 }
 
+/**
+ * Каноническое представление формы для флага «были изменения»:
+ * без лишней грязи от пробелов, HEX vs палитра, порядка дней недели.
+ */
+function snapshotCanonical(s: Snapshot, selectedDayKey: string): string {
+  const est = normalizeEstimatePair(s.estimatedHours, s.estimatedMinutesPart)
+  return JSON.stringify({
+    title: s.title.trim(),
+    groupId: s.groupId,
+    colorKey: s.colorKey,
+    priorityRank: s.priorityRank,
+    backlogOnly: s.backlogOnly,
+    scheduledLocalDate: s.scheduledLocalDate,
+    estimatedHours: est.hours,
+    estimatedMinutesPart: est.minutes,
+    timeMode: s.timeMode,
+    timeClock: s.timeMode === 'none' ? '' : s.timeClock,
+    recurrenceKind: s.recurrenceKind,
+    everyNDays: s.everyNDays,
+    weekdays: [...s.weekdays].sort((a, b) => a - b),
+    anchorLocalDate: s.anchorLocalDate.trim() || selectedDayKey,
+  })
+}
+
 export type CreateTaskModalProps = {
   open: boolean
   selectedDayKey: string
@@ -145,12 +181,14 @@ export function CreateTaskModal({
     emptySnapshot(selectedDayKey, defaultGroupId),
   )
   const [estimateError, setEstimateError] = useState<string | null>(null)
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false)
 
   const sortedGroups = useMemo(() => [...groups].sort((a, b) => a.sortOrder - b.sortOrder), [groups])
 
   useEffect(() => {
     if (!open) return
     savedRef.current = false
+    setCloseConfirmOpen(false)
     draftIdRef.current = resumeDraft?.id ?? null
     const base = resumeDraft
       ? snapshotFromDraft(resumeDraft, selectedDayKey)
@@ -163,11 +201,12 @@ export function CreateTaskModal({
   const isDirty = useMemo(() => {
     const init = initialRef.current
     if (!init) return false
-    return JSON.stringify(snap) !== JSON.stringify(init)
-  }, [snap])
+    return snapshotCanonical(snap, selectedDayKey) !== snapshotCanonical(init, selectedDayKey)
+  }, [snap, selectedDayKey])
 
   const estimateBlocked = useMemo(() => {
-    const estMerge = mergeEstimateParts(snap.estimatedHours, snap.estimatedMinutesPart)
+    const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
+    const estMerge = mergeEstimateParts(estNorm.hours, estNorm.minutes)
     const planned = !snap.backlogOnly && snap.scheduledLocalDate != null
     return estMerge.invalid || (planned && estMerge.total == null)
   }, [
@@ -197,7 +236,8 @@ export function CreateTaskModal({
     const trimmed = snap.title.trim()
     if (!trimmed || !canEdit) return
 
-    const estMerge = mergeEstimateParts(snap.estimatedHours, snap.estimatedMinutesPart)
+    const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
+    const estMerge = mergeEstimateParts(estNorm.hours, estNorm.minutes)
     if (estMerge.invalid) {
       setEstimateError(t('app.estimateInvalid'))
       return
@@ -243,7 +283,16 @@ export function CreateTaskModal({
     onClose()
   }
 
-  async function handleDismiss() {
+  const handleAttemptClose = useCallback(() => {
+    if (savedRef.current) {
+      onClose()
+      return
+    }
+    setCloseConfirmOpen(true)
+  }, [onClose])
+
+  const finalizeDismissWithoutSave = useCallback(async () => {
+    setCloseConfirmOpen(false)
     if (savedRef.current) {
       onClose()
       return
@@ -262,7 +311,8 @@ export function CreateTaskModal({
       const recurrenceFinal = recurrence && anchorOut ? recurrence : null
 
       const tm = parseTimeForSubmit()
-      const draftEst = mergeEstimateParts(snap.estimatedHours, snap.estimatedMinutesPart)
+      const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
+      const draftEst = mergeEstimateParts(estNorm.hours, estNorm.minutes)
       const draft: TaskDraft = {
         id: draftIdRef.current ?? crypto.randomUUID(),
         updatedAt: new Date().toISOString(),
@@ -282,7 +332,36 @@ export function CreateTaskModal({
       await onPersistDraft(draft)
     }
     onClose()
-  }
+  }, [
+    isDirty,
+    canEdit,
+    snap,
+    selectedDayKey,
+    sortedGroups,
+    onClose,
+    onPersistDraft,
+  ])
+
+  const closeConfirmHint = !isDirty
+    ? t('app.createTaskCloseHintPristine')
+    : canEdit
+      ? t('app.createTaskCloseHintDraft')
+      : t('app.createTaskCloseHintLost')
+
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      if (closeConfirmOpen) {
+        setCloseConfirmOpen(false)
+        return
+      }
+      handleAttemptClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [open, closeConfirmOpen, handleAttemptClose])
 
   if (!open) return null
 
@@ -297,21 +376,23 @@ export function CreateTaskModal({
   ]
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 sm:items-center"
-      role="dialog"
-      aria-modal
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) void handleDismiss()
-      }}
-    >
+    <>
+      <div
+        className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 sm:items-center"
+        role="dialog"
+        aria-modal
+        aria-hidden={closeConfirmOpen}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) handleAttemptClose()
+        }}
+      >
       <div className="scrollbar-site max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-sm font-semibold text-zinc-200">{t('app.createTaskTitle')}</h2>
           <button
             type="button"
             className="text-zinc-500 hover:text-zinc-300"
-            onClick={() => void handleDismiss()}
+            onClick={() => handleAttemptClose()}
           >
             ✕
           </button>
@@ -323,7 +404,9 @@ export function CreateTaskModal({
             className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
             value={snap.title}
             disabled={!canEdit}
-            onChange={(e) => setSnap((s) => ({ ...s, title: e.target.value }))}
+            onChange={(e) =>
+              setSnap((s) => ({ ...s, title: sanitizeTaskTitleInput(e.target.value) }))
+            }
           />
         </label>
 
@@ -459,15 +542,16 @@ export function CreateTaskModal({
             <label className="flex flex-col gap-1 text-xs text-zinc-500">
               <span>{t('app.everyNDaysLabel')}</span>
               <input
-                type="number"
-                min={1}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
                 className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-                value={snap.everyNDays}
+                value={String(snap.everyNDays)}
                 disabled={!canEdit}
                 onChange={(e) =>
                   setSnap((s) => ({
                     ...s,
-                    everyNDays: Math.max(1, Number(e.target.value) || 1),
+                    everyNDays: sanitizeEveryNDaysInput(e.target.value),
                   }))
                 }
               />
@@ -526,9 +610,17 @@ export function CreateTaskModal({
                 placeholder="0"
                 value={snap.estimatedHours}
                 disabled={!canEdit}
-                onChange={(e) =>
-                  setSnap((s) => ({ ...s, estimatedHours: e.target.value }))
-                }
+                onChange={(e) => {
+                  const p = reconcileEstimateAfterHoursEdit(
+                    e.target.value,
+                    snap.estimatedMinutesPart,
+                  )
+                  setSnap((s) => ({
+                    ...s,
+                    estimatedHours: p.hours,
+                    estimatedMinutesPart: p.minutes,
+                  }))
+                }}
               />
             </label>
             <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
@@ -541,9 +633,17 @@ export function CreateTaskModal({
                 placeholder="0"
                 value={snap.estimatedMinutesPart}
                 disabled={!canEdit}
-                onChange={(e) =>
-                  setSnap((s) => ({ ...s, estimatedMinutesPart: e.target.value }))
-                }
+                onChange={(e) => {
+                  const p = reconcileEstimateAfterMinutesEdit(
+                    snap.estimatedHours,
+                    e.target.value,
+                  )
+                  setSnap((s) => ({
+                    ...s,
+                    estimatedHours: p.hours,
+                    estimatedMinutesPart: p.minutes,
+                  }))
+                }}
               />
             </label>
           </div>
@@ -588,12 +688,52 @@ export function CreateTaskModal({
           <button
             type="button"
             className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
-            onClick={() => void handleDismiss()}
+            onClick={() => handleAttemptClose()}
           >
             {t('common.cancel')}
           </button>
         </div>
       </div>
-    </div>
+      </div>
+
+      {closeConfirmOpen ? (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-4"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCloseConfirmOpen(false)
+          }}
+        >
+          <div
+            role="alertdialog"
+            aria-modal
+            aria-labelledby="create-task-close-title"
+            className="w-full max-w-sm rounded-xl border border-zinc-600 bg-zinc-950 p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="create-task-close-title" className="text-sm font-semibold text-zinc-100">
+              {t('app.createTaskCloseTitle')}
+            </h3>
+            <p className="mt-2 text-sm leading-snug text-zinc-400">{closeConfirmHint}</p>
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                onClick={() => setCloseConfirmOpen(false)}
+              >
+                {t('app.createTaskCloseStay')}
+              </button>
+              <button
+                type="button"
+                className="rounded-lg bg-zinc-100 px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-white"
+                onClick={() => void finalizeDismissWithoutSave()}
+              >
+                {t('app.createTaskCloseLeave')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }

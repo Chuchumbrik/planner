@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { TaskColorKey } from '@/vault/types'
+import { sanitizeColorTextInput } from '@/lib/fieldSanitize'
+import type { TaskColorKey } from '@motivator/core'
 import {
   TASK_COLOR_HEX,
   TASK_COLOR_KEYS,
   nearestTaskColorKey,
   parseColorInput,
-} from '@/vault/colors'
+} from '@motivator/core'
 
 const RECENT_KEY = 'motivator_recent_task_colors'
 const MAX_RECENT = 8
@@ -115,27 +116,42 @@ export function TaskColorAccordion({
   }
 
   return (
-    <details className="task-color-disclosure mt-4 rounded-lg border border-zinc-800 bg-zinc-900/30 open:bg-zinc-900/50">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm text-zinc-200 [&::-webkit-details-marker]:hidden">
-        <span className="flex min-w-0 items-center gap-2">
+    <details className="plan-accordion group mt-4 rounded-lg border border-zinc-800 bg-zinc-900/60 open:border-zinc-700/90">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-zinc-900/80 [&::-webkit-details-marker]:hidden">
+        <span className="flex min-w-0 items-start gap-3">
           <span
-            className={`h-5 w-5 shrink-0 rounded-full ring-2 ring-offset-2 ring-offset-zinc-950 ${SWATCH[colorKey]}`}
+            className={`mt-0.5 h-5 w-5 shrink-0 rounded-full ring-2 ring-offset-2 ring-offset-zinc-950 ${SWATCH[colorKey]}`}
             aria-hidden
           />
-          <span className="truncate font-medium">{t('app.color')}</span>
-          <span className="truncate text-zinc-500">
-            · {t(`app.colorName.${colorKey}`)}
+          <span className="flex min-w-0 flex-col gap-0.5 text-left">
+            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              {t('app.color')}
+            </span>
+            <span className="truncate text-sm text-zinc-200">
+              {t(`app.colorName.${colorKey}`)}
+            </span>
           </span>
         </span>
         <span
-          className="task-color-disclosure-chevron shrink-0 text-zinc-500 transition-transform duration-150"
+          className="plan-accordion-chevron mt-1 shrink-0 text-zinc-500 transition-transform duration-150 ease-out group-open:text-zinc-400"
           aria-hidden
         >
-          ▾
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
         </span>
       </summary>
 
-      <div className="border-t border-zinc-800 px-3 pb-3 pt-2">
+      <div className="border-t border-zinc-800/90 px-3 pb-3 pt-3">
         <p className="mb-2 text-[11px] text-zinc-500">{t('app.colorSwatchesHint')}</p>
         <div className="flex flex-wrap gap-2">
           {orderedKeys.map((key) => (
@@ -161,7 +177,9 @@ export function TaskColorAccordion({
               placeholder="#RRGGBB · rgb(…)"
               value={colorHexInput}
               disabled={!canEdit}
-              onChange={(e) => onHexInputChange(e.target.value)}
+              onChange={(e) =>
+                onHexInputChange(sanitizeColorTextInput(e.target.value))
+              }
               onBlur={() => handleHexBlur()}
             />
           </label>

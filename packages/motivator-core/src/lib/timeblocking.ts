@@ -1,5 +1,5 @@
-import { taskOccursOnDate } from '@/lib/recurrence'
-import type { Task } from '@/vault/types'
+import { taskOccursOnDate } from './recurrence'
+import type { Task } from '../vault/types'
 
 /** Если оценки нет — используем для визуализации и пересечений (минуты). */
 export const DEFAULT_SLOT_DURATION_MIN = 30

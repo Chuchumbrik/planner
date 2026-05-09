@@ -10,11 +10,31 @@ import {
   type ReactNode,
 } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
-import { decryptUtf8, deriveAesKey, encryptUtf8 } from '@/lib/cryptoVault'
-import i18n from '@/i18n'
-import { normalizeVault } from '@/vault/normalize'
-import { supabase } from '@/lib/supabase'
 import {
+  applyAddChecklistItem,
+  applyAddGroup,
+  applyCreateTask,
+  applyDeleteDraft,
+  applyDeleteGroup,
+  applyPatchTask,
+  applyRemoveChecklistItem,
+  applyRemoveTask,
+  applyRenameGroup,
+  applySetPriorityLabel,
+  applySetTaskColor,
+  applySetTaskEstimatedMinutes,
+  applySetTaskGroup,
+  applySetTaskPriorityRank,
+  applySetTaskScheduledLocalDate,
+  applySetTaskTimePlan,
+  applyToggleChecklistItem,
+  applyToggleTask,
+  applyUpsertDraft,
+  type VaultDeps,
+  decryptUtf8,
+  deriveAesKey,
+  encryptUtf8,
+  normalizeVault,
   DEFAULT_GROUP_ID,
   emptyVault,
   type CreateTaskInput,
@@ -22,13 +42,22 @@ import {
   type Task,
   type TaskColorKey,
   type TaskDraft,
-  type TaskGroup,
   type TaskTimeMode,
   type VaultPayload,
-} from '@/vault/types'
+  VAULT_JSON_WARN_BYTES,
+  VAULT_REMOTE_SAVE_DEBOUNCE_MS,
+} from '@motivator/core'
+import { createSupabaseVaultRemote } from '@/infrastructure/supabaseVaultRemote'
+import i18n from '@/i18n'
+import { supabase } from '@/lib/supabase'
 
 const SEED_KEY = 'motivator_seed_b64'
 const PASSWORD_KEY = 'motivator_kdf_password'
+
+const vaultDepsDefault: VaultDeps = {
+  newId: () => crypto.randomUUID(),
+  nowIso: () => new Date().toISOString(),
+}
 
 type VaultContextValue = {
   ready: boolean
@@ -40,7 +69,7 @@ type VaultContextValue = {
   vault: VaultPayload
   remoteError: string | null
   saveSeed: (seedB64: string, password: string) => Promise<void>
-  lock: () => void
+  lock: () => Promise<void>
   createTask: (input: CreateTaskInput) => Promise<void>
   /** @deprecated используйте createTask */
   addTask: (
@@ -77,12 +106,12 @@ type VaultContextValue = {
 
 const VaultContext = createContext<VaultContextValue | null>(null)
 
-function newId(): string {
-  return crypto.randomUUID()
-}
-
 export function VaultProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
+  const vaultRemote = useMemo(
+    () => (supabase ? createSupabaseVaultRemote(supabase) : null),
+    [],
+  )
   const [cryptoKey, setCryptoKey] = useState<CryptoKey | null>(null)
   const [vault, setVault] = useState<VaultPayload>(emptyVault())
   const [ready, setReady] = useState(false)
@@ -92,6 +121,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null)
   const [decryptFailed, setDecryptFailed] = useState(false)
   const versionRef = useRef(1)
+  const revisionRef = useRef(0)
+  const latestPayloadRef = useRef<VaultPayload | null>(null)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const persistChainRef = useRef<Promise<void>>(Promise.resolve())
 
   const unlocked = Boolean(cryptoKey)
 
@@ -125,52 +158,105 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setCryptoKey(key)
   }, [])
 
-  const lock = useCallback(() => {
+  const runPersistUntilCaughtUp = useCallback(async () => {
+    const userId = session?.user?.id
+    if (!cryptoKey || !userId || !vaultRemote) {
+      setSavePending(false)
+      return
+    }
+
+    let needsAnotherPass = true
+    while (needsAnotherPass) {
+      needsAnotherPass = false
+      const revAtStart = revisionRef.current
+      const normalized = latestPayloadRef.current
+      if (!normalized) {
+        setSavePending(false)
+        return
+      }
+
+      try {
+        const json = JSON.stringify(normalized)
+        if (
+          import.meta.env.DEV &&
+          new TextEncoder().encode(json).length > VAULT_JSON_WARN_BYTES
+        ) {
+          console.warn('[motivator] vault JSON size exceeds VAULT_JSON_WARN_BYTES')
+        }
+        const ciphertext = await encryptUtf8(json, cryptoKey)
+        const nextVersion = versionRef.current + 1
+        await vaultRemote.upsertVault(userId, ciphertext, nextVersion)
+        setRemoteError(null)
+        versionRef.current = nextVersion
+        setLastSyncedAt(Date.now())
+
+        if (revisionRef.current !== revAtStart) {
+          needsAnotherPass = true
+          continue
+        }
+        setSavePending(false)
+        return
+      } catch (e) {
+        setRemoteError(e instanceof Error ? e.message : String(e))
+        setSavePending(false)
+        return
+      }
+    }
+  }, [cryptoKey, session, vaultRemote])
+
+  const schedulePersist = useCallback(() => {
+    if (!cryptoKey || !session?.user || !vaultRemote) return
+    setSavePending(true)
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    debounceTimerRef.current = setTimeout(() => {
+      debounceTimerRef.current = null
+      persistChainRef.current = persistChainRef.current.then(() => runPersistUntilCaughtUp())
+    }, VAULT_REMOTE_SAVE_DEBOUNCE_MS)
+  }, [cryptoKey, session, vaultRemote, runPersistUntilCaughtUp])
+
+  const flushPendingUpload = useCallback(async () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
+    }
+    persistChainRef.current = persistChainRef.current.then(() => runPersistUntilCaughtUp())
+    await persistChainRef.current
+  }, [runPersistUntilCaughtUp])
+
+  const lock = useCallback(async () => {
+    try {
+      await flushPendingUpload()
+    } catch {
+      /* best-effort перед очисткой ключа */
+    }
     setCryptoKey(null)
     localStorage.removeItem(SEED_KEY)
     localStorage.removeItem(PASSWORD_KEY)
     setVault(emptyVault())
     versionRef.current = 1
+    revisionRef.current = 0
+    latestPayloadRef.current = null
     setDecryptFailed(false)
     setRemoteHydrated(false)
     setLastSyncedAt(null)
     setRemoteError(null)
-  }, [])
+  }, [flushPendingUpload])
 
   const pushVault = useCallback(
     async (next: VaultPayload) => {
       const normalized = normalizeVault(next as unknown)
       setVault(normalized)
-      if (!cryptoKey || !session?.user || !supabase) return
-      setSavePending(true)
-      try {
-        const json = JSON.stringify(normalized)
-        const ciphertext = await encryptUtf8(json, cryptoKey)
-        const nextVersion = versionRef.current + 1
-        const { error } = await supabase.from('user_vault').upsert(
-          {
-            user_id: session.user.id,
-            ciphertext,
-            version: nextVersion,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id' },
-        )
-        if (error) setRemoteError(error.message)
-        else {
-          setRemoteError(null)
-          versionRef.current = nextVersion
-          setLastSyncedAt(Date.now())
-        }
-      } finally {
-        setSavePending(false)
-      }
+      latestPayloadRef.current = normalized
+      revisionRef.current += 1
+
+      if (!cryptoKey || !session?.user || !vaultRemote) return
+      schedulePersist()
     },
-    [cryptoKey, session],
+    [cryptoKey, session, vaultRemote, schedulePersist],
   )
 
   useEffect(() => {
-    if (!cryptoKey || !session?.user || !supabase) {
+    if (!cryptoKey || !session?.user || !vaultRemote) {
       startTransition(() => setRemoteHydrated(false))
       return
     }
@@ -182,64 +268,61 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       setRemoteError(null)
       setDecryptFailed(false)
 
-      const { data, error } = await supabase
-        .from('user_vault')
-        .select('ciphertext, version')
-        .eq('user_id', session.user.id)
-        .maybeSingle()
-
-      if (cancelled) return
-
-      if (error) {
-        setRemoteError(error.message)
-        setRemoteHydrated(true)
-        return
-      }
-
-      if (!data?.ciphertext) {
-        const empty = emptyVault()
-        const ciphertext = await encryptUtf8(JSON.stringify(empty), cryptoKey)
-        const { error: upErr } = await supabase.from('user_vault').upsert(
-          {
-            user_id: session.user.id,
-            ciphertext,
-            version: 1,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id' },
-        )
-        if (cancelled) return
-        if (upErr) {
-          setRemoteError(upErr.message)
-        } else {
-          setVault(empty)
-          setDecryptFailed(false)
-          versionRef.current = 1
-          setLastSyncedAt(Date.now())
-        }
-        setRemoteHydrated(true)
-        return
-      }
-
       try {
-        const plain = await decryptUtf8(data.ciphertext as string, cryptoKey)
-        const parsed = normalizeVault(JSON.parse(plain) as unknown)
-        setVault(parsed)
-        setDecryptFailed(false)
-        versionRef.current =
-          typeof data.version === 'number' && data.version > 0 ? data.version : 1
-        setLastSyncedAt(Date.now())
-      } catch {
-        setDecryptFailed(true)
-        setRemoteError(i18n.t('vault.decryptError'))
+        const row = await vaultRemote.fetchVault(session.user.id)
+        if (cancelled) return
+
+        if (!row?.ciphertext) {
+          const empty = emptyVault()
+          try {
+            const ciphertext = await encryptUtf8(JSON.stringify(empty), cryptoKey)
+            await vaultRemote.upsertVault(session.user.id, ciphertext, 1)
+            if (cancelled) return
+            setVault(empty)
+            latestPayloadRef.current = empty
+            revisionRef.current = 0
+            setDecryptFailed(false)
+            versionRef.current = 1
+            setLastSyncedAt(Date.now())
+          } catch (e) {
+            if (!cancelled) {
+              setRemoteError(e instanceof Error ? e.message : String(e))
+            }
+          }
+          if (!cancelled) setRemoteHydrated(true)
+          return
+        }
+
+        try {
+          const plain = await decryptUtf8(row.ciphertext, cryptoKey)
+          const parsed = normalizeVault(JSON.parse(plain) as unknown)
+          setVault(parsed)
+          latestPayloadRef.current = parsed
+          revisionRef.current = 0
+          setDecryptFailed(false)
+          versionRef.current = row.version
+          setLastSyncedAt(Date.now())
+        } catch {
+          setDecryptFailed(true)
+          setRemoteError(i18n.t('vault.decryptError'))
+        }
+        if (!cancelled) setRemoteHydrated(true)
+      } catch (e) {
+        if (!cancelled) {
+          setRemoteError(e instanceof Error ? e.message : String(e))
+          setRemoteHydrated(true)
+        }
       }
-      if (!cancelled) setRemoteHydrated(true)
     })()
 
     return () => {
       cancelled = true
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = null
+      }
     }
-  }, [cryptoKey, session])
+  }, [cryptoKey, session, vaultRemote])
 
   const mutate = useCallback(
     async (fn: (v: VaultPayload) => VaultPayload) => {
@@ -252,54 +335,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const createTask = useCallback(
     async (input: CreateTaskInput) => {
       if (!remoteHydrated) return
-      const trimmed = input.title.trim()
-      if (!trimmed) return
-      const base = vault
-      const gid =
-        input.groupId && base.groups.some((g) => g.id === input.groupId)
-          ? input.groupId
-          : DEFAULT_GROUP_ID
-      const now = new Date().toISOString()
-
-      let recurrence = input.recurrence
-      let anchor = input.recurrenceAnchorLocalDate
-      if (recurrence && !anchor) anchor = input.scheduledLocalDate
-      if (recurrence && !anchor) recurrence = null
-      if (!recurrence) anchor = null
-
-      let timeMode = input.timeMode
-      let timeMinutes = input.timeMinutesFromMidnight
-      if (timeMode === 'none') timeMinutes = null
-      if (timeMode !== 'none' && (timeMinutes == null || timeMinutes < 0 || timeMinutes > 1439)) {
-        timeMode = 'none'
-        timeMinutes = null
-      }
-
-      let est: number | null = input.estimatedMinutes
-      if (est != null && (Number.isNaN(est) || est <= 0 || est > 24 * 60)) est = null
-
-      const task: Task = {
-        id: newId(),
-        title: trimmed,
-        done: false,
-        createdAt: now,
-        updatedAt: now,
-        groupId: gid,
-        colorKey: input.colorKey ?? 'zinc',
-        checklist: [],
-        priorityRank: input.priorityRank,
-        scheduledLocalDate: input.scheduledLocalDate,
-        estimatedMinutes: est,
-        timeMode,
-        timeMinutesFromMidnight: timeMinutes,
-        recurrence,
-        recurrenceAnchorLocalDate: anchor,
-        completedOccurrenceLocalDates: [],
-      }
-      await pushVault({
-        ...base,
-        tasks: [task, ...base.tasks],
-      })
+      if (!input.title.trim()) return
+      await pushVault(applyCreateTask(vault, input, vaultDepsDefault))
     },
     [pushVault, remoteHydrated, vault],
   )
@@ -335,201 +372,80 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const upsertDraft = useCallback(
     async (draft: TaskDraft) => {
-      await mutate((v) => {
-        const rest = v.drafts.filter((d) => d.id !== draft.id)
-        const nextDrafts = [draft, ...rest].sort(
-          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-        )
-        return { ...v, drafts: nextDrafts }
-      })
+      await mutate((v) => applyUpsertDraft(v, draft))
     },
     [mutate],
   )
 
   const deleteDraft = useCallback(
     async (draftId: string) => {
-      await mutate((v) => ({
-        ...v,
-        drafts: v.drafts.filter((d) => d.id !== draftId),
-      }))
+      await mutate((v) => applyDeleteDraft(v, draftId))
     },
     [mutate],
   )
 
   const toggleTask = useCallback(
     async (id: string, occurrenceDayKey?: string) => {
-      const dayOk =
-        typeof occurrenceDayKey === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(occurrenceDayKey)
-      await mutate((v) => {
-        const t = v.tasks.find((x) => x.id === id)
-        if (!t) return v
-        const now = new Date().toISOString()
-
-        if (t.recurrence) {
-          if (!dayOk || !occurrenceDayKey) return v
-          const prevDates = t.completedOccurrenceLocalDates ?? []
-          const wasDone = prevDates.includes(occurrenceDayKey)
-          const nextDone = !wasDone
-          if (nextDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
-            return v
-          }
-          const nextDates = nextDone
-            ? [...new Set([...prevDates, occurrenceDayKey])].sort()
-            : prevDates.filter((d) => d !== occurrenceDayKey)
-          return {
-            ...v,
-            tasks: v.tasks.map((task) =>
-              task.id === id
-                ? { ...task, completedOccurrenceLocalDates: nextDates, updatedAt: now }
-                : task,
-            ),
-          }
-        }
-
-        const nextDone = !t.done
-        if (nextDone && t.checklist.length > 0 && t.checklist.some((s) => !s.done)) {
-          return v
-        }
-        return {
-          ...v,
-          tasks: v.tasks.map((task) =>
-            task.id === id ? { ...task, done: nextDone, updatedAt: now } : task,
-          ),
-        }
-      })
+      await mutate((v) => applyToggleTask(v, id, occurrenceDayKey, vaultDepsDefault))
     },
     [mutate],
   )
 
   const removeTask = useCallback(
     async (id: string) => {
-      await mutate((v) => ({
-        ...v,
-        tasks: v.tasks.filter((t) => t.id !== id),
-      }))
+      await mutate((v) => applyRemoveTask(v, id))
     },
     [mutate],
   )
 
   const setTaskColor = useCallback(
     async (taskId: string, colorKey: TaskColorKey) => {
-      await mutate((v) => ({
-        ...v,
-        tasks: v.tasks.map((t) =>
-          t.id === taskId ? { ...t, colorKey, updatedAt: new Date().toISOString() } : t,
-        ),
-      }))
+      await mutate((v) => applySetTaskColor(v, taskId, colorKey, vaultDepsDefault))
     },
     [mutate],
   )
 
   const setTaskGroup = useCallback(
     async (taskId: string, groupId: string) => {
-      await mutate((v) => {
-        if (!v.groups.some((g) => g.id === groupId)) return v
-        return {
-          ...v,
-          tasks: v.tasks.map((t) =>
-            t.id === taskId ? { ...t, groupId, updatedAt: new Date().toISOString() } : t,
-          ),
-        }
-      })
+      await mutate((v) => applySetTaskGroup(v, taskId, groupId, vaultDepsDefault))
     },
     [mutate],
   )
 
   const addChecklistItem = useCallback(
     async (taskId: string, title: string) => {
-      const trimmed = title.trim()
-      if (!trimmed) return
-      await mutate((v) => {
-        const now = new Date().toISOString()
-        const sub = {
-          id: newId(),
-          title: trimmed,
-          done: false,
-          createdAt: now,
-          updatedAt: now,
-        }
-        return {
-          ...v,
-          tasks: v.tasks.map((t) =>
-            t.id === taskId
-              ? {
-                  ...t,
-                  updatedAt: now,
-                  checklist: [sub, ...t.checklist],
-                }
-              : t,
-          ),
-        }
-      })
+      if (!title.trim()) return
+      await mutate((v) => applyAddChecklistItem(v, taskId, title, vaultDepsDefault))
     },
     [mutate],
   )
 
   const toggleChecklistItem = useCallback(
     async (taskId: string, itemId: string) => {
-      await mutate((v) => {
-        const now = new Date().toISOString()
-        return {
-          ...v,
-          tasks: v.tasks.map((t) =>
-            t.id === taskId
-              ? {
-                  ...t,
-                  updatedAt: now,
-                  checklist: t.checklist.map((s) =>
-                    s.id === itemId ? { ...s, done: !s.done, updatedAt: now } : s,
-                  ),
-                }
-              : t,
-          ),
-        }
-      })
+      await mutate((v) => applyToggleChecklistItem(v, taskId, itemId, vaultDepsDefault))
     },
     [mutate],
   )
 
   const removeChecklistItem = useCallback(
     async (taskId: string, itemId: string) => {
-      await mutate((v) => ({
-        ...v,
-        tasks: v.tasks.map((t) =>
-          t.id === taskId
-            ? { ...t, checklist: t.checklist.filter((s) => s.id !== itemId) }
-            : t,
-        ),
-      }))
+      await mutate((v) => applyRemoveChecklistItem(v, taskId, itemId))
     },
     [mutate],
   )
 
   const addGroup = useCallback(
     async (name: string) => {
-      const trimmed = name.trim()
-      if (!trimmed) return
-      await mutate((v) => {
-        const maxOrder = v.groups.reduce((m, g) => Math.max(m, g.sortOrder), 0)
-        const g: TaskGroup = {
-          id: newId(),
-          name: trimmed,
-          sortOrder: maxOrder + 1,
-        }
-        return { ...v, groups: [...v.groups, g] }
-      })
+      if (!name.trim()) return
+      await mutate((v) => applyAddGroup(v, name, vaultDepsDefault))
     },
     [mutate],
   )
 
   const renameGroup = useCallback(
     async (groupId: string, name: string) => {
-      const trimmed = name.trim()
-      if (!trimmed) return
-      await mutate((v) => ({
-        ...v,
-        groups: v.groups.map((g) => (g.id === groupId ? { ...g, name: trimmed } : g)),
-      }))
+      if (!name.trim()) return
+      await mutate((v) => applyRenameGroup(v, groupId, name))
     },
     [mutate],
   )
@@ -537,143 +453,54 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const deleteGroup = useCallback(
     async (groupId: string) => {
       if (groupId === DEFAULT_GROUP_ID) return
-      await mutate((v) => ({
-        ...v,
-        groups: v.groups.filter((g) => g.id !== groupId),
-        tasks: v.tasks.map((t) =>
-          t.groupId === groupId ? { ...t, groupId: DEFAULT_GROUP_ID } : t,
-        ),
-      }))
+      await mutate((v) => applyDeleteGroup(v, groupId))
     },
     [mutate],
   )
 
   const setPriorityLabel = useCallback(
     async (rank: PriorityRank, label: string) => {
-      const trimmed = label.trim()
-      if (!trimmed) return
-      await mutate((v) => ({
-        ...v,
-        priorityLabels: { ...v.priorityLabels, [rank]: trimmed },
-      }))
+      if (!label.trim()) return
+      await mutate((v) => applySetPriorityLabel(v, rank, label))
     },
     [mutate],
   )
 
   const setTaskPriorityRank = useCallback(
     async (taskId: string, rank: PriorityRank) => {
-      await mutate((v) => ({
-        ...v,
-        tasks: v.tasks.map((t) =>
-          t.id === taskId
-            ? { ...t, priorityRank: rank, updatedAt: new Date().toISOString() }
-            : t,
-        ),
-      }))
+      await mutate((v) => applySetTaskPriorityRank(v, taskId, rank, vaultDepsDefault))
     },
     [mutate],
   )
 
   const setTaskScheduledLocalDate = useCallback(
     async (taskId: string, date: string | null) => {
-      await mutate((v) => ({
-        ...v,
-        tasks: v.tasks.map((t) =>
-          t.id === taskId
-            ? {
-                ...t,
-                scheduledLocalDate: date,
-                updatedAt: new Date().toISOString(),
-              }
-            : t,
-        ),
-      }))
+      await mutate((v) => applySetTaskScheduledLocalDate(v, taskId, date, vaultDepsDefault))
     },
     [mutate],
   )
 
   const setTaskEstimatedMinutes = useCallback(
     async (taskId: string, minutes: number | null) => {
-      await mutate((v) => ({
-        ...v,
-        tasks: v.tasks.map((t) => {
-          if (t.id !== taskId) return t
-          let est: number | null = null
-          if (minutes != null && !Number.isNaN(minutes)) {
-            const e = Math.floor(minutes)
-            if (e > 0 && e <= 24 * 60) est = e
-          }
-          return { ...t, estimatedMinutes: est, updatedAt: new Date().toISOString() }
-        }),
-      }))
+      await mutate((v) =>
+        applySetTaskEstimatedMinutes(v, taskId, minutes, vaultDepsDefault),
+      )
     },
     [mutate],
   )
 
   const setTaskTimePlan = useCallback(
     async (taskId: string, mode: TaskTimeMode, minutesFromMidnight: number | null) => {
-      await mutate((v) => ({
-        ...v,
-        tasks: v.tasks.map((t) => {
-          if (t.id !== taskId) return t
-          const now = new Date().toISOString()
-          if (mode === 'none') {
-            return {
-              ...t,
-              timeMode: 'none' as const,
-              timeMinutesFromMidnight: null,
-              updatedAt: now,
-            }
-          }
-          const m =
-            minutesFromMidnight != null &&
-            !Number.isNaN(minutesFromMidnight) &&
-            minutesFromMidnight >= 0 &&
-            minutesFromMidnight <= 1439
-              ? Math.floor(minutesFromMidnight)
-              : null
-          return {
-            ...t,
-            timeMode: mode,
-            timeMinutesFromMidnight: m,
-            updatedAt: now,
-          }
-        }),
-      }))
+      await mutate((v) =>
+        applySetTaskTimePlan(v, taskId, mode, minutesFromMidnight, vaultDepsDefault),
+      )
     },
     [mutate],
   )
 
   const patchTask = useCallback(
     async (taskId: string, patch: Partial<Task>) => {
-      await mutate((v) => ({
-        ...v,
-        tasks: v.tasks.map((t) => {
-          if (t.id !== taskId) return t
-          const merged: Task = { ...t, ...patch, updatedAt: new Date().toISOString() }
-
-          if (patch.recurrence === null) {
-            merged.completedOccurrenceLocalDates = []
-            return merged
-          }
-
-          if (!merged.recurrence) return merged
-
-          const ruleChanged =
-            'recurrence' in patch &&
-            patch.recurrence !== undefined &&
-            JSON.stringify(patch.recurrence) !== JSON.stringify(t.recurrence)
-          const anchorChanged =
-            'recurrenceAnchorLocalDate' in patch &&
-            patch.recurrenceAnchorLocalDate !== t.recurrenceAnchorLocalDate
-
-          if (ruleChanged || anchorChanged) {
-            merged.completedOccurrenceLocalDates = []
-          }
-
-          return merged
-        }),
-      }))
+      await mutate((v) => applyPatchTask(v, taskId, patch, vaultDepsDefault))
     },
     [mutate],
   )

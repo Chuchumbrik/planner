@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation, Trans } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
-import { generateSeedB64 } from '@/lib/cryptoVault'
+import { generateSeedB64 } from '@motivator/core'
 import { useVault } from '@/vault/VaultProvider'
 
 type SeedMode = 'generate' | 'import'
