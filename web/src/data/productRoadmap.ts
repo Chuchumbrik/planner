@@ -136,8 +136,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Week plan ring: sums per-day metrics through today (`plannedPeriodProgress`); grid left, ring right on wide screens; ring first on narrow (`flex-col-reverse`).',
       },
       {
-        ru: 'Сетка недели без горизонтальной прокрутки: колонки делят ширину; вертикальная прокрутка блока с часами при `max-height`; тёмный вертикальный скролл, резерв под полосу и отступ у последней колонки.',
-        en: 'Week grid avoids horizontal scrolling; columns flex; vertical scroll when height-capped; dark scrollbar gutter and padding so the last column stays clear.',
+        ru: 'Сетка недели без горизонтальной прокрутки; заголовки и слоты на общих колонках (**subgrid**); вертикальный скролл тёмный (`week-grid-v-scroll`).',
+        en: 'Week grid avoids horizontal scrolling; headers and slots share column tracks (**subgrid**); dark vertical scroll (`week-grid-v-scroll`).',
       },
     ],
   },
@@ -240,6 +240,14 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
+      {
+        changes: [
+          {
+            ru: '«Неделя»: выравнивание заголовков дней и сетки слотов — **одна сетка + subgrid**, без смещения колонок из‑за скролла.',
+            en: 'Week tab: day headers align with the slot grid via **one grid + subgrid** (no column drift from scroll/padding).',
+          },
+        ],
+      },
       {
         changes: [
           {
