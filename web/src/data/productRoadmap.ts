@@ -27,8 +27,9 @@ export type RoadmapReleaseNoteBlock = {
 }
 
 /**
- * Фазы 0–5 по плану MVP — **уже в сборке**. Совпадают с номерами в
- * `obsidian-motivator/17-План-реализации-MVP.md`; детали перенесены из блока «план».
+ * Фазы 0–6 по плану MVP — **уже в сборке** (фаза 6 — первая итерация EOD и связки отчётов;
+ * DR-004 и полный набор анимаций — в `MVP_PHASES_PLANNED`). Номера совпадают с
+ * `obsidian-motivator/17-План-реализации-MVP.md`.
  */
 export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
   {
@@ -153,8 +154,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
     id: 5,
     title: { ru: 'Отчёты на клиенте', en: 'Client-side reports' },
     summary: {
-      ru: 'Страница `/app/reports`: аналитика после расшифровки (DR-007), KPI и диаграммы; «часто проваленные» (DR-008). Полный стрик DR-013 — после ритуала End-of-Day (фаза 6).',
-      en: '`/app/reports`: analytics after decrypt (DR-007), KPI and charts; often-missed (DR-008). Full DR-013 streak after End-of-Day (phase 6).',
+      ru: 'Страница `/app/reports`: аналитика после расшифровки (DR-007), KPI и диаграммы; «часто проваленные» (DR-008). Стрик DR-013 в полном виде — с учётом дат End-of-Day (`eodCompletedLocalDates`, фаза 6).',
+      en: '`/app/reports`: analytics after decrypt (DR-007), KPI and charts; often-missed (DR-008). DR-013 streak uses End-of-Day completion dates (`eodCompletedLocalDates`, phase 6).',
     },
     detailBullets: [
       {
@@ -162,12 +163,34 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: '7 / 30-day windows; bar chart by day; logic in `@motivator/core` (`vaultAnalytics`).',
       },
       {
-        ru: 'Таблицы часто проваленных: повторы по серии и разовые задачи в окне; стрик DR-013 в интерфейсе с пометкой до внедрения EOD.',
-        en: 'Often-missed tables: repeats by series and one-off tasks in window; DR-013 streak UI until EOD lands.',
+        ru: 'Таблицы часто проваленных: повторы по серии и разовые задачи в окне; KPI стрика DR-013 — полный расчёт после отметки ритуала EOD за день.',
+        en: 'Often-missed tables: repeats by series and one-off tasks in window; DR-013 streak KPI — full calculation after marking the EOD ritual for the day.',
       },
       {
         ru: 'Дальнейшие улучшения тяжёлых расчётов (worker/батчи) — в плане вместе с стабилизацией отчётов.',
         en: 'Heavy-math improvements (worker/batches) — tracked with reports hardening in the plan.',
+      },
+    ],
+  },
+  {
+    id: 6,
+    title: { ru: 'Ритуал End-of-Day (первая итерация)', en: 'End-of-Day ritual (first iteration)' },
+    summary: {
+      ru: 'Кнопка «Завершить день», модалка DR-002, vault **v6** (`eodCompletedLocalDates`, `eodPreferences`), чекбокс участия задачи в ритуале; полный стрик DR-013 в отчётах после EOD. Лёгкая позитивная анимация блока при завершении. **Остаётся по фазе 6:** DR-004 и минимум двух пар анимаций тона по ТЗ — в блоке «план».',
+      en: '“Finish day” button, DR-002 modal, vault **v6** (`eodCompletedLocalDates`, `eodPreferences`), per-task ritual toggle; full DR-013 streak in reports after EOD. Light positive motion on completion. **Still for phase 6:** DR-004 and two tone-pair animations per spec — see planned block.',
+    },
+    detailBullets: [
+      {
+        ru: 'Глобальный вкл/выкл кнопки EOD в настройках; запись локальной даты завершения ритуала.',
+        en: 'Global EOD button toggle in settings; writes local ritual completion date.',
+      },
+      {
+        ru: 'Связка с отчётами (фаза 5): стрик DR-013 использует даты EOD.',
+        en: 'Tied to reports (phase 5): DR-013 streak uses EOD dates.',
+      },
+      {
+        ru: 'Задел под роли (`motivatorRole`, `app_metadata.motivator_role`) без ограничений UI — см. план фазы 7.',
+        en: 'Role hooks (`motivatorRole`, `app_metadata.motivator_role`) without UI gating — see phase 7 plan.',
       },
     ],
   },
@@ -179,8 +202,16 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
       {
-        ru: 'Отчёты `/app/reports`: график отметок, KPI, блок стрика DR-013 (полное значение после EOD — в фазе 6), таблицы «часто проваленные» по DR-008.',
-        en: '`/app/reports`: completion chart, KPI, DR-013 streak block (full value after EOD in phase 6), often-missed tables (DR-008).',
+        ru: 'Версия продукта **0.6.0** (`package.json`): правило **0.N.PATCH**, **N** = последняя закрытая фаза MVP (см. `web/README.md`).',
+        en: 'Product version **0.6.0** (`package.json`): **0.N.PATCH** rule, **N** = last closed MVP phase (see `web/README.md`).',
+      },
+      {
+        ru: 'Модалка дорожной карты: фазы **0–6** в «реализовано»; остаток фазы 6 (DR-004, анимации по ТЗ) — в «плане».',
+        en: 'Roadmap modal: phases **0–6** under shipped; remainder of phase 6 (DR-004, spec animations) — under planned.',
+      },
+      {
+        ru: 'Отчёты `/app/reports`: график отметок, KPI, стрик DR-013 с EOD, таблицы «часто проваленные» по DR-008.',
+        en: '`/app/reports`: completion chart, KPI, DR-013 streak with EOD, often-missed tables (DR-008).',
       },
       {
         ru: 'Создание задачи: янтарная подсказка обязательных полей; черновики — одна секция или кнопка «Черновики» с модалкой; форма не сбрасывается при смене дня/фильтра.',
@@ -195,29 +226,25 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
 ]
 
 /**
- * Оставшиеся фазы до релиза 1.0.0 (источник правды — `obsidian-motivator/17-План-реализации-MVP.md`).
- * Фазы 0–5 см. в `IMPLEMENTED_MVP_PHASES`.
+ * Оставшийся охват до 1.0.0 (источник — `obsidian-motivator/17-План-реализации-MVP.md`).
+ * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — **остаток фазы 6** и фазы 7–10.
  */
 export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   {
     id: 6,
-    title: { ru: 'Двойное подтверждение, EOD, анимации', en: 'Double-check, EOD, motion' },
+    title: { ru: 'Фаза 6 — остаток: DR-004 и анимации', en: 'Phase 6 — remainder: DR-004 & animations' },
     summary: {
-      ru: 'Двойное подтверждение (DR-004); End-of-Day (DR-002); минимум двух пар анимаций тона.',
-      en: 'Double confirmation (DR-004); End-of-Day (DR-002); at least two tone-pair animations.',
+      ru: 'Первая итерация EOD уже в сборке. Остаётся: **двойное подтверждение** по правилам задачи (**DR-004**) и **минимум двух пар** анимаций тона (успех / мягко при «не сделал») по ТЗ.',
+      en: 'EOD first iteration is shipped. Still to do: task **double confirmation** (**DR-004**) and **at least two pairs** of tone animations (success / gentle “not done”) per spec.',
     },
     detailBullets: [
       {
-        ru: 'Состав задач ритуала EOD с учётом плана на день и календаря; уточнение КПТ при необходимости.',
-        en: 'EOD task set aligned with day plan and calendar; CPT bank refinement if needed.',
+        ru: 'DR-004 не смешивать с первой итерацией EOD — отдельный UX-поток.',
+        en: 'Keep DR-004 separate from the first EOD iteration — dedicated UX flow.',
       },
       {
-        ru: 'Анимации: пара «успех» и пара «мягко при не выполнено» — по ТЗ MVP.',
-        en: 'Animations: success pair and gentle “not done” pair — per MVP spec.',
-      },
-      {
-        ru: 'После EOD — полный учёт стрика DR-013 в отчётах (связь с фазой 5).',
-        en: 'After EOD — full DR-013 streak in reports (ties to phase 5).',
+        ru: 'При необходимости — доработка состава задач ритуала и КПТ-банка под финальную модель.',
+        en: 'Optional: refine ritual task set and CPT bank for the final model.',
       },
     ],
   },
@@ -225,8 +252,8 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     id: 7,
     title: { ru: 'Настройки, аккаунт, юридика', en: 'Settings, account, legal' },
     summary: {
-      ru: 'Настройки по блокам; пароль; seed; удаление и 30 дней; тексты; feedback; cookie; роли user/admin; дорожная карта только для админов; промоут админов.',
-      en: 'Grouped settings; password; seed; deletion & 30 days; legal; feedback; cookie; user/admin roles; roadmap for admins only; promote admins.',
+      ru: 'Настройки по блокам; пароль; seed; удаление и 30 дней; тексты; feedback; cookie. Роли и ограничения UI по permissions — отдельная доработка (см. буллеты ниже).',
+      en: 'Grouped settings; password; seed; deletion & 30 days; legal; feedback; cookie. Role-based UI gating — separate pass (see bullets).',
     },
     detailBullets: [
       {
@@ -246,16 +273,8 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
         en: 'Cookie: banner or bar, persist choice, link to policy; align with DR-006 and jurisdiction.',
       },
       {
-        ru: 'Permissions: группы **пользователь** и **администратор** (источник на сервере — Supabase metadata / таблица ролей + RLS).',
-        en: 'Permissions: **user** vs **admin** groups (server-side source — Supabase metadata / roles table + RLS).',
-      },
-      {
-        ru: 'Модалка «Что сделано и планы» (`productRoadmap`) — кнопка видна **только администраторам**.',
-        en: '“Shipped & roadmap” modal (`productRoadmap`) — entry button **admins only**.',
-      },
-      {
-        ru: 'Администраторы: **назначение новых админов** (Edge Function / Dashboard на первом этапе), без самопроизвольного повышения с клиента.',
-        en: 'Admins: **promote new admins** (Edge Function / Dashboard early on), no client-only elevation.',
+        ru: '**Permissions (отложено в текущей сборке):** роли **пользователь / бета-тестер / администратор**, источник на сервере (`app_metadata.motivator_role`, RLS). Задел в коде — `motivatorRole.ts`, контекст Auth; включение ограничений UI (например дорожной карты только админам) — при отдельной задаче.',
+        en: '**Permissions (deferred in current build):** **user / beta tester / admin**, server-side (`app_metadata.motivator_role`, RLS). Hooks exist (`motivatorRole.ts`, Auth context); UI gating (e.g. roadmap admins-only) — separate task.',
       },
     ],
   },
@@ -318,6 +337,27 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       ru: 'Всё ниже — черновой backlog без сроков и без обещаний в текущем MVP.',
       en: 'Everything below is an informal backlog — no dates and no MVP commitment.',
     },
+  },
+  {
+    title: { ru: 'Презентационная страница (лендинг)', en: 'Marketing / landing page' },
+    summary: {
+      ru: 'Публичная страница о приложении: зачем оно, базовые возможности, новости — и вход в регистрацию без открытия планировщика.',
+      en: 'A public page about the app: purpose, core features, news — plus sign-up without opening the planner shell.',
+    },
+    detailBullets: [
+      {
+        ru: 'Отдельный маршрут (до или рядом с `/app`): регистрация, краткий онбординг, ссылки на политики.',
+        en: 'Dedicated route (before or alongside `/app`): sign-up, short onboarding, legal links.',
+      },
+      {
+        ru: 'Блок новостей или релиз-нот для пользователей без доступа к GitHub (можно связать с RELEASE_NOTES_BLOCKS или CMS).',
+        en: 'News / release notes for users without GitHub access (may tie to RELEASE_NOTES_BLOCKS or a CMS).',
+      },
+      {
+        ru: 'Роль **бета-тестер** (`app_metadata.motivator_role`, рядом с admin/user): закрытая волна регистраций, канал обратной связи с продактом; от обычного пользователя — расширенный доступ к экспериментальным функциям или каналу новостей (уточняется при реализации).',
+        en: '**Beta tester** role (`app_metadata.motivator_role`, alongside admin/user): invite-only waves, feedback loop with product; vs regular users — optional early/experimental features or news channel (TBD at implementation).',
+      },
+    ],
   },
   {
     title: { ru: 'Цели и шаблоны', en: 'Goals and templates' },

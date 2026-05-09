@@ -8,14 +8,16 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { isMotivatorAdmin } from '@/lib/motivatorRole'
+import { isMotivatorAdmin, isMotivatorBetaTester } from '@/lib/motivatorRole'
 import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 
 type AuthContextValue = {
   session: Session | null
   loading: boolean
-  /** Роль из Supabase `app_metadata.motivator_role`; кнопка дорожной карты и блок админов завязаны на это. */
+  /** Роль из Supabase `app_metadata.motivator_role`; для будущего gated UI (пока без ограничений в интерфейсе). */
   isAdmin: boolean
+  /** Бета-тестер (`motivator_role === beta_tester`) — для будущего gated UI. */
+  isBetaTester: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (
     email: string,
@@ -100,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       updatePassword,
       isAdmin: isMotivatorAdmin(session),
+      isBetaTester: isMotivatorBetaTester(session),
     }),
     [session, loading, signIn, signUp, signOut, updatePassword],
   )
@@ -111,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           session: null,
           loading: false,
           isAdmin: false,
+          isBetaTester: false,
           signIn: async () => ({
             error: new Error('Задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY'),
           }),

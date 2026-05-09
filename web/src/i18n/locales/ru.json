@@ -191,7 +191,7 @@
     "eodHelp": "Вечернее закрытие дня и учёт стрика DR-013. Отключите, если не используете ритуал.",
     "eodToggle": "Показывать кнопку «Завершить день» в планировщике",
     "adminSectionTitle": "Администраторы",
-    "adminSectionHelp": "Назначение новых администраторов выполняется на сервере (Supabase Dashboard → Authentication → пользователь → User Metadata → app_metadata: ключ motivator_role, значение admin). Полноценный UI приглашений или Edge Function — по плану MVP (фаза 7). Кнопка «Что сделано и планы» видна только при роли администратора."
+    "adminSectionHelp": "Назначение ролей на сервере (Supabase Dashboard → Authentication → пользователь → User Metadata → app_metadata: ключ motivator_role). Значения: admin, beta_tester (бета-тестер), при отсутствии ключа — обычный пользователь. Полноценный UI или Edge Function — по плану MVP (фаза 7). Кнопка «Что сделано и планы» видна только при роли администратора."
   },
   "eod": {
     "title": "End-of-Day",

@@ -191,7 +191,7 @@
     "eodHelp": "Evening closure and DR-013 streak accounting. Turn off if you do not use the ritual.",
     "eodToggle": "Show “End day” in the planner header",
     "adminSectionTitle": "Administrators",
-    "adminSectionHelp": "Promoting users to admin is done server-side (Supabase Dashboard → Authentication → user → User Metadata → app_metadata: key motivator_role, value admin). Invites UI or an Edge Function can follow per MVP phase 7. The “Shipped & roadmap” button is visible only for admins."
+    "adminSectionHelp": "Assign roles server-side (Supabase Dashboard → Authentication → user → User Metadata → app_metadata key motivator_role). Values: admin, beta_tester, or omit for a normal user. Invites UI or an Edge Function can follow per MVP phase 7. The “Shipped & roadmap” button is visible only for admins."
   },
   "eod": {
     "title": "End-of-Day",

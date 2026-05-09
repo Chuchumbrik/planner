@@ -90,7 +90,7 @@ const MIN_ACCOUNT_PASSWORD_LEN = 6
 
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
-  const { signOut, session, updatePassword, isAdmin } = useAuth()
+  const { signOut, session, updatePassword } = useAuth()
   const {
     lock,
     vault,
@@ -157,15 +157,13 @@ function SettingsPageInner() {
         <Link className="text-sm text-emerald-400 hover:text-emerald-300" to="/app">
           {t('settings.back')}
         </Link>
-        {isAdmin ? (
-          <button
-            type="button"
-            className="shrink-0 rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-100 hover:border-zinc-500 hover:bg-zinc-800"
-            onClick={() => setRoadmapOpen(true)}
-          >
-            {t('settings.roadmapTempButton')}
-          </button>
-        ) : null}
+        <button
+          type="button"
+          className="shrink-0 rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-100 hover:border-zinc-500 hover:bg-zinc-800"
+          onClick={() => setRoadmapOpen(true)}
+        >
+          {t('settings.roadmapTempButton')}
+        </button>
       </div>
       <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
       <p className="mt-2 text-sm text-zinc-400">{t('settings.seedHint')}</p>
@@ -213,14 +211,7 @@ function SettingsPageInner() {
         </select>
       </section>
 
-      <ProductRoadmapModal open={roadmapOpen && isAdmin} onClose={() => setRoadmapOpen(false)} />
-
-      {isAdmin ? (
-        <section className="mt-8 rounded-lg border border-violet-900/45 bg-violet-950/20 px-3 py-4">
-          <h2 className="text-sm font-medium text-violet-200/95">{t('settings.adminSectionTitle')}</h2>
-          <p className="mt-2 text-xs leading-relaxed text-zinc-400">{t('settings.adminSectionHelp')}</p>
-        </section>
-      ) : null}
+      <ProductRoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} />
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('settings.accountPasswordTitle')}</h2>
