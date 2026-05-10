@@ -102,12 +102,32 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Create modal: amber “to save” checklist after the **first** Save attempt; **group** under Additional settings; estimate: **required and valid** for a **planned-day** task; **backlog** — estimate optional, invalid input still blocks save; form persists when changing day/group filter while open.',
       },
       {
+        ru: 'Модалки создания и редактирования: между блоками формы **`gap-4`**; секция «Дата и бэклог» — **`flex`** / **`gap-3`**; **липкий подвал** с динамическим списком недостающего и прокруткой к полям.',
+        en: 'Create/edit modals: **`gap-4`** between blocks; «Date & backlog» — **`flex`** / **`gap-3`**; **sticky footer** with a dynamic missing-field list and scroll-to-field.',
+      },
+      {
         ru: 'Черновики в vault; на `/app` кнопка **«Черновики»** рядом с фильтром только при **наличии** черновиков (счётчик); список — в модалке.',
         en: 'Vault drafts; on `/app` **Drafts** button next to filters only when drafts **exist** (badge); list in a modal.',
       },
       {
         ru: 'Вкладка «День» и периоды: кольцо прогресса — знаменатель = число задач в плане; **`tasksScheduledForPlannerDay`** / **`plannedPeriodProgress`**; чек-лист даёт долю внутри задачи; **процент выполнения** отображается **внутри** SVG-кольца (без отдельной строки под диаграммой); EOD — те же доли; списки EOD — **`tasksPlannedForLocalDay`**.',
         en: 'Day & periods: ring denominator = planned tasks; **`tasksScheduledForPlannerDay`** / **`plannedPeriodProgress`**; checklist shares inside a task; **completion percent** is **inside** the SVG ring (no separate line below); EOD uses same fractions; EOD lists — **`tasksPlannedForLocalDay`**.',
+      },
+      {
+        ru: 'Подпись под кольцом «План на день»: только **процент** (без второй строки про доли задач).',
+        en: 'Caption under the day plan ring: **percent only** (no extra fractional task line).',
+      },
+      {
+        ru: 'Шапка **`/app`:** иконка синхронизации визуально слабее рядом с меню аккаунта; меню — отчёты, переход к ритуалу EOD на вкладке «День», настройки, выход; при ошибке загрузки vault с сервера — понятный текст и кнопка **«Повторить»**.',
+        en: '`/app` header: quieter sync icon next to account; menu — reports, EOD entry on Day tab, settings, sign out; remote vault load errors — friendly copy and **Retry**.',
+      },
+      {
+        ru: 'Вкладка «День»: кнопка **«Завершить день»** на одной строке с созданием задачи.',
+        en: 'Day tab: **End day** on the same row as create task.',
+      },
+      {
+        ru: '**`TaskEditModal`** на мобильном WebKit: оверлей через **`createPortal` → `document.body`**, блокировка прокрутки **`body`** — касания не проходят сквозь модалку.',
+        en: '**`TaskEditModal`** on mobile WebKit: overlay via **`createPortal` → `document.body`**, **`body`** scroll lock — touches do not pass through.',
       },
       {
         ru: 'Настройки: названия приоритетов, CRUD групп, смена пароля Supabase. TaskEditModal — те же правила, что при создании (`taskScheduleValidation`).',
@@ -147,6 +167,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         ru: 'Сетка недели без горизонтальной прокрутки; заголовки и слоты на общих колонках (**subgrid**); вертикальный скролл тёмный (`week-grid-v-scroll`).',
         en: 'Week grid avoids horizontal scrolling; headers and slots share column tracks (**subgrid**); dark vertical scroll (`week-grid-v-scroll`).',
       },
+      {
+        ru: 'Высота слота часа **`HOUR_HEIGHT_PX` = 42**, контрастнее подписи часов на оси.',
+        en: 'Hour slot height **`HOUR_HEIGHT_PX` = 42**, stronger hour labels on the axis.',
+      },
     ],
   },
   {
@@ -164,6 +188,14 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
       {
         ru: 'Информер активных условий фильтрации, когда панель фильтров свернута.',
         en: 'Informer for active filter conditions when the filter panel is collapsed.',
+      },
+      {
+        ru: 'Информер **скрыт**, пока все фильтры в состоянии по умолчанию (все группы, все приоритеты, любой цвет, любые повторы).',
+        en: 'Informer stays **hidden** while every filter is at its default (all groups, priorities, color, repeats).',
+      },
+      {
+        ru: 'На узком экране: фильтры — полноэкранная панель; чипы активных условий; кнопка **«Сбросить всё»**.',
+        en: 'On narrow screens: filters use a fullscreen sheet; active-condition chips; **Reset all**.',
       },
       {
         ru: 'Кольцо «План месяца»: те же правила по дням месяца до сегодня; календарь и кольцо в контейнере `max-w-5xl` по центру; скрывается без задач в плане в охвате.',
@@ -259,8 +291,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
         changes: [
           {
+            ru: 'Дорожная карта (**фаза 7** плана до **1.0.0**): в объём **проработки недели и календаря месяца** включены правила **отображения задач**, решение по **таймлайну**, поведение для **прошедшего времени / невыполненных и выполненных**.',
+            en: 'Roadmap (**phase 7** toward **1.0.0**): **Week** and **month calendar** scope covers **task rendering**, **timeline** decision, and **past slots / open vs done** behavior.',
+          },
+          {
+            ru: 'Политика **скрытия** — только фильтрами; синхронизация с **`17-План-реализации-MVP.md`**.',
+            en: '**Visibility** policy — filters only; synced with **`17-План-реализации-MVP.md`**.',
+          },
+          {
             ru: '**`/app`:** кнопка **«Черновики»** показывается только если в vault есть хотя бы один черновик (ранее была видна неактивной при нуле).',
             en: '**`/app`:** **Drafts** button is shown only when at least one draft exists in the vault (previously shown disabled when empty).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В «Краткой сводке» в **фазе 7** теперь явно расписано, что до релиза нужно договориться: **как рисовать задачи** на неделе и в месяце, **делать ли отдельный таймлайн**, как показывать **«время вышло, а задача не закрыта»** и **уже сделанное**, и **не скрывать** задачи без явного фильтра.',
+            en: '**Brief summary** phase **7** now states we must decide **how tasks show** on Week and Month, **whether to add a timeline**, how **past-but-open** and **done** look, and **not hide** work unless filters say so.',
           },
         ],
       },
@@ -268,8 +314,32 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.6.24', en: '0.6.24' },
         changes: [
           {
-            ru: 'Полировка `/app`: иконка синхронизации визуально слабее рядом с меню аккаунта. Кольца прогресса (**`DayPlanDonut`**, **`PeriodPlanDonut`**, ритуал EOD): **процент внутри** SVG-кольца (`PlanProgressRing.centerLabel`). Черновики — кнопка рядом с фильтром при наличии черновиков; список — в модалке (в т.ч. один черновик). Создание/редактирование задачи: **группа** перенесена в **«Дополнительные настройки»**; единый **`gap-4`** между блоками; секция «Дата и бэклог» выровнена (`flex`/`gap-3`); янтарная плашка **«Чтобы сохранить»** только **после первой попытки «Сохранить»**; валидация оценки: для бэклога не требуется заполнение, но **некорректный ввод** по-прежнему блокирует сохранение и отображается отдельной строкой (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
-            en: '`/app` polish: sync icon visually quieter next to the account menu. Progress rings (**`DayPlanDonut`**, **`PeriodPlanDonut`**, EOD ritual): **percent inside** the SVG ring (`PlanProgressRing.centerLabel`). Drafts — button beside filters when drafts exist; list in a modal (including a single draft). Create/edit task: **group** moved under **Additional settings**; consistent **`gap-4`** between blocks; «Date & backlog» layout balanced (`flex`/`gap-3`); amber **«To save»** strip only **after first Save attempt**; estimate validation: backlog does not require a filled estimate, but **invalid input** still blocks save (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
+            ru: '**`/app`:** иконка синхронизации визуально слабее рядом с меню аккаунта.',
+            en: '**`/app`:** sync icon visually quieter next to the account menu.',
+          },
+          {
+            ru: 'Кольца прогресса (**`DayPlanDonut`**, **`PeriodPlanDonut`**, ритуал EOD): **процент внутри** SVG-кольца (`PlanProgressRing.centerLabel`).',
+            en: 'Progress rings (**`DayPlanDonut`**, **`PeriodPlanDonut`**, EOD ritual): **percent inside** the SVG ring (`PlanProgressRing.centerLabel`).',
+          },
+          {
+            ru: '**Черновики:** кнопка рядом с фильтром при наличии черновиков; список — в модалке (в т.ч. один черновик).',
+            en: '**Drafts:** button beside filters when drafts exist; list in a modal (including a single draft).',
+          },
+          {
+            ru: '**Создание и редактирование задачи:** поле **«Группа»** перенесено в **«Дополнительные настройки»**.',
+            en: '**Create and edit task:** **Group** moved under **Additional settings**.',
+          },
+          {
+            ru: 'Форма: единый отступ **`gap-4`** между блоками; секция «Дата и бэклог» выровнена (`flex`/`gap-3`).',
+            en: 'Form: consistent **`gap-4`** between blocks; «Date & backlog» section aligned (`flex`/`gap-3`).',
+          },
+          {
+            ru: 'Янтарная плашка **«Чтобы сохранить»** — только **после первой** попытки **«Сохранить»**.',
+            en: 'Amber **«To save»** checklist — only **after the first** **Save** attempt.',
+          },
+          {
+            ru: '**Валидация оценки:** для бэклога оценка не обязательна; **некорректный ввод** по-прежнему блокирует сохранение (строки **`estimateInvalid`** и **`createTaskMissingEstimate`**).',
+            en: '**Estimate validation:** backlog does not require a filled estimate; **invalid input** still blocks save (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
           },
         ],
         plainBullets: [
@@ -819,14 +889,30 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
     id: 7,
     title: { ru: 'Дизайн и адаптивность', en: 'Design & responsiveness' },
     summary: {
-      ru: 'Проработка визуального слоя и макета: единый стиль, типографика и отступы; комфорт на **широких экранах** (сетка, использование ширины, читаемые колонки); полировка под **мобильные** и узкие окна (touch, навигация, модалки и формы без горизонтального скролла).',
-      en: 'Visual and layout pass: cohesive styling, typography, spacing; **wide-screen** treatment (grid, width usage, readable columns); polish for **mobile** and narrow viewports (touch targets, navigation, modals/forms without sideways scroll).',
+      ru: 'Проработка визуального слоя и макета: единый стиль, типографика и отступы; комфорт на **широких экранах** (сетка, использование ширины, читаемые колонки); полировка под **мобильные** и узкие окна (touch, навигация, модалки и формы без горизонтального скролла). **Отдельно — продуктовая доводка представления задач** во **вкладке «Неделя»** и **календаре месяца:** как они рисуются во времени, нужен ли таймлайн, что делать с прошедшим слотом и невыполненным, как не прятать важное без выбора пользователя.',
+      en: 'Visual and layout pass: cohesive styling, typography, spacing; **wide-screen** treatment (grid, width usage, readable columns); polish for **mobile** and narrow viewports (touch targets, navigation, modals/forms without sideways scroll). **Plus a product pass on how tasks read in the Week** and **Month calendar:** layout in time, optional timeline, past slots and incomplete work, done vs not — without hiding things the user did not choose to filter away.',
     },
     plain: {
-      ru: 'Сделать интерфейс не только рабочим, но и аккуратным: чтобы на большом мониторе не было пустоты «узкой колонкой посередине без смысла» и чтобы на телефоне всё можно было нажать пальцем и прочитать без прищуривания. Это отдельный заход до финального MVP — после того как функции уже живут в приложении.',
-      en: 'Make the UI not only functional but tidy: on a large monitor avoid an accidental “tiny strip in the middle,” and on a phone keep taps comfortable and text readable. A dedicated pass before the MVP finish line — after core features already exist.',
+      ru: 'Сделать интерфейс не только рабочим, но и аккуратным: чтобы на большом мониторе не было пустоты «узкой колонкой посередине без смысла» и чтобы на телефоне всё можно было нажать пальцем и прочитать без прищуривания. Для **недели** и **месяца** — отдельно договориться, **как визуально вести себя задачи** (включая «уже прошло, но не закрыто»), чтобы планировщик не врал и не пугал зря.',
+      en: 'Make the UI not only functional but tidy: on a large monitor avoid an accidental “tiny strip in the middle,” and on a phone keep taps comfortable and text readable. For **Week** and **Month**, explicitly decide **how tasks should look** (including “time passed but still open”) so the planner stays honest and calm.',
     },
     detailBullets: [
+      {
+        ru: '**Как отображаются задачи** в календаре месяца и в недельной сетке: плотность ячеек, обрезка заголовка, цвет/полоска, время, признак выполнения, согласованность с активными **фильтрами** и информером.',
+        en: '**How tasks render** in the month grid and week grid: cell density, title truncation, color bar, clock time, done state, consistency with active **filters** and the informer.',
+      },
+      {
+        ru: '**Таймлайн:** решение продукта — оставить только почасовую сетку недели как сейчас, добавить отдельный **режим «линия дня»**, или комбинировать; критерии — читаемость на desktop/mobile и отсутствие лишнего шума.',
+        en: '**Timeline:** product decision — keep the hourly week grid only, add a **day timeline** mode, or combine; success criteria — readability on desktop/mobile without clutter.',
+      },
+      {
+        ru: '**Прошедшее время и статусы:** если интервал задачи **уже прошёл**, но задача **не выполнена** — как подсветить (например «просрочено» / «осталось») и давать ли **мягкое напоминание в интерфейсе** (не push); **выполненные** в том же календарном дне — как отличать от невыполненных, чтобы не смешивать с долгом.',
+        en: '**Past time & status:** if the slot **already passed** but the task is **still open** — highlight rules (e.g. overdue vs still actionable) and optional **soft in-app nudge** (not push); **completed** tasks that day — distinct styling so “done” does not read as debt.',
+      },
+      {
+        ru: '**Скрытие задач:** явная политика — скрывает только **выбранный фильтр** (группа, приоритет и т.д.); по умолчанию не «прятать» просрочку без явного действия пользователя; границы **плана на дату** vs **бэклог** — как в ТЗ; при необходимости подпись «есть скрытые по фильтру».',
+        en: '**Hidden tasks:** explicit policy — only **active filters** hide items (group, priority, etc.); don’t silently hide overdue work; **planned-for-date** vs **backlog** boundaries per TZ; optional hint when rows are filtered out.',
+      },
       {
         ru: 'Аудит ключевых экранов (`/app`, неделя, месяц, отчёты, настройки): брейкпоинты Tailwind, предсказуемые отступы и иерархия заголовков.',
         en: 'Audit core screens (`/app`, week, month, reports, settings): Tailwind breakpoints, consistent spacing and heading hierarchy.',
