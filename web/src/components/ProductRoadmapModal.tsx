@@ -9,10 +9,41 @@ import {
   type RoadmapIdeaEntry,
   type RoadmapMvpPhase,
   type RoadmapReleaseNoteBlock,
+  type RoadmapReleaseNoteItem,
 } from '@/data/productRoadmap'
 
 function pickLocale(s: LocalizedString, lang: string): string {
   return lang === 'en' ? s.en : s.ru
+}
+
+/** Семвер `x.y.z` из строки версии (без build metadata). */
+function semverTuple(v: string): [number, number, number] {
+  const m = v.trim().match(/^(\d+)\.(\d+)\.(\d+)/)
+  if (!m) return [0, 0, 0]
+  return [Number(m[1]), Number(m[2]), Number(m[3])]
+}
+
+/** Новее (больше semver) — выше в списке. */
+function compareSemverDesc(a: string, b: string): number {
+  const [a1, a2, a3] = semverTuple(a)
+  const [b1, b2, b3] = semverTuple(b)
+  if (a1 !== b1) return b1 - a1
+  if (a2 !== b2) return b2 - a2
+  return b3 - a3
+}
+
+/** Подблоки одного дня: порядок по убыванию `releasedInVersion`, при равенстве — как в файле. */
+function sortReleaseNoteItems(items: RoadmapReleaseNoteItem[], lang: string): RoadmapReleaseNoteItem[] {
+  return [...items]
+    .map((item, origIdx) => ({ item, origIdx }))
+    .sort((x, y) => {
+      const c = compareSemverDesc(
+        pickLocale(x.item.releasedInVersion, lang),
+        pickLocale(y.item.releasedInVersion, lang),
+      )
+      return c !== 0 ? c : x.origIdx - y.origIdx
+    })
+    .map(({ item }) => item)
 }
 
 /** Ключ даты `YYYY-MM-DD` для группировки (локальный календарь в строке). */
@@ -328,7 +359,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                             }
                           >
                             <div className="flex flex-col gap-4">
-                              {segment.items.map((item, ii) => (
+                              {sortReleaseNoteItems(segment.items, lang).map((item, ii) => (
                                 <div
                                   key={ii}
                                   className="rounded-lg border border-zinc-800/90 bg-zinc-950/45 px-3 py-2.5"

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   DOUBLE_CONFIRM_DEFAULT_GRACE_MIN,
   DOUBLE_CONFIRM_DEFAULT_INTERVAL_MIN,
@@ -124,6 +125,14 @@ export function TaskEditModal({
   todayLocalDateKey,
 }: Props) {
   const { t } = useTranslation()
+  /** Портал в body + lock scroll: без этого на iOS/WebKit касания часто уходят на скроллящийся «планировщик» под модалкой. */
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prevOverflow
+    }
+  }, [])
   const [titleDraft, setTitleDraft] = useState(task.title)
   const [checkDraft, setCheckDraft] = useState('')
   const [estHoursDraft, setEstHoursDraft] = useState('')
@@ -393,16 +402,16 @@ export function TaskEditModal({
     })
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+      className="fixed inset-0 z-[80] flex min-h-dvh w-full items-end justify-center bg-black/60 p-4 sm:items-center"
       role="dialog"
       aria-modal
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="scrollbar-site max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
+      <div className="scrollbar-site max-h-[90vh] w-full max-w-lg overscroll-y-contain overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-sm font-semibold text-zinc-200">{t('app.editTask')}</h2>
           <button
@@ -890,6 +899,7 @@ export function TaskEditModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

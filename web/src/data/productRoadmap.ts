@@ -249,12 +249,30 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  * объект с `dateLabel` (обычно **в начало массива**, чтобы новее было выше в файле). За один день несколько
  * деплоев — несколько элементов **`items`** подряд. Один выпуск: несколько правок — **`changes`**[];
  * пояснение «для людей» — **`plainBullets`**. У каждого элемента **`releasedInVersion`** — semver выпуска,
- * в котором изменения попали в сборку (как в `package.json` до `vite build`, без `+git`). Интерфейс не скрывает даты по календарю «сегодня».
+ * в котором изменения попали в сборку (как в `package.json` до `vite build`, без `+git`). В модалке внутри одного дня подблоки сортируются по **убыванию** этого semver. Интерфейс не скрывает даты по календарю «сегодня».
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
+        changes: [
+          {
+            ru: 'Редактор задачи (**`TaskEditModal`**): на телефонах (WebKit) касания не «проваливаются» в список задач под модалкой — оверлей через **`createPortal` → `document.body`**, на время открытия **`overflow: hidden`** у **`body`**, затемнение закрывает по **`onPointerDown`**, слой **`z-[80]`**, у прокрутки формы — **`overscroll-y-contain`**.',
+            en: 'Task editor (**`TaskEditModal`**): on phones (WebKit) touches no longer fall through to the list behind — overlay via **`createPortal` → `document.body`**, **`overflow: hidden`** on **`body`** while open, backdrop closes on **`onPointerDown`**, layer **`z-[80]`**, scroll panel uses **`overscroll-y-contain`**.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.21', en: '0.6.21' },
+        changes: [
+          {
+            ru: 'Модалка «Краткая сводка»: подблоки внутри одной календарной даты выводятся по **убыванию semver** (`releasedInVersion`). Выпуски **0.6.5** и **0.6.6** перенесены с **`dateLabel` 2026-05-10** на **2026-05-09**; под **10.05** остаются выпуски **0.6.18** и новее.',
+            en: 'Brief summary modal: sub-blocks within one calendar date are ordered by **descending semver** (`releasedInVersion`). **0.6.5** and **0.6.6** entries moved from **2026-05-10** to **2026-05-09**; May **10** lists releases **0.6.18** and newer only.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.20', en: '0.6.20' },
         changes: [
@@ -282,79 +300,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-      {
-        releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
-        changes: [
-          {
-            ru: 'Ритуал «Завершение дня»: списки строятся только по задачам, запланированным на этот календарный день.',
-            en: 'End-of-day ritual: lists only include tasks planned for that calendar day.',
-          },
-          {
-            ru: 'Исправление: задача не попадает в «не закрыто» только из‑за редактирования в тот же день.',
-            en: 'Fix: a task is not listed as “not closed” solely because it was edited today.',
-          },
-          {
-            ru: 'Бэклог — отдельный блок «на заметку», не как долг за день.',
-            en: 'Backlog is a separate FYI block, not framed as same-day debt.',
-          },
-          {
-            ru: 'Заголовок модалки для локали ru отображается на русском.',
-            en: 'Russian locale shows a Russian modal title.',
-          },
-          {
-            ru: 'Добавлен блок «Открытые вопросы» в модалке завершения дня (позже перенесён в «Краткая сводка»).',
-            en: '“Open questions” block in End-of-day (later moved to Brief summary).',
-          },
-        ],
-        plainBullets: [
-          {
-            ru: 'Те же правила, что в отчётах: в основные списки попадает только запланированное на дату; бэклог отдельно.',
-            en: 'Same as reports: main lists match what was planned for the date; backlog is separate.',
-          },
-        ],
-      },
-      {
-        releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
-        changes: [
-          {
-            ru: 'В дорожной карте обновлены «Идеи на потом»: внешние календари (черновик в Obsidian §4).',
-            en: 'Ideas for later: external calendars (draft in Obsidian §4).',
-          },
-          {
-            ru: 'Идея: цвет метки с названием и описанием.',
-            en: 'Idea: color labels with name and description.',
-          },
-          {
-            ru: 'Задел: раздел тестирования для admin/beta, поля рефлексии EOD, мини-диаграмма на вкладке «День».',
-            en: 'Draft ideas: QA settings for admin/beta, EOD reflection fields, Day tab mini-chart.',
-          },
-        ],
-        plainBullets: [
-          {
-            ru: 'В модалке — короткие карточки; подробности интеграции с календарями — в репозитории Obsidian.',
-            en: 'The modal shows short cards; full calendar-integration draft stays in Obsidian.',
-          },
-        ],
-      },
-      {
-        releasedInVersion: { ru: '0.6.6', en: '0.6.6' },
-        changes: [
-          {
-            ru: 'Синхронизированы web/README.md, тексты в productRoadmap.ts и релиз-ноты для тестеров.',
-            en: 'Synced web/README.md, productRoadmap.ts copy, and tester-facing release notes.',
-          },
-          {
-            ru: 'Описание вкладок дорожной карты в README приведено к актуальной модалке.',
-            en: 'README roadmap tabs description matches the current modal.',
-          },
-        ],
-        plainBullets: [
-          {
-            ru: 'Таблица возможностей и контракт vault отражают сборку; релиз-ноты группируются по календарным датам.',
-            en: 'Feature table and vault contract match the build; release notes are grouped by calendar date.',
-          },
-        ],
-      },
     ],
   },
   {
@@ -370,8 +315,8 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
         plainBullets: [
           {
-            ru: 'В «Краткая сводка» видна та же хронология, что в файле: новее — выше. Не нужно «дождаться дня», чтобы запись появилась в списке.',
-            en: 'Brief summary shows the same timeline as the file—newer above. You do not wait for a calendar day for an entry to appear.',
+            ru: 'В модалке дни по убыванию даты; внутри дня подблоки — по **убыванию версии выпуска** (`releasedInVersion`). Не нужно «дождаться дня», чтобы запись появилась в списке.',
+            en: 'In the modal, days are newest-first; within a day, sub-blocks follow **descending ship version** (`releasedInVersion`). You do not wait for a calendar day for an entry to appear.',
           },
         ],
       },
@@ -379,8 +324,8 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.6.14', en: '0.6.14' },
         changes: [
           {
-            ru: 'Релиз-ноты: восстановлена отдельная календарная дата **2026-05-10** (раньше ошибочно всё лежало только под 09.05).',
-            en: 'Release notes: restored calendar date **2026-05-10** (was incorrectly merged only under 05-09).',
+            ru: 'Релиз-ноты: в данных заведена отдельная календарная секция **2026-05-10** для записей того периода (раньше ошибочно сливали с 09.05).',
+            en: 'Release notes: data has a separate calendar section **2026-05-10** for that period (was wrongly merged with 05-09).',
           },
         ],
       },
@@ -701,6 +646,79 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           {
             ru: 'Цвет стабильно виден в сетке; время без нативного time-picker.',
             en: 'Color stays visible in the grid; time without native time-picker.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.6', en: '0.6.6' },
+        changes: [
+          {
+            ru: 'Синхронизированы web/README.md, тексты в productRoadmap.ts и релиз-ноты для тестеров.',
+            en: 'Synced web/README.md, productRoadmap.ts copy, and tester-facing release notes.',
+          },
+          {
+            ru: 'Описание вкладок дорожной карты в README приведено к актуальной модалке.',
+            en: 'README roadmap tabs description matches the current modal.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Таблица возможностей и контракт vault отражают сборку; релиз-ноты группируются по календарным датам.',
+            en: 'Feature table and vault contract match the build; release notes are grouped by calendar date.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
+        changes: [
+          {
+            ru: 'В дорожной карте обновлены «Идеи на потом»: внешние календари (черновик в Obsidian §4).',
+            en: 'Ideas for later: external calendars (draft in Obsidian §4).',
+          },
+          {
+            ru: 'Идея: цвет метки с названием и описанием.',
+            en: 'Idea: color labels with name and description.',
+          },
+          {
+            ru: 'Задел: раздел тестирования для admin/beta, поля рефлексии EOD, мини-диаграмма на вкладке «День».',
+            en: 'Draft ideas: QA settings for admin/beta, EOD reflection fields, Day tab mini-chart.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В модалке — короткие карточки; подробности интеграции с календарями — в репозитории Obsidian.',
+            en: 'The modal shows short cards; full calendar-integration draft stays in Obsidian.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
+        changes: [
+          {
+            ru: 'Ритуал «Завершение дня»: списки строятся только по задачам, запланированным на этот календарный день.',
+            en: 'End-of-day ritual: lists only include tasks planned for that calendar day.',
+          },
+          {
+            ru: 'Исправление: задача не попадает в «не закрыто» только из‑за редактирования в тот же день.',
+            en: 'Fix: a task is not listed as “not closed” solely because it was edited today.',
+          },
+          {
+            ru: 'Бэклог — отдельный блок «на заметку», не как долг за день.',
+            en: 'Backlog is a separate FYI block, not framed as same-day debt.',
+          },
+          {
+            ru: 'Заголовок модалки для локали ru отображается на русском.',
+            en: 'Russian locale shows a Russian modal title.',
+          },
+          {
+            ru: 'Добавлен блок «Открытые вопросы» в модалке завершения дня (позже перенесён в «Краткая сводка»).',
+            en: '“Open questions” block in End-of-day (later moved to Brief summary).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Те же правила, что в отчётах: в основные списки попадает только запланированное на дату; бэклог отдельно.',
+            en: 'Same as reports: main lists match what was planned for the date; backlog is separate.',
           },
         ],
       },
