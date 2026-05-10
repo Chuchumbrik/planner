@@ -778,31 +778,25 @@ function AppPageInner() {
                 {filtersPanelOpen ? '▴' : '▾'}
               </span>
             </button>
-            <button
-              type="button"
-              disabled={!canEdit || vault.drafts.length === 0}
-              aria-haspopup="dialog"
-              aria-expanded={draftsModalOpen}
-              title={
-                vault.drafts.length === 0
-                  ? t('app.draftsEmptyHint')
-                  : `${t('app.draftsTitle')}: ${vault.drafts.length}`
-              }
-              className="inline-flex items-center gap-2 rounded-lg border border-amber-900/45 bg-amber-950/25 px-3 py-2 text-sm font-medium text-amber-200/95 hover:bg-amber-950/40 disabled:opacity-40"
-              onClick={() => {
-                if (vault.drafts.length > 0) setDraftsModalOpen(true)
-              }}
-            >
-              <span>{t('app.draftsTitle')}</span>
-              {vault.drafts.length > 0 ? (
+            {vault.drafts.length > 0 ? (
+              <button
+                type="button"
+                disabled={!canEdit}
+                aria-haspopup="dialog"
+                aria-expanded={draftsModalOpen}
+                title={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
+                className="inline-flex items-center gap-2 rounded-lg border border-amber-900/45 bg-amber-950/25 px-3 py-2 text-sm font-medium text-amber-200/95 hover:bg-amber-950/40 disabled:opacity-40"
+                onClick={() => setDraftsModalOpen(true)}
+              >
+                <span>{t('app.draftsTitle')}</span>
                 <span
                   className="inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-amber-600/90 px-1.5 text-xs font-semibold text-amber-950"
                   aria-hidden
                 >
                   {vault.drafts.length}
                 </span>
-              ) : null}
-            </button>
+              </button>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {view === 'day' && eodEnabled ? (

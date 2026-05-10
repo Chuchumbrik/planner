@@ -102,8 +102,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Create modal: amber “to save” checklist after the **first** Save attempt; **group** under Additional settings; estimate: **required and valid** for a **planned-day** task; **backlog** — estimate optional, invalid input still blocks save; form persists when changing day/group filter while open.',
       },
       {
-        ru: 'Черновики в vault; на `/app` кнопка **«Черновики»** рядом с фильтром (всегда видна; счётчик при наличии); список — в модалке.',
-        en: 'Vault drafts; on `/app` **Drafts** button next to filters (always visible; badge when any); list in a modal.',
+        ru: 'Черновики в vault; на `/app` кнопка **«Черновики»** рядом с фильтром только при **наличии** черновиков (счётчик); список — в модалке.',
+        en: 'Vault drafts; on `/app` **Drafts** button next to filters only when drafts **exist** (badge); list in a modal.',
       },
       {
         ru: 'Вкладка «День» и периоды: кольцо прогресса — знаменатель = число задач в плане; **`tasksScheduledForPlannerDay`** / **`plannedPeriodProgress`**; чек-лист даёт долю внутри задачи; **процент выполнения** отображается **внутри** SVG-кольца (без отдельной строки под диаграммой); EOD — те же доли; списки EOD — **`tasksPlannedForLocalDay`**.',
@@ -256,17 +256,26 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        changes: [
+          {
+            ru: '**`/app`:** кнопка **«Черновики»** показывается только если в vault есть хотя бы один черновик (ранее была видна неактивной при нуле).',
+            en: '**`/app`:** **Drafts** button is shown only when at least one draft exists in the vault (previously shown disabled when empty).',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.24', en: '0.6.24' },
         changes: [
           {
-            ru: 'Полировка `/app`: иконка синхронизации визуально слабее рядом с меню аккаунта. Кольца прогресса (**`DayPlanDonut`**, **`PeriodPlanDonut`**, ритуал EOD): **процент внутри** SVG-кольца (`PlanProgressRing.centerLabel`). Черновики — **всегда кнопка** рядом с фильтром; список — в модалке (в т.ч. один черновик). Создание/редактирование задачи: **группа** перенесена в **«Дополнительные настройки»**; единый **`gap-4`** между блоками; секция «Дата и бэклог» выровнена (`flex`/`gap-3`); янтарная плашка **«Чтобы сохранить»** только **после первой попытки «Сохранить»**; валидация оценки: для бэклога не требуется заполнение, но **некорректный ввод** по-прежнему блокирует сохранение и отображается отдельной строкой (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
-            en: '`/app` polish: sync icon visually quieter next to the account menu. Progress rings (**`DayPlanDonut`**, **`PeriodPlanDonut`**, EOD ritual): **percent inside** the SVG ring (`PlanProgressRing.centerLabel`). Drafts — **always a button** beside filters; list in a modal (including a single draft). Create/edit task: **group** moved under **Additional settings**; consistent **`gap-4`** between blocks; «Date & backlog» layout balanced (`flex`/`gap-3`); amber **«To save»** strip only **after first Save attempt**; estimate validation: backlog does not require a filled estimate, but **invalid input** still blocks save (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
+            ru: 'Полировка `/app`: иконка синхронизации визуально слабее рядом с меню аккаунта. Кольца прогресса (**`DayPlanDonut`**, **`PeriodPlanDonut`**, ритуал EOD): **процент внутри** SVG-кольца (`PlanProgressRing.centerLabel`). Черновики — кнопка рядом с фильтром при наличии черновиков; список — в модалке (в т.ч. один черновик). Создание/редактирование задачи: **группа** перенесена в **«Дополнительные настройки»**; единый **`gap-4`** между блоками; секция «Дата и бэклог» выровнена (`flex`/`gap-3`); янтарная плашка **«Чтобы сохранить»** только **после первой попытки «Сохранить»**; валидация оценки: для бэклога не требуется заполнение, но **некорректный ввод** по-прежнему блокирует сохранение и отображается отдельной строкой (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
+            en: '`/app` polish: sync icon visually quieter next to the account menu. Progress rings (**`DayPlanDonut`**, **`PeriodPlanDonut`**, EOD ritual): **percent inside** the SVG ring (`PlanProgressRing.centerLabel`). Drafts — button beside filters when drafts exist; list in a modal (including a single draft). Create/edit task: **group** moved under **Additional settings**; consistent **`gap-4`** between blocks; «Date & backlog» layout balanced (`flex`/`gap-3`); amber **«To save»** strip only **after first Save attempt**; estimate validation: backlog does not require a filled estimate, but **invalid input** still blocks save (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
           },
         ],
         plainBullets: [
           {
-            ru: 'Синхронизация в шапке меньше отвлекает от аватара. У колец прогресса крупная цифра процента — внутри круга. Черновики открываются одной кнопкой рядом с фильтром. В форме задачи реже «шумит» подсказка про сохранение: она появляется после того, как вы нажали «Сохранить», а не сразу. Для задачи **в бэклоге** оценка не обязательна; если в полях оценки мусор — сохранить всё равно нельзя, и это видно в списке ошибок.',
-            en: 'The sync control is less visually tied to the account avatar. Ring charts show the big percent **inside** the circle. Drafts live in one button next to filters. The amber save checklist appears **after** you try Save, not immediately. **Backlog** tasks do not require an estimate; garbled estimate fields still block save and show as an error line.',
+            ru: 'Синхронизация в шапке меньше отвлекает от аватара. У колец прогресса крупная цифра процента — внутри круга. Черновики — кнопка рядом с фильтром, когда они есть. В форме задачи реже «шумит» подсказка про сохранение: она появляется после того, как вы нажали «Сохранить», а не сразу. Для задачи **в бэклоге** оценка не обязательна; если в полях оценки мусор — сохранить всё равно нельзя, и это видно в списке ошибок.',
+            en: 'The sync control is less visually tied to the account avatar. Ring charts show the big percent **inside** the circle. Drafts use one button next to filters when you have any. The amber save checklist appears **after** you try Save, not immediately. **Backlog** tasks do not require an estimate; garbled estimate fields still block save and show as an error line.',
           },
         ],
       },
