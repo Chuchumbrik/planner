@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/auth/AuthProvider'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { PeriodPlanDonut } from '@/components/PeriodPlanDonut'
@@ -48,6 +49,21 @@ function formatSynced(ts: number | null, locale: string): string | null {
   } catch {
     return null
   }
+}
+
+function humanizeRemoteError(raw: string | null, t: (k: string) => string): string {
+  if (!raw) return ''
+  const lower = raw.toLowerCase()
+  if (
+    lower.includes('typeerror') ||
+    lower.includes('load failed') ||
+    lower.includes('failed to fetch') ||
+    lower.includes('networkerror') ||
+    (lower.includes('fetch') && lower.includes('fail'))
+  ) {
+    return t('app.syncErrorGeneric')
+  }
+  return raw
 }
 
 function formatDayHeading(dateKey: string, locale: string): string {
@@ -122,13 +138,16 @@ function matchesFiltersExcept(
 
 function AppPageInner() {
   const { t, i18n } = useTranslation()
+  const { signOut } = useAuth()
   const {
     vault,
     remoteError,
+    retryRemoteHydrate,
     remoteHydrated,
     decryptFailed,
     savePending,
     lastSyncedAt,
+    lock,
     createTask,
     upsertDraft,
     deleteDraft,
@@ -174,6 +193,8 @@ function AppPageInner() {
   const [eodOpen, setEodOpen] = useState(false)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
+  const accountMenuRef = useRef<HTMLDivElement>(null)
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false)
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
@@ -204,6 +225,18 @@ function AppPageInner() {
     document.addEventListener('mousedown', handlePointerDown)
     return () => document.removeEventListener('mousedown', handlePointerDown)
   }, [openFilterMenu])
+
+  useEffect(() => {
+    if (!accountMenuOpen) return
+    function handlePointerDown(e: MouseEvent) {
+      const node = accountMenuRef.current
+      if (node && !node.contains(e.target as Node)) {
+        setAccountMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [accountMenuOpen])
 
   useEffect(() => {
     if (vault.drafts.length <= 1) setDraftsModalOpen(false)
@@ -468,6 +501,19 @@ function AppPageInner() {
     setPriorityEnabled(new Set(PRIORITY_RANKS))
   }
 
+  function resetAllFilters() {
+    setFilterGroupId('all')
+    setPriorityEnabled(new Set(PRIORITY_RANKS))
+    setFilterColor('all')
+    setFilterRepeats('all')
+  }
+
+  async function handleSignOut() {
+    setAccountMenuOpen(false)
+    await lock()
+    await signOut()
+  }
+
   const priorityFilterSummary = useMemo(() => {
     if (priorityEnabled.size === PRIORITY_RANKS.length) {
       return t('app.filterPrioritiesDropdownAll')
@@ -477,50 +523,6 @@ function AppPageInner() {
       .join(', ')
   }, [priorityEnabled, vault.priorityLabels, t])
 
-  const informerLine = useMemo(() => {
-    const parts: string[] = []
-    if (filterGroupId === 'all') {
-      parts.push(t('app.informerGroup', { name: t('app.filterAllGroups') }))
-    } else {
-      const g = vault.groups.find((x) => x.id === filterGroupId)
-      parts.push(t('app.informerGroup', { name: g?.name ?? filterGroupId }))
-    }
-    if (priorityEnabled.size === PRIORITY_RANKS.length) {
-      parts.push(t('app.informerPrioritiesAll'))
-    } else {
-      parts.push(
-        t('app.informerPrioritiesSubset', {
-          labels: PRIORITY_RANKS.filter((r) => priorityEnabled.has(r))
-            .map((r) => vault.priorityLabels[r])
-            .join(', '),
-        }),
-      )
-    }
-    if (filterColor !== 'all') {
-      parts.push(
-        t('app.informerColor', {
-          name: t(`app.colorName.${filterColor}`),
-        }),
-      )
-    }
-    if (filterRepeats === 'all') {
-      parts.push(t('app.informerRepeatsAll'))
-    } else if (filterRepeats === 'recurring') {
-      parts.push(t('app.informerRepeatsOnly'))
-    } else {
-      parts.push(t('app.informerRepeatsWithout'))
-    }
-    return parts.join(' · ')
-  }, [
-    filterGroupId,
-    filterColor,
-    filterRepeats,
-    vault.groups,
-    vault.priorityLabels,
-    priorityEnabled,
-    t,
-  ])
-
   /** Информер нужен только когда что-то отличается от «всё по умолчанию». */
   const filtersInformerActive = useMemo(() => {
     if (filterGroupId !== 'all') return true
@@ -529,6 +531,60 @@ function AppPageInner() {
     if (filterRepeats !== 'all') return true
     return false
   }, [filterGroupId, priorityEnabled, filterColor, filterRepeats])
+
+  type FilterChip = { key: string; label: string; onRemove: () => void }
+
+  const activeFilterChips = useMemo((): FilterChip[] => {
+    const chips: FilterChip[] = []
+    if (filterGroupId !== 'all') {
+      const g = vault.groups.find((x) => x.id === filterGroupId)
+      chips.push({
+        key: 'group',
+        label: t('app.filterChipGroup', { name: g?.name ?? filterGroupId }),
+        onRemove: () => setFilterGroupId('all'),
+      })
+    }
+    if (priorityEnabled.size !== PRIORITY_RANKS.length) {
+      chips.push({
+        key: 'priority',
+        label: t('app.filterChipPriorities', {
+          labels: PRIORITY_RANKS.filter((r) => priorityEnabled.has(r))
+            .map((r) => vault.priorityLabels[r])
+            .join(', '),
+        }),
+        onRemove: selectAllPriorities,
+      })
+    }
+    if (filterColor !== 'all') {
+      chips.push({
+        key: 'color',
+        label: t('app.filterChipColor', { name: t(`app.colorName.${filterColor}`) }),
+        onRemove: () => setFilterColor('all'),
+      })
+    }
+    if (filterRepeats === 'recurring') {
+      chips.push({
+        key: 'repeat',
+        label: t('app.filterChipRepeatsRecurring'),
+        onRemove: () => setFilterRepeats('all'),
+      })
+    } else if (filterRepeats === 'nonRecurring') {
+      chips.push({
+        key: 'repeat',
+        label: t('app.filterChipRepeatsNon'),
+        onRemove: () => setFilterRepeats('all'),
+      })
+    }
+    return chips
+  }, [
+    filterGroupId,
+    priorityEnabled,
+    filterColor,
+    filterRepeats,
+    vault.groups,
+    vault.priorityLabels,
+    t,
+  ])
 
   function handleTab(next: 'day' | 'week' | 'month') {
     setView(next)
@@ -584,38 +640,94 @@ function AppPageInner() {
           </p>
           <h1 className="text-xl font-semibold text-white">{t('app.plannerTitle')}</h1>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex flex-wrap justify-end gap-2">
-            <Link
-              to="/app/reports"
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={`rounded-lg border px-2.5 py-2 text-sm hover:bg-zinc-900 disabled:opacity-40 ${
+              remoteError
+                ? 'border-amber-700 text-amber-200'
+                : savePending
+                  ? 'border-emerald-800 text-emerald-300'
+                  : 'border-zinc-700 text-zinc-400'
+            }`}
+            title={syncHint}
+            aria-label={t('app.syncIconAria')}
+          >
+            <span className="sr-only">{syncHint}</span>
+            <span aria-hidden className="text-base leading-none">
+              {savePending ? '…' : remoteError ? '⚠' : '✓'}
+            </span>
+          </button>
+          <div className="relative" ref={accountMenuRef}>
+            <button
+              type="button"
+              className="rounded-lg border border-zinc-700 px-2.5 py-2 text-zinc-300 hover:bg-zinc-900"
+              aria-expanded={accountMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setAccountMenuOpen((v) => !v)}
             >
-              {t('app.reportsNav')}
-            </Link>
-            {eodEnabled ? (
-              <button
-                type="button"
-                disabled={!canEdit}
-                className={`rounded-lg border px-3 py-1.5 text-sm hover:border-zinc-500 disabled:opacity-40 ${
-                  eodDoneToday
-                    ? 'border-emerald-800 text-emerald-300'
-                    : 'border-violet-700 text-violet-200'
-                }`}
-                onClick={() => setEodOpen(true)}
+              <span className="sr-only">{t('app.accountMenuAria')}</span>
+              <svg
+                aria-hidden
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
               >
-                {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                />
+              </svg>
+            </button>
+            {accountMenuOpen ? (
+              <div
+                className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-zinc-700 bg-zinc-950 py-1 shadow-xl"
+                role="menu"
+              >
+                <Link
+                  to="/app/reports"
+                  role="menuitem"
+                  className="block px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                  onClick={() => setAccountMenuOpen(false)}
+                >
+                  {t('app.reportsNav')}
+                </Link>
+                {eodEnabled ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={!canEdit}
+                    className="block w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+                    onClick={() => {
+                      setAccountMenuOpen(false)
+                      setEodOpen(true)
+                    }}
+                  >
+                    {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
+                  </button>
+                ) : null}
+                <Link
+                  to="/settings"
+                  role="menuitem"
+                  className="block px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                  onClick={() => setAccountMenuOpen(false)}
+                >
+                  {t('app.settings')}
+                </Link>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="block w-full px-3 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-900"
+                  onClick={() => void handleSignOut()}
+                >
+                  {t('settings.signOut')}
+                </button>
+              </div>
             ) : null}
-            <Link
-              to="/settings"
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:border-zinc-500"
-            >
-              {t('app.settings')}
-            </Link>
           </div>
-          <p className="max-w-[14rem] text-right text-xs text-zinc-500" aria-live="polite">
-            {syncHint}
-          </p>
         </div>
       </header>
 
@@ -636,11 +748,20 @@ function AppPageInner() {
         ))}
       </nav>
 
-      {remoteError && (
-        <div className="mb-4 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
-          {t('app.syncErrorPrefix')} {remoteError}
+      {remoteError ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
+          <p className="min-w-0 flex-1 leading-snug">
+            {humanizeRemoteError(remoteError, t)}
+          </p>
+          <button
+            type="button"
+            className="shrink-0 rounded-lg border border-amber-600/60 bg-amber-950/50 px-3 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-900/40"
+            onClick={() => retryRemoteHydrate()}
+          >
+            {t('app.syncRetry')}
+          </button>
         </div>
-      )}
+      ) : null}
 
       <div className="mb-6 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -656,22 +777,56 @@ function AppPageInner() {
               {filtersPanelOpen ? '▴' : '▾'}
             </span>
           </button>
-          <button
-            type="button"
-            disabled={!canEdit}
-            className="inline-flex shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
-            onClick={() => {
-              setResumeDraft(null)
-              setCreateOpen(true)
-            }}
-          >
-            {t('app.openCreateTask')}
-          </button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {view === 'day' && eodEnabled ? (
+              <button
+                type="button"
+                disabled={!canEdit}
+                className={`rounded-lg border px-3 py-2 text-sm hover:border-zinc-500 disabled:opacity-40 ${
+                  eodDoneToday
+                    ? 'border-emerald-800 text-emerald-300'
+                    : 'border-violet-700 text-violet-200'
+                }`}
+                onClick={() => setEodOpen(true)}
+              >
+                {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              disabled={!canEdit}
+              className="inline-flex shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+              onClick={() => {
+                setResumeDraft(null)
+                setCreateOpen(true)
+              }}
+            >
+              {t('app.openCreateTask')}
+            </button>
+          </div>
         </div>
 
         {filtersPanelOpen ? (
-          <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 p-3 shadow-inner">
-            <p className="mb-3 text-xs font-medium text-zinc-400">{t('app.filtersTitle')}</p>
+          <>
+            <div
+              className="fixed inset-0 z-[44] bg-black/65 md:hidden"
+              aria-hidden
+              onClick={() => setFiltersPanelOpen(false)}
+            />
+            <div className="relative z-[45] md:z-auto">
+              <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 shadow-inner max-md:fixed max-md:inset-0 max-md:z-[45] max-md:flex max-md:flex-col max-md:overflow-hidden max-md:rounded-none max-md:border-0 max-md:bg-zinc-950 max-md:p-0 md:p-3">
+                <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3 md:hidden">
+                  <span className="text-sm font-medium text-zinc-200">{t('app.filtersTitle')}</span>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
+                    onClick={() => setFiltersPanelOpen(false)}
+                  >
+                    {t('app.filtersSheetDone')}
+                  </button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-3 md:overflow-visible md:p-0">
+                  <p className="mb-3 hidden text-xs font-medium text-zinc-400 md:block">{t('app.filtersTitle')}</p>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
               <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
                 <span>{t('app.group')}</span>
@@ -790,16 +945,41 @@ function AppPageInner() {
                 </select>
               </label>
             </div>
-          </div>
+                </div>
+              </div>
+            </div>
+          </>
         ) : null}
 
         {!filtersPanelOpen && filtersInformerActive ? (
           <div
-            className="rounded-lg border border-cyan-800/55 bg-cyan-950/45 px-3 py-2 text-xs leading-relaxed text-cyan-100/95 shadow-sm"
+            className="flex flex-wrap items-center gap-2"
             role="status"
             aria-live="polite"
           >
-            {informerLine}
+            {activeFilterChips.map((c) => (
+              <span
+                key={c.key}
+                className="inline-flex max-w-full items-center gap-1 rounded-full border border-cyan-800/50 bg-cyan-950/40 py-1 pl-2.5 pr-1 text-[11px] text-cyan-100"
+              >
+                <span className="min-w-0 truncate">{c.label}</span>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-full px-1.5 py-0.5 text-cyan-200/90 hover:bg-cyan-900/60"
+                  onClick={c.onRemove}
+                  aria-label={t('common.close')}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              className="text-[11px] font-medium text-cyan-300/95 underline decoration-cyan-600/80 underline-offset-2 hover:text-cyan-200"
+              onClick={resetAllFilters}
+            >
+              {t('app.filtersResetAll')}
+            </button>
           </div>
         ) : null}
 

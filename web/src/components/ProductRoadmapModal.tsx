@@ -78,7 +78,7 @@ export type ProductRoadmapModalProps = {
   onClose: () => void
 }
 
-/** Доля закрытых фаз 0–6 от всех фаз дорожной карты до 1.0.0 (0–6 + 7–11). */
+/** Доля закрытых фаз 0–6 от всех фаз дорожной карты до 1.0.0 (0–6 + 7–13). */
 function MvpProgressRing({ shipped, total }: { shipped: number; total: number }) {
   const frac = total === 0 ? 0 : shipped / total
   const size = 120

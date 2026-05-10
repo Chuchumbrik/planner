@@ -106,8 +106,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Vault drafts; on `/app` one draft — inline strip, several — “Drafts” button with count and list modal.',
       },
       {
-        ru: 'Вкладка «День»: кольцо прогресса — знаменатель = число задач в плане; список и кольцо согласованы через **`tasksScheduledForPlannerDay`**; чек-лист даёт долю внутри задачи (1 из 4 пунктов = 0,25); подпись: процент и строка про **число задач**; списки модалки EOD — по **`tasksPlannedForLocalDay`** (отбор для ритуала).',
-        en: 'Day tab: ring denominator = planned task count; list and ring aligned via **`tasksScheduledForPlannerDay`**; checklist share inside a task (1 of 4 = 0.25); caption references **task count**; EOD modal lists use **`tasksPlannedForLocalDay`** (ritual scope).',
+        ru: 'Вкладка «День»: кольцо прогресса — знаменатель = число задач в плане; список и кольцо согласованы через **`tasksScheduledForPlannerDay`**; чек-лист даёт долю внутри задачи (1 из 4 пунктов = 0,25); подпись под кольцом — **только процент**; списки модалки EOD — по **`tasksPlannedForLocalDay`** (отбор для ритуала).',
+        en: 'Day tab: ring denominator = planned task count; list and ring aligned via **`tasksScheduledForPlannerDay`**; checklist share inside a task (1 of 4 = 0.25); caption under the ring — **percent only**; EOD modal lists use **`tasksPlannedForLocalDay`** (ritual scope).',
       },
       {
         ru: 'Настройки: названия приоритетов, CRUD групп, смена пароля Supabase. TaskEditModal — те же правила, что при создании (`taskScheduleValidation`).',
@@ -259,6 +259,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
         changes: [
           {
+            ru: 'Дорожная карта (**`MVP_PHASES_PLANNED`**): в план до **1.0.0** добавлены фазы **12** (домен: выбор, покупка, DNS, привязка к деплою) и **13** (ветка **`dev`** → тесты → слияние в **`main`**); счётчик фаз и документация приведены к диапазону **0–13**.',
+            en: 'Roadmap (**`MVP_PHASES_PLANNED`**): phases **12** (domain: choose, buy, DNS, bind to hosting) and **13** (**`dev`** → test → merge to **`main`**) added to the **1.0.0** plan; phase totals and docs updated to **0–13**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В «Краткой сводке» в списке **план до релиза** теперь в конце две отдельные фазы: **свой домен** для сайта и **порядок веток** (сначала разработка в `dev`, потом — стабильная `main` для прода).',
+            en: 'In **Brief summary**, the pre-release plan ends with two phases: a **custom domain** for the app and a **branch policy** (work on `dev`, then promote to stable `main` for production).',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
+        changes: [
+          {
             ru: 'Редактор задачи (**`TaskEditModal`**): на телефонах (WebKit) касания не «проваливаются» в список задач под модалкой — оверлей через **`createPortal` → `document.body`**, на время открытия **`overflow: hidden`** у **`body`**, затемнение закрывает по **`onPointerDown`**, слой **`z-[80]`**, у прокрутки формы — **`overscroll-y-contain`**.',
             en: 'Task editor (**`TaskEditModal`**): on phones (WebKit) touches no longer fall through to the list behind — overlay via **`createPortal` → `document.body`**, **`overflow: hidden`** on **`body`** while open, backdrop closes on **`onPointerDown`**, layer **`z-[80]`**, scroll panel uses **`overscroll-y-contain`**.',
           },
@@ -305,6 +320,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.23', en: '0.6.23' },
+        changes: [
+          {
+            ru: '**`/app`**: шапка — иконка синхронизации и меню аккаунта (отчёты, EOD при вкладке «День», настройки, выход); ошибки удалённого vault — человекочитаемый текст и кнопка **«Повторить»**; фильтры — мобильная панель на весь экран, чипы активных условий и **«Сбросить всё»**; кнопка **«Завершить день»** в одной строке с созданием задачи на вкладке «День». Модалка создания: порядок полей как в договорённостях, **липкий подвал** с динамическим списком недостающего и прокруткой к полям; цвет и двойное подтверждение — в **«Дополнительные настройки»**. Редактирование задачи — тот же порядок секций и `<details>` доп. настроек. **«День»**: под кольцом прогресса только **процент** (без второй строки про доли задач). **«Неделя»**: выше слоты часов (`HOUR_HEIGHT_PX` **42**), контрастнее подписи часов.',
+            en: '**`/app`**: header — sync icon and account menu (reports, EOD on Day tab, settings, sign out); remote vault errors — friendly copy and **Retry**; filters — fullscreen mobile sheet, active chips and **Reset all**; **End day** on the same row as create task on Day. Create modal: field order per spec, **sticky footer** with dynamic missing list and scroll-to-field; color and double-confirm under **Additional settings**. Task edit — same section order and `<details>` for extras. **Day**: progress caption shows **percent only** (no fractional task line). **Week**: taller hour slots (**`HOUR_HEIGHT_PX` 42**), stronger hour labels.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Синхронизация и аккаунт удобнее на телефоне; если загрузка vault с сервера не удалась — понятное сообщение и одна кнопка повтора. Фильтры не теряются: видно чипами, что включено, и можно сбросить разом. Создание и правка задачи идут в одном порядке блоков; редкие настройки спрятаны под «Дополнительно». У кольца «день» остаётся только крупный процент — без второй строки про задачи.',
+            en: 'Sync and account are easier on mobile; if remote vault load fails you get plain language plus one retry. Filters show as chips with reset-all. Create and edit share the same block order; rare options live under **Additional**. The day ring caption is just the big percent — no extra task-fraction line.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.15', en: '0.6.15' },
         changes: [
@@ -446,8 +476,8 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             en: 'Every time the modal opens, all collapsible sections start collapsed.',
           },
           {
-            ru: 'Вверху модалки добавлена круговая диаграмма: процент и доля закрытых фаз дорожной карты до MVP 1.0.0 (0–6 из 0–11).',
-            en: 'A donut chart at the top shows percent complete for roadmap phases toward MVP 1.0.0 (phases 0–6 of 0–11).',
+            ru: 'Вверху модалки добавлена круговая диаграмма: процент и доля закрытых фаз дорожной карты до MVP 1.0.0 (0–6 из 0–13).',
+            en: 'A donut chart at the top shows percent complete for roadmap phases toward MVP 1.0.0 (phases 0–6 of 0–13).',
           },
           {
             ru: 'Релиз-ноты: каждая дата — отдельная раскрывашка, чтобы быстрее находить нужный выпуск.',
@@ -550,8 +580,8 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
         changes: [
           {
-            ru: 'Дорожная карта в настройках: до 1.0.0 остаются фазы 7–11 (включая фазу 7 — дизайн и адаптивность).',
-            en: 'Settings roadmap: phases 7–11 remain until 1.0.0 (incl. phase 7 — design & responsiveness).',
+            ru: 'Дорожная карта в настройках: до 1.0.0 остаются фазы 7–13 (включая фазу 7 — дизайн и адаптивность).',
+            en: 'Settings roadmap: phases 7–13 remain until 1.0.0 (incl. phase 7 — design & responsiveness).',
           },
           {
             ru: 'В «Идеях на потом» — черновик раздела тестирования для админов и бета-тестеров.',
@@ -728,7 +758,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
 
 /**
  * Оставшийся охват до 1.0.0 (источник — `obsidian-motivator/17-План-реализации-MVP.md`).
- * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — фазы **7–11**.
+ * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — фазы **7–13**.
  */
 export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   {
@@ -841,19 +871,67 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   },
   {
     id: 11,
-    title: { ru: 'Релиз 1.0.0', en: '1.0.0 release' },
+    title: { ru: 'Чеклист к релизу 1.0.0', en: 'Release checklist for 1.0.0' },
     summary: {
-      ru: 'Чеклист ТЗ, semver 1.0.0, регрессия, деплой и документация.',
-      en: 'TZ checklist, semver 1.0.0, regression, deploy and docs.',
+      ru: 'Закрытие Scope по ТЗ, регрессия, актуализация деплоя и документации; **семантический тег `1.0.0`** ставится после фаз **12–13**.',
+      en: 'Close Scope vs TZ, regression, refresh deploy/docs; the **`1.0.0` semver tag** lands after phases **12–13**.',
     },
     plain: {
-      ru: 'Большой финиш чертежа **1.0.0**: пройти чек-лист как перед школьной контрольной, проверить всё ещё раз, выложить для людей и подложить понятные бумажки-инструкции.',
-      en: 'The big **1.0.0** finish line: run the checklist like before an exam, test everything again, ship for real people, and leave simple instruction papers.',
+      ru: 'Пройти приёмочный чек-лист как перед контрольной и убедиться, что продукт держит обещания ТЗ; финальный **переход на `1.0.0`** по правилам репозитория — после **домена** и **ветки `main`**, см. фазы 12–13.',
+      en: 'Run the acceptance checklist like an exam and verify the product meets TZ; the formal bump to **`1.0.0`** per repo rules comes **after domain** and a stable **`main`** — see phases 12–13.',
     },
     detailBullets: [
       {
-        ru: 'Закрытие Scope по 16-TZ и 03-Scope; актуализация Vercel/README.',
-        en: 'Close Scope per 16-TZ and 03-Scope; refresh Vercel/README.',
+        ru: 'Закрытие Scope по 16-TZ и 03-Scope; регрессия сценариев день / неделя / месяц / отчёты / аккаунт; актуализация Vercel/README.',
+        en: 'Close Scope per 16-TZ and 03-Scope; regress day / week / month / reports / account; refresh Vercel/README.',
+      },
+    ],
+  },
+  {
+    id: 12,
+    title: { ru: 'Домен продукта', en: 'Product domain' },
+    summary: {
+      ru: 'Выбор имени, покупка у регистратора, DNS и привязка к деплою (**Vercel** / выбранный хостинг), HTTPS.',
+      en: 'Pick a name, purchase from a registrar, configure DNS and bind to the deployment (**Vercel** or chosen host), HTTPS.',
+    },
+    plain: {
+      ru: 'Закрепить **свой адрес сайта** вместо только технического URL хостинга: купить домен, настроить записи так, чтобы приложение открывалось по человеческому имени и с защищённым соединением.',
+      en: 'Give the app a **proper site address**, not only the host’s default URL: buy a domain, wire DNS so the app loads on a human-readable name with HTTPS.',
+    },
+    detailBullets: [
+      {
+        ru: 'Регистратор и зона **по решению продукта**; проверка доступности имени; продление и владелец записей — зафиксировать в документации команды.',
+        en: 'Registrar and TLD — **product decision**; name availability; renewal and DNS ownership — captured in team docs.',
+      },
+      {
+        ru: 'Связка с **Vercel** (или текущим пайплайном): домен в проекте, верификация, при необходимости перенос с прежнего URL.',
+        en: 'Tie to **Vercel** (or current pipeline): project domain, verification, migrate from prior URL if needed.',
+      },
+    ],
+  },
+  {
+    id: 13,
+    title: { ru: 'Процесс веток: dev → main', en: 'Branch flow: dev → main' },
+    summary: {
+      ru: 'Основная разработка в ветке **`dev`** (или согласованном эквиваленте); после тестирования — слияние в **`main`** как стабильная линия и источник продакшен-деплоя.',
+      en: 'Day-to-day work on **`dev`** (or agreed equivalent); after testing — merge to **`main`** as the stable line and production deploy source.',
+    },
+    plain: {
+      ru: 'Чтобы не ломать прод «полпути», договориться: новые фичи и правки копятся в **отдельной ветке**, проверяются, и только потом попадают в **основную**, откуда уходит сборка для пользователей.',
+      en: 'Agree a rhythm so production isn’t broken mid-flight: features land on a **working branch**, get verified, then merge to **main** where the user-facing build comes from.',
+    },
+    detailBullets: [
+      {
+        ru: 'Зафиксировать в репозитории: правила PR, кто мержит в `main`, минимальный набор проверок перед слиянием (линт, ручной смоук — по команде).',
+        en: 'Document in-repo: PR rules, who merges to `main`, minimum checks before merge (lint, manual smoke — team call).',
+      },
+      {
+        ru: 'Согласовать с **`obsidian-motivator/14-V1-минимальный-запуск-Vercel.md`**: какая ветка триггерит preview vs production.',
+        en: 'Align with **`obsidian-motivator/14-V1-минимальный-запуск-Vercel.md`**: which branch triggers preview vs production.',
+      },
+      {
+        ru: 'После выполнения критериев этой фазы — **`1.0.0`** в `web/package.json` и сборка по политике репозитория.',
+        en: 'When this phase’s criteria are met — ship **`1.0.0`** in `web/package.json` per repo policy.',
       },
     ],
   },
@@ -1045,6 +1123,18 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Шаблоны задач: сохранённые заготовки полей для быстрого создания похожих задач.',
         en: 'Task templates: saved field presets to spawn similar tasks quickly.',
+      },
+      {
+        ru: 'К форме создания по шаблону (после MVP): настройка **порядка полей** — какое поле где в модалке (перетаскивание / список), чтобы под разные типы задач показывать сначала главное.',
+        en: 'For template-driven create (post-MVP): **field order** — which input appears where in the modal (reorder list / drag), so recurring task types surface the important fields first.',
+      },
+      {
+        ru: 'Там же — **обязательность полей**: для шаблона или общего профиля помечать, что нужно заполнить до сохранения; точная модель (глобально vs на шаблон, исключения) — при реализации.',
+        en: 'Same scope — **required fields**: per template or profile, mark what must be filled before save; exact model (global vs per-template, exceptions) — TBD at implementation.',
+      },
+      {
+        ru: 'Черновик формулировок — **`obsidian-motivator/15-Идеи-для-развития.md`**, §8.',
+        en: 'Draft wording — **`obsidian-motivator/15-Идеи-для-развития.md`**, §8.',
       },
     ],
   },

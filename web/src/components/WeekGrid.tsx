@@ -8,7 +8,7 @@ import {
   type Task,
 } from '@motivator/core'
 
-const HOUR_HEIGHT_PX = 36
+const HOUR_HEIGHT_PX = 42
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 /** Одна сетка для заголовков и тела: выравнивание колонок и скролл только в нижней строке (subgrid). */
@@ -148,7 +148,7 @@ export function WeekGrid({
                 <div
                   key={h}
                   style={{ height: HOUR_HEIGHT_PX }}
-                  className="border-t border-zinc-800/60 text-[10px] leading-none text-zinc-600"
+                  className="border-t border-zinc-800/60 text-[11px] leading-none text-zinc-500"
                 >
                   {String(h).padStart(2, '0')}:00
                 </div>
@@ -198,7 +198,7 @@ export function WeekGrid({
           })}
         </div>
       </div>
-      <p className="mt-2 shrink-0 border-t border-zinc-800 pt-2 text-[10px] leading-snug text-zinc-600">
+      <p className="mt-2 shrink-0 border-t border-zinc-800 pt-2 text-[11px] leading-snug text-zinc-400">
         {t('app.weekGridHint')}
       </p>
     </div>

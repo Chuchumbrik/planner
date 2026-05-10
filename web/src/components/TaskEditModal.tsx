@@ -411,8 +411,8 @@ export function TaskEditModal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="scrollbar-site max-h-[90vh] w-full max-w-lg overscroll-y-contain overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
-        <div className="flex items-start justify-between gap-2">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl sm:max-h-[min(90vh,800px)]">
+        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/80 px-4 pb-3 pt-4">
           <h2 className="text-sm font-semibold text-zinc-200">{t('app.editTask')}</h2>
           <button
             type="button"
@@ -423,7 +423,8 @@ export function TaskEditModal({
           </button>
         </div>
 
-        <label className="mt-3 flex flex-col gap-1 text-xs text-zinc-500">
+        <div className="scrollbar-site flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-2 pt-3">
+        <label className="mt-0 flex flex-col gap-1 text-xs text-zinc-500">
           <span className="flex flex-wrap items-center justify-between gap-2">
             <span>{t('app.taskTitle')}</span>
             <span className="font-normal text-zinc-600">
@@ -438,29 +439,6 @@ export function TaskEditModal({
             onBlur={() => handleBlurTitle()}
           />
         </label>
-
-        <TaskColorAccordion
-          colorKey={task.colorKey}
-          colorHexInput={colorHexDraft}
-          canEdit={canEdit}
-          onPickKey={(key) => {
-            onSetColor(key)
-            setColorHexDraft(TASK_COLOR_HEX[key])
-          }}
-          onHexInputChange={(raw) => {
-            setColorHexDraft(raw)
-            const rgb = parseColorInput(raw)
-            if (rgb) onSetColor(nearestTaskColorKey(rgb))
-          }}
-          onNativePick={(hex) => {
-            const rgb = parseColorInput(hex)
-            if (rgb) {
-              const key = nearestTaskColorKey(rgb)
-              onSetColor(key)
-              setColorHexDraft(hex)
-            }
-          }}
-        />
 
         <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
           <span>{t('app.group')}</span>
@@ -496,105 +474,6 @@ export function TaskEditModal({
           </select>
         </label>
 
-        <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
-          <input
-            type="checkbox"
-            className="mt-0.5"
-            checked={task.includeInEodRitual !== false}
-            disabled={!canEdit}
-            onChange={(e) => onApplyTaskPatch({ includeInEodRitual: e.target.checked })}
-          />
-          <span className="leading-snug">{t('app.includeInEodRitual')}</span>
-        </label>
-
-        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
-          <legend className="px-1 text-xs text-zinc-500">{t('app.doubleConfirmSection')}</legend>
-          <label className="flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={task.doubleConfirmEnabled === true}
-              disabled={!canEdit}
-              onChange={(e) =>
-                onApplyTaskPatch({ doubleConfirmEnabled: e.target.checked })
-              }
-            />
-            <span className="leading-snug">{t('app.doubleConfirmEnable')}</span>
-          </label>
-          <p className="mt-2 text-[10px] leading-snug text-zinc-600">{t('app.doubleConfirmHintEdit')}</p>
-
-          {task.doubleConfirmEnabled ? (
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1 text-xs text-zinc-500">
-                <span>{t('app.doubleConfirmIntervalMin')}</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={1440}
-                  inputMode="numeric"
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-                  placeholder={String(DOUBLE_CONFIRM_DEFAULT_INTERVAL_MIN)}
-                  value={task.doubleConfirmIntervalMinutes ?? ''}
-                  disabled={!canEdit}
-                  onChange={(e) => {
-                    const raw = e.target.value.trim()
-                    if (raw === '') {
-                      onApplyTaskPatch({ doubleConfirmIntervalMinutes: undefined })
-                      return
-                    }
-                    const n = Number(raw)
-                    if (!Number.isFinite(n)) return
-                    onApplyTaskPatch({
-                      doubleConfirmIntervalMinutes: Math.min(1440, Math.max(1, Math.floor(n))),
-                    })
-                  }}
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-xs text-zinc-500">
-                <span>{t('app.doubleConfirmGraceMin')}</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={1440}
-                  inputMode="numeric"
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-                  placeholder={String(DOUBLE_CONFIRM_DEFAULT_GRACE_MIN)}
-                  value={task.doubleConfirmGraceMinutes ?? ''}
-                  disabled={!canEdit}
-                  onChange={(e) => {
-                    const raw = e.target.value.trim()
-                    if (raw === '') {
-                      onApplyTaskPatch({ doubleConfirmGraceMinutes: undefined })
-                      return
-                    }
-                    const n = Number(raw)
-                    if (!Number.isFinite(n)) return
-                    onApplyTaskPatch({
-                      doubleConfirmGraceMinutes: Math.min(1440, Math.max(1, Math.floor(n))),
-                    })
-                  }}
-                />
-              </label>
-            </div>
-          ) : null}
-
-          {task.doubleConfirmEnabled &&
-          task.doubleConfirmPending &&
-          task.doubleConfirmPending.localDate === occurrenceDayKey ? (
-            <div className="mt-3 rounded-md border border-amber-800/60 bg-amber-950/25 px-3 py-2 text-xs text-amber-100/90">
-              <p className="leading-snug">{t('app.doubleConfirmPendingInEditor')}</p>
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="mt-2 text-[11px] text-amber-300 underline hover:text-amber-200 disabled:opacity-40"
-                onClick={() => onApplyTaskPatch({ doubleConfirmPending: undefined })}
-              >
-                {t('app.doubleConfirmCancelPending')}
-              </button>
-            </div>
-          ) : null}
-        </fieldset>
-
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
           <LocalDatePickerField
@@ -622,6 +501,79 @@ export function TaskEditModal({
             {t('app.planForSelectedDay', { date: selectedDayKey })}
           </button>
         </fieldset>
+
+        <div className="mt-4">
+          <TaskTimeAccordion
+            timeMode={task.timeMode}
+            timeClock={
+              task.timeMode === 'none'
+                ? ''
+                : timeDraft ||
+                  (task.timeMinutesFromMidnight != null
+                    ? minutesToTimeInput(task.timeMinutesFromMidnight)
+                    : '')
+            }
+            canEdit={canEdit}
+            radioName="timemode"
+            onModeNone={() => {
+              void onSetTimePlan('none', null)
+              setTimeDraft('')
+            }}
+            onModeStart={() => applyTime('start')}
+            onModeEnd={() => applyTime('end')}
+            onClockChange={(value) => setTimeDraft(value)}
+            onClockBlur={() => {
+              if (task.timeMode !== 'none') applyTime(task.timeMode)
+            }}
+          />
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2">
+          <span className="text-xs text-zinc-500">{t('app.estimatedTimeSection')}</span>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.estimatedHours')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                placeholder="0"
+                value={estHoursDraft}
+                disabled={!canEdit}
+                onChange={(e) => {
+                  const p = reconcileEstimateAfterHoursEdit(e.target.value, estMinutesDraft)
+                  setEstHoursDraft(p.hours)
+                  setEstMinutesDraft(p.minutes)
+                }}
+                onBlur={() => commitEstimate()}
+              />
+            </label>
+            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.estimatedMinutesPart')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                placeholder="0"
+                value={estMinutesDraft}
+                disabled={!canEdit}
+                onChange={(e) => {
+                  const p = reconcileEstimateAfterMinutesEdit(estHoursDraft, e.target.value)
+                  setEstHoursDraft(p.hours)
+                  setEstMinutesDraft(p.minutes)
+                }}
+                onBlur={() => commitEstimate()}
+              />
+            </label>
+          </div>
+          {estFieldError ? <p className="text-xs text-red-400">{estFieldError}</p> : null}
+          <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
+          {floatingEstimateWarning ? (
+            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
+          ) : null}
+        </div>
 
         <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.recurrenceSection')}</legend>
@@ -743,77 +695,6 @@ export function TaskEditModal({
           ) : null}
         </fieldset>
 
-        <div className="mt-4 flex flex-col gap-2">
-          <span className="text-xs text-zinc-500">{t('app.estimatedTimeSection')}</span>
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.estimatedHours')}</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
-                placeholder="0"
-                value={estHoursDraft}
-                disabled={!canEdit}
-                onChange={(e) => {
-                  const p = reconcileEstimateAfterHoursEdit(e.target.value, estMinutesDraft)
-                  setEstHoursDraft(p.hours)
-                  setEstMinutesDraft(p.minutes)
-                }}
-                onBlur={() => commitEstimate()}
-              />
-            </label>
-            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.estimatedMinutesPart')}</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
-                placeholder="0"
-                value={estMinutesDraft}
-                disabled={!canEdit}
-                onChange={(e) => {
-                  const p = reconcileEstimateAfterMinutesEdit(estHoursDraft, e.target.value)
-                  setEstHoursDraft(p.hours)
-                  setEstMinutesDraft(p.minutes)
-                }}
-                onBlur={() => commitEstimate()}
-              />
-            </label>
-          </div>
-          {estFieldError ? <p className="text-xs text-red-400">{estFieldError}</p> : null}
-          <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
-          {floatingEstimateWarning ? (
-            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
-          ) : null}
-        </div>
-
-        <TaskTimeAccordion
-          timeMode={task.timeMode}
-          timeClock={
-            task.timeMode === 'none'
-              ? ''
-              : timeDraft ||
-                (task.timeMinutesFromMidnight != null
-                  ? minutesToTimeInput(task.timeMinutesFromMidnight)
-                  : '')
-          }
-          canEdit={canEdit}
-          radioName="timemode"
-          onModeNone={() => {
-            void onSetTimePlan('none', null)
-            setTimeDraft('')
-          }}
-          onModeStart={() => applyTime('start')}
-          onModeEnd={() => applyTime('end')}
-          onClockChange={(value) => setTimeDraft(value)}
-          onClockBlur={() => {
-            if (task.timeMode !== 'none') applyTime(task.timeMode)
-          }}
-        />
-
         <div className="mt-4 border-t border-zinc-800 pt-4">
           <p className="text-xs font-medium text-zinc-400">{t('app.checklistTitle')}</p>
           <ul className="mt-2 flex flex-col gap-2">
@@ -874,7 +755,136 @@ export function TaskEditModal({
           </form>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-zinc-800 pt-4">
+        <details className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+          <summary className="cursor-pointer text-xs font-medium text-zinc-400">
+            {t('app.createTaskAdditionalSettings')}
+          </summary>
+          <div className="mt-3 flex flex-col gap-4 border-t border-zinc-800/80 pt-3">
+            <TaskColorAccordion
+              colorKey={task.colorKey}
+              colorHexInput={colorHexDraft}
+              canEdit={canEdit}
+              onPickKey={(key) => {
+                onSetColor(key)
+                setColorHexDraft(TASK_COLOR_HEX[key])
+              }}
+              onHexInputChange={(raw) => {
+                setColorHexDraft(raw)
+                const rgb = parseColorInput(raw)
+                if (rgb) onSetColor(nearestTaskColorKey(rgb))
+              }}
+              onNativePick={(hex) => {
+                const rgb = parseColorInput(hex)
+                if (rgb) {
+                  const key = nearestTaskColorKey(rgb)
+                  onSetColor(key)
+                  setColorHexDraft(hex)
+                }
+              }}
+            />
+            <label className="flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={task.includeInEodRitual !== false}
+                disabled={!canEdit}
+                onChange={(e) => onApplyTaskPatch({ includeInEodRitual: e.target.checked })}
+              />
+              <span className="leading-snug">{t('app.includeInEodRitual')}</span>
+            </label>
+            <fieldset className="rounded-lg border border-zinc-800 p-3">
+              <legend className="px-1 text-xs text-zinc-500">{t('app.doubleConfirmSection')}</legend>
+              <label className="flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={task.doubleConfirmEnabled === true}
+                  disabled={!canEdit}
+                  onChange={(e) =>
+                    onApplyTaskPatch({ doubleConfirmEnabled: e.target.checked })
+                  }
+                />
+                <span className="leading-snug">{t('app.doubleConfirmEnable')}</span>
+              </label>
+              <p className="mt-2 text-[10px] leading-snug text-zinc-600">{t('app.doubleConfirmHintEdit')}</p>
+
+              {task.doubleConfirmEnabled ? (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                    <span>{t('app.doubleConfirmIntervalMin')}</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={1440}
+                      inputMode="numeric"
+                      className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                      placeholder={String(DOUBLE_CONFIRM_DEFAULT_INTERVAL_MIN)}
+                      value={task.doubleConfirmIntervalMinutes ?? ''}
+                      disabled={!canEdit}
+                      onChange={(e) => {
+                        const raw = e.target.value.trim()
+                        if (raw === '') {
+                          onApplyTaskPatch({ doubleConfirmIntervalMinutes: undefined })
+                          return
+                        }
+                        const n = Number(raw)
+                        if (!Number.isFinite(n)) return
+                        onApplyTaskPatch({
+                          doubleConfirmIntervalMinutes: Math.min(1440, Math.max(1, Math.floor(n))),
+                        })
+                      }}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                    <span>{t('app.doubleConfirmGraceMin')}</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={1440}
+                      inputMode="numeric"
+                      className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                      placeholder={String(DOUBLE_CONFIRM_DEFAULT_GRACE_MIN)}
+                      value={task.doubleConfirmGraceMinutes ?? ''}
+                      disabled={!canEdit}
+                      onChange={(e) => {
+                        const raw = e.target.value.trim()
+                        if (raw === '') {
+                          onApplyTaskPatch({ doubleConfirmGraceMinutes: undefined })
+                          return
+                        }
+                        const n = Number(raw)
+                        if (!Number.isFinite(n)) return
+                        onApplyTaskPatch({
+                          doubleConfirmGraceMinutes: Math.min(1440, Math.max(1, Math.floor(n))),
+                        })
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : null}
+
+              {task.doubleConfirmEnabled &&
+              task.doubleConfirmPending &&
+              task.doubleConfirmPending.localDate === occurrenceDayKey ? (
+                <div className="mt-3 rounded-md border border-amber-800/60 bg-amber-950/25 px-3 py-2 text-xs text-amber-100/90">
+                  <p className="leading-snug">{t('app.doubleConfirmPendingInEditor')}</p>
+                  <button
+                    type="button"
+                    disabled={!canEdit}
+                    className="mt-2 text-[11px] text-amber-300 underline hover:text-amber-200 disabled:opacity-40"
+                    onClick={() => onApplyTaskPatch({ doubleConfirmPending: undefined })}
+                  >
+                    {t('app.doubleConfirmCancelPending')}
+                  </button>
+                </div>
+              ) : null}
+            </fieldset>
+          </div>
+        </details>
+
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-3 border-t border-zinc-800 bg-zinc-950 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4">
           {commitGateError || scheduleValidationError || anchorValidationError ? (
             <p className="text-xs text-red-400" role="alert">
               {commitGateError ?? scheduleValidationError ?? anchorValidationError}

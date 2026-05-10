@@ -71,6 +71,8 @@ type VaultContextValue = {
   lastSyncedAt: number | null
   vault: VaultPayload
   remoteError: string | null
+  /** Повторная загрузка vault с сервера (например после сетевой ошибки). */
+  retryRemoteHydrate: () => void
   saveSeed: (seedB64: string, password: string) => Promise<void>
   lock: () => Promise<void>
   createTask: (input: CreateTaskInput) => Promise<void>
@@ -121,6 +123,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [vault, setVault] = useState<VaultPayload>(emptyVault())
   const [ready, setReady] = useState(false)
   const [remoteError, setRemoteError] = useState<string | null>(null)
+  const [hydrateNonce, setHydrateNonce] = useState(0)
   const [remoteHydrated, setRemoteHydrated] = useState(false)
   const [savePending, setSavePending] = useState(false)
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null)
@@ -327,7 +330,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         debounceTimerRef.current = null
       }
     }
-  }, [cryptoKey, session, vaultRemote])
+  }, [cryptoKey, session, vaultRemote, hydrateNonce])
+
+  const retryRemoteHydrate = useCallback(() => {
+    setHydrateNonce((n) => n + 1)
+  }, [])
 
   const mutate = useCallback(
     async (fn: (v: VaultPayload) => VaultPayload) => {
@@ -558,6 +565,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       lastSyncedAt,
       vault,
       remoteError,
+      retryRemoteHydrate,
       saveSeed,
       lock,
       createTask,
@@ -592,6 +600,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       lastSyncedAt,
       vault,
       remoteError,
+      retryRemoteHydrate,
       saveSeed,
       lock,
       createTask,

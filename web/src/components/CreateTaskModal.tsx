@@ -210,6 +210,12 @@ export function CreateTaskModal({
   )
   const [estimateError, setEstimateError] = useState<string | null>(null)
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false)
+  const [saveAttempted, setSaveAttempted] = useState(false)
+  const titleRef = useRef<HTMLDivElement>(null)
+  const scheduleRef = useRef<HTMLFieldSetElement>(null)
+  const estimateRef = useRef<HTMLDivElement>(null)
+  const timeRef = useRef<HTMLDivElement>(null)
+  const recurrenceRef = useRef<HTMLFieldSetElement>(null)
 
   const sortedGroups = useMemo(() => [...groups].sort((a, b) => a.sortOrder - b.sortOrder), [groups])
 
@@ -225,6 +231,7 @@ export function CreateTaskModal({
 
     savedRef.current = false
     setCloseConfirmOpen(false)
+    setSaveAttempted(false)
     draftIdRef.current = resumeDraft?.id ?? null
     const base = resumeDraft
       ? snapshotFromDraft(resumeDraft, selectedDayKey)
@@ -244,16 +251,6 @@ export function CreateTaskModal({
     () => !snap.backlogOnly && snap.scheduledLocalDate != null,
     [snap.backlogOnly, snap.scheduledLocalDate],
   )
-
-  const estimateBlocked = useMemo(() => {
-    const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
-    const estMerge = mergeEstimateParts(estNorm.hours, estNorm.minutes)
-    return estMerge.invalid || (plannedWithEstimateRequired && estMerge.total == null)
-  }, [
-    snap.estimatedHours,
-    snap.estimatedMinutesPart,
-    plannedWithEstimateRequired,
-  ])
 
   const validationFields = useMemo(
     (): TaskScheduleValidationFields => ({
@@ -289,6 +286,27 @@ export function CreateTaskModal({
     [validationFields, t],
   )
 
+  const blockingLinesForSave = useMemo(() => {
+    const lines: string[] = []
+    if (!snap.title.trim()) lines.push(t('app.createTaskMissingTitle'))
+    const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
+    const estMerge = mergeEstimateParts(estNorm.hours, estNorm.minutes)
+    if (plannedWithEstimateRequired && (estMerge.invalid || estMerge.total == null)) {
+      lines.push(t('app.createTaskMissingEstimate'))
+    }
+    if (scheduleValidationError) lines.push(scheduleValidationError)
+    if (anchorValidationError) lines.push(anchorValidationError)
+    return lines
+  }, [
+    snap.title,
+    snap.estimatedHours,
+    snap.estimatedMinutesPart,
+    plannedWithEstimateRequired,
+    scheduleValidationError,
+    anchorValidationError,
+    t,
+  ])
+
   useEffect(() => {
     setEstimateError(null)
   }, [
@@ -307,24 +325,49 @@ export function CreateTaskModal({
     return { mode: snap.timeMode, minutes: m }
   }
 
+  function scrollToRef(el: HTMLElement | null) {
+    if (!el) return
+    window.setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 0)
+  }
+
   async function handleSave() {
+    setSaveAttempted(true)
     const trimmed = snap.title.trim()
-    if (!trimmed || !canEdit) return
+    if (!trimmed || !canEdit) {
+      scrollToRef(titleRef.current)
+      return
+    }
 
     const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
     const estMerge = mergeEstimateParts(estNorm.hours, estNorm.minutes)
     if (estMerge.invalid) {
       setEstimateError(t('app.estimateInvalid'))
+      scrollToRef(estimateRef.current)
       return
     }
     if (plannedWithEstimateRequired && estMerge.total == null) {
       setEstimateError(t('app.estimateRequiredWhenPlanned'))
+      scrollToRef(estimateRef.current)
       return
     }
 
     const schedErr = computeTaskScheduleValidationError(validationFields, t)
     if (schedErr) {
       setEstimateError(schedErr)
+      const low = schedErr.toLowerCase()
+      if (
+        low.includes('время') ||
+        low.includes('time') ||
+        low.includes('начала') ||
+        low.includes('окончания') ||
+        low.includes('clock')
+      ) {
+        scrollToRef(timeRef.current)
+      } else {
+        scrollToRef(scheduleRef.current)
+      }
       return
     }
 
@@ -332,6 +375,7 @@ export function CreateTaskModal({
     const anchorErr = computeRecurrenceAnchorPastError(anchorOut, Boolean(recurrenceFinal), t)
     if (anchorErr) {
       setEstimateError(anchorErr)
+      scrollToRef(recurrenceRef.current)
       return
     }
     setEstimateError(null)
@@ -454,8 +498,8 @@ export function CreateTaskModal({
           if (e.target === e.currentTarget) handleAttemptClose()
         }}
       >
-      <div className="scrollbar-site max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-4 shadow-2xl">
-        <div className="flex items-start justify-between gap-2">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl sm:max-h-[min(90vh,800px)]">
+        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/80 px-4 pb-3 pt-4">
           <h2 className="text-sm font-semibold text-zinc-200">{t('app.createTaskTitle')}</h2>
           <button
             type="button"
@@ -466,14 +510,9 @@ export function CreateTaskModal({
           </button>
         </div>
 
-        <p className="mt-3 rounded-lg border border-amber-900/40 bg-amber-950/25 px-3 py-2 text-[11px] leading-relaxed text-amber-100/90">
-          <span className="font-medium text-amber-200/95">{t('app.createTaskSaveRequirementsHeading')}</span>{' '}
-          {plannedWithEstimateRequired
-            ? t('app.createTaskSaveRequirementsBodyPlanned')
-            : t('app.createTaskSaveRequirementsBodyBacklog')}
-        </p>
-
-        <label className="mt-3 flex flex-col gap-1 text-xs text-zinc-500">
+        <div className="scrollbar-site flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-2 pt-3">
+        <div ref={titleRef} className="scroll-mt-24">
+        <label className="mt-0 flex flex-col gap-1 text-xs text-zinc-500">
           <span className="flex flex-wrap items-center justify-between gap-2">
             <span>
               {t('app.taskTitle')}
@@ -495,38 +534,7 @@ export function CreateTaskModal({
             }
           />
         </label>
-
-        <TaskColorAccordion
-          colorKey={snap.colorKey}
-          colorHexInput={snap.colorHexInput}
-          canEdit={canEdit}
-          onPickKey={(key) =>
-            setSnap((s) => ({
-              ...s,
-              colorKey: key,
-              colorHexInput: TASK_COLOR_HEX[key],
-            }))
-          }
-          onHexInputChange={(raw) => {
-            const rgb = parseColorInput(raw)
-            setSnap((s) => ({
-              ...s,
-              colorHexInput: raw,
-              colorKey: rgb ? nearestTaskColorKey(rgb) : s.colorKey,
-            }))
-          }}
-          onNativePick={(hex) => {
-            const rgb = parseColorInput(hex)
-            if (rgb) {
-              const key = nearestTaskColorKey(rgb)
-              setSnap((s) => ({
-                ...s,
-                colorKey: key,
-                colorHexInput: hex,
-              }))
-            }
-          }}
-        />
+        </div>
 
         <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
           <span>{t('app.group')}</span>
@@ -562,7 +570,7 @@ export function CreateTaskModal({
           </select>
         </label>
 
-        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
+        <fieldset ref={scheduleRef} className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
           {!snap.backlogOnly ? (
             <LocalDatePickerField
@@ -600,7 +608,96 @@ export function CreateTaskModal({
           </label>
         </fieldset>
 
-        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
+        <div ref={timeRef} className="scroll-mt-24 mt-4">
+          <TaskTimeAccordion
+            timeMode={snap.timeMode}
+            timeClock={snap.timeMode === 'none' ? '' : snap.timeClock}
+            canEdit={canEdit}
+            radioName="createtimemode"
+            onModeNone={() => setSnap((s) => ({ ...s, timeMode: 'none', timeClock: '' }))}
+            onModeStart={() =>
+              setSnap((s) => ({
+                ...s,
+                timeMode: 'start',
+                timeClock: s.timeClock || minutesToTimeInput(9 * 60),
+              }))
+            }
+            onModeEnd={() =>
+              setSnap((s) => ({
+                ...s,
+                timeMode: 'end',
+                timeClock: s.timeClock || minutesToTimeInput(18 * 60),
+              }))
+            }
+            onClockChange={(value) => setSnap((s) => ({ ...s, timeClock: value }))}
+          />
+        </div>
+
+        <div ref={estimateRef} className="scroll-mt-24 mt-4 flex flex-col gap-2">
+          <span className="text-xs text-zinc-500">
+            {t('app.estimatedTimeSection')}
+            {plannedWithEstimateRequired ? (
+              <span className="text-amber-400/90" aria-hidden>
+                {' '}
+                *
+              </span>
+            ) : null}
+          </span>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.estimatedHours')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                placeholder="0"
+                value={snap.estimatedHours}
+                disabled={!canEdit}
+                onChange={(e) => {
+                  const p = reconcileEstimateAfterHoursEdit(
+                    e.target.value,
+                    snap.estimatedMinutesPart,
+                  )
+                  setSnap((s) => ({
+                    ...s,
+                    estimatedHours: p.hours,
+                    estimatedMinutesPart: p.minutes,
+                  }))
+                }}
+              />
+            </label>
+            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.estimatedMinutesPart')}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                placeholder="0"
+                value={snap.estimatedMinutesPart}
+                disabled={!canEdit}
+                onChange={(e) => {
+                  const p = reconcileEstimateAfterMinutesEdit(
+                    snap.estimatedHours,
+                    e.target.value,
+                  )
+                  setSnap((s) => ({
+                    ...s,
+                    estimatedHours: p.hours,
+                    estimatedMinutesPart: p.minutes,
+                  }))
+                }}
+              />
+            </label>
+          </div>
+          <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
+          {floatingEstimateWarning ? (
+            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
+          ) : null}
+        </div>
+
+        <fieldset ref={recurrenceRef} className="mt-4 rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.recurrenceSection')}</legend>
           <select
             className="mb-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
@@ -683,135 +780,92 @@ export function CreateTaskModal({
           ) : null}
         </fieldset>
 
-        <div className="mt-4 flex flex-col gap-2">
-          <span className="text-xs text-zinc-500">
-            {t('app.estimatedTimeSection')}
-            {plannedWithEstimateRequired ? (
-              <span className="text-amber-400/90" aria-hidden>
-                {' '}
-                *
-              </span>
-            ) : null}
-          </span>
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.estimatedHours')}</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
-                placeholder="0"
-                value={snap.estimatedHours}
-                disabled={!canEdit}
-                onChange={(e) => {
-                  const p = reconcileEstimateAfterHoursEdit(
-                    e.target.value,
-                    snap.estimatedMinutesPart,
-                  )
+        <details className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+          <summary className="cursor-pointer text-xs font-medium text-zinc-400">
+            {t('app.createTaskAdditionalSettings')}
+          </summary>
+          <div className="mt-3 flex flex-col gap-4 border-t border-zinc-800/80 pt-3">
+            <TaskColorAccordion
+              colorKey={snap.colorKey}
+              colorHexInput={snap.colorHexInput}
+              canEdit={canEdit}
+              onPickKey={(key) =>
+                setSnap((s) => ({
+                  ...s,
+                  colorKey: key,
+                  colorHexInput: TASK_COLOR_HEX[key],
+                }))
+              }
+              onHexInputChange={(raw) => {
+                const rgb = parseColorInput(raw)
+                setSnap((s) => ({
+                  ...s,
+                  colorHexInput: raw,
+                  colorKey: rgb ? nearestTaskColorKey(rgb) : s.colorKey,
+                }))
+              }}
+              onNativePick={(hex) => {
+                const rgb = parseColorInput(hex)
+                if (rgb) {
+                  const key = nearestTaskColorKey(rgb)
                   setSnap((s) => ({
                     ...s,
-                    estimatedHours: p.hours,
-                    estimatedMinutesPart: p.minutes,
+                    colorKey: key,
+                    colorHexInput: hex,
                   }))
-                }}
-              />
-            </label>
-            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
-              <span>{t('app.estimatedMinutesPart')}</span>
+                }
+              }}
+            />
+            <label className="flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
               <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
-                placeholder="0"
-                value={snap.estimatedMinutesPart}
+                type="checkbox"
+                className="mt-0.5"
+                checked={snap.doubleConfirmEnabled}
                 disabled={!canEdit}
-                onChange={(e) => {
-                  const p = reconcileEstimateAfterMinutesEdit(
-                    snap.estimatedHours,
-                    e.target.value,
-                  )
-                  setSnap((s) => ({
-                    ...s,
-                    estimatedHours: p.hours,
-                    estimatedMinutesPart: p.minutes,
-                  }))
-                }}
+                onChange={(e) =>
+                  setSnap((s) => ({ ...s, doubleConfirmEnabled: e.target.checked }))
+                }
               />
+              <span className="leading-snug">{t('app.doubleConfirmEnable')}</span>
             </label>
+            <p className="text-[10px] leading-snug text-zinc-600">{t('app.doubleConfirmHintShort')}</p>
           </div>
-          <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
-          {floatingEstimateWarning ? (
-            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
-          ) : null}
+        </details>
+
         </div>
 
-        <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
-          <input
-            type="checkbox"
-            className="mt-0.5"
-            checked={snap.doubleConfirmEnabled}
-            disabled={!canEdit}
-            onChange={(e) =>
-              setSnap((s) => ({ ...s, doubleConfirmEnabled: e.target.checked }))
-            }
-          />
-          <span className="leading-snug">{t('app.doubleConfirmEnable')}</span>
-        </label>
-        <p className="mt-1 text-[10px] leading-snug text-zinc-600">{t('app.doubleConfirmHintShort')}</p>
-
-        <TaskTimeAccordion
-          timeMode={snap.timeMode}
-          timeClock={snap.timeMode === 'none' ? '' : snap.timeClock}
-          canEdit={canEdit}
-          radioName="createtimemode"
-          onModeNone={() => setSnap((s) => ({ ...s, timeMode: 'none', timeClock: '' }))}
-          onModeStart={() =>
-            setSnap((s) => ({
-              ...s,
-              timeMode: 'start',
-              timeClock: s.timeClock || minutesToTimeInput(9 * 60),
-            }))
-          }
-          onModeEnd={() =>
-            setSnap((s) => ({
-              ...s,
-              timeMode: 'end',
-              timeClock: s.timeClock || minutesToTimeInput(18 * 60),
-            }))
-          }
-          onClockChange={(value) => setSnap((s) => ({ ...s, timeClock: value }))}
-        />
-
-        <div className="mt-6 flex flex-col gap-3 border-t border-zinc-800 pt-4">
-          {scheduleValidationError || anchorValidationError || estimateError ? (
-            <p className="text-xs text-red-400" role="alert">
-              {scheduleValidationError ?? anchorValidationError ?? estimateError}
+        <div className="shrink-0 border-t border-zinc-800 bg-zinc-950 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+          {blockingLinesForSave.length > 0 ? (
+            <div className="mb-3 rounded-lg border border-amber-900/35 bg-amber-950/20 px-3 py-2">
+              <p className="text-[11px] font-medium text-amber-200/95">{t('app.createTaskFooterHint')}</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-amber-100/90">
+                {blockingLinesForSave.map((line, i) => (
+                  <li key={`${i}-${line.slice(0, 24)}`}>{line}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {saveAttempted && estimateError ? (
+            <p className="mb-2 text-xs text-red-400" role="alert">
+              {estimateError}
             </p>
           ) : null}
           <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={
-              !canEdit ||
-              !snap.title.trim() ||
-              estimateBlocked ||
-              !!scheduleValidationError ||
-              !!anchorValidationError
-            }
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
-            onClick={() => void handleSave()}
-          >
-            {t('common.save')}
-          </button>
-          <button
-            type="button"
-            className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
-            onClick={() => handleAttemptClose()}
-          >
-            {t('common.cancel')}
-          </button>
+            <button
+              type="button"
+              disabled={!canEdit}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+              onClick={() => void handleSave()}
+            >
+              {t('common.save')}
+            </button>
+            <button
+              type="button"
+              className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+              onClick={() => handleAttemptClose()}
+            >
+              {t('common.cancel')}
+            </button>
           </div>
         </div>
       </div>
