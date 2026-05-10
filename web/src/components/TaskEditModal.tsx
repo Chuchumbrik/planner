@@ -423,8 +423,8 @@ export function TaskEditModal({
           </button>
         </div>
 
-        <div className="scrollbar-site flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-2 pt-3">
-        <label className="mt-0 flex flex-col gap-1 text-xs text-zinc-500">
+        <div className="scrollbar-site flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-2 pt-3">
+        <label className="flex flex-col gap-1 text-xs text-zinc-500">
           <span className="flex flex-wrap items-center justify-between gap-2">
             <span>{t('app.taskTitle')}</span>
             <span className="font-normal text-zinc-600">
@@ -440,23 +440,7 @@ export function TaskEditModal({
           />
         </label>
 
-        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
-          <span>{t('app.group')}</span>
-          <select
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-            value={task.groupId}
-            disabled={!canEdit}
-            onChange={(e) => onSetGroup(e.target.value)}
-          >
-            {sortedGroups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
+        <label className="flex flex-col gap-1 text-xs text-zinc-500">
           <span>{t('app.priorityShort')}</span>
           <select
             className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
@@ -474,35 +458,39 @@ export function TaskEditModal({
           </select>
         </label>
 
-        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
+        <fieldset className="rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
-          <LocalDatePickerField
-            label={t('app.plannedDate')}
-            value={task.scheduledLocalDate}
-            onChange={(v) => guardedSetScheduledLocalDate(v)}
-            disabled={!canEdit}
-            allowClear
-          />
-          <p className="mt-2 text-xs text-zinc-600">{t('app.backlogHint')}</p>
-          <button
-            type="button"
-            disabled={!canEdit}
-            className="mt-2 rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
-            onClick={() => guardedSetScheduledLocalDate(null)}
-          >
-            {t('app.moveToBacklog')}
-          </button>
-          <button
-            type="button"
-            disabled={!canEdit}
-            className="mt-2 ml-2 rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
-            onClick={() => guardedSetScheduledLocalDate(selectedDayKey)}
-          >
-            {t('app.planForSelectedDay', { date: selectedDayKey })}
-          </button>
+          <div className="flex flex-col gap-3">
+            <LocalDatePickerField
+              label={t('app.plannedDate')}
+              value={task.scheduledLocalDate}
+              onChange={(v) => guardedSetScheduledLocalDate(v)}
+              disabled={!canEdit}
+              allowClear
+            />
+            <p className="text-xs text-zinc-600">{t('app.backlogHint')}</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
+                onClick={() => guardedSetScheduledLocalDate(null)}
+              >
+                {t('app.moveToBacklog')}
+              </button>
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
+                onClick={() => guardedSetScheduledLocalDate(selectedDayKey)}
+              >
+                {t('app.planForSelectedDay', { date: selectedDayKey })}
+              </button>
+            </div>
+          </div>
         </fieldset>
 
-        <div className="mt-4">
+        <div>
           <TaskTimeAccordion
             timeMode={task.timeMode}
             timeClock={
@@ -528,7 +516,7 @@ export function TaskEditModal({
           />
         </div>
 
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           <span className="text-xs text-zinc-500">{t('app.estimatedTimeSection')}</span>
           <div className="flex flex-wrap items-end gap-3">
             <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
@@ -575,7 +563,7 @@ export function TaskEditModal({
           ) : null}
         </div>
 
-        <fieldset className="mt-4 rounded-lg border border-zinc-800 p-3">
+        <fieldset className="rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.recurrenceSection')}</legend>
           <select
             className="mb-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
@@ -695,7 +683,7 @@ export function TaskEditModal({
           ) : null}
         </fieldset>
 
-        <div className="mt-4 border-t border-zinc-800 pt-4">
+        <div className="border-t border-zinc-800 pt-4">
           <p className="text-xs font-medium text-zinc-400">{t('app.checklistTitle')}</p>
           <ul className="mt-2 flex flex-col gap-2">
             {task.checklist.map((s) => (
@@ -755,11 +743,26 @@ export function TaskEditModal({
           </form>
         </div>
 
-        <details className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+        <details className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
           <summary className="cursor-pointer text-xs font-medium text-zinc-400">
             {t('app.createTaskAdditionalSettings')}
           </summary>
           <div className="mt-3 flex flex-col gap-4 border-t border-zinc-800/80 pt-3">
+            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.group')}</span>
+              <select
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                value={task.groupId}
+                disabled={!canEdit}
+                onChange={(e) => onSetGroup(e.target.value)}
+              >
+                {sortedGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <TaskColorAccordion
               colorKey={task.colorKey}
               colorHexInput={colorHexDraft}

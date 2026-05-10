@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { plannedDayCompletionWeights, type Task } from '@motivator/core'
-import { getPlanProgressLabels, PlanDayProgressCaption } from '@/components/PlanDayProgressCaption'
+import { getPlanProgressLabels } from '@/components/PlanDayProgressCaption'
 import { PlanProgressRing } from '@/components/PlanProgressRing'
 
 export type DayPlanDonutProps = {
@@ -22,6 +22,7 @@ export function DayPlanDonut({ plannedTasksForDay, dayKey }: DayPlanDonutProps) 
 
   const empty = progress.plannedTaskCount === 0
   const frac = empty ? 0 : progress.doneFraction / progress.plannedTaskCount
+  const pctLabels = empty ? null : getPlanProgressLabels(progress, locale)
 
   const ariaLabel = empty
     ? t('eod.chartEmptyPlan')
@@ -38,14 +39,22 @@ export function DayPlanDonut({ plannedTasksForDay, dayKey }: DayPlanDonutProps) 
       <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
         {t('eod.chartTitle')}
       </p>
-      <PlanProgressRing frac={frac} empty={empty} />
+      <PlanProgressRing
+        frac={frac}
+        empty={empty}
+        centerLabel={
+          pctLabels ? (
+            <span className="text-lg font-semibold tabular-nums leading-none text-zinc-100">
+              {t('eod.chartPercentLine', { pct: pctLabels.pctStr })}
+            </span>
+          ) : undefined
+        }
+      />
       {empty ? (
         <p className="max-w-[14rem] text-center text-xs leading-snug text-zinc-400">
           {t('eod.chartEmptyPlan')}
         </p>
-      ) : (
-        <PlanDayProgressCaption progress={progress} />
-      )}
+      ) : null}
     </div>
   )
 }

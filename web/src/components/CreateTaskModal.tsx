@@ -291,7 +291,9 @@ export function CreateTaskModal({
     if (!snap.title.trim()) lines.push(t('app.createTaskMissingTitle'))
     const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
     const estMerge = mergeEstimateParts(estNorm.hours, estNorm.minutes)
-    if (plannedWithEstimateRequired && (estMerge.invalid || estMerge.total == null)) {
+    if (estMerge.invalid) {
+      lines.push(t('app.estimateInvalid'))
+    } else if (plannedWithEstimateRequired && estMerge.total == null) {
       lines.push(t('app.createTaskMissingEstimate'))
     }
     if (scheduleValidationError) lines.push(scheduleValidationError)
@@ -510,9 +512,9 @@ export function CreateTaskModal({
           </button>
         </div>
 
-        <div className="scrollbar-site flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-2 pt-3">
+        <div className="scrollbar-site flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-2 pt-3">
         <div ref={titleRef} className="scroll-mt-24">
-        <label className="mt-0 flex flex-col gap-1 text-xs text-zinc-500">
+        <label className="flex flex-col gap-1 text-xs text-zinc-500">
           <span className="flex flex-wrap items-center justify-between gap-2">
             <span>
               {t('app.taskTitle')}
@@ -536,23 +538,7 @@ export function CreateTaskModal({
         </label>
         </div>
 
-        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
-          <span>{t('app.group')}</span>
-          <select
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-            value={snap.groupId}
-            disabled={!canEdit}
-            onChange={(e) => setSnap((s) => ({ ...s, groupId: e.target.value }))}
-          >
-            {sortedGroups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">
+        <label className="flex flex-col gap-1 text-xs text-zinc-500">
           <span>{t('app.priorityShort')}</span>
           <select
             className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
@@ -570,45 +556,46 @@ export function CreateTaskModal({
           </select>
         </label>
 
-        <fieldset ref={scheduleRef} className="mt-4 rounded-lg border border-zinc-800 p-3">
+        <fieldset ref={scheduleRef} className="rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
-          {!snap.backlogOnly ? (
-            <LocalDatePickerField
-              label={t('app.plannedDate')}
-              value={snap.scheduledLocalDate}
-              onChange={(v) =>
-                setSnap((s) => ({
-                  ...s,
-                  scheduledLocalDate: v,
-                  anchorLocalDate:
-                    s.recurrenceKind !== 'none'
-                      ? v || s.anchorLocalDate
-                      : s.anchorLocalDate,
-                }))
-              }
-              disabled={!canEdit}
-            />
-          ) : null}
-          <label
-            className={`flex cursor-pointer items-center gap-2 text-xs text-zinc-400 ${snap.backlogOnly ? 'mt-2' : 'mt-3'}`}
-          >
-            <input
-              type="checkbox"
-              checked={snap.backlogOnly}
-              disabled={!canEdit}
-              onChange={(e) =>
-                setSnap((s) => ({
-                  ...s,
-                  backlogOnly: e.target.checked,
-                  scheduledLocalDate: e.target.checked ? null : selectedDayKey,
-                }))
-              }
-            />
-            {t('app.addToBacklog')}
-          </label>
+          <div className="flex flex-col gap-3">
+            {!snap.backlogOnly ? (
+              <LocalDatePickerField
+                label={t('app.plannedDate')}
+                value={snap.scheduledLocalDate}
+                onChange={(v) =>
+                  setSnap((s) => ({
+                    ...s,
+                    scheduledLocalDate: v,
+                    anchorLocalDate:
+                      s.recurrenceKind !== 'none'
+                        ? v || s.anchorLocalDate
+                        : s.anchorLocalDate,
+                  }))
+                }
+                disabled={!canEdit}
+              />
+            ) : null}
+            <label className="flex cursor-pointer items-center gap-2.5 text-xs leading-snug text-zinc-400">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-zinc-600 bg-zinc-900"
+                checked={snap.backlogOnly}
+                disabled={!canEdit}
+                onChange={(e) =>
+                  setSnap((s) => ({
+                    ...s,
+                    backlogOnly: e.target.checked,
+                    scheduledLocalDate: e.target.checked ? null : selectedDayKey,
+                  }))
+                }
+              />
+              <span>{t('app.addToBacklog')}</span>
+            </label>
+          </div>
         </fieldset>
 
-        <div ref={timeRef} className="scroll-mt-24 mt-4">
+        <div ref={timeRef} className="scroll-mt-24">
           <TaskTimeAccordion
             timeMode={snap.timeMode}
             timeClock={snap.timeMode === 'none' ? '' : snap.timeClock}
@@ -633,7 +620,7 @@ export function CreateTaskModal({
           />
         </div>
 
-        <div ref={estimateRef} className="scroll-mt-24 mt-4 flex flex-col gap-2">
+        <div ref={estimateRef} className="scroll-mt-24 flex flex-col gap-2">
           <span className="text-xs text-zinc-500">
             {t('app.estimatedTimeSection')}
             {plannedWithEstimateRequired ? (
@@ -697,7 +684,7 @@ export function CreateTaskModal({
           ) : null}
         </div>
 
-        <fieldset ref={recurrenceRef} className="mt-4 rounded-lg border border-zinc-800 p-3">
+        <fieldset ref={recurrenceRef} className="rounded-lg border border-zinc-800 p-3">
           <legend className="px-1 text-xs text-zinc-500">{t('app.recurrenceSection')}</legend>
           <select
             className="mb-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
@@ -780,11 +767,26 @@ export function CreateTaskModal({
           ) : null}
         </fieldset>
 
-        <details className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+        <details className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
           <summary className="cursor-pointer text-xs font-medium text-zinc-400">
             {t('app.createTaskAdditionalSettings')}
           </summary>
           <div className="mt-3 flex flex-col gap-4 border-t border-zinc-800/80 pt-3">
+            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+              <span>{t('app.group')}</span>
+              <select
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                value={snap.groupId}
+                disabled={!canEdit}
+                onChange={(e) => setSnap((s) => ({ ...s, groupId: e.target.value }))}
+              >
+                {sortedGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <TaskColorAccordion
               colorKey={snap.colorKey}
               colorHexInput={snap.colorHexInput}
@@ -835,7 +837,7 @@ export function CreateTaskModal({
         </div>
 
         <div className="shrink-0 border-t border-zinc-800 bg-zinc-950 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
-          {blockingLinesForSave.length > 0 ? (
+          {saveAttempted && blockingLinesForSave.length > 0 ? (
             <div className="mb-3 rounded-lg border border-amber-900/35 bg-amber-950/20 px-3 py-2">
               <p className="text-[11px] font-medium text-amber-200/95">{t('app.createTaskFooterHint')}</p>
               <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-amber-100/90">

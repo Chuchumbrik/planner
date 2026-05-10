@@ -147,6 +147,7 @@
     "estimateExceedsRestOfCalendarDay": "The estimate is longer than the rest of the calendar day until midnight. Set a start/end time or reduce the estimate. (Custom working hours will come later.)",
     "openCreateTask": "Create task…",
     "draftsTitle": "Drafts",
+    "draftsEmptyHint": "No saved drafts",
     "draftUntitled": "(no title)",
     "draftContinue": "Continue",
     "recurrenceSection": "Recurrence",

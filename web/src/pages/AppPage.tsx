@@ -239,7 +239,7 @@ function AppPageInner() {
   }, [accountMenuOpen])
 
   useEffect(() => {
-    if (vault.drafts.length <= 1) setDraftsModalOpen(false)
+    if (vault.drafts.length === 0) setDraftsModalOpen(false)
   }, [vault.drafts.length])
 
   useEffect(() => {
@@ -643,18 +643,18 @@ function AppPageInner() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className={`rounded-lg border px-2.5 py-2 text-sm hover:bg-zinc-900 disabled:opacity-40 ${
+            className={`rounded-md border px-2 py-1.5 text-xs hover:bg-zinc-900/80 disabled:opacity-40 ${
               remoteError
-                ? 'border-amber-700 text-amber-200'
+                ? 'border-amber-900/50 text-amber-300/90'
                 : savePending
-                  ? 'border-emerald-800 text-emerald-300'
-                  : 'border-zinc-700 text-zinc-400'
+                  ? 'border-zinc-700/80 text-zinc-500'
+                  : 'border-transparent text-zinc-600 hover:text-zinc-400'
             }`}
             title={syncHint}
             aria-label={t('app.syncIconAria')}
           >
             <span className="sr-only">{syncHint}</span>
-            <span aria-hidden className="text-base leading-none">
+            <span aria-hidden className="text-[0.85rem] leading-none opacity-90">
               {savePending ? '…' : remoteError ? '⚠' : '✓'}
             </span>
           </button>
@@ -765,18 +765,45 @@ function AppPageInner() {
 
       <div className="mb-6 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <button
-            type="button"
-            disabled={!canEdit}
-            aria-expanded={filtersPanelOpen}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40"
-            onClick={() => setFiltersPanelOpen((v) => !v)}
-          >
-            {t('app.filterToggle')}
-            <span className="text-zinc-500" aria-hidden>
-              {filtersPanelOpen ? '▴' : '▾'}
-            </span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={!canEdit}
+              aria-expanded={filtersPanelOpen}
+              className="inline-flex items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40"
+              onClick={() => setFiltersPanelOpen((v) => !v)}
+            >
+              {t('app.filterToggle')}
+              <span className="text-zinc-500" aria-hidden>
+                {filtersPanelOpen ? '▴' : '▾'}
+              </span>
+            </button>
+            <button
+              type="button"
+              disabled={!canEdit || vault.drafts.length === 0}
+              aria-haspopup="dialog"
+              aria-expanded={draftsModalOpen}
+              title={
+                vault.drafts.length === 0
+                  ? t('app.draftsEmptyHint')
+                  : `${t('app.draftsTitle')}: ${vault.drafts.length}`
+              }
+              className="inline-flex items-center gap-2 rounded-lg border border-amber-900/45 bg-amber-950/25 px-3 py-2 text-sm font-medium text-amber-200/95 hover:bg-amber-950/40 disabled:opacity-40"
+              onClick={() => {
+                if (vault.drafts.length > 0) setDraftsModalOpen(true)
+              }}
+            >
+              <span>{t('app.draftsTitle')}</span>
+              {vault.drafts.length > 0 ? (
+                <span
+                  className="inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-amber-600/90 px-1.5 text-xs font-semibold text-amber-950"
+                  aria-hidden
+                >
+                  {vault.drafts.length}
+                </span>
+              ) : null}
+            </button>
+          </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {view === 'day' && eodEnabled ? (
               <button
@@ -983,69 +1010,39 @@ function AppPageInner() {
           </div>
         ) : null}
 
-        {vault.drafts.length === 1 ? (
-          <section className="max-w-lg rounded-lg border border-amber-900/40 bg-amber-950/20 p-3">
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-200/90">
-              {t('app.draftsTitle')}
-            </h3>
-            <ul className="flex flex-col gap-2">{draftListItems}</ul>
-          </section>
-        ) : vault.drafts.length > 1 ? (
-          <>
-            <div className="max-w-lg">
-              <button
-                type="button"
-                disabled={!canEdit}
-                aria-haspopup="dialog"
-                aria-expanded={draftsModalOpen}
-                title={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-                className="inline-flex w-full items-center justify-between gap-3 rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-left text-sm font-medium text-amber-200 hover:bg-amber-950/35 disabled:opacity-40 sm:w-auto sm:justify-start"
-                onClick={() => setDraftsModalOpen(true)}
-              >
-                <span>{t('app.draftsTitle')}</span>
-                <span
-                  className="inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-amber-600/90 px-1.5 text-xs font-semibold text-amber-950"
-                  aria-hidden
+        {draftsModalOpen && vault.drafts.length > 0 ? (
+          <div
+            className="fixed inset-0 z-[55] flex items-center justify-center bg-black/60 p-4"
+            role="presentation"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setDraftsModalOpen(false)
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="drafts-modal-title"
+              className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-800 px-4 py-3">
+                <h2 id="drafts-modal-title" className="text-sm font-semibold text-amber-200/90">
+                  {t('app.draftsTitle')}
+                </h2>
+                <button
+                  type="button"
+                  className="rounded px-2 py-1 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                  aria-label={t('common.close')}
+                  onClick={() => setDraftsModalOpen(false)}
                 >
-                  {vault.drafts.length}
-                </span>
-              </button>
-            </div>
-            {draftsModalOpen ? (
-              <div
-                className="fixed inset-0 z-[55] flex items-center justify-center bg-black/60 p-4"
-                role="presentation"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) setDraftsModalOpen(false)
-                }}
-              >
-                <div
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="drafts-modal-title"
-                  className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-800 px-4 py-3">
-                    <h2 id="drafts-modal-title" className="text-sm font-semibold text-amber-200/90">
-                      {t('app.draftsTitle')}
-                    </h2>
-                    <button
-                      type="button"
-                      className="rounded px-2 py-1 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
-                      aria-label={t('common.close')}
-                      onClick={() => setDraftsModalOpen(false)}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <ul className="scrollbar-site flex max-h-[min(70vh,28rem)] flex-col gap-2 overflow-y-auto p-3">
-                    {draftListItems}
-                  </ul>
-                </div>
+                  ✕
+                </button>
               </div>
-            ) : null}
-          </>
+              <ul className="scrollbar-site flex max-h-[min(70vh,28rem)] flex-col gap-2 overflow-y-auto p-3">
+                {draftListItems}
+              </ul>
+            </div>
+          </div>
         ) : null}
       </div>
 

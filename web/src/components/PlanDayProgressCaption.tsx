@@ -18,7 +18,7 @@ type Props = {
   emptyClassName?: string
 }
 
-/** Подпись под кольцом: крупно процент, ниже дробь «выполнено по задачам / число задач». */
+/** Резерв: подпись под кольцом; основной процент отображается внутри PlanProgressRing. */
 export function PlanDayProgressCaption({ progress, emptyClassName }: Props) {
   const { t, i18n } = useTranslation()
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'

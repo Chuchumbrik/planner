@@ -98,16 +98,16 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Priorities 1–5 with vault labels; estimate h+m; start XOR end time (or none); slot overlap confirmation.',
       },
       {
-        ru: 'Модалка создания: подсказка обязательных полей для «Сохранить» (янтарный стиль); форма не сбрасывается при смене дня/фильтра группы, пока окно открыто.',
-        en: 'Create modal: required-field hint for Save (amber); form persists when changing day/group filter while open.',
+        ru: 'Модалка создания: янтарная подсказка «чтобы сохранить» после **первой** попытки «Сохранить»; **группа** — в «Дополнительные настройки»; правило оценки: для задачи **в плане на день** оценка обязательна и должна быть **корректной**; для **бэклога** оценка не обязательна, но некорректный ввод всё равно блокирует сохранение; форма не сбрасывается при смене дня/фильтра группы, пока окно открыто.',
+        en: 'Create modal: amber “to save” checklist after the **first** Save attempt; **group** under Additional settings; estimate: **required and valid** for a **planned-day** task; **backlog** — estimate optional, invalid input still blocks save; form persists when changing day/group filter while open.',
       },
       {
-        ru: 'Черновики в vault; на `/app` один черновик — компактная секция, несколько — кнопка «Черновики» со счётчиком и модалка списка.',
-        en: 'Vault drafts; on `/app` one draft — inline strip, several — “Drafts” button with count and list modal.',
+        ru: 'Черновики в vault; на `/app` кнопка **«Черновики»** рядом с фильтром (всегда видна; счётчик при наличии); список — в модалке.',
+        en: 'Vault drafts; on `/app` **Drafts** button next to filters (always visible; badge when any); list in a modal.',
       },
       {
-        ru: 'Вкладка «День»: кольцо прогресса — знаменатель = число задач в плане; список и кольцо согласованы через **`tasksScheduledForPlannerDay`**; чек-лист даёт долю внутри задачи (1 из 4 пунктов = 0,25); подпись под кольцом — **только процент**; списки модалки EOD — по **`tasksPlannedForLocalDay`** (отбор для ритуала).',
-        en: 'Day tab: ring denominator = planned task count; list and ring aligned via **`tasksScheduledForPlannerDay`**; checklist share inside a task (1 of 4 = 0.25); caption under the ring — **percent only**; EOD modal lists use **`tasksPlannedForLocalDay`** (ritual scope).',
+        ru: 'Вкладка «День» и периоды: кольцо прогресса — знаменатель = число задач в плане; **`tasksScheduledForPlannerDay`** / **`plannedPeriodProgress`**; чек-лист даёт долю внутри задачи; **процент выполнения** отображается **внутри** SVG-кольца (без отдельной строки под диаграммой); EOD — те же доли; списки EOD — **`tasksPlannedForLocalDay`**.',
+        en: 'Day & periods: ring denominator = planned tasks; **`tasksScheduledForPlannerDay`** / **`plannedPeriodProgress`**; checklist shares inside a task; **completion percent** is **inside** the SVG ring (no separate line below); EOD uses same fractions; EOD lists — **`tasksPlannedForLocalDay`**.',
       },
       {
         ru: 'Настройки: названия приоритетов, CRUD групп, смена пароля Supabase. TaskEditModal — те же правила, что при создании (`taskScheduleValidation`).',
@@ -255,6 +255,51 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.24', en: '0.6.24' },
+        changes: [
+          {
+            ru: 'Полировка `/app`: иконка синхронизации визуально слабее рядом с меню аккаунта. Кольца прогресса (**`DayPlanDonut`**, **`PeriodPlanDonut`**, ритуал EOD): **процент внутри** SVG-кольца (`PlanProgressRing.centerLabel`). Черновики — **всегда кнопка** рядом с фильтром; список — в модалке (в т.ч. один черновик). Создание/редактирование задачи: **группа** перенесена в **«Дополнительные настройки»**; единый **`gap-4`** между блоками; секция «Дата и бэклог» выровнена (`flex`/`gap-3`); янтарная плашка **«Чтобы сохранить»** только **после первой попытки «Сохранить»**; валидация оценки: для бэклога не требуется заполнение, но **некорректный ввод** по-прежнему блокирует сохранение и отображается отдельной строкой (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
+            en: '`/app` polish: sync icon visually quieter next to the account menu. Progress rings (**`DayPlanDonut`**, **`PeriodPlanDonut`**, EOD ritual): **percent inside** the SVG ring (`PlanProgressRing.centerLabel`). Drafts — **always a button** beside filters; list in a modal (including a single draft). Create/edit task: **group** moved under **Additional settings**; consistent **`gap-4`** between blocks; «Date & backlog» layout balanced (`flex`/`gap-3`); amber **«To save»** strip only **after first Save attempt**; estimate validation: backlog does not require a filled estimate, but **invalid input** still blocks save (**`estimateInvalid`** vs **`createTaskMissingEstimate`**).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Синхронизация в шапке меньше отвлекает от аватара. У колец прогресса крупная цифра процента — внутри круга. Черновики открываются одной кнопкой рядом с фильтром. В форме задачи реже «шумит» подсказка про сохранение: она появляется после того, как вы нажали «Сохранить», а не сразу. Для задачи **в бэклоге** оценка не обязательна; если в полях оценки мусор — сохранить всё равно нельзя, и это видно в списке ошибок.',
+            en: 'The sync control is less visually tied to the account avatar. Ring charts show the big percent **inside** the circle. Drafts live in one button next to filters. The amber save checklist appears **after** you try Save, not immediately. **Backlog** tasks do not require an estimate; garbled estimate fields still block save and show as an error line.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** вход через **сторонние провайдеры** (**Яндекс**, **Google** и др., OAuth / federated login — типично через Supabase Auth); черновик в **`15-Идеи-для-развития.md`**, §10.',
+            en: '**Ideas for later:** **third-party sign-in** (**Yandex**, **Google**, etc. — OAuth / federated login, typically via Supabase Auth); draft in **`15-Идеи-для-развития.md`**, §10.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В идеях после релиза зафиксирован вариант **войти через Яндекс или Google**, а не только email и пароль — когда до этого дойдёт продукт.',
+            en: 'Post-release ideas now note **Yandex or Google sign-in** as an alternative to email/password — for whenever the product prioritizes it.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** добавлена карточка **тестовые аккаунты с простым seed** (выделенные QA-учётки, предсказуемый seed для регрессии — только пост-MVP и не как норма безопасности); черновик в **`15-Идеи-для-развития.md`**, §9.',
+            en: '**Ideas for later:** added **test accounts with a simple seed** (dedicated QA logins, predictable seed for regression — post-MVP only, not a security baseline); draft in **`15-Идеи-для-развития.md`**, §9.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В блоке идей после релиза появился пункт про **отдельные тестовые логины** с **простым известным seed** — чтобы команде проще гонять одни и те же сценарии; для обычных пользователей это не рекламируется.',
+            en: 'The post-release ideas list now mentions **dedicated test logins** with a **simple known seed** so the team can rerun the same scenarios; not pitched as guidance for end users.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
         changes: [
@@ -1014,6 +1059,52 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Предпочтительно хранить QA-флаги **локально** (например `localStorage`) или в профиле без записи в зашифрованный vault — чтобы тестовые режимы не утекали в бэкапы и не мешали обычным пользователям.',
         en: 'Prefer **local** QA flags (e.g. `localStorage`) or non-vault prefs so test modes never leak into encrypted backups or ordinary users’ data.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Тестовые аккаунты с простым seed', en: 'Test accounts with a simple seed' },
+    summary: {
+      ru: 'После MVP: выделенные учётки для ручных прогонов и регрессии, где **seed шифрования vault намеренно простой** (короткая известная фраза) — чтобы быстро воспроизводить один и тот же расшифрованный контекст без роли как «боевого» пользователя.',
+      en: 'Post-MVP: dedicated accounts for manual runs and regression where the **vault encryption seed is deliberately simple** (a short known passphrase) — reproducible decrypted context without pretending to be a production user profile.',
+    },
+    detailBullets: [
+      {
+        ru: 'Только для **внутренней** QA/автотестов (отдельные логины Supabase или изолированное окружение); не продвигать как норму безопасности для людей.',
+        en: '**Internal** QA/automation only (separate Supabase logins or isolated env); never marketed as good security hygiene for real users.',
+      },
+      {
+        ru: 'Ротация seed при утечке, запрет слияния таких vault с личными бэкапами — политика при реализации.',
+        en: 'Rotate seeds if leaked; forbid merging these vaults with personal backups — policy at implementation.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §9.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §9.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Вход через сторонние сервисы (OAuth)', en: 'Sign-in via third-party providers (OAuth)' },
+    summary: {
+      ru: 'После MVP: авторизация не только по email и паролю, но и через **провайдеров** — например **Яндекс** и **Google** (типовой путь **OAuth** / federated login в **Supabase Auth**).',
+      en: 'Post-MVP: auth beyond email/password via **identity providers** — e.g. **Yandex** and **Google** (standard **OAuth** / federated login with **Supabase Auth**).',
+    },
+    detailBullets: [
+      {
+        ru: 'Настройка провайдеров в консоли Supabase (или аналога), кнопки «Войти через …» на экране входа, политика **связки** нескольких способов входа с одним пользователем — при реализации.',
+        en: 'Provider setup in Supabase (or equivalent), “Continue with …” on sign-in, **account linking** policy — at implementation.',
+      },
+      {
+        ru: 'Клиентское шифрование vault **не заменяется** OAuth: seed для vault по-прежнему задаёт пользователь; что показывать при первом входе через провайдера — отдельный UX-проход.',
+        en: 'Client-side vault crypto is **unchanged** by OAuth — users still supply the vault seed; first-login-through-provider UX is a separate pass.',
+      },
+      {
+        ru: 'Юридика и согласие на передачу минимальных данных провайдеру — по юрисдикции и DR.',
+        en: 'Legal/consent for minimal provider data sharing — jurisdiction and DR.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §10.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §10.',
       },
     ],
   },

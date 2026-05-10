@@ -6,7 +6,7 @@ import {
   type PlannedDayProgress,
   type Task,
 } from '@motivator/core'
-import { getPlanProgressLabels, PlanDayProgressCaption } from '@/components/PlanDayProgressCaption'
+import { getPlanProgressLabels } from '@/components/PlanDayProgressCaption'
 import { PlanProgressRing } from '@/components/PlanProgressRing'
 
 const BACKLOG_PREVIEW = 6
@@ -32,12 +32,31 @@ function TaskLine({ task }: { task: Task }) {
 }
 
 /** Круговая диаграмма: сумма долей по задачам (чек-лист даёт долю внутри одной задачи). */
-function EodPlanDonut({ progress }: { progress: PlannedDayProgress }) {
+function EodPlanDonut({
+  progress,
+  pctLabels,
+}: {
+  progress: PlannedDayProgress
+  pctLabels: ReturnType<typeof getPlanProgressLabels> | null
+}) {
+  const { t } = useTranslation()
   const empty = progress.plannedTaskCount === 0
   const frac = empty ? 0 : progress.doneFraction / progress.plannedTaskCount
   return (
     <div className="flex flex-col items-center">
-      <PlanProgressRing frac={frac} empty={empty} size={112} stroke={10} />
+      <PlanProgressRing
+        frac={frac}
+        empty={empty}
+        size={112}
+        stroke={10}
+        centerLabel={
+          pctLabels ? (
+            <span className="text-base font-semibold tabular-nums leading-none text-zinc-100">
+              {t('eod.chartPercentLine', { pct: pctLabels.pctStr })}
+            </span>
+          ) : undefined
+        }
+      />
     </div>
   )
 }
@@ -67,6 +86,11 @@ export function EndOfDayModal({
   const backlogShown = backlogReminder.slice(0, BACKLOG_PREVIEW)
   const backlogMoreCount = Math.max(0, backlogReminder.length - backlogShown.length)
   const remainingClear = remaining.length === 0
+
+  const eodPctLabels =
+    plannedWeights.plannedTaskCount === 0
+      ? null
+      : getPlanProgressLabels(plannedWeights, locale)
 
   useEffect(() => {
     if (!open) return
@@ -133,11 +157,12 @@ export function EndOfDayModal({
           }
         >
           <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{t('eod.chartTitle')}</p>
-          <EodPlanDonut progress={plannedWeights} />
-          <PlanDayProgressCaption
-            progress={plannedWeights}
-            emptyClassName="max-w-[16rem] text-center text-xs leading-relaxed text-zinc-400"
-          />
+          <EodPlanDonut progress={plannedWeights} pctLabels={eodPctLabels} />
+          {plannedWeights.plannedTaskCount === 0 ? (
+            <p className="max-w-[16rem] text-center text-xs leading-relaxed text-zinc-400">
+              {t('eod.chartEmptyPlan')}
+            </p>
+          ) : null}
         </div>
 
         <section className="animate-eod-pop mt-5 rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3">
