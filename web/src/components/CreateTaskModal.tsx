@@ -208,7 +208,6 @@ export function CreateTaskModal({
   const [snap, setSnap] = useState<Snapshot>(() =>
     emptySnapshot(selectedDayKey, defaultGroupId),
   )
-  const [estimateError, setEstimateError] = useState<string | null>(null)
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false)
   const [saveAttempted, setSaveAttempted] = useState(false)
   const titleRef = useRef<HTMLDivElement>(null)
@@ -238,7 +237,6 @@ export function CreateTaskModal({
       : emptySnapshot(selectedDayKey, defaultGroupId)
     initialRef.current = JSON.parse(JSON.stringify(base)) as Snapshot
     setSnap(base)
-    setEstimateError(null)
   }, [open, resumeDraft, selectedDayKey, defaultGroupId])
 
   const isDirty = useMemo(() => {
@@ -294,7 +292,7 @@ export function CreateTaskModal({
     if (estMerge.invalid) {
       lines.push(t('app.estimateInvalid'))
     } else if (plannedWithEstimateRequired && estMerge.total == null) {
-      lines.push(t('app.createTaskMissingEstimate'))
+      lines.push(t('app.estimateRequiredWhenPlanned'))
     }
     if (scheduleValidationError) lines.push(scheduleValidationError)
     if (anchorValidationError) lines.push(anchorValidationError)
@@ -307,17 +305,6 @@ export function CreateTaskModal({
     scheduleValidationError,
     anchorValidationError,
     t,
-  ])
-
-  useEffect(() => {
-    setEstimateError(null)
-  }, [
-    snap.estimatedHours,
-    snap.estimatedMinutesPart,
-    snap.backlogOnly,
-    snap.scheduledLocalDate,
-    snap.timeMode,
-    snap.timeClock,
   ])
 
   function parseTimeForSubmit(): { mode: TaskTimeMode; minutes: number | null } {
@@ -345,19 +332,16 @@ export function CreateTaskModal({
     const estNorm = normalizeEstimatePair(snap.estimatedHours, snap.estimatedMinutesPart)
     const estMerge = mergeEstimateParts(estNorm.hours, estNorm.minutes)
     if (estMerge.invalid) {
-      setEstimateError(t('app.estimateInvalid'))
       scrollToRef(estimateRef.current)
       return
     }
     if (plannedWithEstimateRequired && estMerge.total == null) {
-      setEstimateError(t('app.estimateRequiredWhenPlanned'))
       scrollToRef(estimateRef.current)
       return
     }
 
     const schedErr = computeTaskScheduleValidationError(validationFields, t)
     if (schedErr) {
-      setEstimateError(schedErr)
       const low = schedErr.toLowerCase()
       if (
         low.includes('время') ||
@@ -376,11 +360,9 @@ export function CreateTaskModal({
     const { recurrenceFinal, anchorOut } = resolveCreateRecurrenceAnchor(snap, selectedDayKey)
     const anchorErr = computeRecurrenceAnchorPastError(anchorOut, Boolean(recurrenceFinal), t)
     if (anchorErr) {
-      setEstimateError(anchorErr)
       scrollToRef(recurrenceRef.current)
       return
     }
-    setEstimateError(null)
 
     const scheduled = snap.backlogOnly ? null : snap.scheduledLocalDate
 
@@ -846,11 +828,6 @@ export function CreateTaskModal({
                 ))}
               </ul>
             </div>
-          ) : null}
-          {saveAttempted && estimateError ? (
-            <p className="mb-2 text-xs text-red-400" role="alert">
-              {estimateError}
-            </p>
           ) : null}
           <div className="flex flex-wrap gap-2">
             <button

@@ -102,8 +102,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Priorities 1–5 with vault labels; estimate h+m; start XOR end time (or none); slot overlap confirmation.',
       },
       {
-        ru: 'Модалка создания: янтарная подсказка «чтобы сохранить» после **первой** попытки «Сохранить»; **группа** — в «Дополнительные настройки»; правило оценки: для задачи **в плане на день** оценка обязательна и должна быть **корректной**; для **бэклога** оценка не обязательна, но некорректный ввод всё равно блокирует сохранение; форма не сбрасывается при смене дня/фильтра группы, пока окно открыто.',
-        en: 'Create modal: amber “to save” checklist after the **first** Save attempt; **group** under Additional settings; estimate: **required and valid** for a **planned-day** task; **backlog** — estimate optional, invalid input still blocks save; form persists when changing day/group filter while open.',
+        ru: 'Модалка создания: янтарная подсказка «чтобы сохранить» после **первой** попытки «Сохранить» — **единственный** вывод списка ошибок на этом шаге (без дублирующей красной строки под списком); **группа** — в «Дополнительные настройки»; правило оценки: для задачи **в плане на день** оценка обязательна и должна быть **корректной**; для **бэклога** оценка не обязательна, но некорректный ввод всё равно блокирует сохранение; форма не сбрасывается при смене дня/фильтра группы, пока окно открыто.',
+        en: 'Create modal: amber “to save” checklist after the **first** Save attempt — **only** error surface for that step (no duplicate red line below); **group** under Additional settings; estimate: **required and valid** for a **planned-day** task; **backlog** — estimate optional, invalid input still blocks save; form persists when changing day/group filter while open.',
       },
       {
         ru: 'Модалки создания и редактирования: между блоками формы **`gap-4`**; секция «Дата и бэклог» — **`flex`** / **`gap-3`**; **липкий подвал** с динамическим списком недостающего и прокруткой к полям.',
@@ -295,6 +295,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.31', en: '0.6.31' },
+        changes: [
+          {
+            ru: '**`CreateTaskModal`:** после первой попытки **«Сохранить»** блокирующие сообщения только в янтарном списке **«Чтобы сохранить»**; убрана вторая красная строка с тем же смыслом; для плана на день без оценки в списке — **`estimateRequiredWhenPlanned`**.',
+            en: '**`CreateTaskModal`:** after the first **Save** attempt, blocking messages appear only in the amber **“To save”** list; removed the duplicate red line; planned day without estimate uses **`estimateRequiredWhenPlanned`** in that list.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Ошибки при сохранении новой задачи не повторяются двумя разными абзацами подряд.',
+            en: 'Save validation for new tasks is no longer shown twice in two different styles.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.30', en: '0.6.30' },
         changes: [
