@@ -75,6 +75,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         ru: 'Сборка Web + PWA (manifest, service worker); i18next ru/en, переключатель в настройках, ключ в localStorage.',
         en: 'Web + PWA (manifest, SW); i18next ru/en, settings toggle, localStorage key.',
       },
+      {
+        ru: 'Главная до входа (**`/`**): вход без отдельной плашки со ссылкой на документацию (`HomePage`).',
+        en: 'Pre-auth home (**`/`**): sign-in without an extra documentation strip (`HomePage`).',
+      },
     ],
   },
   {
@@ -98,6 +102,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Checklist: **per-item done toggles** only on calendar **today** (same rule as the main task checkbox on `/app`); enforced in **`applyToggleChecklistItem`** (`@motivator/core`) and UI (**`TaskMiniCard`**, **`TaskEditModal`**). Adding/removing checklist rows in the modal stays allowed whenever the vault is editable — **not** tied to “today.”',
       },
       {
+        ru: 'Чек-лист и кольцо/строка плана: **«все пункты чек-листа, но без главной галочки дня»** не считается полностью закрытой — вклад в доли **ограничен** (до **0,99** слота задачи), пока не выполнено **`isPlannedTaskFullyCompleteForDay`** (`@motivator/core`).',
+        en: 'Checklist vs ring/plan row: **all checklist items checked without the main day-done flag** is **not** fully closed — the fractional share is **capped** (up to **0.99** of one task slot) until **`isPlannedTaskFullyCompleteForDay`** (`@motivator/core`).',
+      },
+      {
         ru: 'Приоритеты 1–5 с названиями в vault; оценка часы+минуты; время начала XOR окончания (или без времени); пересечение слотов с подтверждением.',
         en: 'Priorities 1–5 with vault labels; estimate h+m; start XOR end time (or none); slot overlap confirmation.',
       },
@@ -106,12 +114,12 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Create modal: amber “to save” checklist after the **first** Save attempt — **only** error surface for that step (no duplicate red line below); **group** under Additional settings; estimate: **required and valid** for a **planned-day** task; **backlog** — estimate optional, invalid input still blocks save; form persists when changing day/group filter while open.',
       },
       {
-        ru: 'Модалки создания и редактирования: между блоками формы **`gap-4`**; секция «Дата и бэклог» — **`flex`** / **`gap-3`**; **липкий подвал** с динамическим списком недостающего и прокруткой к полям.',
-        en: 'Create/edit modals: **`gap-4`** between blocks; «Date & backlog» — **`flex`** / **`gap-3`**; **sticky footer** with a dynamic missing-field list and scroll-to-field.',
+        ru: 'Модалки создания и редактирования: между блоками формы **`gap-4`**; секция «Дата и бэклог» — **`flex`** / **`gap-3`**; **липкий подвал** с динамическим списком недостающего и прокруткой к полям; середина **`CreateTaskModal`** — **`overflow-y-auto`** / **`min-h-0`** в flex-цепочке; выбор цвета — единая типографика (**`TaskColorAccordion`**).',
+        en: 'Create/edit modals: **`gap-4`** between blocks; «Date & backlog» — **`flex`** / **`gap-3`**; **sticky footer** with a dynamic missing-field list and scroll-to-field; **`CreateTaskModal`** mid section scrolls (**`overflow-y-auto`** / **`min-h-0`** in the flex chain); color labels use consistent typography (**`TaskColorAccordion`**).',
       },
       {
-        ru: 'Черновики в vault; на `/app` кнопка **«Черновики»** рядом с фильтром только при **наличии** черновиков (счётчик); список — в модалке.',
-        en: 'Vault drafts; on `/app` **Drafts** button next to filters only when drafts **exist** (badge); list in a modal.',
+        ru: 'Черновики в vault; на `/app` **бейдж** со счётчиком на кнопке **«Фильтры»** только при **наличии** черновиков; по тапу на бейдж — модалка списка.',
+        en: 'Vault drafts; on `/app` a **badge** on **Filters** only when drafts **exist**; tap the badge to open the list modal.',
       },
       {
         ru: 'Вкладка «День» и периоды: кольцо прогресса — знаменатель = число задач в плане; **`tasksScheduledForPlannerDay`** / **`plannedPeriodProgress`**; чек-лист даёт долю внутри задачи; **процент выполнения** отображается **внутри** SVG-кольца (без отдельной строки под диаграммой); EOD — те же доли; списки EOD — **`tasksPlannedForLocalDay`**.',
@@ -172,6 +180,14 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Week plan ring: sums per-day metrics through today (`plannedPeriodProgress`); grid left, ring right on wide screens; ring first on narrow (`flex-col-reverse`).',
       },
       {
+        ru: 'Рядом с кольцом «Неделя»/«Месяц» — **`PeriodPlanBreakdownChart`** (**Recharts**): столбцы по **группам** или **цветам** (`plannedPeriodSlotsByGroupId` / `plannedPeriodSlotsByColorKey`).',
+        en: 'Next to the Week/Month ring — **`PeriodPlanBreakdownChart`** (**Recharts**): bars by **group** or **color** (`plannedPeriodSlotsByGroupId` / `plannedPeriodSlotsByColorKey`).',
+      },
+      {
+        ru: 'Шапка недели — компактная навигация (**иконки**, короткий диапазон дат); корень **`/app`** — **`min-h-dvh`**, колонка контента **`flex-1 min-h-0`**, чтобы сетка и нижняя панель **скроллились** на коротком экране.',
+        en: 'Week header — compact nav (**icons**, short date range); **`/app`** root uses **`min-h-dvh`** and the main column **`flex-1 min-h-0`** so the grid + bottom bar **scroll** on short viewports.',
+      },
+      {
         ru: 'Сетка недели без горизонтальной прокрутки; заголовки и слоты на общих колонках (**subgrid**); вертикальный скролл тёмный (`week-grid-v-scroll`).',
         en: 'Week grid avoids horizontal scrolling; headers and slots share column tracks (**subgrid**); dark vertical scroll (`week-grid-v-scroll`).',
       },
@@ -202,8 +218,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Informer stays **hidden** while every filter is at its default (all groups, priorities, color, repeats).',
       },
       {
-        ru: 'На узком экране: фильтры — полноэкранная панель; чипы активных условий; кнопка **«Сбросить всё»**.',
-        en: 'On narrow screens: filters use a fullscreen sheet; active-condition chips; **Reset all**.',
+        ru: 'На узком экране: фильтры — полноэкранная панель; чипы активных условий; кнопка **«Сбросить всё»**. Черновики: **бейдж** на **«Фильтры»** (см. фазу 1).',
+        en: 'On narrow screens: filters use a fullscreen sheet; active-condition chips; **Reset all**. Drafts: **badge** on **Filters** (see phase 1).',
       },
       {
         ru: 'Кольцо «План месяца»: те же правила по дням месяца до сегодня; календарь и кольцо в контейнере `max-w-5xl` по центру; скрывается без задач в плане в охвате.',
@@ -702,6 +718,37 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-09', en: '2026-05-09' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.34', en: '0.6.34' },
+        changes: [
+          {
+            ru: '**`@motivator/core` / план и EOD:** задача с чек-листом без главной галочки дня **не** считается полностью закрытой — вклад в доли кольца **ограничен** (до **0,99** слота), пока не выполнено **`isPlannedTaskFullyCompleteForDay`**; добавлены **`plannedPeriodSlotsByGroupId`** / **`plannedPeriodSlotsByColorKey`** для разбивки периода.',
+            en: '**`@motivator/core` / plan & EOD:** a checklist task without the **main day-done** flag is **not** fully closed — its ring share is **capped** (up to **0.99** of one task slot) until **`isPlannedTaskFullyCompleteForDay`**; added **`plannedPeriodSlotsByGroupId`** / **`plannedPeriodSlotsByColorKey`** for period breakdown.',
+          },
+          {
+            ru: '**`/app`:** бейдж **черновиков** на кнопке **«Фильтры»** (модалка списка по тапу); порядок элементов **тулбара**; **`min-h-dvh`** и **`flex-1 min-h-0`** — скролл недели и нижней панели на коротком экране; шапка недели — компактные стрелки и короткий диапазон дат.',
+            en: '**`/app`:** **drafts** badge on **Filters** (tap opens list modal); **toolbar** control order; **`min-h-dvh`** + **`flex-1 min-h-0`** so week grid + bottom bar scroll on short viewports; week header — compact arrows and short date range.',
+          },
+          {
+            ru: '**«Неделя» / «Месяц»:** рядом с кольцом периода — **`PeriodPlanBreakdownChart`** (**Recharts**): столбцы по **группам** или **цветам**.',
+            en: '**Week / Month:** next to the period ring — **`PeriodPlanBreakdownChart`** (**Recharts**): bars by **group** or **color**.',
+          },
+          {
+            ru: '**`TaskMiniCard`:** строки чек-листа — **`<label>`** на всю строку, **`min-h-[44px]`** для тач-цели; **`HomePage`:** убрана плашка `home.docsHint`.',
+            en: '**`TaskMiniCard`:** checklist rows use a full-row **`<label>`** and **`min-h-[44px]`** touch targets; **`HomePage`:** removed the `home.docsHint` strip.',
+          },
+          {
+            ru: '**`index.css`:** поля ввода на мобилке **≥16px** (анти-zoom iOS); **`cursor: pointer`** у кнопок и ссылок в **`@layer base`**. **`CreateTaskModal`:** прокрутка середины формы; **`TaskColorAccordion`** — единая типографика подписей цвета.',
+            en: '**`index.css`:** mobile inputs **≥16px** (anti iOS zoom); **`cursor: pointer`** on buttons/links in **`@layer base`**. **`CreateTaskModal`:** scrollable mid form; **`TaskColorAccordion`** — consistent color-label typography.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Все пункты чек-листа отмечены, но главная «сделано» не стоит — кольцо и EOD **не** показывают полный слот задачи; зелёная строка и «всё закрыто» — только вместе с главной галочкой. На неделе/месяце рядом с кольцом — **столбцы по группам или цветам**. Черновики — **счётчик на «Фильтрах»**; главная без лишней плашки доков; на телефоне поля не уменьшают масштаб страницы при фокусе.',
+            en: 'All checklist items checked but the main “done” isn’t — the ring/EOD **won’t** count a full task slot; green row and “all done” need the **main** checkbox too. Week/month show **group/color bars** beside the ring. Drafts use a **counter on Filters**; landing drops the extra docs strip; mobile inputs avoid focus zoom.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.23', en: '0.6.23' },
         changes: [
