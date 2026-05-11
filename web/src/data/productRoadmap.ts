@@ -2,7 +2,7 @@
  * Контент модалки «Краткая сводка»: дорожная карта, changelog по датам, идеи, открытые вопросы.
  *
  * Жёсткое правило репозитория: перед **любым** коммитом обновлять этот файл и `web/README.md`
- * (см. `.cursor/rules/pre-commit-docs-roadmap.mdc`). Релиз-ноты — **`RELEASE_NOTES_BLOCKS`**:
+ * (см. `.cursor/rules/pre-commit-docs-roadmap.mdc` и скилл `.cursor/skills/pre-commit-docs-roadmap/SKILL.md`). Релиз-ноты — **`RELEASE_NOTES_BLOCKS`**:
  * дата = день изменений; новый день — новый блок с `dateLabel`; за день несколько выпусков —
  * несколько элементов **`items`**; в одном выпуске несколько правок — массив **`changes`**;
  * суть простым языком — **`plainBullets`** (в UI под раскрывашкой). По календарю строки не скрываются.
@@ -349,6 +349,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.31', en: '0.6.31' },
+        changes: [
+          {
+            ru: '**Процесс / документация (техн.):** добавлен проектный Cursor-скилл **`.cursor/skills/pre-commit-docs-roadmap/`** (`SKILL.md`, `reference.md`) — пошаговый чеклист перед коммитом (README, `productRoadmap.ts`, i18n); правило **`.cursor/rules/pre-commit-docs-roadmap.mdc`** дополнено: скилл **обязателен**, краткий текст правила его **не заменяет**; **`web/README.md`** — ссылки на скилл в разделах «Краткая сводка» и «Перед коммитом».',
+            en: '**Process / docs (internal):** added repo Cursor skill **`.cursor/skills/pre-commit-docs-roadmap/`** (`SKILL.md`, `reference.md`) — step-by-step pre-commit checklist (README, `productRoadmap.ts`, i18n); **`.cursor/rules/pre-commit-docs-roadmap.mdc`** now states the skill is **mandatory** and the short rule text **does not replace** it; **`web/README.md`** links to the skill from “Brief summary” and “Before commit”.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Для команды и агентов зафиксирован единый порядок: перед коммитом не ограничиваться коротким правилом — пройти полный скилл, чтобы README и «Краткая сводка» не отставали от кода.',
+            en: 'A single workflow for humans and agents: before commit, follow the full skill—not only the short always-on rule—so README and the Brief summary stay aligned with the code.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.28', en: '0.6.28' },
         changes: [
