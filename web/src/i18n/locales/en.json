@@ -206,7 +206,7 @@
     "appVersion": "App version {{version}}",
     "roadmapTempButton": "Brief summary",
     "roadmapTitle": "Shipped and roadmap",
-    "roadmapIntro": "Five collapsible sections: shipped (phases 0–6), plan to 1.0.0 (phases 7–13), tester release notes, post-release ideas, open product questions. Roadmap and release-note content lives in src/data/productRoadmap.ts.",
+    "roadmapIntro": "A ring shows shipped phases 0–6 of 13 toward MVP 1.0.0. Below: five collapsible blocks — shipped, plan to 1.0.0, dated release notes, post-release ideas, open questions (last block strings live in locales). For the full layout and maintenance rules, see the “Brief summary” section in web/README.md; data lives in src/data/productRoadmap.ts.",
     "roadmapImplemented": "Shipped",
     "roadmapImplementedHint": "Phases 0–6 per the MVP plan; open “Details” under each phase for task bullets.",
     "roadmapMvp": "MVP 1.0.0 plan (phases 7–13)",

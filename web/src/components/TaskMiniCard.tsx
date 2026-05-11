@@ -205,7 +205,10 @@ export function TaskMiniCard({
               <input
                 type="checkbox"
                 checked={item.done}
-                disabled={!canEdit}
+                disabled={!canEdit || !completionToggleAllowed}
+                title={
+                  !completionToggleAllowed ? t('app.completionOnlyToday') : undefined
+                }
                 onChange={() => onToggleChecklistItem(item.id)}
                 onClick={(e) => e.stopPropagation()}
                 aria-label={item.title}

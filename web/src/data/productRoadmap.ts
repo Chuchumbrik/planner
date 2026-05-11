@@ -94,6 +94,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Work checklist: new items append; toggles on day/backlog mini cards.',
       },
       {
+        ru: 'Чек-лист: **отметки «выполнено» по пунктам** — только в календарный **сегодня** (как главная галочка на `/app`); проверка в **`applyToggleChecklistItem`** (`@motivator/core`) и в UI (**`TaskMiniCard`**, **`TaskEditModal`**). Добавление/удаление строк чек-листа в модалке — при праве редактирования и **не** привязано к «сегодня».',
+        en: 'Checklist: **per-item done toggles** only on calendar **today** (same rule as the main task checkbox on `/app`); enforced in **`applyToggleChecklistItem`** (`@motivator/core`) and UI (**`TaskMiniCard`**, **`TaskEditModal`**). Adding/removing checklist rows in the modal stays allowed whenever the vault is editable — **not** tied to “today.”',
+      },
+      {
         ru: 'Приоритеты 1–5 с названиями в vault; оценка часы+минуты; время начала XOR окончания (или без времени); пересечение слотов с подтверждением.',
         en: 'Priorities 1–5 with vault labels; estimate h+m; start XOR end time (or none); slot overlap confirmation.',
       },
@@ -268,8 +272,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Role hooks (`motivatorRole`, `app_metadata.motivator_role`) without UI gating — see phase 8 plan.',
       },
       {
-        ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; круговая диаграмма доли закрытых задач по плану; продуктовые **«Открытые вопросы»** перенесены в модалку **«Краткая сводка»** (настройки).',
-        en: '**End-of-day** modal: **planned-for-day** tasks only; backlog FYI strip; **ru** title localized; donut chart for share of planned tasks closed; **Open questions** product notes live under **Brief summary** in settings.',
+        ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; круговая диаграмма доли закрытых задач по плану; продуктовые **«Открытые вопросы»** ведутся в модалке **«Краткая сводка»** (настройки), строки — в i18n.',
+        en: '**End-of-day** modal: **planned-for-day** tasks only; backlog FYI strip; **ru** title localized; donut chart for share of planned tasks closed; **Open questions** product notes are maintained under **Brief summary** in settings (i18n strings).',
       },
     ],
   },
@@ -285,8 +289,118 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.6.27', en: '0.6.27' },
+        changes: [
+          {
+            ru: '**Документация:** в **`web/README.md`** — отдельный раздел **«Краткая сводка»** (состав модалки, константы `productRoadmap.ts`, i18n, ссылки на Obsidian и правило перед коммитом); строка таблицы «Настройки» ссылается на раздел вместо длинного дубля.',
+            en: '**Docs:** **`web/README.md`** — dedicated **“Brief summary”** section (modal layout, `productRoadmap.ts` keys, i18n, Obsidian links, pre-commit rule); Settings table row links there instead of duplicating.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В README одна «карта» модалки: куда смотреть в коде и как сопровождать релиз-ноты и дорожную карту.',
+            en: 'README is a single “map” of the modal: where to edit and how to maintain release notes and roadmap data.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.26', en: '0.6.26' },
+        changes: [
+          {
+            ru: '**Чек-лист:** отметки «выполнено» по пунктам — только в **календарный сегодня** (как главная галочка); **`applyToggleChecklistItem`** принимает контекстный день и отклоняет переключение, если это не «сегодня»; UI — **`TaskMiniCard`**, **`TaskEditModal`**.',
+            en: '**Checklist:** per-item **done** toggles only on **calendar today** (same as the main checkbox); **`applyToggleChecklistItem`** takes a context day and no-ops unless it is “today”; UI — **`TaskMiniCard`**, **`TaskEditModal`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Если в календаре выбран **не сегодняшний** день, **нельзя** щёлкать галочки у пунктов чек-листа на карточке и в окне задачи — как с главной галочкой «сделано». **Добавить или убрать** строку чек-листа в окне по-прежнему можно.',
+            en: 'When the picked calendar day is **not today**, you **cannot** toggle checklist item checkboxes on the card or in the task window — same as the main “done” control. You can still **add or remove** checklist rows in the editor.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** **форма дефекта в приложении** для **бета-тестеров** и **админов** (описание, шаги, контекст версии/экрана — без утечки vault); черновик в **`15-Идеи-для-развития.md`**, §14.',
+            en: '**Ideas for later:** **in-app defect form** for **beta testers** and **admins** (description, steps, version/route context — no vault leakage); draft in **`15-Идеи-для-развития.md`**, §14.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В идеях после релиза — завести баг **из интерфейса**, если вы тестер или админ, без обязательного ухода во внешний трекер.',
+            en: 'Post-release ideas: **file a bug from the UI** when you’re a tester or admin—no mandatory hop to an external tracker.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        changes: [
+          {
+            ru: '**Задокументирован дефект MVP:** в прошлые календарные дни **отметки «выполнено» по пунктам чек-листа** в модалке оставались доступны вопреки правилу «как главная галочка — только сегодня».',
+            en: '**MVP defect documented:** on past calendar days, checklist **item done toggles** in the editor stayed available unlike the “main checkbox — today only” rule.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Исправление отметок пунктов — в **0.6.26** (блок релиз-нотов **2026-05-11**); **добавление/удаление** строк чек-листа по-прежнему не привязано к «сегодня».',
+            en: 'Item **done** toggles were fixed in **0.6.26** (release notes **2026-05-11**); **add/remove** checklist rows remain allowed on any day.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** **перенос незакрытой задачи** с **частично выполненным чек-листом** — сохранять отмеченные пункты; текст выполненных строк **можно править**; черновик в **`15-Идеи-для-развития.md`**, §13.',
+            en: '**Ideas for later:** **deferring an open task** with **partial checklist progress** — keep checked items; **completed lines stay editable**; draft in **`15-Идеи-для-развития.md`**, §13.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Зафиксирована идея: при переносе задачи на другой день **не терять** уже отмеченные пункты чек-листа и оставлять возможность **подправить текст** выполненных строк.',
+            en: 'Idea captured: when moving a task to another day, **don’t lose** checked checklist items and keep **completed line text** editable.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** карточка **«Достижения»** (значки и вехи за паттерны использования планировщика — после MVP, без давления); черновик в **`15-Идеи-для-развития.md`**, §12.',
+            en: '**Ideas for later:** **Achievements** card (badges/milestones for planner habits — post-MVP, low-pressure); draft in **`15-Идеи-для-развития.md`**, §12.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В списке идей после релиза добавлены **достижения** — опциональные значки за осмысленные успехи, их можно будет спрятать из интерфейса.',
+            en: 'Post-release ideas now include optional **achievements** — badges for meaningful wins, hideable in UI.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** после выхода новой версии приложения — **появляющаяся кнопка** «Обновить» с **перезагрузкой и сбросом кэша** статики / **service worker**; черновик в **`15-Идеи-для-развития.md`**, §11.',
+            en: '**Ideas for later:** after a **new app version** ships — an **Update** affordance that **reloads with cache bust** for static assets / **service worker**; draft in **`15-Идеи-для-развития.md`**, §11.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В списке идей после релиза зафиксирован сценарий: приложение само подсказывает **обновить вкладку**, чтобы не сидеть на старом коде после деплоя.',
+            en: 'Post-release ideas now include prompting users to **reload the tab** so they don’t stay on stale code after a deploy.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
         changes: [
@@ -1133,6 +1247,27 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    title: { ru: 'Перенос незакрытой задачи и чек-листа', en: 'Moving an open task with checklist progress' },
+    summary: {
+      ru: 'После MVP: при **переносе** (или аналоге «переложить на другой день») **незакрытой** задачи, если **часть пунктов чек-листа уже выполнена**, переносить их как **отмеченные**; текст **выполненных** пунктов остаётся **доступен для правки** в модалке — чтобы можно было уточнить формулировку, не теряя факт «уже сделано».',
+      en: 'Post-MVP: when **deferring** an **open** task, if **some checklist items are done**, carry them as **checked**; **completed** lines stay **editable** in the modal so wording can be refined without losing “already done.”',
+    },
+    detailBullets: [
+      {
+        ru: 'Уточнить продуктово: одноразовый перенос vs копия; как вести себя у **повторяющихся** задач и при **серии** — отдельное решение.',
+        en: 'Product call: one-off defer vs duplicate; behavior for **repeats** and **series** — separate decision.',
+      },
+      {
+        ru: 'Не сбрасывать прогресс чек-листа «молча» при смене даты без явного действия пользователя.',
+        en: 'Don’t silently reset checklist progress when the planned date changes without an explicit user action.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §13.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §13.',
+      },
+    ],
+  },
+  {
     title: { ru: 'Раздел «Тестирование» в настройках', en: 'Settings: testing / QA tools' },
     summary: {
       ru: 'Отдельная секция **только для администраторов и бета-тестеров**: переключатели и вспомогательные режимы, которые упрощают проверку приложения и сценариев; обычный пользователь раздел не видит.',
@@ -1154,6 +1289,27 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Предпочтительно хранить QA-флаги **локально** (например `localStorage`) или в профиле без записи в зашифрованный vault — чтобы тестовые режимы не утекали в бэкапы и не мешали обычным пользователям.',
         en: 'Prefer **local** QA flags (e.g. `localStorage`) or non-vault prefs so test modes never leak into encrypted backups or ordinary users’ data.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Дефекты из приложения (тестеры и админы)', en: 'In-app defect filing (testers & admins)' },
+    summary: {
+      ru: 'После MVP: для ролей **бета-тестер** и **администратор** — **форма заведения дефекта** прямо в интерфейсе (краткое описание, шаги воспроизведения, при необходимости скриншот или контекст экрана), чтобы не уводить человека в почту или сторонний трекер без необходимости.',
+      en: 'Post-MVP: for **beta tester** and **admin** — an **in-app defect form** (short description, repro steps, optional screenshot or screen context) so testers aren’t forced to email or an external tracker first.',
+    },
+    detailBullets: [
+      {
+        ru: 'Тот же **контроль по ролям**, что и раздел «Тестирование» (`app_metadata.motivator_role`); канал назначения — **GitHub Issues**, **Linear**, таблица Supabase + уведомление, почта — решение при реализации.',
+        en: 'Same **role gating** as the Testing section (`app_metadata.motivator_role`); sink — **GitHub Issues**, **Linear**, Supabase table + notify, email — TBD.',
+      },
+      {
+        ru: 'Автоподстановка **версии приложения** (`APP_VERSION` / build), маршрута, локали; **не** отправлять содержимое vault в явном виде без явного согласия пользователя.',
+        en: 'Auto-fill **app version** (`APP_VERSION` / build), route, locale; **never** ship vault plaintext without explicit user consent.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §14.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §14.',
       },
     ],
   },
@@ -1200,6 +1356,27 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §10.',
         en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §10.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Обновить после новой версии (сброс кэша)', en: 'Refresh after new version (cache bust)' },
+    summary: {
+      ru: 'После MVP: если клиент видит, что **версия приложения на сервере новее**, чем у уже загруженной вкладки — показать **аккуратную кнопку** (или баннер) **«Обновить»**, по нажатию — **перезагрузка страницы со сбросом кэша** статики и актуализацией **service worker**, чтобы пользователь не застревал на старом бандле после деплоя.',
+      en: 'Post-MVP: when the client detects the **shipped app version is newer** than the loaded tab — show a subtle **Update** button or banner; on click, **reload with cache bypass** for static assets and refresh the **service worker** so users don’t stay on a stale bundle after deploy.',
+    },
+    detailBullets: [
+      {
+        ru: 'Источник версии — например **`APP_VERSION`** из сборки (`vite`), сравнение с последней сохранённой в **`localStorage`** или из ответа `/meta`; точная схема — при реализации.',
+        en: 'Version source — e.g. **`APP_VERSION`** from `vite` build vs last seen in **`localStorage`** or a lightweight **`/meta`** endpoint; exact scheme — at implementation.',
+      },
+      {
+        ru: 'Для **PWA**: договориться о **`skipWaiting`** / перезапуске контроллера без потери несинхронизированного vault — не форсить перезагрузку в опасный момент.',
+        en: 'For **PWA**: define **`skipWaiting`** / controller swap rules without forcing reload while unsynced vault work is pending.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §11.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §11.',
       },
     ],
   },
@@ -1337,6 +1514,27 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       ru: 'Очки, уровни, награды — только после отдельной продуктовой проработки.',
       en: 'Points, levels, badges — only after a dedicated product pass.',
     },
+  },
+  {
+    title: { ru: 'Достижения', en: 'Achievements' },
+    summary: {
+      ru: 'После MVP: **достижения** — значки или вехи за осмысленные паттерны работы с планировщиком (первая неделя со стриком, закрытие давней задачи и т.п.), без давления и с возможностью **не показывать** блок в интерфейсе.',
+      en: 'Post-MVP: **achievements** — badges or milestones for meaningful planner habits (first streak week, closing a long-standing task, etc.), low-pressure with an option to **hide** the feature.',
+    },
+    detailBullets: [
+      {
+        ru: 'Согласовать с карточкой **«Геймификация»**: достижения — про **узнаваемые вехи**, а не обязательную гонку за очками; не стыдить за перерывы.',
+        en: 'Align with **Gamification**: achievements as **recognition milestones**, not a mandatory points race; no shame for gaps.',
+      },
+      {
+        ru: 'Где хранить состояние разблокировок (vault vs метаданные профиля), уведомления о новом значке — при отдельной проработке.',
+        en: 'Where unlock state lives (vault vs profile metadata), notification UX — separate design pass.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §12.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §12.',
+      },
+    ],
   },
   {
     title: { ru: 'Персонаж-тамагочи и группы', en: 'Tamagotchi-style character & groups' },

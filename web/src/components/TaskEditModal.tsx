@@ -231,6 +231,9 @@ export function TaskEditModal({
   const blockOccurrenceByCalendarDay =
     Boolean(task.recurrence) && occurrenceDayKey !== todayLocalDateKey
 
+  /** Отметки пунктов чек-листа «выполнено» — только в календарный сегодня (как главная галочка на `/app`). */
+  const checklistProgressToggleAllowed = occurrenceDayKey === todayLocalDateKey
+
   function pushRecurrencePatch(
     kind: RecurrenceUiKind,
     opts?: { everyN?: number; weekdays?: number[] },
@@ -685,14 +688,26 @@ export function TaskEditModal({
 
         <div className="border-t border-zinc-800 pt-4">
           <p className="text-xs font-medium text-zinc-400">{t('app.checklistTitle')}</p>
+          {!checklistProgressToggleAllowed ? (
+            <p className="mt-1 text-[10px] leading-snug text-zinc-600">{t('app.completionOnlyToday')}</p>
+          ) : null}
           <ul className="mt-2 flex flex-col gap-2">
             {task.checklist.map((s) => (
               <li key={s.id} className="flex items-start gap-2">
-                <label className="flex flex-1 cursor-pointer items-start gap-2">
+                <label
+                  className={`flex flex-1 items-start gap-2 ${
+                    !canEdit || !checklistProgressToggleAllowed
+                      ? 'cursor-not-allowed'
+                      : 'cursor-pointer'
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={s.done}
-                    disabled={!canEdit}
+                    disabled={!canEdit || !checklistProgressToggleAllowed}
+                    title={
+                      !checklistProgressToggleAllowed ? t('app.completionOnlyToday') : undefined
+                    }
                     onChange={() => onToggleChecklistItem(s.id)}
                     className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
                   />

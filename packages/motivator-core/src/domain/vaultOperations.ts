@@ -371,8 +371,17 @@ export function applyToggleChecklistItem(
   taskId: string,
   itemId: string,
   deps: VaultDeps,
+  /** Календарный день контекста UI (выбранный день / колонка недели); отметки пунктов — только если это локальное «сегодня». */
+  contextLocalDateKey: string | undefined,
 ): VaultPayload {
   const now = deps.nowIso()
+  const nowMs = Date.parse(now)
+  const todayKey = localDateKey(new Date(nowMs))
+  const dayOk =
+    typeof contextLocalDateKey === 'string' && LOCAL_DATE_KEY_PATTERN.test(contextLocalDateKey)
+  /** Согласовано с `applyToggleTask`: менять «выполнено» по чек-листу можно только в календарный сегодня. */
+  if (!dayOk || !contextLocalDateKey || contextLocalDateKey !== todayKey) return vault
+
   return {
     ...vault,
     tasks: vault.tasks.map((t) =>

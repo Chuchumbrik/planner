@@ -1114,7 +1114,7 @@ function AppPageInner() {
                           onToggle={() => void toggleTask(task.id, selectedDay)}
                           onOpen={() => openTaskEditor(task.id)}
                           onToggleChecklistItem={(itemId) =>
-                            void toggleChecklistItem(task.id, itemId)
+                            void toggleChecklistItem(task.id, itemId, selectedDay)
                           }
                           onClearDoubleConfirm={() =>
                             void patchTask(task.id, { doubleConfirmPending: undefined })
@@ -1152,7 +1152,7 @@ function AppPageInner() {
                       onToggle={() => void toggleTask(task.id, selectedDay)}
                       onOpen={() => openTaskEditor(task.id)}
                       onToggleChecklistItem={(itemId) =>
-                        void toggleChecklistItem(task.id, itemId)
+                        void toggleChecklistItem(task.id, itemId, selectedDay)
                       }
                       onClearDoubleConfirm={() =>
                         void patchTask(task.id, { doubleConfirmPending: undefined })
@@ -1344,7 +1344,7 @@ function AppPageInner() {
             void addChecklistItem(editingTask.id, newTitle)
           }
           onToggleChecklistItem={(itemId) =>
-            void toggleChecklistItem(editingTask.id, itemId)
+            void toggleChecklistItem(editingTask.id, itemId, occurrenceDayForEdit)
           }
           onRemoveChecklistItem={(itemId) =>
             void removeChecklistItem(editingTask.id, itemId)

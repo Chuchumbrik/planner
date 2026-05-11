@@ -92,7 +92,7 @@ type VaultContextValue = {
   setTaskColor: (taskId: string, colorKey: TaskColorKey) => Promise<void>
   setTaskGroup: (taskId: string, groupId: string) => Promise<void>
   addChecklistItem: (taskId: string, title: string) => Promise<void>
-  toggleChecklistItem: (taskId: string, itemId: string) => Promise<void>
+  toggleChecklistItem: (taskId: string, itemId: string, contextLocalDateKey: string) => Promise<void>
   removeChecklistItem: (taskId: string, itemId: string) => Promise<void>
   addGroup: (name: string) => Promise<void>
   renameGroup: (groupId: string, name: string) => Promise<void>
@@ -457,8 +457,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   )
 
   const toggleChecklistItem = useCallback(
-    async (taskId: string, itemId: string) => {
-      await mutate((v) => applyToggleChecklistItem(v, taskId, itemId, vaultDepsDefault))
+    async (taskId: string, itemId: string, contextLocalDateKey: string) => {
+      await mutate((v) =>
+        applyToggleChecklistItem(v, taskId, itemId, vaultDepsDefault, contextLocalDateKey),
+      )
     },
     [mutate],
   )
