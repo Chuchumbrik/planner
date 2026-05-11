@@ -13,6 +13,11 @@ export type TaskTimeAccordionProps = {
   onModeEnd: () => void
   onClockChange: (value: string) => void
   onClockBlur?: () => void
+  /**
+   * Нижняя граница выбора времени (минуты от полуночи, локально), включительно.
+   * Часы/минуты в селектах не предлагают значения ниже этого порога (например план на **сегодня**).
+   */
+  earliestClockMinutesFromMidnight?: number | null
 }
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => i)
@@ -21,8 +26,17 @@ const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => i)
 const selectClass =
   'w-full min-w-[5rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-40'
 
-function clockParts(clock: string): { h: number; min: number } {
-  const m = timeInputToMinutes(clock.trim() || '09:00') ?? 9 * 60
+function clampDayMinute(m: number): number {
+  return Math.max(0, Math.min(24 * 60 - 1, m))
+}
+
+function clockParts(
+  clock: string,
+  earliest: number | null | undefined,
+): { h: number; min: number } {
+  const raw = timeInputToMinutes(clock.trim() || '09:00') ?? 9 * 60
+  const lo = earliest == null ? null : clampDayMinute(earliest)
+  const m = lo != null && raw < lo ? lo : raw
   return { h: Math.floor(m / 60), min: m % 60 }
 }
 
@@ -36,8 +50,23 @@ export function TaskTimeAccordion({
   onModeEnd,
   onClockChange,
   onClockBlur,
+  earliestClockMinutesFromMidnight,
 }: TaskTimeAccordionProps) {
   const { t } = useTranslation()
+
+  const minM =
+    earliestClockMinutesFromMidnight == null
+      ? null
+      : clampDayMinute(earliestClockMinutesFromMidnight)
+
+  /** Ограничение «не раньше сейчас» только когда время задачи реально задаётся. */
+  const floorM = timeMode === 'none' ? null : minM
+
+  const hourChoices = useMemo(() => {
+    if (floorM == null) return HOUR_OPTIONS
+    const loH = Math.floor(floorM / 60)
+    return HOUR_OPTIONS.filter((h) => h >= loH)
+  }, [floorM])
 
   const summaryPreview = useMemo(() => {
     if (timeMode === 'none') return t('app.timeNone')
@@ -47,18 +76,32 @@ export function TaskTimeAccordion({
   }, [timeMode, timeClock, t])
 
   const { h: hourVal, min: minuteVal } =
-    timeMode === 'none' ? { h: 9, min: 0 } : clockParts(timeClock)
+    timeMode === 'none' ? { h: 9, min: 0 } : clockParts(timeClock, floorM)
+
+  const minuteChoices = useMemo(() => {
+    if (floorM == null) return MINUTE_OPTIONS
+    const loH = Math.floor(floorM / 60)
+    if (hourVal > loH) return MINUTE_OPTIONS
+    const loMin = floorM % 60
+    return MINUTE_OPTIONS.filter((m) => m >= loMin)
+  }, [floorM, hourVal])
 
   function handleHourChange(nextH: number) {
     const cur = timeInputToMinutes(timeClock.trim()) ?? hourVal * 60 + minuteVal
-    const keptMin = cur % 60
-    onClockChange(minutesToTimeInput(nextH * 60 + keptMin))
+    let keptMin = cur % 60
+    let total = nextH * 60 + keptMin
+    if (floorM != null && total < floorM) {
+      total = floorM
+      keptMin = total % 60
+    }
+    onClockChange(minutesToTimeInput(total))
   }
 
   function handleMinuteChange(nextMin: number) {
-    const cur = timeInputToMinutes(timeClock.trim()) ?? hourVal * 60 + minuteVal
-    const keptH = Math.floor(cur / 60)
-    onClockChange(minutesToTimeInput(keptH * 60 + nextMin))
+    const keptH = hourVal
+    let total = keptH * 60 + nextMin
+    if (floorM != null && total < floorM) total = floorM
+    onClockChange(minutesToTimeInput(total))
   }
 
   return (
@@ -141,7 +184,7 @@ export function TaskTimeAccordion({
               value={hourVal}
               onChange={(e) => handleHourChange(Number(e.target.value))}
             >
-              {HOUR_OPTIONS.map((h) => (
+              {hourChoices.map((h) => (
                 <option key={h} value={h}>
                   {String(h).padStart(2, '0')}
                 </option>
@@ -157,7 +200,7 @@ export function TaskTimeAccordion({
               value={minuteVal}
               onChange={(e) => handleMinuteChange(Number(e.target.value))}
             >
-              {MINUTE_OPTIONS.map((m) => (
+              {minuteChoices.map((m) => (
                 <option key={m} value={m}>
                   {String(m).padStart(2, '0')}
                 </option>

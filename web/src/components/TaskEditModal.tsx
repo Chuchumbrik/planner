@@ -18,6 +18,7 @@ import {
   type Task,
   type TaskColorKey,
   type TaskTimeMode,
+  localDateKey,
 } from '@motivator/core'
 import {
   MAX_TASK_TITLE_CHARS,
@@ -139,6 +140,7 @@ export function TaskEditModal({
   const [estMinutesDraft, setEstMinutesDraft] = useState('')
   const [estFieldError, setEstFieldError] = useState<string | null>(null)
   const [commitGateError, setCommitGateError] = useState<string | null>(null)
+  const [todayTimeFloorTick, setTodayTimeFloorTick] = useState(0)
   const [timeDraft, setTimeDraft] = useState(
     task.timeMinutesFromMidnight != null
       ? minutesToTimeInput(task.timeMinutesFromMidnight)
@@ -180,6 +182,45 @@ export function TaskEditModal({
     if (task.timeMinutesFromMidnight != null) return minutesToTimeInput(task.timeMinutesFromMidnight)
     return ''
   }, [task.timeMode, task.timeMinutesFromMidnight, timeDraft])
+
+  const planDateIsToday = useMemo(
+    () => Boolean(task.scheduledLocalDate && task.scheduledLocalDate === localDateKey()),
+    [task.scheduledLocalDate],
+  )
+
+  const canPlanOnSelectedDay = useMemo(
+    () => selectedDayKey >= localDateKey(),
+    [selectedDayKey],
+  )
+
+  useEffect(() => {
+    if (!planDateIsToday) return
+    const id = window.setInterval(() => setTodayTimeFloorTick((x) => x + 1), 60_000)
+    return () => clearInterval(id)
+  }, [planDateIsToday])
+
+  const earliestClockMinutesFromMidnight = useMemo(() => {
+    void todayTimeFloorTick
+    if (!planDateIsToday) return null
+    const n = new Date()
+    return n.getHours() * 60 + n.getMinutes()
+  }, [planDateIsToday, todayTimeFloorTick])
+
+  useEffect(() => {
+    if (!planDateIsToday || task.timeMode === 'none' || task.timeMinutesFromMidnight == null) return
+    const floor = new Date().getHours() * 60 + new Date().getMinutes()
+    if (task.timeMinutesFromMidnight < floor) {
+      void onSetTimePlan(task.timeMode, floor)
+      setTimeDraft(minutesToTimeInput(floor))
+    }
+  }, [
+    planDateIsToday,
+    task.timeMode,
+    task.timeMinutesFromMidnight,
+    task.id,
+    onSetTimePlan,
+    todayTimeFloorTick,
+  ])
 
   const validationFields = useMemo(
     (): TaskScheduleValidationFields => ({
@@ -325,14 +366,33 @@ export function TaskEditModal({
   }
 
   function guardedSetScheduledLocalDate(date: string | null) {
+    const todayKey = localDateKey()
+    const resolvedDate =
+      date != null && /^\d{4}-\d{2}-\d{2}$/.test(date) && date < todayKey ? todayKey : date
+
+    const floor =
+      resolvedDate === todayKey ? new Date().getHours() * 60 + new Date().getMinutes() : null
+    let timeClockForVal = effectiveTimeClock
+    if (floor != null && task.timeMode !== 'none') {
+      let m = timeInputToMinutes(timeDraft.trim())
+      if (m == null && task.timeMinutesFromMidnight != null) m = task.timeMinutesFromMidnight
+      if (m == null) m = task.timeMode === 'start' ? 9 * 60 : 18 * 60
+      if (m < floor) {
+        m = floor
+        timeClockForVal = minutesToTimeInput(m)
+        setTimeDraft(timeClockForVal)
+        void onSetTimePlan(task.timeMode, m)
+      }
+    }
+
     const merged: TaskScheduleValidationFields = {
-      backlogOnly: date === null,
-      scheduledLocalDate: date,
+      backlogOnly: resolvedDate === null,
+      scheduledLocalDate: resolvedDate,
       timeMode: task.timeMode,
-      timeClock: effectiveTimeClock,
+      timeClock: task.timeMode === 'none' ? '' : timeClockForVal,
       estimatedHours: estHoursDraft,
       estimatedMinutesPart: estMinutesDraft,
-      plannedWithEstimateRequired: date != null,
+      plannedWithEstimateRequired: resolvedDate != null,
     }
     const err = computeTaskScheduleValidationError(merged, t)
     if (err) {
@@ -340,7 +400,7 @@ export function TaskEditModal({
       return
     }
     setCommitGateError(null)
-    void onSetScheduledLocalDate(date)
+    void onSetScheduledLocalDate(resolvedDate)
   }
 
   function applyTime(mode: TaskTimeMode) {
@@ -367,9 +427,13 @@ export function TaskEditModal({
     let m = timeInputToMinutes(timeDraft)
     if (m == null) {
       m = mode === 'start' ? 9 * 60 : 18 * 60
-      setTimeDraft(minutesToTimeInput(m))
+    }
+    if (planDateIsToday) {
+      const floor = new Date().getHours() * 60 + new Date().getMinutes()
+      if (m < floor) m = floor
     }
     const clockStr = minutesToTimeInput(m)
+    setTimeDraft(clockStr)
     const merged: TaskScheduleValidationFields = {
       backlogOnly: task.scheduledLocalDate === null,
       scheduledLocalDate: task.scheduledLocalDate,
@@ -467,6 +531,7 @@ export function TaskEditModal({
             <LocalDatePickerField
               label={t('app.plannedDate')}
               value={task.scheduledLocalDate}
+              minLocalDateKey={localDateKey()}
               onChange={(v) => guardedSetScheduledLocalDate(v)}
               disabled={!canEdit}
               allowClear
@@ -483,7 +548,7 @@ export function TaskEditModal({
               </button>
               <button
                 type="button"
-                disabled={!canEdit}
+                disabled={!canEdit || !canPlanOnSelectedDay}
                 className="rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
                 onClick={() => guardedSetScheduledLocalDate(selectedDayKey)}
               >
@@ -516,6 +581,7 @@ export function TaskEditModal({
             onClockBlur={() => {
               if (task.timeMode !== 'none') applyTime(task.timeMode)
             }}
+            earliestClockMinutesFromMidnight={earliestClockMinutesFromMidnight}
           />
         </div>
 
@@ -639,6 +705,7 @@ export function TaskEditModal({
               <LocalDatePickerField
                 label={t('app.recurrenceAnchor')}
                 value={task.recurrenceAnchorLocalDate ?? anchorBase}
+                minLocalDateKey={localDateKey()}
                 onChange={(v) => {
                   if (!task.recurrence) return
                   guardedAnchorChange(v)

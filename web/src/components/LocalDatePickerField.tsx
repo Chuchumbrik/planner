@@ -22,6 +22,8 @@ export type LocalDatePickerFieldProps = {
   value: string | null
   onChange: (dateKey: string | null) => void
   disabled?: boolean
+  /** Не раньше этой даты (YYYY-MM-DD, локальный календарь). Сравнение строковое — формат ISO. */
+  minLocalDateKey?: string | null
   /** Кнопка «без даты» внутри панели */
   allowClear?: boolean
   className?: string
@@ -32,6 +34,7 @@ export function LocalDatePickerField({
   value,
   onChange,
   disabled,
+  minLocalDateKey,
   allowClear,
   className,
 }: LocalDatePickerFieldProps) {
@@ -110,6 +113,14 @@ export function LocalDatePickerField({
   const matrix = useMemo(() => monthWeekMatrix(viewY, viewM), [viewY, viewM])
   const todayKey = localDateKey()
 
+  const lastDayOfPreviousMonthKey = useMemo(
+    () => localDateKey(new Date(viewY, viewM, 0)),
+    [viewY, viewM],
+  )
+  const minKey =
+    minLocalDateKey && /^\d{4}-\d{2}-\d{2}$/.test(minLocalDateKey) ? minLocalDateKey : null
+  const disablePrevMonth = minKey != null && lastDayOfPreviousMonthKey < minKey
+
   const weekDayLabels = useMemo(() => {
     const base = new Date(2024, 0, 1)
     const monday = new Date(base)
@@ -171,8 +182,9 @@ export function LocalDatePickerField({
           <div className="mb-2 flex items-center justify-between gap-2">
             <button
               type="button"
-              className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-900"
+              className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-35"
               aria-label={t('app.datePickerPrevMonth')}
+              disabled={disablePrevMonth}
               onClick={() => shiftMonth(-1)}
             >
               ←
@@ -207,11 +219,13 @@ export function LocalDatePickerField({
                   const selected = value === dateKey
                   const isToday = dateKey === todayKey
                   const dayNum = Number(dateKey.slice(8, 10))
+                  const beforeMin = minKey != null && dateKey < minKey
+                  const dayDisabled = Boolean(disabled || (beforeMin && !selected))
                   return (
                     <button
                       key={dateKey}
                       type="button"
-                      disabled={disabled}
+                      disabled={dayDisabled}
                       className={`min-h-[2rem] rounded-lg border text-xs font-medium transition hover:bg-zinc-900 disabled:opacity-40 ${
                         selected
                           ? 'border-emerald-500 bg-emerald-950/70 text-emerald-50 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.45)]'

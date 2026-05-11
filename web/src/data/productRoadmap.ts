@@ -296,6 +296,36 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.32', en: '0.6.32' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** **документация / руководство пользователя** — отдельная страница или раздел справки в приложении или по ссылке (структура, ru/en, без дублирования лендинга); черновик в **`15-Идеи-для-развития.md`**, §16.',
+            en: '**Ideas for later:** **in-app docs / user guide** — dedicated help area or public branded page (structure, ru/en, distinct from landing); draft in **`15-Идеи-для-развития.md`**, §16.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'После релиза планируется **одно место** с понятным текстом: как пользоваться планировщиком, а не только маркетинговая главная.',
+            en: 'Post-release backlog now includes a **single place** for plain-language “how to use the planner,” separate from marketing copy.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.32', en: '0.6.32' },
+        changes: [
+          {
+            ru: '**Планировщик / модалки задачи:** **`LocalDatePickerField`** — опция **`minLocalDateKey`**: в календаре **нельзя выбрать** дату **раньше сегодня** (план и якорь повтора); кнопка **«назад по месяцам»** отключена, если предыдущий месяц целиком в прошлом; **«Запланировать на выбранный день»** в **`TaskEditModal`** неактивна для **прошлого** выбранного дня на `/app`; **`CreateTaskModal`** — **`clampPlanDateKey`** при старте формы, снятии бэклога и в **`onChange`**. **Время на сегодня:** **`TaskTimeAccordion`** — **`earliestClockMinutesFromMidnight`** (селекты часов/минут и кламп; тик раз в минуту).',
+            en: '**Planner / task modals:** **`LocalDatePickerField`** — **`minLocalDateKey`**: the grid **cannot pick** a date **before today** (planned date & recurrence anchor); **previous month** is disabled when that month is entirely in the past; **“Plan for selected day”** in **`TaskEditModal`** is off when the planner **selected day** is in the past; **`CreateTaskModal`** uses **`clampPlanDateKey`** on form init, leaving backlog, and in **`onChange`**. **Time for today:** **`TaskTimeAccordion`** — **`earliestClockMinutesFromMidnight`** (hour/minute options + clamp; 1-minute tick while open).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Нельзя «накликать» прошлую дату в плане и время начала/конца на сегодня раньше «сейчас» — только сегодня и дальше по календарю, время не уходит в прошедшие минуты этого дня.',
+            en: 'You can’t pick a past plan date or a start/end time on today before “now”—only today onward on the calendar, and the clock won’t slip into earlier minutes today.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.31', en: '0.6.31' },
         changes: [
           {
@@ -1560,6 +1590,27 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Роль **бета-тестер** (`app_metadata.motivator_role`, рядом с admin/user): закрытая волна регистраций, канал обратной связи с продактом; от обычного пользователя — расширенный доступ к экспериментальным функциям или каналу новостей (уточняется при реализации).',
         en: '**Beta tester** role (`app_metadata.motivator_role`, alongside admin/user): invite-only waves, feedback loop with product; vs regular users — optional early/experimental features or news channel (TBD at implementation).',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Документация и руководство пользователя', en: 'In-app docs & user guide' },
+    summary: {
+      ru: 'После MVP: отдельная **страница или раздел «Справка / Руководство»** внутри приложения (или по публичной ссылке с тем же брендингом) — структурированное описание экранов, планирования, повторов, отчётов, seed и безопасности **простым языком**, с поиском по разделам и ссылками из подсказок в UI.',
+      en: 'Post-MVP: a dedicated **Help / User guide** area inside the app (or a branded public URL) — structured plain-language coverage of screens, planning, repeats, reports, seed & safety, with section search and links from in-app hints.',
+    },
+    detailBullets: [
+      {
+        ru: 'Не дублировать полностью **лендинг** (карточка «Презентационная страница»): лендинг — «зачем зайти», руководство — «как пользоваться после входа»; можно перекрёстно ссылаться.',
+        en: 'Don’t fully duplicate the **landing** card: landing = “why sign up,” guide = “how to use after login”; cross-link instead.',
+      },
+      {
+        ru: 'Контент: **Markdown** в репозитории, headless CMS, или генерируемая страница из i18n — по ресурсам; **ru/en** в паре с приложением.',
+        en: 'Content: **Markdown** in-repo, headless CMS, or i18n-driven pages — team choice; **ru/en** aligned with the app.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §16.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §16.',
       },
     ],
   },

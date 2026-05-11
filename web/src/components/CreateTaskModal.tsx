@@ -20,6 +20,7 @@ import {
   type TaskDraft,
   type TaskGroup,
   type TaskTimeMode,
+  localDateKey,
 } from '@motivator/core'
 import {
   MAX_TASK_TITLE_CHARS,
@@ -37,6 +38,12 @@ import {
 } from '@/lib/taskScheduleValidation'
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
+
+/** Плановая дата не раньше локального сегодня (строки YYYY-MM-DD). */
+function clampPlanDateKey(dateKey: string): string {
+  const t = localDateKey()
+  return dateKey < t ? t : dateKey
+}
 
 type Snapshot = {
   title: string
@@ -72,7 +79,8 @@ function snapshotFromDraft(d: TaskDraft, fallbackDay: string): Snapshot {
     colorHexInput: TASK_COLOR_HEX[d.colorKey] ?? TASK_COLOR_HEX.zinc,
     priorityRank: d.priorityRank,
     backlogOnly: d.scheduledLocalDate === null,
-    scheduledLocalDate: d.scheduledLocalDate,
+    scheduledLocalDate:
+      d.scheduledLocalDate == null ? null : clampPlanDateKey(d.scheduledLocalDate),
     ...(() => {
       const p = splitEstimateMinutes(d.estimatedMinutes)
       return {
@@ -86,12 +94,15 @@ function snapshotFromDraft(d: TaskDraft, fallbackDay: string): Snapshot {
     recurrenceKind,
     everyNDays: d.recurrence?.kind === 'everyNDays' ? d.recurrence.n : 2,
     weekdays: d.recurrence?.kind === 'weekly' ? [...d.recurrence.weekdays] : [],
-    anchorLocalDate: d.recurrenceAnchorLocalDate ?? d.scheduledLocalDate ?? fallbackDay,
+    anchorLocalDate: clampPlanDateKey(
+      d.recurrenceAnchorLocalDate ?? d.scheduledLocalDate ?? fallbackDay,
+    ),
     doubleConfirmEnabled: false,
   }
 }
 
 function emptySnapshot(selectedDayKey: string, groupId: string): Snapshot {
+  const plan = clampPlanDateKey(selectedDayKey)
   return {
     title: '',
     groupId,
@@ -99,7 +110,7 @@ function emptySnapshot(selectedDayKey: string, groupId: string): Snapshot {
     colorHexInput: TASK_COLOR_HEX.zinc,
     priorityRank: 3,
     backlogOnly: false,
-    scheduledLocalDate: selectedDayKey,
+    scheduledLocalDate: plan,
     estimatedHours: '',
     estimatedMinutesPart: '',
     timeMode: 'none',
@@ -107,7 +118,7 @@ function emptySnapshot(selectedDayKey: string, groupId: string): Snapshot {
     recurrenceKind: 'none',
     everyNDays: 2,
     weekdays: [],
-    anchorLocalDate: selectedDayKey,
+    anchorLocalDate: plan,
     doubleConfirmEnabled: false,
   }
 }
@@ -210,6 +221,8 @@ export function CreateTaskModal({
   )
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false)
   const [saveAttempted, setSaveAttempted] = useState(false)
+  /** Обновление нижней границы времени для «сегодня» раз в минуту, пока открыта модалка. */
+  const [todayTimeFloorTick, setTodayTimeFloorTick] = useState(0)
   const titleRef = useRef<HTMLDivElement>(null)
   const scheduleRef = useRef<HTMLFieldSetElement>(null)
   const estimateRef = useRef<HTMLDivElement>(null)
@@ -249,6 +262,47 @@ export function CreateTaskModal({
     () => !snap.backlogOnly && snap.scheduledLocalDate != null,
     [snap.backlogOnly, snap.scheduledLocalDate],
   )
+
+  const planDateIsToday = useMemo(
+    () =>
+      Boolean(
+        open &&
+          !snap.backlogOnly &&
+          snap.scheduledLocalDate &&
+          snap.scheduledLocalDate === localDateKey(),
+      ),
+    [open, snap.backlogOnly, snap.scheduledLocalDate],
+  )
+
+  useEffect(() => {
+    if (!planDateIsToday) return
+    const id = window.setInterval(() => setTodayTimeFloorTick((x) => x + 1), 60_000)
+    return () => clearInterval(id)
+  }, [planDateIsToday])
+
+  const earliestClockMinutesFromMidnight = useMemo(() => {
+    void todayTimeFloorTick
+    if (!planDateIsToday) return null
+    const n = new Date()
+    return n.getHours() * 60 + n.getMinutes()
+  }, [planDateIsToday, todayTimeFloorTick])
+
+  useEffect(() => {
+    if (!open || !planDateIsToday || snap.timeMode === 'none') return
+    const floor = new Date().getHours() * 60 + new Date().getMinutes()
+    const m = timeInputToMinutes(snap.timeClock.trim())
+    if (m == null) return
+    if (m < floor) {
+      setSnap((s) => ({ ...s, timeClock: minutesToTimeInput(floor) }))
+    }
+  }, [
+    open,
+    planDateIsToday,
+    snap.timeMode,
+    snap.timeClock,
+    snap.scheduledLocalDate,
+    todayTimeFloorTick,
+  ])
 
   const validationFields = useMemo(
     (): TaskScheduleValidationFields => ({
@@ -311,6 +365,10 @@ export function CreateTaskModal({
     if (snap.timeMode === 'none') return { mode: 'none', minutes: null }
     let m = timeInputToMinutes(snap.timeClock)
     if (m == null) m = 9 * 60
+    if (planDateIsToday) {
+      const floor = new Date().getHours() * 60 + new Date().getMinutes()
+      if (m < floor) m = floor
+    }
     return { mode: snap.timeMode, minutes: m }
   }
 
@@ -545,15 +603,19 @@ export function CreateTaskModal({
               <LocalDatePickerField
                 label={t('app.plannedDate')}
                 value={snap.scheduledLocalDate}
+                minLocalDateKey={localDateKey()}
                 onChange={(v) =>
-                  setSnap((s) => ({
-                    ...s,
-                    scheduledLocalDate: v,
-                    anchorLocalDate:
-                      s.recurrenceKind !== 'none'
-                        ? v || s.anchorLocalDate
-                        : s.anchorLocalDate,
-                  }))
+                  setSnap((s) => {
+                    const plan = v == null ? null : clampPlanDateKey(v)
+                    return {
+                      ...s,
+                      scheduledLocalDate: plan,
+                      anchorLocalDate:
+                        s.recurrenceKind !== 'none'
+                          ? plan || s.anchorLocalDate
+                          : s.anchorLocalDate,
+                    }
+                  })
                 }
                 disabled={!canEdit}
               />
@@ -568,7 +630,7 @@ export function CreateTaskModal({
                   setSnap((s) => ({
                     ...s,
                     backlogOnly: e.target.checked,
-                    scheduledLocalDate: e.target.checked ? null : selectedDayKey,
+                    scheduledLocalDate: e.target.checked ? null : clampPlanDateKey(selectedDayKey),
                   }))
                 }
               />
@@ -585,20 +647,35 @@ export function CreateTaskModal({
             radioName="createtimemode"
             onModeNone={() => setSnap((s) => ({ ...s, timeMode: 'none', timeClock: '' }))}
             onModeStart={() =>
-              setSnap((s) => ({
-                ...s,
-                timeMode: 'start',
-                timeClock: s.timeClock || minutesToTimeInput(9 * 60),
-              }))
+              setSnap((s) => {
+                const today =
+                  !s.backlogOnly &&
+                  s.scheduledLocalDate != null &&
+                  s.scheduledLocalDate === localDateKey()
+                let m = timeInputToMinutes((s.timeClock || '').trim()) ?? 9 * 60
+                if (today) {
+                  const floor = new Date().getHours() * 60 + new Date().getMinutes()
+                  if (m < floor) m = floor
+                }
+                return { ...s, timeMode: 'start', timeClock: minutesToTimeInput(m) }
+              })
             }
             onModeEnd={() =>
-              setSnap((s) => ({
-                ...s,
-                timeMode: 'end',
-                timeClock: s.timeClock || minutesToTimeInput(18 * 60),
-              }))
+              setSnap((s) => {
+                const today =
+                  !s.backlogOnly &&
+                  s.scheduledLocalDate != null &&
+                  s.scheduledLocalDate === localDateKey()
+                let m = timeInputToMinutes((s.timeClock || '').trim()) ?? 18 * 60
+                if (today) {
+                  const floor = new Date().getHours() * 60 + new Date().getMinutes()
+                  if (m < floor) m = floor
+                }
+                return { ...s, timeMode: 'end', timeClock: minutesToTimeInput(m) }
+              })
             }
             onClockChange={(value) => setSnap((s) => ({ ...s, timeClock: value }))}
+            earliestClockMinutesFromMidnight={earliestClockMinutesFromMidnight}
           />
         </div>
 
@@ -737,10 +814,13 @@ export function CreateTaskModal({
               <LocalDatePickerField
                 label={t('app.recurrenceAnchor')}
                 value={snap.anchorLocalDate}
+                minLocalDateKey={localDateKey()}
                 onChange={(v) =>
                   setSnap((s) => ({
                     ...s,
-                    anchorLocalDate: v ?? s.scheduledLocalDate ?? selectedDayKey,
+                    anchorLocalDate: clampPlanDateKey(
+                      v ?? s.scheduledLocalDate ?? selectedDayKey,
+                    ),
                   }))
                 }
                 disabled={!canEdit}
