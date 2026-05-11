@@ -292,8 +292,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Role hooks (`motivatorRole`, `app_metadata.motivator_role`) without UI gating — see phase 8 plan.',
       },
       {
-        ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; круговая диаграмма доли закрытых задач по плану; продуктовые **«Открытые вопросы»** ведутся в модалке **«Краткая сводка»** (настройки), строки — в i18n.',
-        en: '**End-of-day** modal: **planned-for-day** tasks only; backlog FYI strip; **ru** title localized; donut chart for share of planned tasks closed; **Open questions** product notes are maintained under **Brief summary** in settings (i18n strings).',
+        ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; круговая диаграмма доли закрытых задач по плану; продуктовые **«Открытые вопросы»** ведутся в модалке **«Краткая сводка»** (открытие с **`/app`**, меню аккаунта), строки — в i18n.',
+        en: '**End-of-day** modal: **planned-for-day** tasks only; backlog FYI strip; **ru** title localized; donut chart for share of planned tasks closed; **Open questions** product notes live in **Brief summary** (opened from **`/app`** account menu; i18n strings).',
       },
     ],
   },
@@ -312,6 +312,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.36', en: '0.6.36' },
+        changes: [
+          {
+            ru: '**«Краткая сводка»:** пункт в **меню аккаунта** на **`/app`** (рядом с переходом в настройки и выходом); отдельная кнопка в шапке **`/settings`** убрана; модалка монтируется в **`AppPage`**.',
+            en: '**Brief summary:** item in the **`/app`** **account menu** (next to Settings and Sign out); removed the standalone button from **`/settings`**; modal is mounted from **`AppPage`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Дорожная карта и релиз-ноты открываются из **планировщика** — иконка пользователя → **«Краткая сводка»**; на странице настроек этой кнопки больше нет.',
+            en: 'Open the roadmap and release notes from the **planner**: user icon → **Brief summary**; the settings screen no longer has its own button.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.35', en: '0.6.35' },
         changes: [

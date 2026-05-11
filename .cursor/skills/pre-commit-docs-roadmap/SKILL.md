@@ -2,7 +2,7 @@
 name: pre-commit-docs-roadmap
 description: >-
   Enforces the planner repo pre-commit documentation workflow before git commit or push:
-  web/README.md, web/src/data/productRoadmap.ts (modal «Краткая сводка»), i18n when needed.
+  web/README.md, web/src/data/productRoadmap.ts (Brief summary / «Краткая сводка» data), i18n when needed.
   Use before any git commit, git push, or when the user asks to ship changes; also when
   touching web/src, @motivator/core public API, UX, locales, or package versions.
 ---
@@ -21,7 +21,7 @@ description: >-
 ## Цели
 
 - **`web/README.md`**: версия и таблица «Возможности (сводка)» соответствуют сборке.
-- **`web/src/data/productRoadmap.ts`**: модалка настроек не врёт пользователю; релиз-ноты привязаны к календарным дням работ и к semver из `web/package.json`.
+- **`web/src/data/productRoadmap.ts`**: содержимое модалки «Краткая сводка» не противоречит сборке; релиз-ноты привязаны к календарным дням работ и к semver из `web/package.json`.
 - **Локали** `web/src/i18n/locales/ru.json` и `en.json` — при смене продуктовых формулировок в «Открытых вопросах» и связанных ключах.
 
 Подробные примеры, шаблоны формулировок и разбор ошибок: [reference.md](reference.md).

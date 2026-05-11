@@ -7,6 +7,7 @@ import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { PeriodPlanBreakdownChart } from '@/components/PeriodPlanBreakdownChart'
 import { PeriodPlanDonut } from '@/components/PeriodPlanDonut'
 import { EndOfDayModal } from '@/components/EndOfDayModal'
+import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
 import { TaskEditModal } from '@/components/TaskEditModal'
@@ -232,11 +233,18 @@ function AppPageInner() {
   const [draftsModalOpen, setDraftsModalOpen] = useState(false)
   /** Рядом с кольцом недели/месяца: столбчатая диаграмма по группам или по цветам. */
   const [periodSlotsMode, setPeriodSlotsMode] = useState<'group' | 'color'>('group')
+  /** `lg+`: кольцо недели и график столбиком; уже — в одну строку с компактным кольцом. */
+  const [weekPlanUiWide, setWeekPlanUiWide] = useState(() =>
+    typeof globalThis !== 'undefined' && 'matchMedia' in globalThis
+      ? globalThis.matchMedia('(min-width: 1024px)').matches
+      : false,
+  )
   const [eodOpen, setEodOpen] = useState(false)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
+  const [roadmapModalOpen, setRoadmapModalOpen] = useState(false)
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
@@ -283,6 +291,15 @@ function AppPageInner() {
   useEffect(() => {
     if (vault.drafts.length === 0) setDraftsModalOpen(false)
   }, [vault.drafts.length])
+
+  useEffect(() => {
+    if (typeof globalThis === 'undefined' || !('matchMedia' in globalThis)) return
+    const mq = globalThis.matchMedia('(min-width: 1024px)')
+    const fn = () => setWeekPlanUiWide(mq.matches)
+    fn()
+    mq.addEventListener('change', fn)
+    return () => mq.removeEventListener('change', fn)
+  }, [])
 
   useEffect(() => {
     if (!draftsModalOpen) return
@@ -784,6 +801,17 @@ function AppPageInner() {
                     {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="block w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900"
+                  onClick={() => {
+                    setAccountMenuOpen(false)
+                    setRoadmapModalOpen(true)
+                  }}
+                >
+                  {t('settings.roadmapTempButton')}
+                </button>
                 <Link
                   to="/settings"
                   role="menuitem"
@@ -1297,11 +1325,28 @@ function AppPageInner() {
             </div>
             {weekPlanProgress.plannedTaskCount > 0 ? (
               <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:pt-1">
-                <PeriodPlanDonut
-                  progress={weekPlanProgress}
-                  title={t('app.periodPlanWeekRingTitle')}
-                  subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
-                />
+                <div className="flex min-h-0 flex-row items-stretch gap-2 lg:flex-col lg:gap-2">
+                  <div className="flex w-[min(104px,28vw)] max-w-[112px] shrink-0 justify-center self-start lg:w-full lg:max-w-none">
+                    <PeriodPlanDonut
+                      progress={weekPlanProgress}
+                      title={t('app.periodPlanWeekRingTitle')}
+                      subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+                      ringSize={weekPlanUiWide ? 120 : 92}
+                      ringStroke={weekPlanUiWide ? 10 : 8}
+                    />
+                  </div>
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:w-full">
+                    <PeriodPlanBreakdownChart
+                      compact={!weekPlanUiWide}
+                      rows={weekBreakdownChartRows}
+                      title={
+                        periodSlotsMode === 'group'
+                          ? t('app.periodBreakdownChartTitleGroup')
+                          : t('app.periodBreakdownChartTitleColor')
+                      }
+                    />
+                  </div>
+                </div>
                 <div className="flex justify-center gap-1">
                   <button
                     type="button"
@@ -1326,14 +1371,6 @@ function AppPageInner() {
                     {t('app.periodBreakdownByColor')}
                   </button>
                 </div>
-                <PeriodPlanBreakdownChart
-                  rows={weekBreakdownChartRows}
-                  title={
-                    periodSlotsMode === 'group'
-                      ? t('app.periodBreakdownChartTitleGroup')
-                      : t('app.periodBreakdownChartTitleColor')
-                  }
-                />
               </div>
             ) : null}
           </div>
@@ -1450,6 +1487,8 @@ function AppPageInner() {
         canEdit={canEdit}
         onCompleteRitual={() => completeEodForLocalDate(todayKeyApp)}
       />
+
+      <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />
 
       {editingTask ? (
         <TaskEditModal

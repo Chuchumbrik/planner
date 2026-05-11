@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
-import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { RequireVault } from '@/components/RequireVault'
 import { APP_VERSION } from '@/version'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank } from '@motivator/core'
@@ -110,8 +109,6 @@ function SettingsPageInner() {
   const [pwBusy, setPwBusy] = useState(false)
   const [pwError, setPwError] = useState<string | null>(null)
   const [pwSuccess, setPwSuccess] = useState(false)
-  const [roadmapOpen, setRoadmapOpen] = useState(false)
-
   const canEdit = remoteHydrated && !decryptFailed
   const hasEmailLogin = Boolean(session?.user?.email)
 
@@ -154,17 +151,10 @@ function SettingsPageInner() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-6">
         <Link className="text-sm text-emerald-400 hover:text-emerald-300" to="/app">
           {t('settings.back')}
         </Link>
-        <button
-          type="button"
-          className="shrink-0 rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm font-medium text-zinc-100 hover:border-zinc-500 hover:bg-zinc-800"
-          onClick={() => setRoadmapOpen(true)}
-        >
-          {t('settings.roadmapTempButton')}
-        </button>
       </div>
       <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
       <p className="mt-2 text-sm text-zinc-400">{t('settings.seedHint')}</p>
@@ -229,8 +219,6 @@ function SettingsPageInner() {
           <option value="en">{t('common.langEn')}</option>
         </select>
       </section>
-
-      <ProductRoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} />
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('settings.accountPasswordTitle')}</h2>
