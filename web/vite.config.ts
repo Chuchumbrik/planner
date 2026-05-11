@@ -35,7 +35,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      /** Регистрация только из кода (`src/lib/pwaServiceWorker.ts`), см. `injectRegister`. */
       registerType: 'autoUpdate',
+      injectRegister: null,
       includeAssets: ['favicon.svg', 'pwa-192.png', 'pwa-512.png'],
       manifest: {
         name: 'Мотиватор',

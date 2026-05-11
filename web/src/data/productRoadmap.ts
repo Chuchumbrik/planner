@@ -313,6 +313,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.35', en: '0.6.35' },
+        changes: [
+          {
+            ru: '**PWA / обновления:** явная регистрация SW (`virtual:pwa-register`, **`initPwaServiceWorker`**, **`injectRegister: null`** в `vite.config`); периодический **`registration.update()`** при фокусе окна, **`visibilitychange` → visible** и раз в час; в **`vercel.json`** — **`Cache-Control`** без долгого кэша для **`/sw.js`**, **`/manifest.webmanifest`**, **`/workbox-*.js`**.',
+            en: '**PWA / updates:** explicit SW registration (`virtual:pwa-register`, **`initPwaServiceWorker`**, **`injectRegister: null`** in `vite.config`); periodic **`registration.update()`** on window focus, **`visibilitychange` → visible**, and hourly; **`vercel.json`** adds short **`Cache-Control`** for **`/sw.js`**, **`/manifest.webmanifest`**, **`/workbox-*.js`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'После выката новой версии телефон с ярлыком на рабочем столе **чаще сам подтянет обновление**, без ручной очистки данных сайта: приложение само спрашивает сервер о новом service worker, когда вы снова открываете вкладку или окно.',
+            en: 'After a deploy, a home-screen install should **pick up updates more reliably** without manually clearing site data: the app asks the server for a new service worker when you return to the tab or window.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.33', en: '0.6.33' },
         changes: [
           {

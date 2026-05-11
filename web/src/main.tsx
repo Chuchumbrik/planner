@@ -4,8 +4,11 @@ import { BrowserRouter } from 'react-router-dom'
 import '@/i18n'
 import { AuthProvider } from '@/auth/AuthProvider'
 import { VaultProvider } from '@/vault/VaultProvider'
+import { initPwaServiceWorker } from '@/lib/pwaServiceWorker'
 import './index.css'
 import { App } from './App'
+
+initPwaServiceWorker()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
