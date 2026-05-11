@@ -292,6 +292,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.28', en: '0.6.28' },
+        changes: [
+          {
+            ru: '**«Открытые вопросы»:** добавлен пункт про **EOD** — нужно ли **автоматически** завершать ритуал «Завершение дня», если пользователь не отметил его вручную (`settings.roadmapOpenQuestionEodAuto`, `ProductRoadmapModal`).',
+            en: '**Open questions:** new item on **EOD** — whether **End of day** should **auto-complete** when the user never finishes the ritual manually (`settings.roadmapOpenQuestionEodAuto`, `ProductRoadmapModal`).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В «Краткой сводке» в блоке открытых вопросов теперь явно зафиксирован продуктовый выбор: автоматика vs только ручное завершение и влияние на стрик/отчёты.',
+            en: 'The Brief summary “Open questions” section now explicitly captures the product tradeoff: automation vs manual-only completion and impact on streaks/reports.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.27', en: '0.6.27' },
         changes: [
           {

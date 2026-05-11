@@ -227,6 +227,7 @@
     "roadmapOpenQuestionsHint": "Product notes without a deadline — not the release checklist.",
     "roadmapOpenQuestionBacklogUx": "How should we gently surface a large backlog (dozens of tasks): summary, capped list, dedicated screen — without pressure in the “not closed for today” block?",
     "roadmapOpenQuestionCpt": "Typing reflection answers in-app is planned post-MVP; see “Ideas for later” in this same modal.",
+    "roadmapOpenQuestionEodAuto": "EOD (End of day): should the ritual be **auto-completed** when the user **did not** finish it manually — and how to do that without harming streaks and reports?",
     "eodTitle": "End-of-Day ritual",
     "eodHelp": "Evening closure and DR-013 streak accounting. Turn off if you do not use the ritual.",
     "eodToggle": "Show End-of-Day button in the planner header",

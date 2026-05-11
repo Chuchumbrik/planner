@@ -433,6 +433,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
               <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapOpenQuestionsHint')}</p>
               <p className="text-sm leading-relaxed text-zinc-400">{t('settings.roadmapOpenQuestionBacklogUx')}</p>
               <p className="mt-3 text-sm leading-relaxed text-zinc-500">{t('settings.roadmapOpenQuestionCpt')}</p>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-500">{t('settings.roadmapOpenQuestionEodAuto')}</p>
             </div>
           </details>
         </div>

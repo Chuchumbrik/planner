@@ -4,7 +4,7 @@
 
 **Целевой объём MVP для разработки** (релиз продукта **v1.0.0**) зафиксирован в [`obsidian-motivator/16-TZ-MVP-v1.0.md`](../obsidian-motivator/16-TZ-MVP-v1.0.md); поэтапный план внедрения — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md).
 
-**Текущая версия веб-клиента** в репозитории: **`0.6.27`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** в настройках — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
+**Текущая версия веб-клиента** в репозитории: **`0.6.28`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** в настройках — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
 
 ### Версионирование
 
@@ -72,7 +72,7 @@
 3. **План до 1.0.0** — **`MVP_PHASES_PLANNED`**: фазы **7–13** (источник смысла — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md)); у фаз есть блок **«Простыми словами»** (`plain`) и **«Подробнее»**.
 4. **Релиз-ноты** — **`RELEASE_NOTES_BLOCKS`**: хронология по **календарным датам** работ (`dateLabel`, формат `YYYY-MM-DD`); в модалке дни отсортированы **по убыванию** (новее выше). Внутри одного дня — несколько элементов **`items`** (несколько выпусков за день); у каждого — **`releasedInVersion`** (semver из `web/package.json` на момент выпуска, **без** суффикса `+git`), список **`changes`**, опционально **`plainBullets`** под раскрывашкой **«Подробности простым языком»**. Правила ведения — в комментарии над константой в `productRoadmap.ts` и в [правиле репозитория](../.cursor/rules/pre-commit-docs-roadmap.mdc).
 5. **Идеи на потом** — **`IDEAS_LATER_ENTRIES`**: черновой backlog после **1.0.0**; расширение согласовать с [`obsidian-motivator/15-Идеи-для-развития.md`](../obsidian-motivator/15-Идеи-для-развития.md) (в модалке только перенесённые карточки).
-6. **Открытые вопросы** — продуктовые заметки без срока: строки **`settings.roadmapOpenQuestion*`** в **`web/src/i18n/locales/ru.json`** и **`en.json`** (заголовок секции — `settings.roadmapOpenQuestions` / `roadmapOpenQuestionsHint`).
+6. **Открытые вопросы** — продуктовые заметки без срока: строки **`settings.roadmapOpenQuestion*`** в **`web/src/i18n/locales/ru.json`** и **`en.json`** (заголовок секции — `settings.roadmapOpenQuestions` / `roadmapOpenQuestionsHint`); каждый вопрос дублируется в **`ProductRoadmapModal.tsx`** списком абзацев.
 
 Контент **`productRoadmap.ts`** не должен противоречить текущей сборке; при смене продуктовых формулировок в «Открытых вопросах» правятся обе локали.
 
