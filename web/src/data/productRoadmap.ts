@@ -313,6 +313,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.37', en: '0.6.37' },
+        changes: [
+          {
+            ru: '**Сборка (fix):** **`PeriodPlanBreakdownChart`** — в тип **`Props`** добавлен опциональный **`compact`** (в **0.6.36** **`AppPage`** уже передавал проп; без него **`tsc -b`** падал на Vercel).',
+            en: '**Build (fix):** **`PeriodPlanBreakdownChart`** — optional **`compact`** on **`Props`** (**`AppPage`** already passed it in **0.6.36**; without it **`tsc -b`** failed on Vercel).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Восстановлена согласованность репозитория: недельный график рядом с кольцом снова типизируется вместе с **`compact`**.',
+            en: 'Repo consistency restored: the week breakdown chart type-checks again with **`compact`**.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.36', en: '0.6.36' },
         changes: [
           {
