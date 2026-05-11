@@ -13,6 +13,7 @@ import { useAuth } from '@/auth/AuthProvider'
 import {
   applyAddChecklistItem,
   applyAddGroup,
+  applyAutoCompleteEodForElapsedPlannerDays,
   applyCompleteEodForLocalDate,
   applyCreateTask,
   applyDeleteDraft,
@@ -28,6 +29,7 @@ import {
   applySetTaskGroup,
   applySetTaskPriorityRank,
   applySetTaskScheduledLocalDate,
+  applySetEodAutoCloseAtDayEnd,
   applySetEodEnabled,
   applySetTaskTimePlan,
   applyToggleChecklistItem,
@@ -37,6 +39,7 @@ import {
   decryptUtf8,
   deriveAesKey,
   encryptUtf8,
+  localDateKey,
   normalizeVault,
   DEFAULT_GROUP_ID,
   emptyVault,
@@ -109,6 +112,7 @@ type VaultContextValue = {
   patchTask: (taskId: string, patch: Partial<Task>) => Promise<void>
   completeEodForLocalDate: (dateKey: string) => Promise<void>
   setEodEnabled: (enabled: boolean) => Promise<void>
+  setEodAutoCloseAtDayEnd: (value: boolean) => Promise<void>
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null)
@@ -557,6 +561,44 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
+  const setEodAutoCloseAtDayEnd = useCallback(
+    async (value: boolean) => {
+      await mutate((v) => {
+        let n = applySetEodAutoCloseAtDayEnd(v, value)
+        if (value && n.eodPreferences?.enabled !== false) {
+          n = applyAutoCompleteEodForElapsedPlannerDays(n, localDateKey())
+        }
+        return n
+      })
+    },
+    [mutate],
+  )
+
+  /** EOD: автоматически добавить прошлые дни с планом в `eodCompletedLocalDates`, если включено в настройках. */
+  useEffect(() => {
+    if (!unlocked || !remoteHydrated) return
+
+    const runAuto = () => {
+      const base = latestPayloadRef.current
+      if (!base) return
+      const today = localDateKey()
+      const next = applyAutoCompleteEodForElapsedPlannerDays(base, today)
+      if (next !== base) void pushVault(next)
+    }
+
+    const id = window.setInterval(runAuto, 60_000)
+    const onVis = () => {
+      if (document.visibilityState === 'visible') runAuto()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    runAuto()
+
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [unlocked, remoteHydrated, pushVault])
+
   const value = useMemo(
     () => ({
       ready,
@@ -592,6 +634,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       patchTask,
       completeEodForLocalDate,
       setEodEnabled,
+      setEodAutoCloseAtDayEnd,
     }),
     [
       ready,
@@ -627,6 +670,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       patchTask,
       completeEodForLocalDate,
       setEodEnabled,
+      setEodAutoCloseAtDayEnd,
     ],
   )
 

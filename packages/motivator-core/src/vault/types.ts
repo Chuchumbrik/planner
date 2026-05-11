@@ -126,6 +126,12 @@ export type VaultPayloadV5 = {
 /** Глобальные настройки ритуала End-of-Day ([[DR-002]]) */
 export type EodPreferences = {
   enabled: boolean
+  /**
+   * Если true — для каждого **прошедшего** локального календарного дня, в котором был **хотя бы один** пункт плана
+   * (`tasksScheduledForPlannerDay`), дата автоматически попадает в `eodCompletedLocalDates`, если пользователь
+   * не прошёл ритуал вручную (компромисс до отдельного решения по «настоящему» авто-EOD).
+   */
+  autoCloseAtDayEnd?: boolean
 }
 
 export type VaultPayloadV6 = {
@@ -241,6 +247,6 @@ export function emptyVault(): VaultPayloadV7 {
     tasks: [],
     drafts: [],
     eodCompletedLocalDates: [],
-    eodPreferences: { enabled: true },
+    eodPreferences: { enabled: true, autoCloseAtDayEnd: false },
   }
 }

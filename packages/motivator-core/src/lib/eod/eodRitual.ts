@@ -65,6 +65,16 @@ function taskCompletionFractionForDay(task: Task, dateKey: string): number {
   return done / items.length
 }
 
+/** Доля «сделано» для строки плана на день (как у кольца прогресса): 0…1. */
+export function plannedTaskCompletionFractionForDay(task: Task, dateKey: string): number {
+  return taskCompletionFractionForDay(task, dateKey)
+}
+
+/** Полностью закрыта по плану на этот календарный день (включая чек-лист). */
+export function isPlannedTaskFullyCompleteForDay(task: Task, dateKey: string): boolean {
+  return taskCompletionFractionForDay(task, dateKey) >= 1
+}
+
 /**
  * Прогресс плана на календарный день: **каждая задача** даёт до **1** в сумме «знаменателя».
  * Без чек-листа — 0 или 1 по главной отметке дня; с чек-листом — доля выполненных пунктов (1 из 4 → **0,25** от этой задачи).

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   backlogTasksForEodReminder,
+  isPlannedTaskFullyCompleteForDay,
   partitionEodTasksByCompletion,
   plannedDayCompletionWeights,
   plannedPeriodProgress,
@@ -131,6 +132,41 @@ describe('plannedDayCompletionWeights', () => {
     const r = plannedDayCompletionWeights([a, b], day)
     expect(r.plannedTaskCount).toBe(2)
     expect(r.doneFraction).toBeCloseTo(1.25)
+  })
+})
+
+describe('isPlannedTaskFullyCompleteForDay', () => {
+  const day = '2026-05-09'
+  const iso = '2026-05-09T12:00:00.000Z'
+  const ck = (done: boolean, id: string) => ({
+    id,
+    title: id,
+    done,
+    createdAt: iso,
+    updatedAt: iso,
+  })
+
+  it('true when one-off done for that day', () => {
+    const t = baseTask({ scheduledLocalDate: day, done: true })
+    expect(isPlannedTaskFullyCompleteForDay(t, day)).toBe(true)
+  })
+
+  it('true when checklist fully checked', () => {
+    const t = baseTask({
+      scheduledLocalDate: day,
+      done: false,
+      checklist: [ck(true, 'a'), ck(true, 'b')],
+    })
+    expect(isPlannedTaskFullyCompleteForDay(t, day)).toBe(true)
+  })
+
+  it('false when checklist incomplete', () => {
+    const t = baseTask({
+      scheduledLocalDate: day,
+      done: true,
+      checklist: [ck(true, 'a'), ck(false, 'b')],
+    })
+    expect(isPlannedTaskFullyCompleteForDay(t, day)).toBe(false)
   })
 })
 

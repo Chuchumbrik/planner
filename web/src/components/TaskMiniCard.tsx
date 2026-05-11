@@ -31,6 +31,11 @@ type Props = {
   onToggleChecklistItem?: (itemId: string) => void
   /** DR-004: снять ожидание второго шага без выполнения */
   onClearDoubleConfirm?: () => void
+  /**
+   * Необязательный фон/рамка всей строки (вкладка «День», секция плана).
+   * При ожидании DR-004 не применяется — приоритет у состояния двойного подтверждения.
+   */
+  planRowSurfaceClass?: string
 }
 
 export function TaskMiniCard({
@@ -43,6 +48,7 @@ export function TaskMiniCard({
   onOpen,
   onToggleChecklistItem,
   onClearDoubleConfirm,
+  planRowSurfaceClass,
 }: Props) {
   const { t } = useTranslation()
   const leftAccent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
@@ -110,8 +116,10 @@ export function TaskMiniCard({
       : undefined
 
   const shellClass = [
-    'rounded-lg border bg-zinc-900/60 border-l-4 transition-colors',
-    pendingHere ? 'animate-dc-pending border-amber-700/50 ring-1 ring-amber-600/25' : 'border-zinc-800',
+    'rounded-lg border border-l-4 transition-colors',
+    pendingHere
+      ? 'animate-dc-pending border-amber-700/50 bg-zinc-900/60 ring-1 ring-amber-600/25'
+      : planRowSurfaceClass ?? 'border-zinc-800 bg-zinc-900/60',
     flash === 'success' ? 'animate-task-done-success' : '',
     flash === 'soft' ? 'animate-task-soft-miss' : '',
   ]

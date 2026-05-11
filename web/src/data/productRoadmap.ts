@@ -122,6 +122,10 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Caption under the day plan ring: **percent only** (no extra fractional task line).',
       },
       {
+        ru: 'Список **плана на день** (не бэклог): мягкий фон строки — **зелёный** при полном выполнении по долям дня; **янтарный**, если дата уже в **`eodCompletedLocalDates`** (ручной ритуал или **`autoCloseAtDayEnd`**), а план не закрыт полностью; для **прошлых** дней тона темнее.',
+        en: '**Planned-for-day** list (not backlog): soft row tint — **green** when fully complete; **amber** when the date is in **`eodCompletedLocalDates`** (ritual or **`autoCloseAtDayEnd`**) but work remains; **darker** on past days.',
+      },
+      {
         ru: 'Шапка **`/app`:** иконка синхронизации визуально слабее рядом с меню аккаунта; меню — отчёты, переход к ритуалу EOD на вкладке «День», настройки, выход; при ошибке загрузки vault с сервера — понятный текст и кнопка **«Повторить»**.',
         en: '`/app` header: quieter sync icon next to account; menu — reports, EOD entry on Day tab, settings, sign out; remote vault load errors — friendly copy and **Retry**.',
       },
@@ -256,8 +260,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
     },
     detailBullets: [
       {
-        ru: 'Глобальный вкл/выкл кнопки EOD в настройках; запись локальной даты завершения ритуала.',
-        en: 'Global EOD button toggle in settings; writes local ritual completion date.',
+        ru: 'Глобальный вкл/выкл кнопки EOD в настройках; запись локальной даты завершения ритуала; опция **`autoCloseAtDayEnd`** — прошлые дни с планом без ритуала.',
+        en: 'Global EOD button toggle in settings; local ritual completion dates; **`autoCloseAtDayEnd`** — past planner days without the ritual.',
       },
       {
         ru: 'Связка с отчётами (фаза 5): стрик DR-013 использует даты EOD.',
@@ -288,6 +292,45 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  * в котором изменения попали в сборку (как в `package.json` до `vite build`, без `+git`). В модалке внутри одного дня подблоки сортируются по **убыванию** этого semver. Интерфейс не скрывает даты по календарю «сегодня».
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.6.30', en: '0.6.30' },
+        changes: [
+          {
+            ru: '**EOD:** в настройках — **`eodPreferences.autoCloseAtDayEnd`** (автоматически добавлять в `eodCompletedLocalDates` прошлые локальные дни, в которых был план на день); применение в **`VaultProvider`** (`applyAutoCompleteEodForElapsedPlannerDays` в **`@motivator/core`**). **`applySetEodEnabled`** сохраняет второй флаг.',
+            en: '**EOD:** settings — **`eodPreferences.autoCloseAtDayEnd`** (auto-append past local planner days to `eodCompletedLocalDates`); applied in **`VaultProvider`** (`applyAutoCompleteEodForElapsedPlannerDays` in **`@motivator/core`**). **`applySetEodEnabled`** preserves the second flag.',
+          },
+          {
+            ru: '**Вкладка «День»**, секция плана: мягкий **фон строки** (`TaskMiniCard.planRowSurfaceClass`) — зелёный при полном выполнении, янтарный при дате в `eodCompletedLocalDates` и неполном плане; для прошлых дней — темнее; бэклог без подсветки.',
+            en: '**Day** tab plan section: soft **row background** (`TaskMiniCard.planRowSurfaceClass`) — green when fully complete, amber when the day is in `eodCompletedLocalDates` but work remains; darker on past days; backlog unchanged.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Можно включить **автозакрытие дня по календарю**: вчерашний и более ранние дни с задачами в плане сами попадут в «завершённые по EOD», если вы не открывали ритуал. На «Дне» невыполненное после закрытия дня подсвечивается мягким янтарным, выполненное — зелёным.',
+            en: 'Optional **auto day close**: past planner days that had tasks get an EOD completion stamp even without opening the ritual. On Day, incomplete work after closure shows soft amber; fully complete rows tint green.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.29', en: '0.6.29' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** **страница первичной настройки** при первом входе (мастер после разблокировки vault — язык, приоритеты, EOD, тур); черновик в **`15-Идеи-для-развития.md`**, §15.',
+            en: '**Ideas for later:** **first-launch setup** screen (post–vault-unlock wizard — language, priorities, EOD, tab tour); draft in **`15-Идеи-для-развития.md`**, §15.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В списке идей после релиза появилась карточка: при первом входе не сразу «пустой план», а короткая настройка приложения под человека.',
+            en: 'Post-release ideas now include a first-run setup card so the first session isn’t only an empty planner shell.',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
@@ -1218,6 +1261,26 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       ru: 'Всё ниже — черновой backlog без сроков и без обещаний в текущем MVP. Полный набор направлений см. также **`obsidian-motivator/15-Идеи-для-развития.md`**.',
       en: 'Everything below is an informal backlog — no dates and no MVP commitment. See also **`obsidian-motivator/15-Идеи-для-развития.md`** for the full idea pool.',
     },
+  },
+  {
+    title: {
+      ru: 'Первичный вход: страница настройки приложения',
+      en: 'First launch: app setup screen',
+    },
+    summary: {
+      ru: 'После MVP: при **первом** успешном входе (после разблокировки vault при необходимости) показывать **экран первичной настройки**: язык интерфейса, названия приоритетов по умолчанию, участие в ритуале EOD, короткий обзор вкладок — точный состав и обязательность шагов зафиксировать в продукте; до завершения или явного «пропустить» считать онбординг незавершённым.',
+      en: 'Post-MVP: on **first** successful session (after vault unlock when applicable), show a **first-run setup** screen — UI language, default priority labels, EOD opt-in, short tab tour — exact steps TBD; treat onboarding as incomplete until the user finishes or explicitly skips.',
+    },
+    detailBullets: [
+      {
+        ru: 'Источник флага «первый вход»: `localStorage`, `user_metadata` / `app_metadata` в Supabase или поле в vault; не должен мешать восстановлению по seed и миграциям.',
+        en: '“First launch” flag: `localStorage`, Supabase `user_metadata` / `app_metadata`, or a vault field; must not break seed restore or migrations.',
+      },
+      {
+        ru: 'Черновик в **`obsidian-motivator/15-Идеи-для-развития.md`**, §15.',
+        en: 'Draft in **`obsidian-motivator/15-Идеи-для-развития.md`**, §15.',
+      },
+    ],
   },
   {
     title: {

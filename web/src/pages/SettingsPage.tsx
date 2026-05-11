@@ -101,6 +101,7 @@ function SettingsPageInner() {
     deleteGroup,
     setPriorityLabel,
     setEodEnabled,
+    setEodAutoCloseAtDayEnd,
   } = useVault()
   const [newGroupName, setNewGroupName] = useState('')
   const [pwCurrent, setPwCurrent] = useState('')
@@ -196,6 +197,24 @@ function SettingsPageInner() {
             onChange={(e) => void setEodEnabled(e.target.checked)}
           />
           <span className="text-sm leading-snug text-zinc-300">{t('settings.eodToggle')}</span>
+        </label>
+        <h3 className="mt-6 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {t('settings.eodAutoCloseTitle')}
+        </h3>
+        <p className="mt-2 text-xs text-zinc-500">{t('settings.eodAutoCloseHelp')}</p>
+        <label
+          className={`mt-3 flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3 ${
+            vault.eodPreferences?.enabled === false ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+          }`}
+        >
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={vault.eodPreferences?.autoCloseAtDayEnd === true}
+            disabled={!canEdit || vault.eodPreferences?.enabled === false}
+            onChange={(e) => void setEodAutoCloseAtDayEnd(e.target.checked)}
+          />
+          <span className="text-sm leading-snug text-zinc-300">{t('settings.eodAutoCloseToggle')}</span>
         </label>
       </section>
 

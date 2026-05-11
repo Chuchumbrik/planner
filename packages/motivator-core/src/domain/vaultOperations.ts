@@ -8,10 +8,12 @@ import {
   effectiveDoubleConfirmGraceMin,
   effectiveDoubleConfirmIntervalMin,
 } from '../lib/doubleConfirm'
-import { localDateKey } from '../lib/localDate'
+import { localDateKey, shiftLocalDateKey } from '../lib/localDate'
+import { tasksScheduledForPlannerDay } from '../lib/eod/eodRitual'
 import {
   DEFAULT_GROUP_ID,
   type CreateTaskInput,
+  type EodPreferences,
   type PriorityRank,
   type Task,
   type TaskColorKey,
@@ -553,11 +555,63 @@ export function applyCompleteEodForLocalDate(vault: VaultPayload, dateKey: strin
   return { ...vault, eodCompletedLocalDates: next }
 }
 
+function mergeEodPreferences(prev: VaultPayload['eodPreferences'] | undefined): EodPreferences {
+  const raw = prev && typeof prev === 'object' ? prev : {}
+  const p = raw as Partial<EodPreferences>
+  return {
+    enabled: p.enabled !== false,
+    autoCloseAtDayEnd: p.autoCloseAtDayEnd === true,
+  }
+}
+
 export function applySetEodEnabled(vault: VaultPayload, enabled: boolean): VaultPayload {
+  const m = mergeEodPreferences(vault.eodPreferences)
   return {
     ...vault,
-    eodPreferences: { enabled },
+    eodPreferences: { ...m, enabled },
   }
+}
+
+export function applySetEodAutoCloseAtDayEnd(vault: VaultPayload, value: boolean): VaultPayload {
+  const m = mergeEodPreferences(vault.eodPreferences)
+  return {
+    ...vault,
+    eodPreferences: { ...m, autoCloseAtDayEnd: value },
+  }
+}
+
+/**
+ * Для прошлых локальных дней, в которых был план (`tasksScheduledForPlannerDay` не пуст),
+ * добавляет дату в `eodCompletedLocalDates`, если включены EOD и `autoCloseAtDayEnd`.
+ * Ограничение по глубине — защита от бесконечного цикла при повреждённой дате.
+ */
+export function applyAutoCompleteEodForElapsedPlannerDays(
+  vault: VaultPayload,
+  todayKey: string,
+  opts?: { maxPastDays?: number },
+): VaultPayload {
+  if (!LOCAL_DATE_KEY_PATTERN.test(todayKey)) return vault
+  const m = mergeEodPreferences(vault.eodPreferences)
+  if (!m.enabled || !m.autoCloseAtDayEnd) return vault
+
+  const maxPast = Math.min(800, Math.max(1, opts?.maxPastDays ?? 400))
+  const prev = vault.eodCompletedLocalDates ?? []
+  const done = new Set(prev)
+  const toAdd: string[] = []
+
+  for (let i = 1; i <= maxPast; i++) {
+    const d = shiftLocalDateKey(todayKey, -i)
+    if (!LOCAL_DATE_KEY_PATTERN.test(d)) break
+    if (d >= todayKey) break
+    if (done.has(d)) continue
+    if (tasksScheduledForPlannerDay(vault.tasks, d).length === 0) continue
+    toAdd.push(d)
+    done.add(d)
+  }
+
+  if (toAdd.length === 0) return vault
+  const next = [...new Set([...prev, ...toAdd])].sort()
+  return { ...vault, eodCompletedLocalDates: next }
 }
 
 export function applyPatchTask(

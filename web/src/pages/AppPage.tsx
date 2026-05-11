@@ -24,6 +24,7 @@ import {
   shiftWeekStartMonday,
   startOfWeekMonday,
   isMainTaskDoneForDay,
+  isPlannedTaskFullyCompleteForDay,
   plannedPeriodProgress,
   taskOccursOnDate,
   tasksScheduledForPlannerDay,
@@ -35,6 +36,28 @@ import {
   type TaskDraft,
 } from '@motivator/core'
 import { useVault } from '@/vault/VaultProvider'
+
+/** Фон строки плана на «День»: зелёный при полном выполнении; оранжевый при закрытом EOD и неполном; иначе нейтральный. */
+function dayPlanRowSurfaceClass(opts: {
+  selectedDay: string
+  todayKey: string
+  eodClosedForDay: boolean
+  task: Task
+}): string | undefined {
+  const { selectedDay, todayKey, eodClosedForDay, task } = opts
+  const past = selectedDay < todayKey
+  if (isPlannedTaskFullyCompleteForDay(task, selectedDay)) {
+    return past
+      ? 'border-emerald-900/45 bg-emerald-950/50'
+      : 'border-emerald-900/35 bg-emerald-950/32'
+  }
+  if (eodClosedForDay) {
+    return past
+      ? 'border-amber-900/45 bg-amber-950/48'
+      : 'border-amber-900/30 bg-amber-950/22'
+  }
+  return undefined
+}
 
 function formatSynced(ts: number | null, locale: string): string | null {
   if (ts == null) return null
@@ -437,6 +460,11 @@ function AppPageInner() {
     list.sort((a, b) => sortDayPlan(a, b, selectedDay))
     return list
   }, [filteredVaultTasks, selectedDay])
+
+  const eodClosedForSelectedDay = useMemo(
+    () => Boolean(vault.eodCompletedLocalDates?.includes(selectedDay)),
+    [vault.eodCompletedLocalDates, selectedDay],
+  )
 
   const weekPlanProgress = useMemo(
     () => plannedPeriodProgress(filteredVaultTasks, weekDays, todayKeyApp),
@@ -1111,6 +1139,12 @@ function AppPageInner() {
                           canEdit={canEdit}
                           occurrenceDayKey={selectedDay}
                           completionToggleAllowed={canToggleTaskCompletionOnDayView}
+                          planRowSurfaceClass={dayPlanRowSurfaceClass({
+                            selectedDay,
+                            todayKey: todayKeyApp,
+                            eodClosedForDay: eodClosedForSelectedDay,
+                            task,
+                          })}
                           onToggle={() => void toggleTask(task.id, selectedDay)}
                           onOpen={() => openTaskEditor(task.id)}
                           onToggleChecklistItem={(itemId) =>

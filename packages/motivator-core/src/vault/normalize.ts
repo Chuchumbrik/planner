@@ -247,7 +247,7 @@ function migrateV5toV6(v: VaultPayloadV5): VaultPayloadV6 {
     })),
     drafts: r.drafts,
     eodCompletedLocalDates: [],
-    eodPreferences: { enabled: true },
+    eodPreferences: { enabled: true, autoCloseAtDayEnd: false },
   }
 }
 
@@ -263,6 +263,9 @@ function repairV6(v: VaultPayloadV6): VaultPayloadV6 {
     v.eodPreferences && typeof v.eodPreferences === 'object' && v.eodPreferences.enabled === false
       ? false
       : true
+  const eodRaw = v.eodPreferences && typeof v.eodPreferences === 'object' ? v.eodPreferences : {}
+  const autoClose =
+    'autoCloseAtDayEnd' in eodRaw && (eodRaw as { autoCloseAtDayEnd?: unknown }).autoCloseAtDayEnd === true
   return {
     schemaVersion: 6,
     priorityLabels: r5.priorityLabels,
@@ -273,7 +276,7 @@ function repairV6(v: VaultPayloadV6): VaultPayloadV6 {
     })),
     drafts: r5.drafts,
     eodCompletedLocalDates: normalizeEodCompletedDates(v.eodCompletedLocalDates),
-    eodPreferences: { enabled: eodOn },
+    eodPreferences: { enabled: eodOn, autoCloseAtDayEnd: autoClose },
   }
 }
 

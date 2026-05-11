@@ -231,6 +231,9 @@
     "eodTitle": "End-of-Day ritual",
     "eodHelp": "Evening closure and DR-013 streak accounting. Turn off if you do not use the ritual.",
     "eodToggle": "Show End-of-Day button in the planner header",
+    "eodAutoCloseTitle": "Auto-close day on the calendar",
+    "eodAutoCloseHelp": "When enabled, any **past** local calendar day that had **at least one** planned-for-day task is automatically added to completed EOD dates (same as finishing the ritual). That lets the Day tab show the soft “still open” tint after the day is considered closed. Days with no planned tasks are skipped. Only works when the ritual toggle above is on.",
+    "eodAutoCloseToggle": "Automatically mark the day closed once the calendar day has passed",
     "adminSectionTitle": "Administrators",
     "adminSectionHelp": "Assign roles server-side (Supabase Dashboard → Authentication → user → User Metadata → app_metadata key motivator_role). Values: admin, beta_tester, or omit for a normal user. Invites UI or an Edge Function can follow per MVP phase 8. The section below is for admins; the “Brief summary” button in settings is available to every signed-in user."
   },

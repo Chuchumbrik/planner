@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   applyAddChecklistItem,
+  applyAutoCompleteEodForElapsedPlannerDays,
   applyCreateTask,
   applyDeleteGroup,
   applyRemoveTask,
   applyRenameGroup,
+  applySetEodEnabled,
   applyToggleChecklistItem,
 } from './vaultOperations'
 import { localDateKey } from '../lib/localDate'
@@ -120,5 +122,42 @@ describe('vaultOperations', () => {
     const todayKey = localDateKey(new Date(Date.parse(deps.nowIso())))
     const v2 = applyToggleChecklistItem(v1, taskId, itemId, deps, todayKey)
     expect(v2.tasks[0]!.checklist[0]!.done).toBe(true)
+  })
+
+  it('applyAutoCompleteEodForElapsedPlannerDays добавляет даты только при autoCloseAtDayEnd', () => {
+    const withTask = applyCreateTask(
+      { ...emptyVault(), eodPreferences: { enabled: true, autoCloseAtDayEnd: false } },
+      {
+        title: 'Past',
+        groupId: DEFAULT_GROUP_ID,
+        colorKey: 'zinc',
+        priorityRank: 3,
+        scheduledLocalDate: '2026-05-08',
+        estimatedMinutes: 15,
+        timeMode: 'none',
+        timeMinutesFromMidnight: null,
+        recurrence: null,
+        recurrenceAnchorLocalDate: null,
+      },
+      deps,
+    )
+    expect(
+      applyAutoCompleteEodForElapsedPlannerDays(withTask, '2026-05-10').eodCompletedLocalDates,
+    ).toHaveLength(0)
+
+    const autoOn = { ...withTask, eodPreferences: { enabled: true, autoCloseAtDayEnd: true } }
+    const next = applyAutoCompleteEodForElapsedPlannerDays(autoOn, '2026-05-10')
+    expect(next.eodCompletedLocalDates).toContain('2026-05-08')
+  })
+
+  it('applySetEodEnabled сохраняет autoCloseAtDayEnd', () => {
+    const v = {
+      ...emptyVault(),
+      eodPreferences: { enabled: true, autoCloseAtDayEnd: true },
+    }
+    const off = applySetEodEnabled(v, false)
+    expect(off.eodPreferences).toEqual({ enabled: false, autoCloseAtDayEnd: true })
+    const on = applySetEodEnabled(off, true)
+    expect(on.eodPreferences).toEqual({ enabled: true, autoCloseAtDayEnd: true })
   })
 })
