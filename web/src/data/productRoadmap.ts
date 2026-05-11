@@ -3,8 +3,8 @@
  *
  * Жёсткое правило репозитория: перед **любым** коммитом обновлять этот файл и `web/README.md`
  * (см. `.cursor/rules/pre-commit-docs-roadmap.mdc` и скилл `.cursor/skills/pre-commit-docs-roadmap/SKILL.md`). Релиз-ноты — **`RELEASE_NOTES_BLOCKS`**:
- * дата = день изменений; новый день — новый блок с `dateLabel`; за день несколько выпусков —
- * несколько элементов **`items`**; в одном выпуске несколько правок — массив **`changes`**;
+ * `dateLabel` = **фактический календарный день коммита(ов)** с этой правкой в репозиторий (сверка с `git log`), не «завтра» в смысле IDE и не желаемая дата выката; новый день — новый блок с `dateLabel`; за день несколько выпусков —
+ * несколько элементов **`items`** (или несколько блоков с одной датой — UI склеит); в одном выпуске несколько правок — массив **`changes`**;
  * суть простым языком — **`plainBullets`** (в UI под раскрывашкой). По календарю строки не скрываются.
  */
 
@@ -285,16 +285,47 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
 
 /**
  * Релиз-ноты для тестеров без GitHub.
- * Правило: **дата = день, когда делались изменения** (`YYYY-MM-DD`). В модалке секции сортируются по дате **по убыванию** (более поздний календарный день **выше**); свежие записи должны иметь **`dateLabel` не меньше**, чем у более старых выпусков. Новый день без блока — добавить
+ * Правило: **`dateLabel` = календарный день, когда правки вошли в коммит(ы)** в этот репозиторий (`YYYY-MM-DD`), в **той таймзоне, в которой команда считает «день работы»** (практически — локальная дата автора на момент коммита; при сомнении сверять с **`git log`**, не с «ожидаемым завтра» и не только с «Today» в IDE). **Не** ставить дату **позже** фактического дня коммита и **не** подменять её желаемой датой выката.
+ * В модалке секции сортируются по дате **по убыванию** (более поздний календарный день **выше**); свежие записи должны иметь **`dateLabel` не меньше**, чем у более старых выпусков. Новый день без блока — добавить
  * объект с `dateLabel` (обычно **в начало массива**, чтобы новее было выше в файле). За один день несколько
- * деплоев — несколько элементов **`items`** подряд. Один выпуск: несколько правок — **`changes`**[];
+ * деплоев — несколько элементов **`items`** подряд в одном блоке **или** несколько блоков с **одинаковой** `dateLabel` подряд (в UI день склеивается). Один выпуск: несколько правок — **`changes`**[];
  * пояснение «для людей» — **`plainBullets`**. У каждого элемента **`releasedInVersion`** — semver выпуска,
  * в котором изменения попали в сборку (как в `package.json` до `vite build`, без `+git`). В модалке внутри одного дня подблоки сортируются по **убыванию** этого semver. Интерфейс не скрывает даты по календарю «сегодня».
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
-    dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
+    dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.33', en: '0.6.33' },
+        changes: [
+          {
+            ru: '**Релиз-ноты (данные):** блок с **`dateLabel` 2026-05-12** объединён с **2026-05-11** — коммиты с перечисленными ранее под «12 мая» изменениями относились к **11 мая**; отдельный заголовок «12» вводил в заблуждение.',
+            en: '**Release notes (data):** the **`dateLabel` 2026-05-12** block is merged into **2026-05-11**—commits for those changes were on **May 11**; a standalone “12” header was misleading.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Дата в релиз-нотах — **фактический день работы в git**, не «завтра» и не желаемая дата выката; правило уточнено в комментарии выше и в `.cursor/rules/pre-commit-docs-roadmap.mdc`.',
+            en: 'Release-note dates are the **actual repo workday in git**, not “tomorrow” or a hoped ship date; clarified in the comment above and `.cursor/rules/pre-commit-docs-roadmap.mdc`.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.32', en: '0.6.32' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** режим **«Напоминание»** — запись без учёта как полноценной задачи (без «долга» по плану, отчётам, стрику); простое **напоминание о чём-либо**; черновик в **`15-Идеи-для-развития.md`**, §17.',
+            en: '**Ideas for later:** **“Reminder”** mode — entries that aren’t tracked like full tasks (no plan-debt framing in reports/streak); a simple **nudge about something**; draft in **`15-Идеи-для-развития.md`**, §17.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В идеях после релиза — отдельный тип «**напоминание**», чтобы мелочи не превращались в задачи с оценкой и «не закрыто».',
+            en: 'Post-release ideas add a **reminder** type so small notes don’t become full tasks with estimates and “not done.”',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.32', en: '0.6.32' },
         changes: [
@@ -374,11 +405,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
-    items: [
       {
         releasedInVersion: { ru: '0.6.31', en: '0.6.31' },
         changes: [
@@ -1611,6 +1637,27 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §16.',
         en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §16.',
+      },
+    ],
+  },
+  {
+    title: { ru: 'Режим «Напоминание» (не задача)', en: '“Reminder” mode (not a tracked task)' },
+    summary: {
+      ru: 'После MVP: отдельный **режим записи** рядом с обычной задачей — **напоминание о чём-либо**: не ведёт себя как полноценная задача (без обязательной оценки, без «выполнено» как долга, **не участвует** в отчётах/стрике/EOD как невыполненный план), но может **показываться в дне** или в списке как лёгкая **записка** с датой/временем.',
+      en: 'Post-MVP: a separate **entry mode** next to a normal task — a **reminder about something**: not a full task (no mandatory estimate, no “done” debt framing, **skipped** in reports/streak/EOD as unclosed plan), yet can **surface on a day** or list as a light **note** with date/time.',
+    },
+    detailBullets: [
+      {
+        ru: 'Согласовать с **бэклогом** и **заметками**: не размножить сущности; возможно один флаг в vault + особые правила отображения и фильтра «только напоминания».',
+        en: 'Align with **backlog** and **notes** entities — avoid sprawl; possibly one vault flag + special rendering and a “reminders only” filter.',
+      },
+      {
+        ru: 'Опционально **push** или тихий баннер в день — отдельное решение; не превращать в второй календарь событий.',
+        en: 'Optional **push** or a quiet day banner — separate call; don’t become a second event calendar.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §17.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §17.',
       },
     ],
   },
