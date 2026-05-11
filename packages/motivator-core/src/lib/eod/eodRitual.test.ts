@@ -111,6 +111,19 @@ describe('plannedDayCompletionWeights', () => {
     })
   })
 
+  it('caps checklist-only completion below 1 until main checkbox for the day', () => {
+    const day = '2026-05-09'
+    const t = baseTask({
+      scheduledLocalDate: day,
+      done: false,
+      checklist: [ck(true, 'a'), ck(true, 'b')],
+    })
+    expect(plannedDayCompletionWeights([t], day)).toEqual({
+      doneFraction: 0.99,
+      plannedTaskCount: 1,
+    })
+  })
+
   it('sums fractional contributions across tasks', () => {
     const day = '2026-05-09'
     const a = baseTask({
@@ -151,10 +164,19 @@ describe('isPlannedTaskFullyCompleteForDay', () => {
     expect(isPlannedTaskFullyCompleteForDay(t, day)).toBe(true)
   })
 
-  it('true when checklist fully checked', () => {
+  it('false when checklist fully checked but one-off not marked done', () => {
     const t = baseTask({
       scheduledLocalDate: day,
       done: false,
+      checklist: [ck(true, 'a'), ck(true, 'b')],
+    })
+    expect(isPlannedTaskFullyCompleteForDay(t, day)).toBe(false)
+  })
+
+  it('true when checklist fully checked and one-off marked done', () => {
+    const t = baseTask({
+      scheduledLocalDate: day,
+      done: true,
       checklist: [ck(true, 'a'), ck(true, 'b')],
     })
     expect(isPlannedTaskFullyCompleteForDay(t, day)).toBe(true)

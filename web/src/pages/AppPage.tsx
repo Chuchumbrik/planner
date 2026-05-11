@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
+import { PeriodPlanBreakdownChart } from '@/components/PeriodPlanBreakdownChart'
 import { PeriodPlanDonut } from '@/components/PeriodPlanDonut'
 import { EndOfDayModal } from '@/components/EndOfDayModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
@@ -26,6 +27,8 @@ import {
   isMainTaskDoneForDay,
   isPlannedTaskFullyCompleteForDay,
   plannedPeriodProgress,
+  plannedPeriodSlotsByColorKey,
+  plannedPeriodSlotsByGroupId,
   taskOccursOnDate,
   tasksScheduledForPlannerDay,
   weekDayKeys,
@@ -102,6 +105,20 @@ function formatDayHeading(dateKey: string, locale: string): string {
   } catch {
     return dateKey
   }
+}
+
+/** Короткий диапазон недели для шапки (1–2 строки на мобилке). */
+function formatWeekRangeCompact(firstKey: string, lastKey: string, locale: string): string {
+  const part = (key: string) => {
+    const [y, mo, d] = key.split('-').map(Number)
+    const dt = new Date(y, mo - 1, d)
+    try {
+      return dt.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
+    } catch {
+      return key
+    }
+  }
+  return `${part(firstKey)} — ${part(lastKey)}`
 }
 
 function sortByPriorityThenTitle(a: Task, b: Task): number {
@@ -213,6 +230,8 @@ function AppPageInner() {
   const [editOccurrenceDayKey, setEditOccurrenceDayKey] = useState<string | null>(null)
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false)
   const [draftsModalOpen, setDraftsModalOpen] = useState(false)
+  /** Рядом с кольцом недели/месяца: столбчатая диаграмма по группам или по цветам. */
+  const [periodSlotsMode, setPeriodSlotsMode] = useState<'group' | 'color'>('group')
   const [eodOpen, setEodOpen] = useState(false)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
@@ -476,6 +495,34 @@ function AppPageInner() {
     [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp],
   )
 
+  const weekBreakdownChartRows = useMemo((): { name: string; pct: number }[] => {
+    const buckets =
+      periodSlotsMode === 'group'
+        ? plannedPeriodSlotsByGroupId(filteredVaultTasks, weekDays, todayKeyApp)
+        : plannedPeriodSlotsByColorKey(filteredVaultTasks, weekDays, todayKeyApp)
+    return buckets.map((b) => ({
+      name:
+        periodSlotsMode === 'group'
+          ? sortedGroups.find((g) => g.id === b.key)?.name ?? b.key
+          : t(`app.colorName.${b.key as TaskColorKey}`),
+      pct: b.slotCount > 0 ? Math.round((100 * b.doneFractionSum) / b.slotCount) : 0,
+    }))
+  }, [filteredVaultTasks, weekDays, todayKeyApp, periodSlotsMode, sortedGroups, t])
+
+  const monthBreakdownChartRows = useMemo((): { name: string; pct: number }[] => {
+    const buckets =
+      periodSlotsMode === 'group'
+        ? plannedPeriodSlotsByGroupId(filteredVaultTasks, monthDayKeysForPlan, todayKeyApp)
+        : plannedPeriodSlotsByColorKey(filteredVaultTasks, monthDayKeysForPlan, todayKeyApp)
+    return buckets.map((b) => ({
+      name:
+        periodSlotsMode === 'group'
+          ? sortedGroups.find((g) => g.id === b.key)?.name ?? b.key
+          : t(`app.colorName.${b.key as TaskColorKey}`),
+      pct: b.slotCount > 0 ? Math.round((100 * b.doneFractionSum) / b.slotCount) : 0,
+    }))
+  }, [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp, periodSlotsMode, sortedGroups, t])
+
   const backlogTasks = useMemo(() => {
     const list = filteredVaultTasks.filter(
       (x) => x.scheduledLocalDate === null && !x.recurrence,
@@ -660,7 +707,7 @@ function AppPageInner() {
   ))
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8">
+    <div className="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-8">
       <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-emerald-400/90">
@@ -792,13 +839,13 @@ function AppPageInner() {
       ) : null}
 
       <div className="mb-6 flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative shrink-0">
             <button
               type="button"
               disabled={!canEdit}
               aria-expanded={filtersPanelOpen}
-              className="inline-flex items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-2 pr-5 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40"
               onClick={() => setFiltersPanelOpen((v) => !v)}
             >
               {t('app.filterToggle')}
@@ -812,47 +859,43 @@ function AppPageInner() {
                 disabled={!canEdit}
                 aria-haspopup="dialog"
                 aria-expanded={draftsModalOpen}
+                aria-label={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
                 title={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-                className="inline-flex items-center gap-2 rounded-lg border border-amber-900/45 bg-amber-950/25 px-3 py-2 text-sm font-medium text-amber-200/95 hover:bg-amber-950/40 disabled:opacity-40"
-                onClick={() => setDraftsModalOpen(true)}
+                className="absolute -right-0.5 -top-1.5 z-10 flex h-6 min-w-[1.35rem] items-center justify-center rounded-full border border-amber-700/80 bg-amber-500 px-1 text-[11px] font-bold text-amber-950 shadow-md hover:bg-amber-400 disabled:opacity-40"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setDraftsModalOpen(true)
+                }}
               >
-                <span>{t('app.draftsTitle')}</span>
-                <span
-                  className="inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-amber-600/90 px-1.5 text-xs font-semibold text-amber-950"
-                  aria-hidden
-                >
-                  {vault.drafts.length}
-                </span>
+                {vault.drafts.length > 99 ? '99+' : vault.drafts.length}
               </button>
             ) : null}
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {view === 'day' && eodEnabled ? (
-              <button
-                type="button"
-                disabled={!canEdit}
-                className={`rounded-lg border px-3 py-2 text-sm hover:border-zinc-500 disabled:opacity-40 ${
-                  eodDoneToday
-                    ? 'border-emerald-800 text-emerald-300'
-                    : 'border-violet-700 text-violet-200'
-                }`}
-                onClick={() => setEodOpen(true)}
-              >
-                {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
-              </button>
-            ) : null}
+          {view === 'day' && eodEnabled ? (
             <button
               type="button"
               disabled={!canEdit}
-              className="inline-flex shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
-              onClick={() => {
-                setResumeDraft(null)
-                setCreateOpen(true)
-              }}
+              className={`rounded-lg border px-3 py-2 text-sm hover:border-zinc-500 disabled:opacity-40 ${
+                eodDoneToday
+                  ? 'border-emerald-800 text-emerald-300'
+                  : 'border-violet-700 text-violet-200'
+              }`}
+              onClick={() => setEodOpen(true)}
             >
-              {t('app.openCreateTask')}
+              {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
             </button>
-          </div>
+          ) : null}
+          <button
+            type="button"
+            disabled={!canEdit}
+            className="inline-flex shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+            onClick={() => {
+              setResumeDraft(null)
+              setCreateOpen(true)
+            }}
+          >
+            {t('app.openCreateTask')}
+          </button>
         </div>
 
         {filtersPanelOpen ? (
@@ -1201,38 +1244,48 @@ function AppPageInner() {
       )}
 
       {view === 'week' && (
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
+        <section className="flex min-h-0 flex-1 flex-col space-y-3">
+          <div className="flex flex-nowrap items-center justify-between gap-2">
+            <div className="flex shrink-0 items-center gap-0.5">
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+                onClick={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, -1))}
+                aria-label={t('app.weekPrev')}
+              >
+                <span className="sr-only">{t('app.weekPrev')}</span>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+                onClick={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, 1))}
+                aria-label={t('app.weekNext')}
+              >
+                <span className="sr-only">{t('app.weekNext')}</span>
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+                </svg>
+              </button>
+            </div>
+            <p className="min-w-0 flex-1 truncate px-1 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
+              {formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+            </p>
             <button
               type="button"
               disabled={!canEdit}
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-              onClick={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, -1))}
-            >
-              {t('app.weekPrev')}
-            </button>
-            <span className="flex-1 text-center text-sm text-zinc-300">
-              {weekDays[0]} — {weekDays[6]}
-            </span>
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-              onClick={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, 1))}
-            >
-              {t('app.weekNext')}
-            </button>
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="rounded-lg border border-emerald-800/60 px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40"
+              className="shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
               onClick={() => setWeekStartMonday(startOfWeekMonday(localDateKey()))}
             >
               {t('app.weekThis')}
             </button>
           </div>
-          <div className="mx-auto flex w-full max-w-5xl flex-col-reverse gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
-            <div className="min-w-0 flex-1">
+          <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col-reverse gap-4 lg:flex-row lg:items-stretch lg:justify-center lg:gap-8">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <WeekGrid
                 weekDays={weekDays}
                 tasks={filteredVaultTasks}
@@ -1243,11 +1296,43 @@ function AppPageInner() {
               />
             </div>
             {weekPlanProgress.plannedTaskCount > 0 ? (
-              <div className="flex shrink-0 justify-center lg:w-[min(100%,280px)] lg:justify-end lg:pt-1">
+              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:pt-1">
                 <PeriodPlanDonut
                   progress={weekPlanProgress}
                   title={t('app.periodPlanWeekRingTitle')}
-                  subtitle={`${weekDays[0]} — ${weekDays[6]}`}
+                  subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+                />
+                <div className="flex justify-center gap-1">
+                  <button
+                    type="button"
+                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
+                      periodSlotsMode === 'group'
+                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
+                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
+                    }`}
+                    onClick={() => setPeriodSlotsMode('group')}
+                  >
+                    {t('app.periodBreakdownByGroup')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
+                      periodSlotsMode === 'color'
+                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
+                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
+                    }`}
+                    onClick={() => setPeriodSlotsMode('color')}
+                  >
+                    {t('app.periodBreakdownByColor')}
+                  </button>
+                </div>
+                <PeriodPlanBreakdownChart
+                  rows={weekBreakdownChartRows}
+                  title={
+                    periodSlotsMode === 'group'
+                      ? t('app.periodBreakdownChartTitleGroup')
+                      : t('app.periodBreakdownChartTitleColor')
+                  }
                 />
               </div>
             ) : null}
@@ -1312,11 +1397,43 @@ function AppPageInner() {
               />
             </div>
             {monthPlanProgress.plannedTaskCount > 0 ? (
-              <div className="flex shrink-0 justify-center lg:w-[min(100%,280px)] lg:justify-end lg:pt-1">
+              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:justify-end lg:pt-1">
                 <PeriodPlanDonut
                   progress={monthPlanProgress}
                   title={t('app.periodPlanMonthRingTitle')}
                   subtitle={monthLabel(monthYear, monthIndex, locale)}
+                />
+                <div className="flex justify-center gap-1">
+                  <button
+                    type="button"
+                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
+                      periodSlotsMode === 'group'
+                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
+                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
+                    }`}
+                    onClick={() => setPeriodSlotsMode('group')}
+                  >
+                    {t('app.periodBreakdownByGroup')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
+                      periodSlotsMode === 'color'
+                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
+                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
+                    }`}
+                    onClick={() => setPeriodSlotsMode('color')}
+                  >
+                    {t('app.periodBreakdownByColor')}
+                  </button>
+                </div>
+                <PeriodPlanBreakdownChart
+                  rows={monthBreakdownChartRows}
+                  title={
+                    periodSlotsMode === 'group'
+                      ? t('app.periodBreakdownChartTitleGroup')
+                      : t('app.periodBreakdownChartTitleColor')
+                  }
                 />
               </div>
             ) : null}

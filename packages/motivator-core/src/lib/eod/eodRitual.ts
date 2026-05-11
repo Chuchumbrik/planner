@@ -62,6 +62,10 @@ function taskCompletionFractionForDay(task: Task, dateKey: string): number {
     return isMainTaskDoneForDay(task, dateKey) ? 1 : 0
   }
   const done = items.filter((i) => i.done).length
+  if (done === items.length && !isMainTaskDoneForDay(task, dateKey)) {
+    /** Кольцо прогресса: не показывать «100%» по чек-листу, пока не отмечена главная галочка дня. */
+    return 0.99
+  }
   return done / items.length
 }
 
@@ -70,9 +74,12 @@ export function plannedTaskCompletionFractionForDay(task: Task, dateKey: string)
   return taskCompletionFractionForDay(task, dateKey)
 }
 
-/** Полностью закрыта по плану на этот календарный день (включая чек-лист). */
+/** Полностью закрыта по плану на этот календарный день: чек-лист (если есть) + главная отметка дня. */
 export function isPlannedTaskFullyCompleteForDay(task: Task, dateKey: string): boolean {
-  return taskCompletionFractionForDay(task, dateKey) >= 1
+  const items = task.checklist ?? []
+  if (items.length === 0) return isMainTaskDoneForDay(task, dateKey)
+  if (!items.every((i) => i.done)) return false
+  return isMainTaskDoneForDay(task, dateKey)
 }
 
 /**
@@ -120,6 +127,57 @@ export function plannedPeriodProgress(
     plannedTaskCount += w.plannedTaskCount
   }
   return { doneFraction, plannedTaskCount }
+}
+
+/** Сводка «слотов» плана за период по полю задачи (для диаграмм в UI). */
+export type PeriodPlanSlotBucket = {
+  key: string
+  /** Сумма {@link taskCompletionFractionForDay} по всем (день × задача в плане) в бакете. */
+  doneFractionSum: number
+  /** Число вхождений задачи в плане на день в периоде (знаменатель для доли). */
+  slotCount: number
+}
+
+function accumulatePeriodPlanSlots(
+  tasks: Task[],
+  periodDayKeys: string[],
+  todayKey: string,
+  bucketKey: (t: Task) => string,
+): PeriodPlanSlotBucket[] {
+  const map = new Map<string, { done: number; n: number }>()
+  for (const d of periodDayKeys) {
+    if (d > todayKey) continue
+    for (const t of tasksScheduledForPlannerDay(tasks, d)) {
+      const k = bucketKey(t)
+      const cur = map.get(k) ?? { done: 0, n: 0 }
+      cur.done += taskCompletionFractionForDay(t, d)
+      cur.n += 1
+      map.set(k, cur)
+    }
+  }
+  return [...map.entries()]
+    .map(([key, v]) => ({
+      key,
+      doneFractionSum: v.done,
+      slotCount: v.n,
+    }))
+    .sort((a, b) => b.slotCount - a.slotCount)
+}
+
+export function plannedPeriodSlotsByGroupId(
+  tasks: Task[],
+  periodDayKeys: string[],
+  todayKey: string,
+): PeriodPlanSlotBucket[] {
+  return accumulatePeriodPlanSlots(tasks, periodDayKeys, todayKey, (t) => t.groupId)
+}
+
+export function plannedPeriodSlotsByColorKey(
+  tasks: Task[],
+  periodDayKeys: string[],
+  todayKey: string,
+): PeriodPlanSlotBucket[] {
+  return accumulatePeriodPlanSlots(tasks, periodDayKeys, todayKey, (t) => t.colorKey)
 }
 
 /** Выполнено / не закрыто по плану на день; бэклог отдельным списком для мягкого блока в UI. */

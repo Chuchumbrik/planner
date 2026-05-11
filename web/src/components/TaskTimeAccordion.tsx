@@ -88,12 +88,9 @@ export function TaskTimeAccordion({
 
   function handleHourChange(nextH: number) {
     const cur = timeInputToMinutes(timeClock.trim()) ?? hourVal * 60 + minuteVal
-    let keptMin = cur % 60
+    const keptMin = cur % 60
     let total = nextH * 60 + keptMin
-    if (floorM != null && total < floorM) {
-      total = floorM
-      keptMin = total % 60
-    }
+    if (floorM != null && total < floorM) total = floorM
     onClockChange(minutesToTimeInput(total))
   }
 

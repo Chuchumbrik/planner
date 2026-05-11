@@ -1,5 +1,59 @@
 @import 'tailwindcss';
 
+@layer base {
+  /**
+   * iOS Safari: поля с font-size < 16px при фокусе вызывают авто-zoom.
+   * На мобилке 16px, с sm — как в остальной форме (14px).
+   */
+  input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not(
+      [type='file']
+    ),
+  select,
+  textarea {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  @media (min-width: 640px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not(
+        [type='file']
+      ),
+    select,
+    textarea {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+  }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  summary {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role='button'][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+  a[href] {
+    cursor: pointer;
+  }
+}
+
+/**
+ * Поверх утилит Tailwind (`text-sm` на полях): на узком экране не даём шрифту ввода упасть ниже 16px.
+ */
+@layer utilities {
+  @media (max-width: 639.98px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not(
+        [type='file']
+      ),
+    select,
+    textarea {
+      font-size: 1rem !important;
+      line-height: 1.5rem !important;
+    }
+  }
+}
+
 body {
   margin: 0;
   min-height: 100vh;

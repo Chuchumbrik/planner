@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   isMainTaskDoneForDay,
@@ -51,6 +51,7 @@ export function TaskMiniCard({
   planRowSurfaceClass,
 }: Props) {
   const { t } = useTranslation()
+  const checklistFieldId = useId()
   const leftAccent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
 
   const mainDone =
@@ -208,29 +209,41 @@ export function TaskMiniCard({
       </div>
       {task.checklist.length > 0 && onToggleChecklistItem ? (
         <ul className="border-t border-zinc-800/90 px-3 pb-2 pt-2">
-          {task.checklist.map((item) => (
-            <li key={item.id} className="flex items-start gap-2 py-0.5">
-              <input
-                type="checkbox"
-                checked={item.done}
-                disabled={!canEdit || !completionToggleAllowed}
-                title={
-                  !completionToggleAllowed ? t('app.completionOnlyToday') : undefined
-                }
-                onChange={() => onToggleChecklistItem(item.id)}
-                onClick={(e) => e.stopPropagation()}
-                aria-label={item.title}
-                className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
-              />
-              <span
-                className={`min-w-0 flex-1 text-xs leading-snug ${
-                  item.done ? 'text-zinc-500 line-through' : 'text-zinc-400'
-                }`}
-              >
-                {item.title}
-              </span>
-            </li>
-          ))}
+          {task.checklist.map((item) => {
+            const cid = `${checklistFieldId}-${item.id}`
+            return (
+              <li key={item.id}>
+                <label
+                  htmlFor={cid}
+                  className={`flex min-h-[44px] cursor-pointer items-start gap-3 rounded-md py-1.5 pl-0.5 pr-1 hover:bg-zinc-900/50 ${
+                    !canEdit || !completionToggleAllowed ? 'cursor-default hover:bg-transparent' : ''
+                  }`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    id={cid}
+                    type="checkbox"
+                    checked={item.done}
+                    disabled={!canEdit || !completionToggleAllowed}
+                    title={
+                      !completionToggleAllowed ? t('app.completionOnlyToday') : undefined
+                    }
+                    onChange={() => onToggleChecklistItem(item.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={item.title}
+                    className="mt-1.5 h-5 w-5 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                  />
+                  <span
+                    className={`min-w-0 flex-1 py-0.5 text-sm leading-snug ${
+                      item.done ? 'text-zinc-500 line-through' : 'text-zinc-300'
+                    }`}
+                  >
+                    {item.title}
+                  </span>
+                </label>
+              </li>
+            )
+          })}
         </ul>
       ) : null}
     </div>

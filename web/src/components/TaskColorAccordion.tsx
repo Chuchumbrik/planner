@@ -152,7 +152,7 @@ export function TaskColorAccordion({
       </summary>
 
       <div className="border-t border-zinc-800/90 px-3 pb-3 pt-3">
-        <p className="mb-2 text-[11px] text-zinc-500">{t('app.colorSwatchesHint')}</p>
+        <p className="mb-2 text-xs text-zinc-500">{t('app.colorSwatchesHint')}</p>
         <div className="flex flex-wrap gap-2">
           {orderedKeys.map((key) => (
             <button
@@ -173,7 +173,7 @@ export function TaskColorAccordion({
             <span>{t('app.colorHexInput')}</span>
             <input
               type="text"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 disabled:opacity-40"
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white placeholder:text-zinc-600 disabled:opacity-40 sm:text-sm"
               placeholder="#RRGGBB · rgb(…)"
               value={colorHexInput}
               disabled={!canEdit}
@@ -195,7 +195,7 @@ export function TaskColorAccordion({
             />
           </label>
         </div>
-        <p className="mt-2 text-[10px] leading-snug text-zinc-600">
+        <p className="mt-2 text-xs leading-snug text-zinc-600">
           {t('app.colorHexHint', { name: t(`app.colorName.${colorKey}`) })}
         </p>
       </div>

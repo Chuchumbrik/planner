@@ -228,6 +228,7 @@ export function CreateTaskModal({
   const estimateRef = useRef<HTMLDivElement>(null)
   const timeRef = useRef<HTMLDivElement>(null)
   const recurrenceRef = useRef<HTMLFieldSetElement>(null)
+  const additionalSettingsRef = useRef<HTMLDetailsElement>(null)
 
   const sortedGroups = useMemo(() => [...groups].sort((a, b) => a.sortOrder - b.sortOrder), [groups])
 
@@ -829,8 +830,19 @@ export function CreateTaskModal({
           ) : null}
         </fieldset>
 
-        <details className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
-          <summary className="cursor-pointer text-xs font-medium text-zinc-400">
+        <details
+          ref={additionalSettingsRef}
+          className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
+          onToggle={(e) => {
+            const el = e.currentTarget
+            if (el.open) {
+              requestAnimationFrame(() => {
+                el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+              })
+            }
+          }}
+        >
+          <summary className="cursor-pointer list-none text-xs font-medium text-zinc-400 [&::-webkit-details-marker]:hidden">
             {t('app.createTaskAdditionalSettings')}
           </summary>
           <div className="mt-3 flex flex-col gap-4 border-t border-zinc-800/80 pt-3">

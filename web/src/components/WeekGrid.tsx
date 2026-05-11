@@ -80,12 +80,12 @@ export function WeekGrid({
   }
 
   return (
-    <div className="w-full min-w-0">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
       <div
         className="grid w-full min-w-0 border-x border-t border-zinc-800"
         style={{
           gridTemplateColumns: GRID_COLS,
-          gridTemplateRows: `auto auto minmax(0, min(70vh, 900px))`,
+          gridTemplateRows: `auto auto minmax(200px, min(78dvh, 900px))`,
         }}
       >
         {/* Строка 1: дни недели */}
