@@ -22,6 +22,8 @@ import {
   type VaultPayloadV5,
   type VaultPayloadV6,
   type VaultPayloadV7,
+  type VaultPayloadV8,
+  type NotificationPreferences,
 } from './types'
 
 function isColorKey(x: unknown): x is TaskColorKey {
@@ -109,10 +111,19 @@ function normalizeRecurrenceRule(raw: unknown): RecurrenceRule | null {
   return null
 }
 
-/** Приводит произвольный JSON к актуальной схеме v7 */
-export function normalizeVault(raw: unknown): VaultPayloadV7 {
+/** Приводит произвольный JSON к актуальной схеме v8 */
+export function normalizeVault(raw: unknown): VaultPayloadV8 {
   if (!raw || typeof raw !== 'object') return emptyVault()
   const o = raw as Record<string, unknown>
+
+  if (
+    o.schemaVersion === 8 &&
+    Array.isArray(o.tasks) &&
+    Array.isArray(o.groups) &&
+    Array.isArray(o.drafts)
+  ) {
+    return repairV8(o as VaultPayloadV8)
+  }
 
   if (
     o.schemaVersion === 7 &&
@@ -120,7 +131,7 @@ export function normalizeVault(raw: unknown): VaultPayloadV7 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return repairV7(o as VaultPayloadV7)
+    return migrateV7toV8(repairV7(o as VaultPayloadV7))
   }
 
   if (
@@ -129,7 +140,7 @@ export function normalizeVault(raw: unknown): VaultPayloadV7 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return migrateV6toV7(repairV6(o as VaultPayloadV6))
+    return migrateV7toV8(migrateV6toV7(repairV6(o as VaultPayloadV6)))
   }
 
   if (
@@ -138,35 +149,43 @@ export function normalizeVault(raw: unknown): VaultPayloadV7 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return migrateV6toV7(repairV6(migrateV5toV6(repairV5(o as VaultPayloadV5))))
+    return migrateV7toV8(migrateV6toV7(repairV6(migrateV5toV6(repairV5(o as VaultPayloadV5)))))
   }
 
   if (o.schemaVersion === 4 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV6toV7(repairV6(migrateV5toV6(migrateV4toV5(repairV4(o as VaultPayloadV4)))))
+    return migrateV7toV8(
+      migrateV6toV7(repairV6(migrateV5toV6(migrateV4toV5(repairV4(o as VaultPayloadV4))))),
+    )
   }
 
   if (o.schemaVersion === 3 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV6toV7(
-      repairV6(migrateV5toV6(migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3))))),
+    return migrateV7toV8(
+      migrateV6toV7(
+        repairV6(migrateV5toV6(migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3))))),
+      ),
     )
   }
 
   if (o.schemaVersion === 2 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV6toV7(
-      repairV6(
-        migrateV5toV6(
-          migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))),
+    return migrateV7toV8(
+      migrateV6toV7(
+        repairV6(
+          migrateV5toV6(
+            migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))),
+          ),
         ),
       ),
     )
   }
 
   if (o.schemaVersion === 1 && Array.isArray(o.tasks)) {
-    return migrateV6toV7(
-      repairV6(
-        migrateV5toV6(
-          migrateV4toV5(
-            migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+    return migrateV7toV8(
+      migrateV6toV7(
+        repairV6(
+          migrateV5toV6(
+            migrateV4toV5(
+              migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+            ),
           ),
         ),
       ),
@@ -185,6 +204,41 @@ function migrateV6toV7(v: VaultPayloadV6): VaultPayloadV7 {
     drafts: v.drafts,
     eodCompletedLocalDates: v.eodCompletedLocalDates,
     eodPreferences: v.eodPreferences,
+  }
+}
+
+function normalizeNotificationPreferences(raw: unknown): NotificationPreferences {
+  if (!raw || typeof raw !== 'object') return { deliveryMode: 'off' }
+  const mode = (raw as Record<string, unknown>).deliveryMode
+  if (mode === 'hybrid' || mode === 'full' || mode === 'off') {
+    return { deliveryMode: mode }
+  }
+  return { deliveryMode: 'off' }
+}
+
+function migrateV7toV8(v: VaultPayloadV7): VaultPayloadV8 {
+  return {
+    ...v,
+    schemaVersion: 8,
+    notificationPreferences: { deliveryMode: 'off' },
+  }
+}
+
+function repairV8(v: VaultPayloadV8): VaultPayloadV8 {
+  const v7part: VaultPayloadV7 = {
+    schemaVersion: 7,
+    priorityLabels: v.priorityLabels,
+    groups: v.groups,
+    tasks: v.tasks,
+    drafts: v.drafts,
+    eodCompletedLocalDates: v.eodCompletedLocalDates,
+    eodPreferences: v.eodPreferences,
+  }
+  const repaired7 = repairV7(v7part)
+  return {
+    ...repaired7,
+    schemaVersion: 8,
+    notificationPreferences: normalizeNotificationPreferences(v.notificationPreferences),
   }
 }
 

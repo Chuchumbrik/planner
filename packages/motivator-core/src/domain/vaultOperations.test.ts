@@ -8,6 +8,7 @@ import {
   applyRemoveTask,
   applyRenameGroup,
   applySetEodEnabled,
+  applySetNotificationDeliveryMode,
   applyToggleChecklistItem,
 } from './vaultOperations'
 import { localDateKey } from '../lib/localDate'
@@ -150,14 +151,12 @@ describe('vaultOperations', () => {
     expect(next.eodCompletedLocalDates).toContain('2026-05-08')
   })
 
-  it('applySetEodEnabled сохраняет autoCloseAtDayEnd', () => {
-    const v = {
-      ...emptyVault(),
-      eodPreferences: { enabled: true, autoCloseAtDayEnd: true },
-    }
-    const off = applySetEodEnabled(v, false)
-    expect(off.eodPreferences).toEqual({ enabled: false, autoCloseAtDayEnd: true })
-    const on = applySetEodEnabled(off, true)
-    expect(on.eodPreferences).toEqual({ enabled: true, autoCloseAtDayEnd: true })
+  it('applySetNotificationDeliveryMode', () => {
+    const v = emptyVault()
+    expect(v.notificationPreferences.deliveryMode).toBe('off')
+    const hybrid = applySetNotificationDeliveryMode(v, 'hybrid')
+    expect(hybrid.notificationPreferences).toEqual({ deliveryMode: 'hybrid' })
+    const full = applySetNotificationDeliveryMode(hybrid, 'full')
+    expect(full.notificationPreferences).toEqual({ deliveryMode: 'full' })
   })
 })

@@ -72,8 +72,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'Client-side crypto (DR-005/006), VAULT_CRYPTO_CONTRACT parity; debounced ciphertext sync with Supabase.',
       },
       {
-        ru: 'Сборка Web + PWA (manifest, service worker); i18next ru/en, переключатель в настройках, ключ в localStorage.',
-        en: 'Web + PWA (manifest, SW); i18next ru/en, settings toggle, localStorage key.',
+        ru: 'Сборка Web + PWA (manifest, service worker, push в **`src/sw.ts`**); i18next ru/en, переключатель в настройках, ключ в localStorage; Web Push — режимы в vault и таблицы в Supabase (см. README).',
+        en: 'Web + PWA (manifest, SW, push in **`src/sw.ts`**); i18next ru/en, settings toggle, localStorage key; Web Push modes in vault + Supabase tables (see README).',
       },
       {
         ru: 'Главная до входа (**`/`**): вход без отдельной плашки со ссылкой на документацию (`HomePage`).',
@@ -138,8 +138,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: '`/app` header: quieter sync icon next to account; menu — reports, EOD entry on Day tab, settings, sign out; remote vault load errors — friendly copy and **Retry**.',
       },
       {
-        ru: 'Вкладка «День»: кнопка **«Завершить день»** на одной строке с созданием задачи.',
-        en: 'Day tab: **End day** on the same row as create task.',
+        ru: 'Вкладка «День»: при просмотре **календарного сегодня** — кнопка **«Завершить день»** или **«Отчёт за сегодня»** на одной строке с созданием задачи; при выборе **прошлой** даты — **«Отчёт за день»** (модалка **`EndOfDayModal`**, только просмотр, без завершения ритуала). Для **будущей** даты кнопка не показывается.',
+        en: 'Day tab: on **calendar today**, **End day** / **Today’s report** next to create task; for a **past** day, **Day report** opens **`EndOfDayModal`** read-only (no ritual completion). **Future** days hide the button.',
       },
       {
         ru: '**`TaskEditModal`** на мобильном WebKit: оверлей через **`createPortal` → `document.body`**, блокировка прокрутки **`body`** — касания не проходят сквозь модалку.',
@@ -309,6 +309,45 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  * в котором изменения попали в сборку (как в `package.json` до `vite build`, без `+git`). В модалке внутри одного дня подблоки сортируются по **убыванию** этого semver. Интерфейс не скрывает даты по календарю «сегодня».
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
+  {
+    dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.6.39', en: '0.6.39' },
+        changes: [
+          {
+            ru: '**Уведомления (Web Push):** vault **`schemaVersion: 8`** — **`notificationPreferences.deliveryMode`**: `off` | `hybrid` | `full`; настройки в **`/settings`**; синхронизация **`notification_fire_requests`** в Supabase (debounce); подписка **`push_subscriptions`**; **`injectManifest`** + **`src/sw.ts`** (push + click); Edge Functions **`send-due`**, **`notifications-test`** (`web/supabase/functions/`); миграция **`002_notifications.sql`**; env **`VITE_VAPID_PUBLIC_KEY`**.',
+            en: '**Notifications (Web Push):** vault **`schemaVersion: 8`** — **`notificationPreferences.deliveryMode`**: `off` | `hybrid` | `full`; settings on **`/settings`**; debounced sync of **`notification_fire_requests`** to Supabase; **`push_subscriptions`**; **`injectManifest`** + **`src/sw.ts`** (push + click); Edge Functions **`send-due`**, **`notifications-test`** (`web/supabase/functions/`); migration **`002_notifications.sql`**; env **`VITE_VAPID_PUBLIC_KEY`**.',
+          },
+          {
+            ru: '**Документация:** в **`web/README.md`** — шаг миграции **`002`** в разделе Supabase и чеклист ручной настройки (секреты Edge, деплой функций, cron, переменные Vercel).',
+            en: '**Docs:** in **`web/README.md`** — `002` migration step in the Supabase section plus a manual setup checklist (Edge secrets, function deploy, cron, Vercel env vars).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Можно выбрать: не слать push; **гибрид** (на сервере только время и тип события, текст в шторке общий); **полный** (на сервер могут попасть названия задач). Расписание считается на устройстве после расшифровки vault.',
+            en: 'You can choose: no push; **hybrid** (server gets time and event kind only, generic notification text); **full** (task titles may be stored on the server). The schedule is computed client-side after decrypting the vault.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.38', en: '0.6.38' },
+        changes: [
+          {
+            ru: '**Вкладка «День» / EOD:** при выборе **прошлой** даты в календаре вместо **«Завершить день»** показывается **«Отчёт за день»** — та же модалка **`EndOfDayModal`**, но только просмотр сводки по плану на эту дату (без кнопки завершения ритуала); для **сегодня** поведение без изменений; для **будущей** даты кнопка скрыта. Новые строки i18n: **`app.dayReportNav`**, **`eod.reportTitle`**, **`eod.reportIntro`**, **`eod.reportAlreadyDone`**.',
+            en: '**Day tab / EOD:** when a **past** calendar day is selected, **Day report** replaces **End day** — same **`EndOfDayModal`** in read-only mode for that date’s plan summary (no finish-ritual button); **today** unchanged; **future** days hide the button. New i18n: **`app.dayReportNav`**, **`eod.reportTitle`**, **`eod.reportIntro`**, **`eod.reportAlreadyDone`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Можно открыть «отчёт по дню» для вчера и раньше так же, как сводку за сегодня — без риска случайно «закрыть» прошлый день кнопкой ритуала.',
+            en: 'Open the same day-summary modal for yesterday and earlier as you would for today — without accidentally completing a past day via the ritual button.',
+          },
+        ],
+      },
+    ],
+  },
   {
     dateLabel: { ru: '2026-05-11', en: '2026-05-11' },
     items: [
@@ -1462,6 +1501,30 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   },
   {
     title: {
+      ru: 'Командные задачи и группы совместной работы',
+      en: 'Team tasks and collaborative groups',
+    },
+    summary: {
+      ru: 'После MVP: возможность создавать **группы людей** для совместных задач — общие активности на конкретное время или регулярные цели на день/неделю. Участники группы видят прогресс друг друга, могут оставлять комментарии, советы и делиться результатами/впечатлениями.',
+      en: 'Post-MVP: create **collaborative groups** for shared tasks — scheduled activities and recurring day/week goals. Group members can see each other’s progress, leave comments/advice, and share outcomes/retrospective notes.',
+    },
+    detailBullets: [
+      {
+        ru: 'Нужны отдельные продуктовые решения: модель ролей (владелец/участник), приватность внутри группы, видимость личных задач и защита от давления/сравнений.',
+        en: 'Requires explicit product decisions: role model (owner/member), in-group privacy, personal-task visibility, and anti-pressure guardrails.',
+      },
+      {
+        ru: 'Канал взаимодействия в MVP+1: комментарии к задаче/дню, короткие отчёты о результате, реакции; без смешивания с личным vault без явного согласия.',
+        en: 'Candidate interaction scope for MVP+1: task/day comments, short outcome notes, lightweight reactions; no implicit mixing with private vault data.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §18.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §18.',
+      },
+    ],
+  },
+  {
+    title: {
       ru: 'Напоминания о неиспользованных функциях (feature discovery)',
       en: 'Unused-feature hints (feature discovery)',
     },
@@ -1526,13 +1589,17 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     title: { ru: 'Раздел «Тестирование» в настройках', en: 'Settings: testing / QA tools' },
     summary: {
-      ru: 'Отдельная секция **только для администраторов и бета-тестеров**: переключатели и вспомогательные режимы, которые упрощают проверку приложения и сценариев; обычный пользователь раздел не видит.',
-      en: 'A **settings section for admins and beta testers only**: toggles and helpers to exercise flows and validate behavior; hidden from regular users.',
+      ru: 'Отдельная секция **только для администраторов и бета-тестеров**: переключатели и вспомогательные режимы, которые упрощают проверку приложения и сценариев; обычный пользователь раздел не видит. В той же зоне — **поле / кнопка «Завести дефект»**: форма отправки в **GitHub Issue** (основной целевой канал), см. отдельную карточку ниже и **§14** в Obsidian.',
+      en: 'A **settings section for admins and beta testers only**: toggles and helpers to exercise flows and validate behavior; hidden from regular users. In the same area — a **“File a defect”** control: a form that creates a **GitHub Issue** (primary target sink); see the next card and Obsidian **§14**.',
     },
     detailBullets: [
       {
         ru: 'Доступ по ролям на сервере (`app_metadata.motivator_role`: **admin**, **beta_tester**); состав пунктов и название секции — при реализации.',
         en: 'Role-gated server-side (`app_metadata.motivator_role`: **admin**, **beta_tester**); section title and items — TBD at implementation.',
+      },
+      {
+        ru: '**«Завести дефект»:** одна точка входа в настройках (и при необходимости дублирующая ссылка из шапки только для ролей QA) — открывает модалку или экран с полями; после успешной отправки показывать **ссылку на созданный GitHub Issue**.',
+        en: '**“File a defect”:** one entry point in settings (optional duplicate in header for QA roles only) — modal or screen with fields; on success show a **link to the created GitHub Issue**.',
       },
       {
         ru: 'Поле выбора **«какую дату считать сегодня»** (override системной): вместо текущей даты ОС приложение везде берёт выбранную — план и бэклог на день, ритуал EOD, отчёты, стрики, просрочки; можно ставить задачи на любой день, отмечать выполнение или нет и проверять, как считает логика.',
@@ -1551,21 +1618,29 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     title: { ru: 'Дефекты из приложения (тестеры и админы)', en: 'In-app defect filing (testers & admins)' },
     summary: {
-      ru: 'После MVP: для ролей **бета-тестер** и **администратор** — **форма заведения дефекта** прямо в интерфейсе (краткое описание, шаги воспроизведения, при необходимости скриншот или контекст экрана), чтобы не уводить человека в почту или сторонний трекер без необходимости.',
-      en: 'Post-MVP: for **beta tester** and **admin** — an **in-app defect form** (short description, repro steps, optional screenshot or screen context) so testers aren’t forced to email or an external tracker first.',
+      ru: 'После MVP: для ролей **бета-тестер** и **администратор** — **форма «Завести дефект»** в интерфейсе (заголовок, описание, шаги воспроизведения, опционально скриншот/контекст экрана). **Основной канал назначения** — создание **GitHub Issue** в выбранном репозитории через **серверный** вызов API (токен не в клиенте); после отправки — **прямая ссылка** на issue.',
+      en: 'Post-MVP: for **beta tester** and **admin** — a **“File a defect”** form (title, description, repro steps, optional screenshot/screen context). **Primary sink** — create a **GitHub Issue** in a chosen repo via a **server-side** API call (no client token); on success — a **direct link** to the issue.',
     },
     detailBullets: [
       {
-        ru: 'Тот же **контроль по ролям**, что и раздел «Тестирование» (`app_metadata.motivator_role`); канал назначения — **GitHub Issues**, **Linear**, таблица Supabase + уведомление, почта — решение при реализации.',
-        en: 'Same **role gating** as the Testing section (`app_metadata.motivator_role`); sink — **GitHub Issues**, **Linear**, Supabase table + notify, email — TBD.',
+        ru: '**GitHub:** репозиторий и метки по умолчанию (`bug`, `from-app` и т.д.) — конфиг на сервере; **GitHub App** или **fine-grained PAT** только в Edge Function / бэкенде; шаблон тела issue (markdown) с блоками «Окружение»: `APP_VERSION`, маршрут, локаль, user id (без email в открытую — по политике).',
+        en: '**GitHub:** default repo & labels (`bug`, `from-app`, etc.) — server config; **GitHub App** or **fine-grained PAT** only in Edge Functions / backend; issue body template (markdown) with an **Environment** block: `APP_VERSION`, route, locale, user id (email policy — product/legal).',
+      },
+      {
+        ru: '**Клиент** вызывает только **Supabase Edge Function** (или аналог) с JWT пользователя; функция проверяет роль и дергает **`POST /repos/{owner}/{repo}/issues`**; лимиты API и обработка ошибок — в ответе UI.',
+        en: 'The **client** calls only a **Supabase Edge Function** (or equivalent) with the user JWT; the function checks the role then **`POST /repos/{owner}/{repo}/issues`**; handle rate limits/errors in the UI response.',
+      },
+      {
+        ru: 'Резервный канал (таблица Supabase, почта) — если GitHub недоступен или для закрытой волны без доступа к репо.',
+        en: 'Fallback (Supabase table, email) if GitHub is unavailable or for a wave without repo access.',
       },
       {
         ru: 'Автоподстановка **версии приложения** (`APP_VERSION` / build), маршрута, локали; **не** отправлять содержимое vault в явном виде без явного согласия пользователя.',
         en: 'Auto-fill **app version** (`APP_VERSION` / build), route, locale; **never** ship vault plaintext without explicit user consent.',
       },
       {
-        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §14.',
-        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §14.',
+        ru: 'Черновик и **план этапов** — **`obsidian-motivator/15-Идеи-для-развития.md`**, §14.',
+        en: 'Draft plus **implementation phases** — **`obsidian-motivator/15-Идеи-для-развития.md`**, §14.',
       },
     ],
   },

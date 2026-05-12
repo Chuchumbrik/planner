@@ -134,6 +134,13 @@ export type EodPreferences = {
   autoCloseAtDayEnd?: boolean
 }
 
+/** Режим доставки Web Push (см. README / план уведомлений). */
+export type NotificationDeliveryMode = 'off' | 'hybrid' | 'full'
+
+export type NotificationPreferences = {
+  deliveryMode: NotificationDeliveryMode
+}
+
 export type VaultPayloadV6 = {
   schemaVersion: 6
   priorityLabels: PriorityLabels
@@ -153,6 +160,17 @@ export type VaultPayloadV7 = {
   drafts: TaskDraft[]
   eodCompletedLocalDates: string[]
   eodPreferences: EodPreferences
+}
+
+export type VaultPayloadV8 = {
+  schemaVersion: 8
+  priorityLabels: PriorityLabels
+  groups: TaskGroup[]
+  tasks: Task[]
+  drafts: TaskDraft[]
+  eodCompletedLocalDates: string[]
+  eodPreferences: EodPreferences
+  notificationPreferences: NotificationPreferences
 }
 
 /** Поля создания задачи из модального окна */
@@ -225,7 +243,7 @@ export type VaultPayloadV1 = {
   }>
 }
 
-export type VaultPayload = VaultPayloadV7
+export type VaultPayload = VaultPayloadV8
 
 export const DEFAULT_GROUP_ID = 'grp_default'
 
@@ -239,14 +257,15 @@ export function defaultPriorityLabels(): PriorityLabels {
   }
 }
 
-export function emptyVault(): VaultPayloadV7 {
+export function emptyVault(): VaultPayloadV8 {
   return {
-    schemaVersion: 7,
+    schemaVersion: 8,
     priorityLabels: defaultPriorityLabels(),
     groups: [{ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 }],
     tasks: [],
     drafts: [],
     eodCompletedLocalDates: [],
     eodPreferences: { enabled: true, autoCloseAtDayEnd: false },
+    notificationPreferences: { deliveryMode: 'off' },
   }
 }

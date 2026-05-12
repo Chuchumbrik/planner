@@ -9,7 +9,7 @@ describe('normalizeVault', () => {
     const once = normalizeVault(v as unknown)
     const twice = normalizeVault(once as unknown)
     expect(twice).toEqual(once)
-    expect(once.schemaVersion).toBe(7)
+    expect(once.schemaVersion).toBe(8)
   })
 
   it('принимает сериализованный JSON и возвращает тот же нормализованный снимок', () => {

@@ -21,6 +21,7 @@ import {
   type TaskGroup,
   type TaskTimeMode,
   type VaultPayload,
+  type NotificationDeliveryMode,
 } from '../vault/types'
 
 /** Локальный календарный день задачи / вхождения повтора: YYYY-MM-DD */
@@ -577,6 +578,16 @@ export function applySetEodAutoCloseAtDayEnd(vault: VaultPayload, value: boolean
   return {
     ...vault,
     eodPreferences: { ...m, autoCloseAtDayEnd: value },
+  }
+}
+
+export function applySetNotificationDeliveryMode(
+  vault: VaultPayload,
+  mode: NotificationDeliveryMode,
+): VaultPayload {
+  return {
+    ...vault,
+    notificationPreferences: { deliveryMode: mode },
   }
 }
 

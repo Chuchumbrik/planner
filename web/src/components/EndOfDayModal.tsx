@@ -20,6 +20,8 @@ export type EndOfDayModalProps = {
   alreadyCompleted: boolean
   canEdit: boolean
   onCompleteRitual: () => void | Promise<void>
+  /** `report` — только просмотр сводки за выбранную дату (без завершения ритуала). */
+  mode?: 'ritual' | 'report'
 }
 
 function TaskLine({ task }: { task: Task }) {
@@ -69,8 +71,10 @@ export function EndOfDayModal({
   alreadyCompleted,
   canEdit,
   onCompleteRitual,
+  mode = 'ritual',
 }: EndOfDayModalProps) {
   const { t, i18n } = useTranslation()
+  const isReport = mode === 'report'
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
   const { completed, remaining, backlogReminder } = useMemo(
@@ -124,10 +128,12 @@ export function EndOfDayModal({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 id="eod-modal-title" className="text-base font-semibold text-zinc-100">
-              {t('eod.title')}
+              {isReport ? t('eod.reportTitle') : t('eod.title')}
             </h2>
             <p className="mt-1 text-xs text-zinc-500">{t('eod.dateLabel', { date: ritualDateKey })}</p>
-            <p className="mt-2 text-xs leading-relaxed text-zinc-400">{t('eod.intro')}</p>
+            <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+              {isReport ? t('eod.reportIntro') : t('eod.intro')}
+            </p>
           </div>
           <button
             type="button"
@@ -141,7 +147,7 @@ export function EndOfDayModal({
 
         {alreadyCompleted ? (
           <p className="mt-4 rounded-lg border border-emerald-800/50 bg-emerald-950/25 px-3 py-2 text-sm text-emerald-200/95">
-            {t('eod.alreadyDone')}
+            {isReport ? t('eod.reportAlreadyDone') : t('eod.alreadyDone')}
           </p>
         ) : null}
 
@@ -232,7 +238,7 @@ export function EndOfDayModal({
           >
             {t('common.close')}
           </button>
-          {!alreadyCompleted ? (
+          {!isReport && !alreadyCompleted ? (
             <button
               type="button"
               disabled={!canEdit}

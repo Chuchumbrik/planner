@@ -31,6 +31,7 @@ import {
   applySetTaskScheduledLocalDate,
   applySetEodAutoCloseAtDayEnd,
   applySetEodEnabled,
+  applySetNotificationDeliveryMode,
   applySetTaskTimePlan,
   applyToggleChecklistItem,
   applyToggleTask,
@@ -50,11 +51,17 @@ import {
   type TaskDraft,
   type TaskTimeMode,
   type VaultPayload,
+  type NotificationDeliveryMode,
   VAULT_JSON_WARN_BYTES,
   VAULT_REMOTE_SAVE_DEBOUNCE_MS,
 } from '@motivator/core'
 import { createSupabaseVaultRemote } from '@/infrastructure/supabaseVaultRemote'
 import i18n from '@/i18n'
+import { ensurePushSubscription, getVapidPublicKey } from '@/lib/notifications/pushSubscription'
+import {
+  syncNotificationScheduleFromVault,
+  upsertPushSubscriptionRow,
+} from '@/lib/notifications/syncNotificationSchedule'
 import { supabase } from '@/lib/supabase'
 
 const SEED_KEY = 'motivator_seed_b64'
@@ -113,6 +120,11 @@ type VaultContextValue = {
   completeEodForLocalDate: (dateKey: string) => Promise<void>
   setEodEnabled: (enabled: boolean) => Promise<void>
   setEodAutoCloseAtDayEnd: (value: boolean) => Promise<void>
+  setNotificationDeliveryMode: (mode: NotificationDeliveryMode) => Promise<void>
+  /** Разрешение ОС + подписка Web Push и запись в Supabase; вернуть итог для UI. */
+  subscribePushNotifications: () => Promise<'ok' | 'denied' | 'unconfigured' | 'no_sw'>
+  /** Тестовый push через Edge Function `notifications-test` (должна быть задеплоена). */
+  sendTestPushNotification: () => Promise<void>
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null)
@@ -137,6 +149,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const latestPayloadRef = useRef<VaultPayload | null>(null)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const persistChainRef = useRef<Promise<void>>(Promise.resolve())
+  const notifSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const unlocked = Boolean(cryptoKey)
 
@@ -177,9 +190,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    let needsAnotherPass = true
-    while (needsAnotherPass) {
-      needsAnotherPass = false
+    while (true) {
       const revAtStart = revisionRef.current
       const normalized = latestPayloadRef.current
       if (!normalized) {
@@ -203,7 +214,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         setLastSyncedAt(Date.now())
 
         if (revisionRef.current !== revAtStart) {
-          needsAnotherPass = true
           continue
         }
         setSavePending(false)
@@ -371,6 +381,30 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       document.removeEventListener('visibilitychange', onVis)
     }
   }, [unlocked, remoteHydrated, pushVault])
+
+  /** Синхронизация открытого расписания push в Supabase после изменений vault (debounce). */
+  useEffect(() => {
+    if (!remoteHydrated || decryptFailed || !session?.user?.id || !supabase) return
+
+    if (notifSyncTimerRef.current) clearTimeout(notifSyncTimerRef.current)
+    const uid = session.user.id
+    const locale = i18n.language?.startsWith('en') ? 'en' : 'ru'
+
+    notifSyncTimerRef.current = setTimeout(() => {
+      notifSyncTimerRef.current = null
+      const v = latestPayloadRef.current
+      if (!v) return
+      const mode = v.notificationPreferences?.deliveryMode ?? 'off'
+      if (!supabase) return
+      void syncNotificationScheduleFromVault(supabase, uid, v, mode, locale).catch((e) =>
+        console.warn('[notification schedule sync]', e),
+      )
+    }, 1600)
+
+    return () => {
+      if (notifSyncTimerRef.current) clearTimeout(notifSyncTimerRef.current)
+    }
+  }, [remoteHydrated, decryptFailed, session, supabase, vault, i18n.language])
 
   const createTask = useCallback(
     async (input: CreateTaskInput) => {
@@ -574,6 +608,34 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
+  const setNotificationDeliveryMode = useCallback(
+    async (mode: NotificationDeliveryMode) => {
+      await mutate((v) => applySetNotificationDeliveryMode(v, mode))
+    },
+    [mutate],
+  )
+
+  const subscribePushNotifications = useCallback(async (): Promise<
+    'ok' | 'denied' | 'unconfigured' | 'no_sw'
+  > => {
+    if (!supabase || !session?.user?.id) return 'unconfigured'
+    if (!getVapidPublicKey()) return 'unconfigured'
+    const reg = await navigator.serviceWorker?.getRegistration()
+    if (!reg?.active) return 'no_sw'
+    const sub = await ensurePushSubscription()
+    if (!sub) return 'denied'
+    await upsertPushSubscriptionRow(supabase, session.user.id, sub)
+    return 'ok'
+  }, [session, supabase])
+
+  const sendTestPushNotification = useCallback(async () => {
+    if (!supabase) throw new Error('Supabase is not configured')
+    const { error } = await supabase.functions.invoke('notifications-test', {
+      body: { locale: i18n.language?.startsWith('en') ? 'en' : 'ru' },
+    })
+    if (error) throw error
+  }, [supabase])
+
   /** EOD: автоматически добавить прошлые дни с планом в `eodCompletedLocalDates`, если включено в настройках. */
   useEffect(() => {
     if (!unlocked || !remoteHydrated) return
@@ -635,6 +697,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       completeEodForLocalDate,
       setEodEnabled,
       setEodAutoCloseAtDayEnd,
+      setNotificationDeliveryMode,
+      subscribePushNotifications,
+      sendTestPushNotification,
     }),
     [
       ready,
@@ -671,6 +736,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       completeEodForLocalDate,
       setEodEnabled,
       setEodAutoCloseAtDayEnd,
+      setNotificationDeliveryMode,
+      subscribePushNotifications,
+      sendTestPushNotification,
     ],
   )
 

@@ -131,7 +131,7 @@ export function TaskMiniCard({
     <div className={shellClass} style={{ borderLeftColor: leftAccent }}>
       <div className="flex items-start gap-2 px-3 py-2">
         <label
-          className={`shrink-0 pt-0.5 ${toggleDoneDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          className={`flex shrink-0 items-center pt-0.5 ${toggleDoneDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           title={toggleDoneTitle}
           onClick={(e) => e.stopPropagation()}
         >
@@ -141,7 +141,7 @@ export function TaskMiniCard({
             disabled={toggleDoneDisabled}
             onChange={() => onToggle()}
             aria-label={t('app.toggleTaskDone')}
-            className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+            className="h-5 w-5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40 md:h-3.5 md:w-3.5"
           />
         </label>
         <button
@@ -215,7 +215,7 @@ export function TaskMiniCard({
               <li key={item.id}>
                 <label
                   htmlFor={cid}
-                  className={`flex min-h-[44px] cursor-pointer items-start gap-3 rounded-md py-1.5 pl-0.5 pr-1 hover:bg-zinc-900/50 ${
+                  className={`flex min-h-11 cursor-pointer items-center gap-2.5 rounded-md py-1 pl-0.5 pr-1 hover:bg-zinc-900/50 md:min-h-8 md:gap-2 md:py-0.5 ${
                     !canEdit || !completionToggleAllowed ? 'cursor-default hover:bg-transparent' : ''
                   }`}
                   onClick={(e) => e.stopPropagation()}
@@ -231,10 +231,10 @@ export function TaskMiniCard({
                     onChange={() => onToggleChecklistItem(item.id)}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={item.title}
-                    className="mt-1.5 h-5 w-5 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                    className="h-4 w-4 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40 md:h-3.5 md:w-3.5"
                   />
                   <span
-                    className={`min-w-0 flex-1 py-0.5 text-sm leading-snug ${
+                    className={`min-w-0 flex-1 text-sm leading-snug md:leading-tight ${
                       item.done ? 'text-zinc-500 line-through' : 'text-zinc-300'
                     }`}
                   >

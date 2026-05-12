@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { RequireVault } from '@/components/RequireVault'
 import { APP_VERSION } from '@/version'
-import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank } from '@motivator/core'
+import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank, type NotificationDeliveryMode } from '@motivator/core'
+import { getVapidPublicKey } from '@/lib/notifications/pushSubscription'
 import { useVault } from '@/vault/VaultProvider'
 
 function GroupRow({
@@ -101,6 +102,9 @@ function SettingsPageInner() {
     setPriorityLabel,
     setEodEnabled,
     setEodAutoCloseAtDayEnd,
+    setNotificationDeliveryMode,
+    subscribePushNotifications,
+    sendTestPushNotification,
   } = useVault()
   const [newGroupName, setNewGroupName] = useState('')
   const [pwCurrent, setPwCurrent] = useState('')
@@ -109,8 +113,14 @@ function SettingsPageInner() {
   const [pwBusy, setPwBusy] = useState(false)
   const [pwError, setPwError] = useState<string | null>(null)
   const [pwSuccess, setPwSuccess] = useState(false)
-  const canEdit = remoteHydrated && !decryptFailed
+  const [notifPushHint, setNotifPushHint] = useState<string | null>(null)
+  const [testPushBusy, setTestPushBusy] = useState(false)
+  const [testPushError, setTestPushError] = useState<string | null>(null)
+
+  const deliveryMode: NotificationDeliveryMode =
+    vault.notificationPreferences?.deliveryMode ?? 'off'
   const hasEmailLogin = Boolean(session?.user?.email)
+  const canEdit = remoteHydrated && !decryptFailed
 
   async function handleSignOut() {
     await lock()
@@ -206,6 +216,77 @@ function SettingsPageInner() {
           />
           <span className="text-sm leading-snug text-zinc-300">{t('settings.eodAutoCloseToggle')}</span>
         </label>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-medium text-zinc-300">{t('settings.notificationsTitle')}</h2>
+        <p className="mt-2 text-xs text-zinc-500">{t('settings.notificationsHelp')}</p>
+        <div className="mt-4 flex flex-col gap-3 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3">
+          {(
+            [
+              ['off', t('settings.notificationsModeOff')],
+              ['hybrid', t('settings.notificationsModeHybrid')],
+              ['full', t('settings.notificationsModeFull')],
+            ] as const
+          ).map(([value, label]) => (
+            <label key={value} className="flex cursor-pointer items-start gap-2">
+              <input
+                type="radio"
+                name="notification-delivery"
+                className="mt-1"
+                checked={deliveryMode === value}
+                disabled={!canEdit}
+                onChange={() => void setNotificationDeliveryMode(value)}
+              />
+              <span className="text-sm leading-snug text-zinc-300">{label}</span>
+            </label>
+          ))}
+          <p className="text-xs text-zinc-500">{t('settings.notificationsModeHybridHint')}</p>
+          <p className="text-xs text-amber-600/90">{t('settings.notificationsModeFullHint')}</p>
+        </div>
+        {deliveryMode !== 'off' ? (
+          <div className="mt-4 flex flex-col gap-2">
+            <button
+              type="button"
+              disabled={!canEdit}
+              className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+              onClick={() => {
+                setNotifPushHint(null)
+                void subscribePushNotifications().then((r: 'ok' | 'denied' | 'unconfigured' | 'no_sw') => {
+                  if (r === 'ok') setNotifPushHint(t('settings.notificationsPushOk'))
+                  else if (r === 'denied') setNotifPushHint(t('settings.notificationsPermissionDenied'))
+                  else if (r === 'no_sw') setNotifPushHint(t('settings.notificationsSwMissing'))
+                  else setNotifPushHint(t('settings.notificationsVapidMissing'))
+                })
+              }}
+            >
+              {t('settings.notificationsEnablePush')}
+            </button>
+            {notifPushHint ? <p className="text-xs text-zinc-400">{notifPushHint}</p> : null}
+            <button
+              type="button"
+              disabled={!canEdit || testPushBusy}
+              className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+              onClick={() => {
+                setTestPushError(null)
+                setTestPushBusy(true)
+                void sendTestPushNotification()
+                  .catch((e: unknown) => setTestPushError(e instanceof Error ? e.message : String(e)))
+                  .finally(() => setTestPushBusy(false))
+              }}
+            >
+              {testPushBusy ? t('common.loading') : t('settings.notificationsTestPush')}
+            </button>
+            {testPushError ? (
+              <p className="text-xs text-red-400" role="alert">
+                {testPushError}
+              </p>
+            ) : null}
+            {!getVapidPublicKey() ? (
+              <p className="text-xs text-zinc-500">{t('settings.notificationsVapidMissing')}</p>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="mt-8">

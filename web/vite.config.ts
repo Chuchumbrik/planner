@@ -35,10 +35,16 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       /** Регистрация только из кода (`src/lib/pwaServiceWorker.ts`), см. `injectRegister`. */
       registerType: 'autoUpdate',
       injectRegister: null,
       includeAssets: ['favicon.svg', 'pwa-192.png', 'pwa-512.png'],
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      },
       manifest: {
         name: 'Мотиватор',
         short_name: 'Мотиватор',
@@ -68,10 +74,6 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallback: '/index.html',
       },
       devOptions: {
         enabled: false,

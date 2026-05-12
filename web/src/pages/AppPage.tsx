@@ -177,6 +177,8 @@ function matchesFiltersExcept(
   return true
 }
 
+type EodModalContext = { dateKey: string; mode: 'ritual' | 'report' }
+
 function AppPageInner() {
   const { t, i18n } = useTranslation()
   const { signOut } = useAuth()
@@ -239,7 +241,7 @@ function AppPageInner() {
       ? globalThis.matchMedia('(min-width: 1024px)').matches
       : false,
   )
-  const [eodOpen, setEodOpen] = useState(false)
+  const [eodModalContext, setEodModalContext] = useState<EodModalContext | null>(null)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
@@ -795,7 +797,7 @@ function AppPageInner() {
                     className="block w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
                     onClick={() => {
                       setAccountMenuOpen(false)
-                      setEodOpen(true)
+                      setEodModalContext({ dateKey: todayKeyApp, mode: 'ritual' })
                     }}
                   >
                     {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
@@ -900,18 +902,33 @@ function AppPageInner() {
             ) : null}
           </div>
           {view === 'day' && eodEnabled ? (
-            <button
-              type="button"
-              disabled={!canEdit}
-              className={`rounded-lg border px-3 py-2 text-sm hover:border-zinc-500 disabled:opacity-40 ${
-                eodDoneToday
-                  ? 'border-emerald-800 text-emerald-300'
-                  : 'border-violet-700 text-violet-200'
-              }`}
-              onClick={() => setEodOpen(true)}
-            >
-              {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
-            </button>
+            selectedDay > todayKeyApp ? null : selectedDay < todayKeyApp ? (
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:border-zinc-500 disabled:opacity-40"
+                onClick={() =>
+                  setEodModalContext({ dateKey: selectedDay, mode: 'report' })
+                }
+              >
+                {t('app.dayReportNav')}
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={!canEdit}
+                className={`rounded-lg border px-3 py-2 text-sm hover:border-zinc-500 disabled:opacity-40 ${
+                  eodDoneToday
+                    ? 'border-emerald-800 text-emerald-300'
+                    : 'border-violet-700 text-violet-200'
+                }`}
+                onClick={() =>
+                  setEodModalContext({ dateKey: todayKeyApp, mode: 'ritual' })
+                }
+              >
+                {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
+              </button>
+            )
           ) : null}
           <button
             type="button"
@@ -1479,11 +1496,16 @@ function AppPageInner() {
       )}
 
       <EndOfDayModal
-        open={eodOpen}
-        onClose={() => setEodOpen(false)}
-        ritualDateKey={todayKeyApp}
+        open={eodModalContext !== null}
+        onClose={() => setEodModalContext(null)}
+        ritualDateKey={eodModalContext?.dateKey ?? todayKeyApp}
         tasks={vault.tasks}
-        alreadyCompleted={eodDoneToday}
+        mode={eodModalContext?.mode ?? 'ritual'}
+        alreadyCompleted={
+          eodModalContext?.mode === 'report'
+            ? Boolean(vault.eodCompletedLocalDates?.includes(eodModalContext.dateKey))
+            : eodDoneToday
+        }
         canEdit={canEdit}
         onCompleteRitual={() => completeEodForLocalDate(todayKeyApp)}
       />
