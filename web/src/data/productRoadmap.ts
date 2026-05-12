@@ -313,6 +313,36 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.41', en: '0.6.41' },
+        changes: [
+          {
+            ru: '**Уведомления / Vercel:** в корне репозитория — serverless **`api/send-due-cron.js`** и **`vercel.json`** с **`crons`** на **`GET /api/send-due-cron`** раз в минуту; переменные **`CRON_SECRET`**, **`SUPABASE_SEND_DUE_URL`**, **`SUPABASE_CRON_ANON_KEY`**; README — раздел **«Минутный вызов send-due на Vercel»** и оговорка про **Hobby vs Pro**.',
+            en: '**Notifications / Vercel:** repo root serverless **`api/send-due-cron.js`** + **`vercel.json`** **`crons`** for **`GET /api/send-due-cron`** every minute; env **`CRON_SECRET`**, **`SUPABASE_SEND_DUE_URL`**, **`SUPABASE_CRON_ANON_KEY`**; README — “Vercel minute tick” section and **Hobby vs Pro** note.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Можно обойтись без стороннего cron-сайта: Vercel сам дергает ваш URL раз в минуту (на подходящем тарифе) и проксирует вызов в Supabase **`send-due`**.',
+            en: 'You can skip a third-party cron host: Vercel hits your URL every minute (on supported plans) and proxies to Supabase **`send-due`**.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.39', en: '0.6.39' },
+        changes: [
+          {
+            ru: '**«Идеи на потом»:** раздел **«Тестирование»** и карточка **«Дефекты из приложения»** — **форма «Завести дефект»** с **GitHub Issue** как основным каналом (Edge Function + REST API, токен только на сервере, ссылка на issue в UI); **план этапов** в **`15-Идеи-для-развития.md`**, §14.',
+            en: '**Ideas for later:** **Testing** settings + **in-app defects** — **“File a defect”** tied to **GitHub Issues** as the primary sink (Edge Function + REST API, server-only token, issue link in UI); **phase plan** in **`15-Идеи-для-развития.md`**, §14.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В дорожной карте расписано: дефект из приложения уходит **в GitHub** через сервер, а не с ключом в браузере; в Obsidian добавлен **пошаговый черновик работ** (продукт → GitHub → Edge → UI → роли → доки).',
+            en: 'Roadmap now spells out defects → **GitHub** via the server (no browser token); Obsidian §14 adds a **draft implementation phase list**.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.39', en: '0.6.39' },
         changes: [
           {
@@ -570,6 +600,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-10', en: '2026-05-10' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.40', en: '0.6.40' },
+        changes: [
+          {
+            ru: '**Настройки → Тестирование:** для **`admin`** и **`beta_tester`** — форма **«Завести дефект»** → GitHub Issue через Edge **`file-defect`** (JWT, проверка роли через **Service Role**, токен GitHub только в секретах Edge); после отправки в UI — ссылка на issue.',
+            en: '**Settings → Testing:** for **`admin`** and **`beta_tester`** — **“File a defect”** → GitHub Issue via Edge **`file-defect`** (JWT, role check via **service role**, GitHub token only in Edge secrets); the UI shows a link to the new issue.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Тестеры и админы могут описать баг **из `/settings`**: текст уходит в GitHub, содержимое vault и email в issue не попадают.',
+            en: 'Testers and admins can describe a bug **from `/settings`** — text goes to GitHub; vault contents and email are not included in the issue.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
         changes: [

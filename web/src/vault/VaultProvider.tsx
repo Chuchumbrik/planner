@@ -57,6 +57,7 @@ import {
 } from '@motivator/core'
 import { createSupabaseVaultRemote } from '@/infrastructure/supabaseVaultRemote'
 import i18n from '@/i18n'
+import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
 import { ensurePushSubscription, getVapidPublicKey } from '@/lib/notifications/pushSubscription'
 import {
   syncNotificationScheduleFromVault,
@@ -633,8 +634,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.functions.invoke('notifications-test', {
       body: { locale: i18n.language?.startsWith('en') ? 'en' : 'ru' },
     })
-    if (error) throw error
-  }, [supabase])
+    if (error) throw new Error(await formatSupabaseFunctionInvokeError(error))
+  }, [supabase, i18n.language])
 
   /** EOD: автоматически добавить прошлые дни с планом в `eodCompletedLocalDates`, если включено в настройках. */
   useEffect(() => {

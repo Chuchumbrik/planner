@@ -9,6 +9,9 @@ web/dist/
 !.env.example
 web/.env.local
 
+# Supabase CLI (локальные артефакты)
+web/supabase/.temp/
+
 # OS / IDE
 .DS_Store
 Thumbs.db

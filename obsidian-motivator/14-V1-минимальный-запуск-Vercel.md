@@ -68,7 +68,7 @@ flowchart LR
   Crypto --> PG
 ```
 
-- **Vercel**: только фронтенд; `vercel.json` — fallback на `index.html` для deep links.
+- **Vercel**: фронтенд из `web/dist`; в **корне** репозитория `vercel.json` — fallback на `index.html` для deep links, при необходимости — cron/API для вспомогательных вызовов (см. `web/README.md`).
 - **Секреты**: в Vercel задаются `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (не секрет в классическом смысле для anon key, но хранить в dashboard, не в git).
 
 ---

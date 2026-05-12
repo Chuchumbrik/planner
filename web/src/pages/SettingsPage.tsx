@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { FileDefectModal } from '@/components/FileDefectModal'
 import { RequireVault } from '@/components/RequireVault'
+import { supabase } from '@/lib/supabase'
 import { APP_VERSION } from '@/version'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank, type NotificationDeliveryMode } from '@motivator/core'
 import { getVapidPublicKey } from '@/lib/notifications/pushSubscription'
@@ -90,7 +92,8 @@ const MIN_ACCOUNT_PASSWORD_LEN = 6
 
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
-  const { signOut, session, updatePassword } = useAuth()
+  const location = useLocation()
+  const { signOut, session, updatePassword, isAdmin, isBetaTester } = useAuth()
   const {
     lock,
     vault,
@@ -116,11 +119,14 @@ function SettingsPageInner() {
   const [notifPushHint, setNotifPushHint] = useState<string | null>(null)
   const [testPushBusy, setTestPushBusy] = useState(false)
   const [testPushError, setTestPushError] = useState<string | null>(null)
+  const [fileDefectOpen, setFileDefectOpen] = useState(false)
 
   const deliveryMode: NotificationDeliveryMode =
     vault.notificationPreferences?.deliveryMode ?? 'off'
   const hasEmailLogin = Boolean(session?.user?.email)
   const canEdit = remoteHydrated && !decryptFailed
+  const showQaSection = Boolean(supabase && (isAdmin || isBetaTester))
+  const localeTag: 'ru' | 'en' = i18n.language === 'en' ? 'en' : 'ru'
 
   async function handleSignOut() {
     await lock()
@@ -288,6 +294,29 @@ function SettingsPageInner() {
           </div>
         ) : null}
       </section>
+
+      {showQaSection ? (
+        <section className="mt-8">
+          <h2 className="text-sm font-medium text-zinc-300">{t('settings.qaSectionTitle')}</h2>
+          <p className="mt-2 text-xs text-zinc-500">{t('settings.qaSectionHelp')}</p>
+          <button
+            type="button"
+            className="mt-4 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700"
+            onClick={() => setFileDefectOpen(true)}
+          >
+            {t('settings.fileDefectOpen')}
+          </button>
+          {supabase ? (
+            <FileDefectModal
+              open={fileDefectOpen}
+              onClose={() => setFileDefectOpen(false)}
+              supabase={supabase}
+              localeTag={localeTag}
+              pathname={location.pathname}
+            />
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('common.language')}</h2>
