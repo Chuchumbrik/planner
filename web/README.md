@@ -4,7 +4,7 @@
 
 **Целевой объём MVP для разработки** (релиз продукта **v1.0.0**) зафиксирован в [`obsidian-motivator/16-TZ-MVP-v1.0.md`](../obsidian-motivator/16-TZ-MVP-v1.0.md); поэтапный план внедрения — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md).
 
-**Текущая версия веб-клиента** в репозитории: **`0.6.42`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
+**Текущая версия веб-клиента** в репозитории: **`0.6.43`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
 
 ### Версионирование
 
@@ -132,16 +132,16 @@ npm run dev
 Монорепозиторий: задайте **корень репозитория** как корень проекта в Vercel (не только `web`), иначе workspace-пакет `@motivator/core` не попадёт в сборку.
 
 1. **Root Directory** → корень репозитория (`planner/`).
-2. **Install Command**: `npm install`
-3. **Build Command**: `npm run build -w web`
-4. **Output Directory**: `web/dist`
+2. **Install Command**: `npm install` (дублируется в корневом [`vercel.json`](../vercel.json), чтобы совпадало с CI).
+3. **Build Command**: `npm run build -w web` (там же в **`vercel.json`**).
+4. **Output Directory**: **`web/dist`** — не **`dist`** в корне: Vite пишет сборку в **`web/dist`**. В **`vercel.json`** задано **`outputDirectory`**: **`web/dist`**, иначе Vercel ищет **`dist`** и падает с *No Output Directory named "dist"*.
 5. Environment Variables: те же `VITE_SUPABASE_*`, что в `.env.local`, плюс **`VITE_VAPID_PUBLIC_KEY`**; для минутного **`send-due`** — см. [«Минутный вызов send-due»](#минутный-вызов-send-due) (**`CRON_SECRET`**, **`SUPABASE_SEND_DUE_URL`**, **`SUPABASE_CRON_ANON_KEY`** на Vercel + внешний cron, например [cron-job.org](https://cron-job.org)).
 
 Если по историческим причинам корень проекта в Vercel остаётся только `web`, перед сборкой нужно вручную обеспечить доступ к `packages/motivator-core` (например, скопировать структуру монорепозитория или собирать из полного clone с установкой из родительской папки).
 
 Сборка рассчитана на **Vite 7** (Rollup): в корне репозитория в `package.json` задан **`overrides`** на `vite@7.3.3`, а `@vitejs/plugin-react` — ветка **5.x**, совместимая с Vite 7. Так на Vercel/Linux не подтягивается Vite 8 с нативным **Rolldown**, из‑за которого часто возникает `MODULE_NOT_FOUND` при загрузке нативного binding Rolldown.
 
-Файл [`vercel.json`](../vercel.json) в **корне** репозитория (`planner/`) отправляет все пути на `index.html` для SPA и задаёт **короткий HTTP-кэш** для **`sw.js`**, **`manifest.webmanifest`** и **`workbox-*.js`**. Минутный вызов **`send-due`** — через serverless [`api/send-due-cron.js`](../api/send-due-cron.js) и **внешний** cron (см. [«Минутный вызов send-due»](#минутный-вызов-send-due)); встроенный **Vercel Cron** на **Hobby** не подходит (лимит «раз в сутки» / деплой с `* * * * *` падает), на **Pro** можно добавить **`crons`** в `vercel.json` самостоятельно.
+Файл [`vercel.json`](../vercel.json) в **корне** репозитория (`planner/`) задаёт **`installCommand`**, **`buildCommand`** и **`outputDirectory`**: **`web/dist`**, отправляет все пути на `index.html` для SPA и **короткий HTTP-кэш** для **`sw.js`**, **`manifest.webmanifest`**, **`workbox-*.js`**. Минутный вызов **`send-due`** — через serverless [`api/send-due-cron.js`](../api/send-due-cron.js) и **внешний** cron (см. [«Минутный вызов send-due»](#минутный-вызов-send-due)); встроенный **Vercel Cron** на **Hobby** не подходит (лимит «раз в сутки» / деплой с `* * * * *` падает), на **Pro** можно добавить **`crons`** в `vercel.json` самостоятельно.
 
 ## PWA (установка на домашний экран)
 

@@ -313,6 +313,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.43', en: '0.6.43' },
+        changes: [
+          {
+            ru: '**Vercel (монорепо):** в корневом **`vercel.json`** — **`installCommand`**, **`buildCommand`**, **`outputDirectory`**: **`web/dist`** (и **`$schema`**), чтобы деплой не требовал папки **`dist`** в корне и не падал с *No Output Directory named "dist"* при настройке панели по умолчанию; **`README`** — уточнение в шагах Vercel.',
+            en: '**Vercel (monorepo):** root **`vercel.json`** — **`installCommand`**, **`buildCommand`**, **`outputDirectory`**: **`web/dist`** (plus **`$schema`**) so deploys don’t expect a root **`dist`** folder or fail with *No Output Directory named "dist"* when dashboard defaults differ; **`README`** — Vercel steps clarified.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Если сборка на Vercel внезапно «не находит» папку вывода — у веб-клиента она лежит в **`web/dist`**, а не в корневом **`dist`**; в репозитории это теперь зафиксировано в конфиге.',
+            en: 'If Vercel says it can’t find the output folder — the web app builds to **`web/dist`**, not root **`dist`**; the repo config now pins that path.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.42', en: '0.6.42' },
         changes: [
           {
