@@ -313,6 +313,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.42', en: '0.6.42' },
+        changes: [
+          {
+            ru: '**Уведомления / Vercel Hobby:** из **`vercel.json`** убран блок **`crons`** (минутное расписание на Hobby недоступно или ломает деплой); **`README`** — раздел **«Минутный вызов send-due»**: по умолчанию внешний HTTP-cron (**cron-job.org** и аналоги) на **`/api/send-due-cron`** с **`Authorization: Bearer <CRON_SECRET>`**; на **Pro** можно снова добавить **`crons`** в `vercel.json` самостоятельно.',
+            en: '**Notifications / Vercel Hobby:** removed **`crons`** from **`vercel.json`** (minute cron unavailable on Hobby or breaks deploy); **`README`** — “Minute send-due tick” section: default path is external HTTP cron (**cron-job.org** and similar) to **`/api/send-due-cron`** with **`Authorization: Bearer <CRON_SECRET>`**; **Pro** users may re-add **`crons`** to `vercel.json` manually.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На бесплатном Vercel нельзя положиться на встроенный «звонок каждую минуту»; в документации описано, как бесплатно подключить внешний cron к тому же адресу — напоминания по расписанию снова доходят без платного тарифа Vercel.',
+            en: 'Vercel’s free tier can’t rely on a built-in every-minute ping; the README explains wiring a free external cron to the same URL so scheduled reminders keep working without paying for Vercel Cron.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.41', en: '0.6.41' },
         changes: [
           {
@@ -322,8 +337,8 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
         plainBullets: [
           {
-            ru: 'Можно обойтись без стороннего cron-сайта: Vercel сам дергает ваш URL раз в минуту (на подходящем тарифе) и проксирует вызов в Supabase **`send-due`**.',
-            en: 'You can skip a third-party cron host: Vercel hits your URL every minute (on supported plans) and proxies to Supabase **`send-due`**.',
+            ru: 'На **Pro** и выше Vercel может сам дергать URL раз в минуту; на **Hobby** для минутного тика нужен внешний cron (см. выпуск **0.6.42**).',
+            en: 'On **Pro** and above, Vercel can hit your URL every minute; on **Hobby**, use an external cron for a minute tick (see release **0.6.42**).',
           },
         ],
       },

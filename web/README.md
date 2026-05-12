@@ -4,7 +4,7 @@
 
 **Целевой объём MVP для разработки** (релиз продукта **v1.0.0**) зафиксирован в [`obsidian-motivator/16-TZ-MVP-v1.0.md`](../obsidian-motivator/16-TZ-MVP-v1.0.md); поэтапный план внедрения — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md).
 
-**Текущая версия веб-клиента** в репозитории: **`0.6.41`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
+**Текущая версия веб-клиента** в репозитории: **`0.6.42`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
 
 ### Версионирование
 
@@ -135,13 +135,13 @@ npm run dev
 2. **Install Command**: `npm install`
 3. **Build Command**: `npm run build -w web`
 4. **Output Directory**: `web/dist`
-5. Environment Variables: те же `VITE_SUPABASE_*`, что в `.env.local`, плюс **`VITE_VAPID_PUBLIC_KEY`**; для минутного **`send-due`** через Vercel — см. [«Минутный вызов send-due на Vercel»](#минутный-вызов-send-due-на-vercel) (**`CRON_SECRET`**, **`SUPABASE_SEND_DUE_URL`**, **`SUPABASE_CRON_ANON_KEY`**).
+5. Environment Variables: те же `VITE_SUPABASE_*`, что в `.env.local`, плюс **`VITE_VAPID_PUBLIC_KEY`**; для минутного **`send-due`** — см. [«Минутный вызов send-due»](#минутный-вызов-send-due) (**`CRON_SECRET`**, **`SUPABASE_SEND_DUE_URL`**, **`SUPABASE_CRON_ANON_KEY`** на Vercel + внешний cron, например [cron-job.org](https://cron-job.org)).
 
 Если по историческим причинам корень проекта в Vercel остаётся только `web`, перед сборкой нужно вручную обеспечить доступ к `packages/motivator-core` (например, скопировать структуру монорепозитория или собирать из полного clone с установкой из родительской папки).
 
 Сборка рассчитана на **Vite 7** (Rollup): в корне репозитория в `package.json` задан **`overrides`** на `vite@7.3.3`, а `@vitejs/plugin-react` — ветка **5.x**, совместимая с Vite 7. Так на Vercel/Linux не подтягивается Vite 8 с нативным **Rolldown**, из‑за которого часто возникает `MODULE_NOT_FOUND` при загрузке нативного binding Rolldown.
 
-Файл [`vercel.json`](../vercel.json) в **корне** репозитория (`planner/`) отправляет все пути на `index.html` для SPA, задаёт **короткий HTTP-кэш** для **`sw.js`**, **`manifest.webmanifest`** и **`workbox-*.js`**, а также при **поддерживаемом тарифе Vercel** — **Cron** на **`/api/send-due-cron`** раз в минуту (подробнее — [«Минутный вызов send-due на Vercel»](#минутный-вызов-send-due-на-vercel)). При **Root Directory = `planner/`** в Vercel serverless-файл лежит в [`api/send-due-cron.js`](../api/send-due-cron.js).
+Файл [`vercel.json`](../vercel.json) в **корне** репозитория (`planner/`) отправляет все пути на `index.html` для SPA и задаёт **короткий HTTP-кэш** для **`sw.js`**, **`manifest.webmanifest`** и **`workbox-*.js`**. Минутный вызов **`send-due`** — через serverless [`api/send-due-cron.js`](../api/send-due-cron.js) и **внешний** cron (см. [«Минутный вызов send-due»](#минутный-вызов-send-due)); встроенный **Vercel Cron** на **Hobby** не подходит (лимит «раз в сутки» / деплой с `* * * * *` падает), на **Pro** можно добавить **`crons`** в `vercel.json` самостоятельно.
 
 ## PWA (установка на домашний экран)
 
@@ -161,7 +161,7 @@ npm run dev
 - **Таблицы Supabase** (миграция [`web/supabase/migrations/002_notifications.sql`](./supabase/migrations/002_notifications.sql)): **`push_subscriptions`**, **`notification_fire_requests`** (RLS: только свой `user_id`). После правок vault клиент с **debounce** пересчитывает окна срабатываний по задачам с **`timeMode`** `start` | `end` и датой в плане в горизонте 14 дней и заменяет будущие строки со статусом **`scheduled`**.
 - **Сборка фронта:** в `.env.local` / Vercel задайте **`VITE_VAPID_PUBLIC_KEY`** (пара ключа VAPID; приватный ключ хранится только в секретах Edge / сервера, **не** в `VITE_*`). Пример: [`.env.example`](./.env.example).
 - **Edge Functions** (исходники в [`web/supabase/functions/`](./supabase/functions/)): **`send-due`** — POST, выбор просроченных `notification_fire_requests` и отправка через **web-push** (секреты `VAPID_*`, `SUPABASE_SERVICE_ROLE_KEY`; опционально **`CRON_SECRET`** в заголовке `Authorization: Bearer …`); **`notifications-test`** — POST с JWT пользователя, тестовый push на все сохранённые подписки устройства; **`file-defect`** — POST с JWT, создание **GitHub Issue** для ролей **`admin`** / **`beta_tester`** (секреты **`GITHUB_*`**, см. [Edge **`file-defect`**](#edge-file-defect-github-issues)).
-- **Cron / минутный вызов `send-due`:** без периодического POST на Edge **`send-due`** запланированные строки не превращаются в push. Варианты: **Vercel** — эндпоинт [`api/send-due-cron.js`](../api/send-due-cron.js) и запись **`crons`** в [`vercel.json`](../vercel.json) (раз в минуту — см. ниже про **Hobby / Pro**); **внешний** HTTP-cron (cron-job.org и т.д.) на тот же URL **`https://<ваш-домен>/api/send-due-cron`**; **Supabase pg_cron** + HTTP (если доступно на тарифе).
+- **Cron / минутный вызов `send-due`:** без периодического POST на Edge **`send-due`** запланированные строки не превращаются в push. **Рекомендуемый путь на Vercel Hobby:** эндпоинт [`api/send-due-cron.js`](../api/send-due-cron.js) + **внешний** HTTP-cron ([cron-job.org](https://cron-job.org) и аналоги) на **`https://<ваш-домен>/api/send-due-cron`** раз в минуту (см. [ниже](#минутный-вызов-send-due)). **Vercel Cron** в репозитории **не** задан (на Hobby нет минутного расписания / ломает деплой). **Supabase pg_cron** — при необходимости отдельно.
 - **iOS:** Web Push для веб-приложения с экрана «Домой» — с версий, поддерживаемых Apple; ограничения см. документацию Apple.
 
 ### Ручная настройка Supabase и Vercel (для Web Push)
@@ -176,30 +176,42 @@ npm run dev
    `supabase functions deploy notifications-test --project-ref <REF>`  
    `supabase functions deploy file-defect --project-ref <REF>`  
    Имена совпадают с вызовами **`supabase.functions.invoke`** во фронте (где используются).
-5. **Периодический вызов `send-due`:** см. блок **«Vercel: минутный тик»** ниже (или **внешний** POST на URL Edge с **`Authorization: Bearer <legacy anon>`**; при секрете **`CRON_SECRET`** у Edge — отдельная схема, см. п.3 Supabase).
+5. **Периодический вызов `send-due`:** см. [«Минутный вызов send-due»](#минутный-вызов-send-due) (эндпоинт на Vercel + внешний cron). Прямой POST на URL Edge с **`Authorization: Bearer <legacy anon>`** — альтернатива без прокси; при секрете **`CRON_SECRET`** у Edge — см. п.3 Supabase.
 
 **Vercel**
 
 1. Корень репозитория, **`npm run build -w web`**, **`web/dist`** — как в [разделе «Vercel»](#vercel) выше.
 2. **Переменные (фронт):** **`VITE_SUPABASE_URL`**, **`VITE_SUPABASE_ANON_KEY`**, **`VITE_VAPID_PUBLIC_KEY`**. Сервисный ключ и приватный VAPID **не** в Vercel.
 
-### Минутный вызов send-due на Vercel
+### Минутный вызов send-due
 
-В корне репозитория: [`api/send-due-cron.js`](../api/send-due-cron.js) и [`vercel.json`](../vercel.json) (поле **`crons`** → **`GET /api/send-due-cron`** раз в минуту).
+Serverless в корне репозитория: [`api/send-due-cron.js`](../api/send-due-cron.js). В [`vercel.json`](../vercel.json) **нет** секции **`crons`**: на тарифе **Vercel Hobby** встроенный Cron **не** даёт расписание «раз в минуту» (до **раза в сутки**), а выражение **`* * * * *`** может **ломать деплой**. Минутный тик настраивается **внешним** HTTP-cron.
 
-**Дополнительные переменные окружения** (Vercel → **Settings → Environment Variables**, как минимум **Production**):
+#### 1. Переменные на Vercel (как минимум Production)
 
 | Переменная | Значение |
 |------------|----------|
-| **`CRON_SECRET`** | Длинная случайная строка (одна и та же в Vercel). Встроенный Vercel Cron при вызове добавляет **`Authorization: Bearer <CRON_SECRET>`**; внешний cron должен слать **тот же** заголовок. |
+| **`CRON_SECRET`** | Случайная длинная строка. Любой вызов **`/api/send-due-cron`** должен передавать **`Authorization: Bearer <CRON_SECRET>`** (cron-job.org и ручной `curl`). |
 | **`SUPABASE_SEND_DUE_URL`** | `https://<REF>.supabase.co/functions/v1/send-due` |
-| **`SUPABASE_CRON_ANON_KEY`** | Legacy **anon** `public` (JWT `eyJ…`) из Supabase **Settings → API** — по смыслу тот же ключ, что **`VITE_SUPABASE_ANON_KEY`**. |
+| **`SUPABASE_CRON_ANON_KEY`** | Legacy **anon** `public` (JWT `eyJ…`) из Supabase **Settings → API** — тот же смысл, что **`VITE_SUPABASE_ANON_KEY`**. |
 
-После сохранения переменных — **Redeploy**. Проверка: **Settings → Cron Jobs** — задача на **`/api/send-due-cron`**; логи **Functions** / **Logs** у деплоя.
+После сохранения — **Redeploy**.
 
-**Тариф Hobby:** у Vercel для Cron может действовать **лимит «не чаще раза в сутки»**; расписание **`* * * * *`** тогда **не примут** или Cron не будет минутным. Варианты: **Pro** (или выше) для минутного Vercel Cron **или** оставить эндпоинт и вызывать его **внешним** сервисом раз в минуту (тот же URL и **`Authorization: Bearer <CRON_SECRET>`**, метод **POST** или **GET**). Если **деплой падает** из‑за `crons` — временно **удалите весь ключ `"crons"`** из [`vercel.json`](../vercel.json) и настройте внешний вызов.
+#### 2. [cron-job.org](https://cron-job.org) (или аналог)
 
-**Ручной вызов (PowerShell),** подставьте домен и секреты:
+1. Зарегистрироваться / войти. **Create cronjob**.  
+2. **URL:** `https://<ваш-проект>.vercel.app/api/send-due-cron` (или кастомный домен на Vercel).  
+3. **Schedule:** каждую минуту (например `* * * * *` в расширенном режиме, если сервис предлагает).  
+4. **Request method:** **GET** или **POST** (оба поддерживает `send-due-cron.js`).  
+5. **Headers:** добавить **`Authorization`** со значением **`Bearer <ваш CRON_SECRET>`** (ровно тот же секрет, что в Vercel).  
+6. При необходимости **Body** для POST: `{}` и **Content-Type:** `application/json`.  
+7. Сохранить и **включить** задачу. Проверка: логи задания на cron-job.org и ответ **`{"processed":…,"sent":…}`** либо ошибка в теле.
+
+#### 3. Vercel Pro (опционально)
+
+На **Pro** можно снова добавить в **`vercel.json`** массив **`crons`** с путём **`/api/send-due-cron`** и расписанием **`* * * * *`** — тогда Vercel сам будет слать запрос с **`Authorization: Bearer <CRON_SECRET>`** ([документация](https://vercel.com/docs/cron-jobs)).
+
+#### Ручной вызов (PowerShell)
 
 ```powershell
 curl.exe -s -S "https://ВАШ_ДОМЕН.vercel.app/api/send-due-cron" -H "Authorization: Bearer ВАШ_CRON_SECRET"
