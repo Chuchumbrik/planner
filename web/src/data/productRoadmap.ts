@@ -313,6 +313,36 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-13', en: '2026-05-13' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.48', en: '0.6.48' },
+        changes: [
+          {
+            ru: '**Документация Supabase:** в **`web/README.md`** зафиксирован **project ref** **`ntpkveicqetjjvlnfrwc`**, URL API и примеры деплоя Edge через **`npx supabase functions deploy`** (глобальный **`npm install -g supabase`** не поддерживается; PowerShell / Docker — пояснения в README); в **`web/.env.example`** — ссылка на тот же проект; скилл **`github-defect-workflow`** — краткая отсылка.',
+            en: '**Supabase docs:** **`web/README.md`** records **project ref** **`ntpkveicqetjjvlnfrwc`**, API URL, and Edge deploy via **`npx supabase functions deploy`** (global **`npm install -g supabase`** is unsupported; PowerShell / Docker notes in README); **`web/.env.example`** points to that project; **`github-defect-workflow`** skill cross-link.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Упрощает деплой Edge и настройку окружения без поиска ref в Dashboard.',
+            en: 'Makes Edge deploy and env setup easier without hunting the ref in the Dashboard.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.47', en: '0.6.47' },
+        changes: [
+          {
+            ru: '**«Завести дефект»:** поля **Ожидалось** / **Фактически**, подсказки, плейсхолдеры, счётчики символов, превью версии и маршрута; опционально **User-Agent** в issue; Edge **`file-defect`** — в **Environment** добавлены **`motivator_role`** и разбор **`expected`** / **`actual`** / **`userAgent`**.',
+            en: '**File a defect:** **Expected** / **Actual** fields, hints, placeholders, character counts, version/route preview; optional **User-Agent** in the issue; Edge **`file-defect`** adds **`motivator_role`** to **Environment** and accepts **`expected`**, **`actual`**, **`userAgent`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Issue на GitHub получается структурированнее без ручного копирования шаблона; после деплоя Edge — с новыми полями в теле.',
+            en: 'GitHub issues are more structured without hand-pasting a template; redeploy the Edge function to apply the new body fields.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.46', en: '0.6.46' },
         changes: [
           {
@@ -332,6 +362,70 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.50', en: '0.6.50' },
+        changes: [
+          {
+            ru: '**README:** чеклист **«Статус внедрения „Завести дефект“»**; явный разбор **`PSSecurityException` / `npx.ps1`** и пример **`cmd /c "npx supabase functions deploy …"`**; команды деплоя Edge в примере с **`cmd /c`** для Windows.',
+            en: '**README:** **“File a defect” rollout checklist**; explicit **`PSSecurityException` / `npx.ps1`** note and **`cmd /c "npx supabase functions deploy …"`** example; Edge deploy examples wrapped with **`cmd /c`** for Windows.',
+          },
+          {
+            ru: '**Правила Cursor:** **`documentation-orientation.mdc`** — раздел «Ручная установка и чеклисты настройки»; **`pre-commit-docs-roadmap`** + скилл — чекбокс про фиксацию ручных шагов в README.',
+            en: '**Cursor rules:** **`documentation-orientation.mdc`** — “Manual setup and rollout checklists”; **`pre-commit-docs-roadmap`** + skill — checkbox to record manual steps in README.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Можно один раз зафиксировать прогресс внедрения и не гонять одни и те же шаги; деплой из PowerShell без смены ExecutionPolicy — через cmd.',
+            en: 'Track rollout once and avoid repeating the same steps; deploy from PowerShell without changing ExecutionPolicy via cmd.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.49', en: '0.6.49' },
+        changes: [
+          {
+            ru: '**Vercel:** serverless **`api/defect-attachments-cleanup-cron.js`** (корень репозитория) — прокси на Edge **`defect-attachments-cleanup`** (**`SUPABASE_DEFECT_ATTACHMENTS_CLEANUP_URL`**, **`apikey`** из **`SUPABASE_CRON_ANON_KEY`**, **`Authorization: Bearer <CRON_SECRET>`** на входе и к Edge — секрет на Vercel и в секретах Edge должен **совпадать**); **`web/README.md`** — раздел «Прокси defect-attachments-cleanup», прод-URL, таблица «Возможности».',
+            en: '**Vercel:** serverless **`api/defect-attachments-cleanup-cron.js`** at repo root proxies to Edge **`defect-attachments-cleanup`** (**`SUPABASE_DEFECT_ATTACHMENTS_CLEANUP_URL`**, **`apikey`** from **`SUPABASE_CRON_ANON_KEY`**, **`Authorization: Bearer <CRON_SECRET>`** inbound and to Edge — Vercel and Edge secrets must **match**); **`web/README.md`** — «Прокси defect-attachments-cleanup», production URL, capabilities table.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Очистку черновиков дефектов можно повесить на тот же домен Vercel, что и минутный push, с одним секретом в планировщике.',
+            en: 'Defect draft cleanup can use the same Vercel host as the push tick, with one shared secret in your scheduler.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.48', en: '0.6.48' },
+        changes: [
+          {
+            ru: '**README (cron):** в **`web/README.md`** зафиксирован прод-URL Vercel **`https://planner-tawny-omega.vercel.app/api/send-due-cron`** для минутного тика **`send-due`**; отдельно описан вызов Edge **`defect-attachments-cleanup`** (прямой URL Supabase).',
+            en: '**README (cron):** **`web/README.md`** documents production Vercel **`https://planner-tawny-omega.vercel.app/api/send-due-cron`** for **`send-due`**; separate instructions for Edge **`defect-attachments-cleanup`** (direct Supabase URL).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Два разных URL для двух задач в документации до появления Vercel-прокси для очистки.',
+            en: 'Two URLs for two jobs documented before the optional Vercel cleanup proxy shipped.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.48', en: '0.6.48' },
+        changes: [
+          {
+            ru: '**«Завести дефект»:** плавающая кнопка (**FAB**) на **`/app*`** и **`/settings`** для **admin** / **beta_tester**; единая модалка (**шаблоны**, тип дефекта → метки GitHub, **Markdown-предпросмотр**, аккордеон «Дополнительная информация», до **2** скриншотов в **Supabase Storage** `defect-attachments` с **signed URL** в issue; Edge **`file-defect`** — валидация вложений и меток, **`defect-attachments-cleanup`** — очистка черновиков; миграция **`003_defect_reports`**.',
+            en: '**File a defect:** **FAB** on **`/app*`** and **`/settings`** for **admin** / **beta_tester**; one modal (**templates**, defect type → GitHub labels, **Markdown preview**, “Additional info” accordion, up to **2** screenshots in **Supabase Storage** `defect-attachments` with **signed URLs** in the issue; Edge **`file-defect`** — attachment/label validation, **`defect-attachments-cleanup`** for draft cleanup; migration **`003_defect_reports`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Сообщить о проблеме можно из любого экрана планировщика или настроек; скриншоты не утекют публично — в GitHub попадают только временные ссылки.',
+            en: 'Report from planner or settings; screenshots stay private—GitHub only gets time-limited links.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.45', en: '0.6.45' },
         changes: [

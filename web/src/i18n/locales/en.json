@@ -257,8 +257,23 @@
     "qaSectionTitle": "Testing",
     "qaSectionHelp": "For admin and beta_tester roles: file a bug as a GitHub issue via the server (the repo token never ships to the browser). Configure Edge secrets and deploy file-defect — see web/README.",
     "fileDefectOpen": "File a defect",
+    "fileDefectFabAria": "Report a problem",
     "fileDefectModalTitle": "File a defect on GitHub",
     "fileDefectModalHelp": "Describe the problem briefly. The issue will include the app version and (optionally) the page path; vault contents are never sent.",
+    "fileDefectModalChecklist": "Helpful: where it reproduces, once vs every time, what you clicked. Email and task contents are not sent to GitHub.",
+    "fileDefectContextPreview": "In the issue “Environment” block: {{version}} · {{route}}",
+    "fileDefectRouteOmitted": "(route not sent)",
+    "fileDefectCharCount": "{{used}} / {{max}}",
+    "fileDefectTitlePlaceholder": "e.g. On /app, estimate not saved after …",
+    "fileDefectDescriptionPlaceholder": "Context: what you did, what you saw, whether you expected different behavior.",
+    "fileDefectStepsPlaceholder": "1. …\n2. …\n3. …",
+    "fileDefectExpectedLabel": "Expected",
+    "fileDefectExpectedHint": "Optional. Briefly: what should have happened.",
+    "fileDefectExpectedPlaceholder": "e.g. After Save, the modal closes and the task shows the new estimate.",
+    "fileDefectActualLabel": "Actual",
+    "fileDefectActualHint": "Optional. What happens instead.",
+    "fileDefectActualPlaceholder": "e.g. Modal closes but the list still shows the old estimate.",
+    "fileDefectIncludeUserAgent": "Include browser User-Agent in the report (helps layout/mobile issues)",
     "fileDefectTitleLabel": "Title",
     "fileDefectDescriptionLabel": "Description",
     "fileDefectStepsLabel": "Steps to reproduce",
@@ -268,6 +283,26 @@
     "fileDefectCancel": "Cancel",
     "fileDefectClose": "Close",
     "fileDefectSuccess": "Issue created.",
+    "fileDefectSuccess48": "Thanks! We’ll try to review it within 48 hours.",
+    "fileDefectSuggestedLabels": "GitHub labels: {{labels}}",
+    "fileDefectBackToForm": "Back to form",
+    "fileDefectTabForm": "Form",
+    "fileDefectTabPreview": "Preview",
+    "fileDefectTypeLabel": "Defect type",
+    "fileDefectType": {
+      "bug": "Bug",
+      "ui_ux": "UI / UX",
+      "performance": "Performance",
+      "enhancement": "Enhancement",
+      "other": "Other"
+    },
+    "fileDefectScreenshotsLabel": "Screenshots (up to 2, 3 MB each, PNG / JPEG / WebP)",
+    "fileDefectScreenshotsHint": "Files upload to private storage; the issue will include time-limited links. Drag files here or use the button.",
+    "fileDefectAddScreenshot": "Add file",
+    "fileDefectExtraToggle": "Additional information",
+    "fileDefectRecommendSteps": "The description is long — please add reproduction steps below if you can.",
+    "fileDefectTechBlockTitle": "Technical details that will be sent",
+    "fileDefectOmitted": "(not sent)",
     "fileDefectOpenIssue": "Open issue on GitHub",
     "fileDefectValidationRequired": "Enter a title and description.",
     "fileDefectErrors": {
@@ -281,7 +316,47 @@
       "missing_authorization": "No session: sign in again.",
       "invalid_token": "Session expired: sign in again.",
       "supabase_env_missing": "Supabase environment variables for the function are missing on the server.",
-      "role_lookup_failed": "Could not verify your role on the server. Try again later."
+      "role_lookup_failed": "Could not verify your role on the server. Try again later.",
+      "invalid_defect_type": "Invalid defect type.",
+      "invalid_attachments": "Check attachments: at most two files from your draft folder.",
+      "label_not_allowed": "A label is not allowed on the server. Pick another type or contact an admin.",
+      "rate_limited": "Too many submissions in a row. Wait a bit and try again.",
+      "storage_signed_url_failed": "Could not prepare screenshot links for GitHub. Try without attachments or later.",
+      "invalid_file_type": "Only PNG, JPEG, and WebP are allowed.",
+      "file_too_large": "Each file must be 3 MB or smaller.",
+      "upload_failed": "Upload failed. Check your network and permissions."
+    },
+    "defectTemplate": {
+      "notifications": {
+        "label": "Push",
+        "title": "Notifications / push",
+        "description": "What happens with the notification: when, on which screen, and what you expected instead.",
+        "steps": "1. Enabled notifications in Settings.\n2. …\n3. Saw …"
+      },
+      "planner_day": {
+        "label": "Day",
+        "title": "Planner: Day tab",
+        "description": "What went wrong on the day view: tasks, filters, estimates, rendering.",
+        "steps": "1. Opened /app, Day tab.\n2. …\n3. …"
+      },
+      "week_view": {
+        "label": "Week",
+        "title": "Planner: Week view",
+        "description": "Issue in the week grid or week navigation.",
+        "steps": "1. Switched to Week view.\n2. …\n3. …"
+      },
+      "settings_block": {
+        "label": "Settings",
+        "title": "Settings page",
+        "description": "Something broken in account settings, EOD, notifications, etc.",
+        "steps": "1. Opened /settings, section …\n2. …\n3. …"
+      },
+      "sync_vault": {
+        "label": "Sync",
+        "title": "Sync / vault",
+        "description": "Mismatches after sign-in, decrypt errors, changes not sticking.",
+        "steps": "1. Signed in on two devices …\n2. …\n3. …"
+      }
     },
     "adminRolesTitle": "Users & roles",
     "adminRolesHelp": "Admin only: Supabase Auth users and motivator_role (admin / beta tester / regular user). Deploy Edge **admin-motivator-roles** and set Supabase URL, anon, and service_role secrets — see web/README.",

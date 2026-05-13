@@ -257,8 +257,23 @@
     "qaSectionTitle": "Тестирование",
     "qaSectionHelp": "Для ролей admin и beta_tester: отправка описания бага в GitHub через сервер (токен репозитория не попадает в браузер). Нужны секреты Edge и деплой функции file-defect — см. web/README.",
     "fileDefectOpen": "Завести дефект",
+    "fileDefectFabAria": "Сообщить о проблеме",
     "fileDefectModalTitle": "Завести дефект в GitHub",
     "fileDefectModalHelp": "Кратко опишите проблему. В issue попадут версия приложения и (по желанию) путь страницы; содержимое vault не отправляется.",
+    "fileDefectModalChecklist": "Полезно указать: где воспроизводится, разово или стабильно, что нажимать. В GitHub не попадают email и содержимое задач.",
+    "fileDefectContextPreview": "В блок «Environment» в issue: {{version}} · {{route}}",
+    "fileDefectRouteOmitted": "(маршрут не отправляем)",
+    "fileDefectCharCount": "{{used}} / {{max}}",
+    "fileDefectTitlePlaceholder": "Например: на /app не сохраняется оценка после …",
+    "fileDefectDescriptionPlaceholder": "Контекст: что делали, что увидели, ожидали ли другое поведение.",
+    "fileDefectStepsPlaceholder": "1. …\n2. …\n3. …",
+    "fileDefectExpectedLabel": "Ожидалось",
+    "fileDefectExpectedHint": "Необязательно. Коротко: как должно работать по вашей логике.",
+    "fileDefectExpectedPlaceholder": "Например: после «Сохранить» модалка закрывается и задача в списке.",
+    "fileDefectActualLabel": "Фактически",
+    "fileDefectActualHint": "Необязательно. Что происходит вместо ожидаемого.",
+    "fileDefectActualPlaceholder": "Например: модалка закрывается, но в списке старая оценка.",
+    "fileDefectIncludeUserAgent": "Добавить в отчёт User-Agent браузера (удобно для верстки и мобилки)",
     "fileDefectTitleLabel": "Заголовок",
     "fileDefectDescriptionLabel": "Описание",
     "fileDefectStepsLabel": "Шаги воспроизведения",
@@ -268,6 +283,26 @@
     "fileDefectCancel": "Отмена",
     "fileDefectClose": "Закрыть",
     "fileDefectSuccess": "Issue создан.",
+    "fileDefectSuccess48": "Спасибо! Мы постараемся посмотреть в течение 48 часов.",
+    "fileDefectSuggestedLabels": "Метки в GitHub: {{labels}}",
+    "fileDefectBackToForm": "К форме",
+    "fileDefectTabForm": "Форма",
+    "fileDefectTabPreview": "Предпросмотр",
+    "fileDefectTypeLabel": "Тип дефекта",
+    "fileDefectType": {
+      "bug": "Ошибка (bug)",
+      "ui_ux": "Интерфейс / UX",
+      "performance": "Производительность",
+      "enhancement": "Улучшение",
+      "other": "Другое"
+    },
+    "fileDefectScreenshotsLabel": "Скриншоты (до 2, до 3 МБ, PNG / JPEG / WebP)",
+    "fileDefectScreenshotsHint": "Файлы загружаются в защищённое хранилище; в issue попадут временные ссылки. Перетащите файлы сюда или нажмите кнопку.",
+    "fileDefectAddScreenshot": "Добавить файл",
+    "fileDefectExtraToggle": "Дополнительная информация",
+    "fileDefectRecommendSteps": "Описание длинное — по возможности добавьте шаги воспроизведения в блоке ниже.",
+    "fileDefectTechBlockTitle": "Техническая информация, которая будет отправлена",
+    "fileDefectOmitted": "(не отправляем)",
     "fileDefectOpenIssue": "Открыть issue на GitHub",
     "fileDefectValidationRequired": "Заполните заголовок и описание.",
     "fileDefectErrors": {
@@ -281,7 +316,47 @@
       "missing_authorization": "Сессия не найдена: войдите в аккаунт снова.",
       "invalid_token": "Сессия устарела: войдите в аккаунт снова.",
       "supabase_env_missing": "На сервере не заданы переменные Supabase для функции.",
-      "role_lookup_failed": "Не удалось проверить роль на сервере. Попробуйте позже."
+      "role_lookup_failed": "Не удалось проверить роль на сервере. Попробуйте позже.",
+      "invalid_defect_type": "Недопустимый тип дефекта.",
+      "invalid_attachments": "Проверьте вложения: не более двух файлов из вашей черновой папки.",
+      "label_not_allowed": "Один из типов не разрешён на сервере. Выберите другой тип или сообщите администратору.",
+      "rate_limited": "Слишком много отправок подряд. Подождите немного и попробуйте снова.",
+      "storage_signed_url_failed": "Не удалось подготовить ссылки на скриншоты для GitHub. Попробуйте без вложений или позже.",
+      "invalid_file_type": "Допустимы только PNG, JPEG и WebP.",
+      "file_too_large": "Каждый файл не больше 3 МБ.",
+      "upload_failed": "Не удалось загрузить файл. Проверьте сеть и права доступа."
+    },
+    "defectTemplate": {
+      "notifications": {
+        "label": "Push",
+        "title": "Уведомление / push",
+        "description": "Что происходит с уведомлением: когда, на каком экране, ожидали ли другое поведение.",
+        "steps": "1. Включил режим уведомлений в настройках.\n2. …\n3. Увидел …"
+      },
+      "planner_day": {
+        "label": "День",
+        "title": "Планировщик: вкладка «День»",
+        "description": "Что пошло не так на дневном виде: задачи, фильтры, оценки, отображение.",
+        "steps": "1. Открыл /app, вкладка «День».\n2. …\n3. …"
+      },
+      "week_view": {
+        "label": "Неделя",
+        "title": "Планировщик: неделя",
+        "description": "Проблема в недельной сетке или навигации по неделям.",
+        "steps": "1. Переключился на вид «Неделя».\n2. …\n3. …"
+      },
+      "settings_block": {
+        "label": "Настройки",
+        "title": "Страница настроек",
+        "description": "Что не работает в настройках аккаунта, EOD, уведомлений и т.д.",
+        "steps": "1. Открыл /settings, блок …\n2. …\n3. …"
+      },
+      "sync_vault": {
+        "label": "Синхр.",
+        "title": "Синхронизация / vault",
+        "description": "Расхождения после входа, ошибки расшифровки, сохранение не применяется.",
+        "steps": "1. Вошёл на двух устройствах …\n2. …\n3. …"
+      }
     },
     "adminRolesTitle": "Пользователи и роли",
     "adminRolesHelp": "Только для admin: список учётных записей Supabase Auth и поле motivator_role (admin / бета-тестер / обычный пользователь). Нужен деплой Edge admin-motivator-roles и секреты SUPABASE_* — см. web/README.",
