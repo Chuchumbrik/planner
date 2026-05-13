@@ -24,6 +24,7 @@
     "syncRetry": "Повторить",
     "syncIconAria": "Статус синхронизации",
     "accountMenuAria": "Меню аккаунта",
+    "accountMenuRoleLine": "Роль: {{role}}",
     "filtersResetAll": "Сбросить всё",
     "filtersSheetDone": "Готово",
     "filterChipGroup": "Группа: {{name}}",

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { motivatorAppRole } from '@/lib/motivatorRole'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { PeriodPlanBreakdownChart } from '@/components/PeriodPlanBreakdownChart'
@@ -181,7 +182,7 @@ type EodModalContext = { dateKey: string; mode: 'ritual' | 'report' }
 
 function AppPageInner() {
   const { t, i18n } = useTranslation()
-  const { signOut } = useAuth()
+  const { signOut, session } = useAuth()
   const {
     vault,
     remoteError,
@@ -249,6 +250,13 @@ function AppPageInner() {
   const [roadmapModalOpen, setRoadmapModalOpen] = useState(false)
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
+
+  const accountRoleLabel = useMemo(() => {
+    const r = motivatorAppRole(session)
+    if (r === 'admin') return t('shell.roleLabelAdmin')
+    if (r === 'beta_tester') return t('shell.roleLabelBetaTester')
+    return t('shell.roleLabelUser')
+  }, [session, t])
 
   const occurrenceDayForEdit = editOccurrenceDayKey ?? selectedDay
 
@@ -781,6 +789,12 @@ function AppPageInner() {
                 className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-zinc-700 bg-zinc-950 py-1 shadow-xl"
                 role="menu"
               >
+                <div
+                  className="border-b border-zinc-800 px-3 py-2 text-xs text-zinc-400"
+                  role="presentation"
+                >
+                  {t('app.accountMenuRoleLine', { role: accountRoleLabel })}
+                </div>
                 <Link
                   to="/app/reports"
                   role="menuitem"

@@ -310,6 +310,26 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-13', en: '2026-05-13' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.6.46', en: '0.6.46' },
+        changes: [
+          {
+            ru: '**`/app` — меню аккаунта:** в выпадающем списке сверху показывается **текущая роль** (`motivator_role`, подписи как в **`shell.roleLabel*`**).',
+            en: '**`/app` account menu:** the dropdown shows the **current role** at the top (`motivator_role`, same labels as **`shell.roleLabel*`**).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Можно сразу увидеть, под какой ролью вы вошли (пользователь, бета-тестер или администратор), не заходя в настройки.',
+            en: 'You can see at a glance whether you are signed in as user, beta tester, or admin without opening settings.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
       {

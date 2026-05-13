@@ -24,6 +24,7 @@
     "syncRetry": "Retry",
     "syncIconAria": "Sync status",
     "accountMenuAria": "Account menu",
+    "accountMenuRoleLine": "Role: {{role}}",
     "filtersResetAll": "Reset all",
     "filtersSheetDone": "Done",
     "filterChipGroup": "Group: {{name}}",
