@@ -282,50 +282,54 @@ export function FileDefectModal({
         className="flex max-h-[min(92dvh,780px)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-xl"
         role="dialog"
         aria-modal="true"
-        aria-labelledby={`${formId}-title`}
+        aria-labelledby={issueUrl ? `${formId}-success-title` : `${formId}-title`}
       >
-        <div className="border-b border-zinc-800 px-4 py-3">
-          <h2 id={`${formId}-title`} className="text-base font-semibold text-white">
-            {t('settings.fileDefectModalTitle')}
-          </h2>
-          <p className="mt-1 text-xs text-zinc-500">{t('settings.fileDefectModalHelp')}</p>
-          <p className="mt-2 text-[11px] leading-snug text-zinc-600">{t('settings.fileDefectModalChecklist')}</p>
-          <p className="mt-2 rounded-md border border-zinc-800/80 bg-zinc-900/50 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-zinc-500">
-            {t('settings.fileDefectContextPreview', { version: APP_VERSION, route: routePreview })}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {DEFECT_TEMPLATE_IDS.map((id) => (
+        {issueUrl ? null : (
+          <div className="border-b border-zinc-800 px-4 py-3">
+            <h2 id={`${formId}-title`} className="text-base font-semibold text-white">
+              {t('settings.fileDefectModalTitle')}
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500">{t('settings.fileDefectModalHelp')}</p>
+            <p className="mt-2 text-[11px] leading-snug text-zinc-600">{t('settings.fileDefectModalChecklist')}</p>
+            <p className="mt-2 rounded-md border border-zinc-800/80 bg-zinc-900/50 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-zinc-500">
+              {t('settings.fileDefectContextPreview', { version: APP_VERSION, route: routePreview })}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {DEFECT_TEMPLATE_IDS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className="rounded border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-400 hover:bg-zinc-900"
+                  onClick={() => applyTemplate(id)}
+                >
+                  {t(`settings.defectTemplate.${id}.label`)}
+                </button>
+              ))}
+            </div>
+            <div className="mt-2 flex gap-2">
               <button
-                key={id}
                 type="button"
-                className="rounded border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-400 hover:bg-zinc-900"
-                onClick={() => applyTemplate(id)}
+                className={`rounded-md px-2 py-1 text-xs ${!previewMode ? 'bg-emerald-900/50 text-emerald-100' : 'text-zinc-500 hover:bg-zinc-900'}`}
+                onClick={() => setPreviewMode(false)}
               >
-                {t(`settings.defectTemplate.${id}.label`)}
+                {t('settings.fileDefectTabForm')}
               </button>
-            ))}
+              <button
+                type="button"
+                className={`rounded-md px-2 py-1 text-xs ${previewMode ? 'bg-emerald-900/50 text-emerald-100' : 'text-zinc-500 hover:bg-zinc-900'}`}
+                onClick={() => setPreviewMode(true)}
+              >
+                {t('settings.fileDefectTabPreview')}
+              </button>
+            </div>
           </div>
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              className={`rounded-md px-2 py-1 text-xs ${!previewMode ? 'bg-emerald-900/50 text-emerald-100' : 'text-zinc-500 hover:bg-zinc-900'}`}
-              onClick={() => setPreviewMode(false)}
-            >
-              {t('settings.fileDefectTabForm')}
-            </button>
-            <button
-              type="button"
-              className={`rounded-md px-2 py-1 text-xs ${previewMode ? 'bg-emerald-900/50 text-emerald-100' : 'text-zinc-500 hover:bg-zinc-900'}`}
-              onClick={() => setPreviewMode(true)}
-            >
-              {t('settings.fileDefectTabPreview')}
-            </button>
-          </div>
-        </div>
+        )}
 
         {issueUrl ? (
           <div className="flex flex-col gap-3 px-4 py-4">
-            <p className="text-sm text-emerald-300/95">{t('settings.fileDefectSuccess48')}</p>
+            <p id={`${formId}-success-title`} className="text-sm font-medium text-emerald-300/95">
+              {t('settings.fileDefectSuccess48')}
+            </p>
             {suggestedLabels.length ? (
               <p className="text-[11px] text-zinc-500">
                 {t('settings.fileDefectSuggestedLabels', { labels: suggestedLabels.join(', ') })}
