@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { AdminMotivatorRolePanel } from '@/components/AdminMotivatorRolePanel'
 import { FileDefectModal } from '@/components/FileDefectModal'
 import { RequireVault } from '@/components/RequireVault'
 import { supabase } from '@/lib/supabase'
@@ -294,6 +295,10 @@ function SettingsPageInner() {
           </div>
         ) : null}
       </section>
+
+      {supabase && isAdmin ? (
+        <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
+      ) : null}
 
       {showQaSection ? (
         <section className="mt-8">

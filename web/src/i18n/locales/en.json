@@ -282,8 +282,32 @@
       "supabase_env_missing": "Supabase environment variables for the function are missing on the server.",
       "role_lookup_failed": "Could not verify your role on the server. Try again later."
     },
+    "adminRolesTitle": "Users & roles",
+    "adminRolesHelp": "Admin only: Supabase Auth users and motivator_role (admin / beta tester / regular user). Deploy Edge **admin-motivator-roles** and set Supabase URL, anon, and service_role secrets — see web/README.",
+    "adminRolesSearchPlaceholder": "Search by email or UUID…",
+    "adminRolesRefresh": "Refresh list",
+    "adminRolesColEmail": "User",
+    "adminRolesColRole": "Role",
+    "adminRolesEmpty": "No users match the current filter.",
+    "adminRolesYou": "This is you",
+    "adminRolesSelfHint": "If you remove your own admin role, this block disappears after the change — assign roles again via Dashboard or SQL.",
+    "adminRolesOptionUser": "Regular user",
+    "adminRolesOptionBeta": "Beta tester",
+    "adminRolesOptionAdmin": "Administrator",
+    "adminRolesErrors": {
+      "forbidden": "You need the admin role in app_metadata.motivator_role.",
+      "missing_authorization": "No session: sign in again.",
+      "invalid_token": "Session expired: sign in again.",
+      "supabase_env_missing": "Supabase environment variables for the function are missing on the server.",
+      "role_lookup_failed": "Could not verify your role on the server.",
+      "invalid_body": "Invalid request body.",
+      "invalid_role": "Invalid role value.",
+      "user_not_found": "User not found.",
+      "update_failed": "Could not update the role.",
+      "list_failed": "Could not load the user list."
+    },
     "adminSectionTitle": "Administrators",
-    "adminSectionHelp": "Assign roles server-side (Supabase Dashboard → Authentication → user → User Metadata → app_metadata key motivator_role). Values: admin, beta_tester, or omit for a normal user. On /settings, admin and beta_tester users get the Testing section — file a defect to GitHub via the file-defect Edge function (see web/README). The “Brief summary” item in the /app account menu is available to every signed-in user."
+    "adminSectionHelp": "Roles live in Supabase Auth → user → **App metadata**: key **motivator_role** (`admin`, `beta_tester`; omit key for a regular user). Bootstrap the first admin in the Dashboard or SQL. After that, admins can change roles on **/settings** (Users & roles block, Edge **admin-motivator-roles**). **Testing** and **File a defect** (**file-defect**) are for **admin** and **beta_tester**; see web/README. **Brief summary** on **/app** is for every signed-in user."
   },
   "eod": {
     "title": "End of day",
@@ -381,7 +405,13 @@
   },
   "shell": {
     "loading": "Loading…",
-    "initCrypto": "Initializing crypto…"
+    "initCrypto": "Initializing crypto…",
+    "roleLabelUser": "User",
+    "roleLabelBetaTester": "Beta tester",
+    "roleLabelAdmin": "Administrator",
+    "sessionInformerRoleTitle": "Your account permissions were updated.",
+    "sessionInformerRoleDetail": "Role changed: {{before}} → {{after}}.",
+    "sessionInformerDismiss": "Dismiss"
   },
   "vault": {
     "decryptError": "Could not decrypt vault. Check seed and password."

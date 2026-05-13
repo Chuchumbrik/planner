@@ -282,8 +282,32 @@
       "supabase_env_missing": "На сервере не заданы переменные Supabase для функции.",
       "role_lookup_failed": "Не удалось проверить роль на сервере. Попробуйте позже."
     },
+    "adminRolesTitle": "Пользователи и роли",
+    "adminRolesHelp": "Только для admin: список учётных записей Supabase Auth и поле motivator_role (admin / бета-тестер / обычный пользователь). Нужен деплой Edge admin-motivator-roles и секреты SUPABASE_* — см. web/README.",
+    "adminRolesSearchPlaceholder": "Поиск по email или UUID…",
+    "adminRolesRefresh": "Обновить список",
+    "adminRolesColEmail": "Пользователь",
+    "adminRolesColRole": "Роль",
+    "adminRolesEmpty": "Нет пользователей по текущему фильтру.",
+    "adminRolesYou": "Это вы",
+    "adminRolesSelfHint": "Если снимете с себя роль admin, этот блок исчезнет после сохранения — дальнейшие роли снова через Dashboard или SQL.",
+    "adminRolesOptionUser": "Обычный пользователь",
+    "adminRolesOptionBeta": "Бета-тестер",
+    "adminRolesOptionAdmin": "Администратор",
+    "adminRolesErrors": {
+      "forbidden": "Нужна роль admin в app_metadata.motivator_role.",
+      "missing_authorization": "Сессия не найдена: войдите снова.",
+      "invalid_token": "Сессия устарела: войдите снова.",
+      "supabase_env_missing": "На сервере не заданы переменные Supabase для функции.",
+      "role_lookup_failed": "Не удалось проверить роль на сервере.",
+      "invalid_body": "Некорректный запрос к серверу.",
+      "invalid_role": "Недопустимое значение роли.",
+      "user_not_found": "Пользователь не найден.",
+      "update_failed": "Не удалось обновить роль.",
+      "list_failed": "Не удалось загрузить список пользователей."
+    },
     "adminSectionTitle": "Администраторы",
-    "adminSectionHelp": "Назначение ролей на сервере (Supabase Dashboard → Authentication → пользователь → User Metadata → app_metadata: ключ motivator_role). Значения: admin, beta_tester (бета-тестер), при отсутствии ключа — обычный пользователь. Для admin и beta_tester на экране /settings доступна секция «Тестирование» — заведение дефекта в GitHub через Edge file-defect (см. web/README). Модалка «Краткая сводка» в меню аккаунта на /app доступна всем залогиненным пользователям."
+    "adminSectionHelp": "Роль задаётся в Supabase Auth → пользователь → App metadata: ключ motivator_role (значения admin, beta_tester; без ключа — обычный пользователь). Первый admin — в Dashboard или SQL. Дальше admin может менять роли на экране /settings (блок «Пользователи и роли», Edge admin-motivator-roles). Секция «Тестирование» и «Завести дефект» (file-defect) — для admin и beta_tester; см. web/README. Модалка «Краткая сводка» на /app — у всех залогиненных."
   },
   "eod": {
     "title": "Завершение дня",
@@ -381,7 +405,13 @@
   },
   "shell": {
     "loading": "Загрузка…",
-    "initCrypto": "Инициализация шифрования…"
+    "initCrypto": "Инициализация шифрования…",
+    "roleLabelUser": "Пользователь",
+    "roleLabelBetaTester": "Бета-тестер",
+    "roleLabelAdmin": "Администратор",
+    "sessionInformerRoleTitle": "Обновились права в аккаунте.",
+    "sessionInformerRoleDetail": "Роль изменилась: {{before}} → {{after}}.",
+    "sessionInformerDismiss": "Скрыть"
   },
   "vault": {
     "decryptError": "Не удалось расшифровать vault. Проверьте seed и пароль."

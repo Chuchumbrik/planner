@@ -288,8 +288,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'DR-004: create/edit task; second checkbox tap within the window; expiry without response clears pending without recording completion.',
       },
       {
-        ru: 'Задел под роли (`motivatorRole`, `app_metadata.motivator_role`) без ограничений UI — см. план фазы 8.',
-        en: 'Role hooks (`motivatorRole`, `app_metadata.motivator_role`) without UI gating — see phase 8 plan.',
+        ru: 'Роли **`user` / `beta_tester` / `admin`**: в настройках для **admin** — блок **«Пользователи и роли»** (Edge **`admin-motivator-roles`**); при фокусе вкладки — **`SessionSyncInformer`**, если роль в JWT изменилась на сервере. Ограничения видимости экранов по ролям (фаза 8) — в плане.',
+        en: '**`user` / `beta_tester` / `admin`**: settings **Users & roles** for **admin** (Edge **`admin-motivator-roles`**); on tab focus — **`SessionSyncInformer`** when the server-side role in the JWT changed. Screen-level role gating (phase 8) remains planned.',
       },
       {
         ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; круговая диаграмма доли закрытых задач по плану; продуктовые **«Открытые вопросы»** ведутся в модалке **«Краткая сводка»** (открытие с **`/app`**, меню аккаунта), строки — в i18n.',
@@ -312,6 +312,29 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-12', en: '2026-05-12' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.45', en: '0.6.45' },
+        changes: [
+          {
+            ru: '**Настройки / admin:** блок **«Пользователи и роли»** — список пользователей Supabase Auth, **поиск** по email или UUID, смена **`motivator_role`** (Edge **`admin-motivator-roles`**, JWT + Service Role); после смены **своей** роли — **`refreshSession()`**.',
+            en: '**Settings / admin:** **Users & roles** — Supabase Auth user list, **search** by email or UUID, **`motivator_role`** updates (Edge **`admin-motivator-roles`**, JWT + Service Role); after changing **your own** role — **`refreshSession()`**.',
+          },
+          {
+            ru: '**Сессия / роли:** при возврате на вкладку или фокусе окна — **`refreshSession()`**; если **`motivator_role`** в JWT изменился (например админом, пока вкладка была в фоне) — **верхний баннер** с пояснением и кнопкой **«Скрыть»** (`SessionSyncInformer`, i18n **`shell.*`**).',
+            en: '**Session / roles:** on tab focus or window focus — **`refreshSession()`**; if **`motivator_role`** in the JWT changed (e.g. by an admin while the tab was backgrounded) — a **top banner** explains the change with **Dismiss** (`SessionSyncInformer`, i18n **`shell.*`**).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Первого администратора по-прежнему задают в Supabase вручную; дальше админ может выдавать роли из приложения без SQL.',
+            en: 'The first admin is still set in Supabase manually; afterwards admins can assign roles from the app without SQL.',
+          },
+          {
+            ru: 'Не нужно выходить и входить заново: вернитесь на вкладку — приложение само подтянет новую роль и покажет, что поменялось.',
+            en: 'You don’t have to sign out and back in: return to the tab and the app refreshes the role and tells you what changed.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.43', en: '0.6.43' },
         changes: [
