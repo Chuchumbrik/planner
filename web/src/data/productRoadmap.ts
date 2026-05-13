@@ -313,6 +313,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-13', en: '2026-05-13' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.51', en: '0.6.51' },
+        changes: [
+          {
+            ru: '**Планировщик `/app`:** навигация **День** и **Месяц** — та же строка, что **Неделя**: **шевроны** (`PlannerChevronLeft` / `PlannerChevronRight`), **`aria-label`** + **`sr-only`**, ключи **`app.dayPrev`** / **`app.dayNext`**.',
+            en: '**Planner `/app`:** **Day** and **Month** period nav matches **Week**: **chevron icon buttons** (`PlannerChevronLeft` / `PlannerChevronRight`), **`aria-label`** + **`sr-only`**, keys **`app.dayPrev`** / **`app.dayNext`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Стрелки переключения даты или месяца выглядят и ведут себя так же, как на неделе.',
+            en: 'Day and month step controls match the week tab for layout and accessibility.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.48', en: '0.6.48' },
         changes: [
           {

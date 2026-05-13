@@ -178,6 +178,23 @@ function matchesFiltersExcept(
   return true
 }
 
+/** Иконки навигации периода — те же SVG, что на вкладке «Неделя». */
+function PlannerChevronLeft() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+      <path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" />
+    </svg>
+  )
+}
+
+function PlannerChevronRight() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+      <path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
+    </svg>
+  )
+}
+
 type EodModalContext = { dateKey: string; mode: 'ritual' | 'report' }
 
 function AppPageInner() {
@@ -1191,30 +1208,36 @@ function AppPageInner() {
 
       {view === 'day' && (
         <>
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-              onClick={() => setSelectedDay(shiftLocalDateKey(selectedDay, -1))}
-            >
-              ←
-            </button>
-            <span className="min-w-0 flex-1 text-center text-sm font-medium text-zinc-200">
+          <div className="mb-4 flex flex-nowrap items-center justify-between gap-2">
+            <div className="flex shrink-0 items-center gap-0.5">
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+                onClick={() => setSelectedDay(shiftLocalDateKey(selectedDay, -1))}
+                aria-label={t('app.dayPrev')}
+              >
+                <span className="sr-only">{t('app.dayPrev')}</span>
+                <PlannerChevronLeft />
+              </button>
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+                onClick={() => setSelectedDay(shiftLocalDateKey(selectedDay, 1))}
+                aria-label={t('app.dayNext')}
+              >
+                <span className="sr-only">{t('app.dayNext')}</span>
+                <PlannerChevronRight />
+              </button>
+            </div>
+            <p className="min-w-0 flex-1 truncate px-1 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
               {formatDayHeading(selectedDay, locale)}
-            </span>
+            </p>
             <button
               type="button"
               disabled={!canEdit}
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-              onClick={() => setSelectedDay(shiftLocalDateKey(selectedDay, 1))}
-            >
-              →
-            </button>
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="rounded-lg border border-emerald-800/60 px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40"
+              className="shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
               onClick={() => setSelectedDay(localDateKey())}
             >
               {t('app.today')}
@@ -1314,9 +1337,7 @@ function AppPageInner() {
                 aria-label={t('app.weekPrev')}
               >
                 <span className="sr-only">{t('app.weekPrev')}</span>
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                  <path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" />
-                </svg>
+                <PlannerChevronLeft />
               </button>
               <button
                 type="button"
@@ -1326,9 +1347,7 @@ function AppPageInner() {
                 aria-label={t('app.weekNext')}
               >
                 <span className="sr-only">{t('app.weekNext')}</span>
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                  <path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-                </svg>
+                <PlannerChevronRight />
               </button>
             </div>
             <p className="min-w-0 flex-1 truncate px-1 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
@@ -1410,38 +1429,44 @@ function AppPageInner() {
 
       {view === 'month' && (
         <section className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-              onClick={() => {
-                const d = new Date(monthYear, monthIndex - 1, 1)
-                setMonthYear(d.getFullYear())
-                setMonthIndex(d.getMonth())
-              }}
-            >
-              {t('app.monthPrev')}
-            </button>
-            <span className="flex-1 text-center text-sm font-medium text-zinc-200">
+          <div className="flex flex-nowrap items-center justify-between gap-2">
+            <div className="flex shrink-0 items-center gap-0.5">
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+                onClick={() => {
+                  const d = new Date(monthYear, monthIndex - 1, 1)
+                  setMonthYear(d.getFullYear())
+                  setMonthIndex(d.getMonth())
+                }}
+                aria-label={t('app.monthPrev')}
+              >
+                <span className="sr-only">{t('app.monthPrev')}</span>
+                <PlannerChevronLeft />
+              </button>
+              <button
+                type="button"
+                disabled={!canEdit}
+                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
+                onClick={() => {
+                  const d = new Date(monthYear, monthIndex + 1, 1)
+                  setMonthYear(d.getFullYear())
+                  setMonthIndex(d.getMonth())
+                }}
+                aria-label={t('app.monthNext')}
+              >
+                <span className="sr-only">{t('app.monthNext')}</span>
+                <PlannerChevronRight />
+              </button>
+            </div>
+            <p className="min-w-0 flex-1 truncate px-1 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
               {monthLabel(monthYear, monthIndex, locale)}
-            </span>
+            </p>
             <button
               type="button"
               disabled={!canEdit}
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-              onClick={() => {
-                const d = new Date(monthYear, monthIndex + 1, 1)
-                setMonthYear(d.getFullYear())
-                setMonthIndex(d.getMonth())
-              }}
-            >
-              {t('app.monthNext')}
-            </button>
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="rounded-lg border border-emerald-800/60 px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40"
+              className="shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
               onClick={() => {
                 const now = parseLocalDateKey(localDateKey())!
                 setMonthYear(now.getFullYear())
