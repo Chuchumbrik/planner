@@ -313,6 +313,40 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-13', en: '2026-05-13' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.52', en: '0.6.52' },
+        changes: [
+          {
+            ru: '**«Завести дефект»** (`FileDefectModal`): после успешной отправки **скрывается** верхняя панель формы (шаблоны, вкладки «форма / предпросмотр»); у **`role="dialog"`** **`aria-labelledby`** ведёт на заголовок успеха (**`…-success-title`**).',
+            en: '**File a defect** (`FileDefectModal`): after success, the **form header** (templates, form/preview tabs) is **hidden**; dialog **`aria-labelledby`** targets the **success title** (`…-success-title`).',
+          },
+          {
+            ru: '**Внутреннее:** скилл **`github-defect-workflow`** — в очередь разбора попадают **только открытые** GitHub issue.',
+            en: '**Internal:** **`github-defect-workflow`** skill — triage queue is **open** GitHub issues only.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На экране «готово» не остаётся старой шапки формы; скринридер слышит заголовок успеха.',
+            en: 'The success view drops the old form chrome; assistive tech gets the success line as the dialog label.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.51', en: '0.6.51' },
+        changes: [
+          {
+            ru: '**Планировщик `/app`:** навигация **День** и **Месяц** — та же строка, что **Неделя**: **шевроны** (`PlannerChevronLeft` / `PlannerChevronRight`), **`aria-label`** + **`sr-only`**, ключи **`app.dayPrev`** / **`app.dayNext`**.',
+            en: '**Planner `/app`:** **Day** and **Month** period nav matches **Week**: **chevron icon buttons** (`PlannerChevronLeft` / `PlannerChevronRight`), **`aria-label`** + **`sr-only`**, keys **`app.dayPrev`** / **`app.dayNext`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Стрелки переключения даты или месяца выглядят и ведут себя так же, как на неделе.',
+            en: 'Day and month step controls match the week tab for layout and accessibility.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.48', en: '0.6.48' },
         changes: [
           {
