@@ -559,9 +559,15 @@ export function applyCompleteEodForLocalDate(vault: VaultPayload, dateKey: strin
 function mergeEodPreferences(prev: VaultPayload['eodPreferences'] | undefined): EodPreferences {
   const raw = prev && typeof prev === 'object' ? prev : {}
   const p = raw as Partial<EodPreferences>
+  let pushReminder: number | undefined
+  if (typeof p.pushReminderMinutesFromMidnight === 'number' && Number.isFinite(p.pushReminderMinutesFromMidnight)) {
+    const r = Math.round(p.pushReminderMinutesFromMidnight)
+    if (r >= 0 && r <= 1439) pushReminder = r
+  }
   return {
     enabled: p.enabled !== false,
     autoCloseAtDayEnd: p.autoCloseAtDayEnd === true,
+    ...(pushReminder !== undefined ? { pushReminderMinutesFromMidnight: pushReminder } : {}),
   }
 }
 
@@ -578,6 +584,30 @@ export function applySetEodAutoCloseAtDayEnd(vault: VaultPayload, value: boolean
   return {
     ...vault,
     eodPreferences: { ...m, autoCloseAtDayEnd: value },
+  }
+}
+
+/** `minutes === null` — убрать напоминание EOD по push. */
+export function applySetEodPushReminderMinutes(vault: VaultPayload, minutes: number | null): VaultPayload {
+  const m = mergeEodPreferences(vault.eodPreferences)
+  if (minutes === null) {
+    return {
+      ...vault,
+      eodPreferences: {
+        enabled: m.enabled,
+        autoCloseAtDayEnd: m.autoCloseAtDayEnd,
+      },
+    }
+  }
+  const r = Math.round(minutes)
+  if (!Number.isFinite(r) || r < 0 || r > 1439) return vault
+  return {
+    ...vault,
+    eodPreferences: {
+      enabled: m.enabled,
+      autoCloseAtDayEnd: m.autoCloseAtDayEnd,
+      pushReminderMinutesFromMidnight: r,
+    },
   }
 }
 

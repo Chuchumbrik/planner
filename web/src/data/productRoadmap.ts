@@ -313,6 +313,25 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.55', en: '0.6.55' },
+        changes: [
+          {
+            ru: '**Web Push / #12:** в **hybrid** — **разные** обезличенные тексты для **`task_start`** и **`task_end`**; в **full** — слегка уточнён англ. текст конца окна; новый вид **`eod_reminder`** — **одно** напоминание в локальный день по **`eodPreferences.pushReminderMinutesFromMidnight`** (если ритуал EOD включён, день ещё не в **`eodCompletedLocalDates`**, режим не **`off`**); настройки на **`/settings`** (чекбокс + время); миграция Supabase **`004_notification_fire_kind_eod.sql`**; ядро — **`applySetEodPushReminderMinutes`**, **`computeScheduledFires`**, **`buildPushPayload`**.',
+            en: '**Web Push / #12:** **hybrid** — distinct de-identified copy for **`task_start`** vs **`task_end`**; **full** — slightly refined English end-window wording; new **`eod_reminder`** — **one** local-day reminder from **`eodPreferences.pushReminderMinutesFromMidnight`** when EOD is on, today not yet in **`eodCompletedLocalDates`**, mode not **`off`**; **`/settings`** toggle + time; Supabase migration **`004_notification_fire_kind_eod.sql`**; core **`applySetEodPushReminderMinutes`**, **`computeScheduledFires`**, **`buildPushPayload`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В гибридном режиме уведомление о начале времени задачи и о конце звучит по-разному, при этом название задачи на сервер не уходит.',
+            en: 'In hybrid mode, start vs end notifications read differently while the task title never goes to the server.',
+          },
+          {
+            ru: 'Можно включить вечернее напоминание пройти ритуал «завершить день» по push в выбранное локальное время (если уведомления не выключены и в Supabase применена миграция 004).',
+            en: 'You can schedule one evening push to nudge the End-of-Day ritual at a local time (notifications not off; apply migration 004 in Supabase).',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.54', en: '0.6.54' },
         changes: [
           {
