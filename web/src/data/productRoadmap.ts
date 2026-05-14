@@ -20,11 +20,26 @@ export type RoadmapMvpPhase = {
   detailBullets: LocalizedString[]
 }
 
+/** Порядок тематических групп в блоке «Идеи на потом» (см. локали `settings.roadmapIdeaGroup*`). */
+export const ROADMAP_IDEAS_LATER_GROUP_ORDER = [
+  'postmvp_intro',
+  'everyday_core',
+  'collaboration_integrations',
+  'reliability_accounts',
+  'surface_ai_fun',
+] as const
+
+export type RoadmapIdeaLaterGroupId = (typeof ROADMAP_IDEAS_LATER_GROUP_ORDER)[number]
+
 /** Идея после MVP: заголовок + кратко + список под раскрывашкой */
 export type RoadmapIdeaEntry = {
   title: LocalizedString
   summary: LocalizedString
   detailBullets?: LocalizedString[]
+  /** Тематическая группа; по умолчанию при сборке UI — `everyday_core`. */
+  ideaLaterGroup?: RoadmapIdeaLaterGroupId
+  /** Порядок внутри группы (меньше — выше). По умолчанию `500`. */
+  ideaLaterOrder?: number
 }
 
 /**
@@ -312,6 +327,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
     items: [
+      {
+        releasedInVersion: { ru: '0.6.56', en: '0.6.56' },
+        changes: [
+          {
+            ru: '**«Краткая сводка» / #14:** блок **«Идеи на потом»** — **тематические группы** и порядок внутри (`ideaLaterGroup`, `ideaLaterOrder`, `groupIdeasLaterForDisplay`); подписи групп в **i18n** (`settings.roadmapIdeaGroup_*`); тексты карточек **не** удалялись.',
+            en: '**Brief summary / #14:** **Ideas for later** — **thematic groups** and in-group ordering (`ideaLaterGroup`, `ideaLaterOrder`, `groupIdeasLaterForDisplay`); group titles in **i18n** (`settings.roadmapIdeaGroup_*`); idea card copy **unchanged**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Длинный список идей теперь разбит на смысловые секции с заголовками; внутри секции порядок задаётся числом (удобнее планировать после MVP).',
+            en: 'The long idea list is split into labeled sections; inside each section, numeric order controls ranking for post-MVP planning.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.55', en: '0.6.55' },
         changes: [
@@ -1767,12 +1797,13 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
 ]
 
 /**
- * Идеи после MVP: порядок сверху вниз — рамка → тематические группы → платформы.
- * Связанные пункты объединены в одну карточку с «Подробнее»; ИИ разнесён на LLM и MCP.
+ * Идеи после MVP: **тематические группы** и порядок внутри (`ideaLaterGroup` / `ideaLaterOrder`); в UI — секции по `ROADMAP_IDEAS_LATER_GROUP_ORDER` и функция `groupIdeasLaterForDisplay`.
  * Источник правды для расширения списка — `obsidian-motivator/15-Идеи-для-развития.md` (синхронизировать при добавлении разделов).
  */
 export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
+    ideaLaterGroup: 'postmvp_intro',
+    ideaLaterOrder: 0,
     title: { ru: 'После релиза 1.0', en: 'After the 1.0 release' },
     summary: {
       ru: 'Всё ниже — черновой backlog без сроков и без обещаний в текущем MVP. Полный набор направлений см. также **`obsidian-motivator/15-Идеи-для-развития.md`**.',
@@ -1780,6 +1811,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     },
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 10,
     title: {
       ru: 'Первичный вход: страница настройки приложения',
       en: 'First launch: app setup screen',
@@ -1800,6 +1833,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'collaboration_integrations',
+    ideaLaterOrder: 10,
     title: {
       ru: 'Командные задачи и группы совместной работы',
       en: 'Team tasks and collaborative groups',
@@ -1824,6 +1859,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 20,
     title: {
       ru: 'Напоминания о неиспользованных функциях (feature discovery)',
       en: 'Unused-feature hints (feature discovery)',
@@ -1840,6 +1877,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 20,
     title: { ru: 'Область «Привычки»', en: 'A dedicated «Habits» area' },
     summary: {
       ru: 'Сущность отличная от разовых задач: повторы с собственным потоком и, возможно, моделью в vault; вопросы про идентичность, частоту и лимит времени на день.',
@@ -1853,6 +1892,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 30,
     title: {
       ru: 'Однодневные «пункты дня» (лёгкие привычки)',
       en: 'Daily one-off check-ins (lightweight habits)',
@@ -1869,6 +1910,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 40,
     title: { ru: 'Поиск по задачам', en: 'Task search' },
     summary: {
       ru: 'Поле поиска по загруженному vault: заголовок, при необходимости группа, теги, текст чек-листа — только на клиенте, без отправки запросов на сервер в явном виде.',
@@ -1886,6 +1929,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 10,
     title: {
       ru: '«Мои дефекты»: история обращений в настройках',
       en: '“My defects”: in-app submission history in settings',
@@ -1902,6 +1947,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 50,
     title: { ru: 'Перенос незакрытой задачи и чек-листа', en: 'Moving an open task with checklist progress' },
     summary: {
       ru: 'После MVP: при **переносе** (или аналоге «переложить на другой день») **незакрытой** задачи, если **часть пунктов чек-листа уже выполнена**, переносить их как **отмеченные**; текст **выполненных** пунктов остаётся **доступен для правки** в модалке — чтобы можно было уточнить формулировку, не теряя факт «уже сделано».',
@@ -1923,6 +1970,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 20,
     title: { ru: 'Раздел «Тестирование» в настройках', en: 'Settings: testing / QA tools' },
     summary: {
       ru: 'Отдельная секция **только для администраторов и бета-тестеров**: переключатели и вспомогательные режимы, которые упрощают проверку приложения и сценариев; обычный пользователь раздел не видит. В той же зоне — **поле / кнопка «Завести дефект»**: форма отправки в **GitHub Issue** (основной целевой канал), см. отдельную карточку ниже и **§14** в Obsidian.',
@@ -1952,6 +2001,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 30,
     title: { ru: 'Дефекты из приложения (тестеры и админы)', en: 'In-app defect filing (testers & admins)' },
     summary: {
       ru: 'После MVP: для ролей **бета-тестер** и **администратор** — **форма «Завести дефект»** в интерфейсе (заголовок, описание, шаги воспроизведения, опционально скриншот/контекст экрана). **Основной канал назначения** — создание **GitHub Issue** в выбранном репозитории через **серверный** вызов API (токен не в клиенте); после отправки — **прямая ссылка** на issue.',
@@ -1981,6 +2032,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 40,
     title: { ru: 'Тестовые аккаунты с простым seed', en: 'Test accounts with a simple seed' },
     summary: {
       ru: 'После MVP: выделенные учётки для ручных прогонов и регрессии, где **seed шифрования vault намеренно простой** (короткая известная фраза) — чтобы быстро воспроизводить один и тот же расшифрованный контекст без роли как «боевого» пользователя.',
@@ -2002,6 +2055,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 50,
     title: { ru: 'Вход через сторонние сервисы (OAuth)', en: 'Sign-in via third-party providers (OAuth)' },
     summary: {
       ru: 'После MVP: авторизация не только по email и паролю, но и через **провайдеров** — например **Яндекс** и **Google** (типовой путь **OAuth** / federated login в **Supabase Auth**).',
@@ -2027,6 +2082,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 60,
     title: { ru: 'Обновить после новой версии (сброс кэша)', en: 'Refresh after new version (cache bust)' },
     summary: {
       ru: 'После MVP: если клиент видит, что **версия приложения на сервере новее**, чем у уже загруженной вкладки — показать **аккуратную кнопку** (или баннер) **«Обновить»**, по нажатию — **перезагрузка страницы со сбросом кэша** статики и актуализацией **service worker**, чтобы пользователь не застревал на старом бандле после деплоя.',
@@ -2048,6 +2105,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 60,
     title: { ru: 'Ритуал «Завершение дня»: поля рефлексии', en: 'End-of-day ritual: reflection inputs' },
     summary: {
       ru: 'После MVP: ответы на мягкие вопросы прямо в модалке, хранение в vault или отдельном слое, сводки за неделю/месяц для ретроспективы без самобичевания.',
@@ -2061,6 +2120,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 70,
     title: { ru: 'Диаграммы: отчёты и вкладка «День»', en: 'Charts: reports vs Day tab' },
     summary: {
       ru: '**`/app/reports`** — столбчатая диаграмма по дням; вкладки **«День»**, **«Неделя»**, **«Месяц»** — кольца прогресса плана (**реализовано**). Дальнейшие визуализации (тренды, сравнение периодов) — по приоритету после 1.0.',
@@ -2068,6 +2129,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     },
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 80,
     title: { ru: 'Цвет метки — как мини-группа (название и описание)', en: 'Label color as a mini-group (name & description)' },
     summary: {
       ru: 'После MVP: настройка **цветовых меток** не только как оттенок на карточке, а как сущность со **своим названием и описанием** (по смыслу близко к группе проектов, но привязка к цвету): одна точка настроек, текст в подсказках и при фильтрации.',
@@ -2085,6 +2148,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'collaboration_integrations',
+    ideaLaterOrder: 20,
     title: { ru: 'Интеграция с внешними календарями', en: 'External calendar integration' },
     summary: {
       ru: 'После MVP: связка с **Google Calendar**, **Outlook / Microsoft 365**, **Apple/iCloud** и системными календарями — один временной контур; варианты **ICS** (файл / подписка по защищённой ссылке).',
@@ -2102,6 +2167,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 30,
     title: { ru: 'Презентационная страница (лендинг)', en: 'Marketing / landing page' },
     summary: {
       ru: 'Публичная страница о приложении: зачем оно, базовые возможности, новости — и вход в регистрацию без открытия планировщика.',
@@ -2123,6 +2190,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 40,
     title: { ru: 'Документация и руководство пользователя', en: 'In-app docs & user guide' },
     summary: {
       ru: 'После MVP: отдельная **страница или раздел «Справка / Руководство»** внутри приложения (или по публичной ссылке с тем же брендингом) — структурированное описание экранов, планирования, повторов, отчётов, seed и безопасности **простым языком**, с поиском по разделам и ссылками из подсказок в UI.',
@@ -2144,6 +2213,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 90,
     title: { ru: 'Режим «Напоминание» (не задача)', en: '“Reminder” mode (not a tracked task)' },
     summary: {
       ru: 'После MVP: отдельный **режим записи** рядом с обычной задачей — **напоминание о чём-либо**: не ведёт себя как полноценная задача (без обязательной оценки, без «выполнено» как долга, **не участвует** в отчётах/стрике/EOD как невыполненный план), но может **показываться в дне** или в списке как лёгкая **записка** с датой/временем.',
@@ -2165,6 +2236,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 50,
     title: { ru: 'Опросник приоритетов', en: 'Priority survey' },
     summary: {
       ru: 'Узнать у пользователей, что иметь в виду в первую очередь, а что можно отложить.',
@@ -2182,6 +2255,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 100,
     title: { ru: 'Цели и шаблоны', en: 'Goals and templates' },
     summary: {
       ru: 'Два разных направления планирования «над» отдельными задачами.',
@@ -2211,6 +2286,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 15,
     title: { ru: 'Жесты: long-press', en: 'Gestures: long-press' },
     summary: {
       ru: 'Дополнительные действия или контекстное меню по долгому нажатию на карточки и элементы.',
@@ -2218,6 +2295,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     },
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 60,
     title: { ru: 'Геймификация', en: 'Gamification' },
     summary: {
       ru: 'Очки, уровни, награды — только после отдельной продуктовой проработки.',
@@ -2225,6 +2304,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     },
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 70,
     title: { ru: 'Достижения', en: 'Achievements' },
     summary: {
       ru: 'После MVP: **достижения** — значки или вехи за осмысленные паттерны работы с планировщиком (первая неделя со стриком, закрытие давней задачи и т.п.), без давления и с возможностью **не показывать** блок в интерфейсе.',
@@ -2246,6 +2327,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 80,
     title: { ru: 'Персонаж-тамагочи и группы', en: 'Tamagotchi-style character & groups' },
     summary: {
       ru: 'Мягкая геймификация **без давления**: персонаж, потребности (настроение, «кормление» и т.д.), привязка к **группам задач** — что усиливает персонажа при выполнении; опционально отключить в настройках.',
@@ -2259,6 +2342,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 110,
     title: { ru: 'Нагрузка и рабочее время', en: 'Workload and working hours' },
     summary: {
       ru: 'Мягкие подсказки, чтобы не перегружать день, без жёстких запретов.',
@@ -2276,6 +2361,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 70,
     title: { ru: 'Нативные клиенты', en: 'Native clients' },
     summary: {
       ru: 'Отдельные приложения iOS/Android при наличии ресурсов; крипто — паритет с VAULT_CRYPTO_CONTRACT.',
@@ -2283,6 +2370,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     },
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 120,
     title: { ru: 'Экран «День»: другие виды', en: 'Day screen: alternate views' },
     summary: {
       ru: 'Помимо списка — таймлайн по часам, компактные режимы, переключатель вида.',
@@ -2300,6 +2389,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 90,
     title: { ru: 'Подсказки через LLM (API)', en: 'LLM hints (API)' },
     summary: {
       ru: 'Внешние модели по API, свой ключ и провайдер — только после продуктовой и privacy-оценки.',
@@ -2313,6 +2404,8 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 100,
     title: { ru: 'MCP и контекстные ассистенты', en: 'MCP & contextual assistants' },
     summary: {
       ru: 'Интеграции через Model Context Protocol или аналоги — отдельный слой от «сырого» HTTP API к LLM.',
@@ -2326,3 +2419,29 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
 ]
+
+/**
+ * Сгруппировать идеи «на потом» для модалки: порядок групп — `ROADMAP_IDEAS_LATER_GROUP_ORDER`,
+ * внутри группы — по `ideaLaterOrder` (меньше — выше). Без `ideaLaterGroup` запись попадает в `everyday_core`.
+ */
+export function groupIdeasLaterForDisplay(
+  entries: RoadmapIdeaEntry[],
+): { groupId: RoadmapIdeaLaterGroupId; ideas: RoadmapIdeaEntry[] }[] {
+  const defaultGroup: RoadmapIdeaLaterGroupId = 'everyday_core'
+  const byGroup = new Map<RoadmapIdeaLaterGroupId, RoadmapIdeaEntry[]>()
+  for (const id of ROADMAP_IDEAS_LATER_GROUP_ORDER) {
+    byGroup.set(id, [])
+  }
+  for (const e of entries) {
+    const g = e.ideaLaterGroup ?? defaultGroup
+    const bucket = byGroup.get(g) ?? byGroup.get(defaultGroup)!
+    bucket.push(e)
+  }
+  for (const list of byGroup.values()) {
+    list.sort((a, b) => (a.ideaLaterOrder ?? 500) - (b.ideaLaterOrder ?? 500))
+  }
+  return ROADMAP_IDEAS_LATER_GROUP_ORDER.map((groupId) => ({
+    groupId,
+    ideas: byGroup.get(groupId)!,
+  })).filter((x) => x.ideas.length > 0)
+}

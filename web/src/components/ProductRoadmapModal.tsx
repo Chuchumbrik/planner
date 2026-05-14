@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  groupIdeasLaterForDisplay,
   IDEAS_LATER_ENTRIES,
   IMPLEMENTED_MVP_PHASES,
   MVP_PHASES_PLANNED,
@@ -228,6 +229,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
   }, [])
 
   const releaseNotesByDay = useMemo(() => groupReleaseNotesForUi(RELEASE_NOTES_BLOCKS), [])
+  const ideasLaterGroups = useMemo(() => groupIdeasLaterForDisplay(IDEAS_LATER_ENTRIES), [])
 
   useEffect(() => {
     if (!open) return
@@ -416,11 +418,24 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             </summary>
             <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
               <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapIdeasHint')}</p>
-              <ul className="flex flex-col gap-2">
-                {IDEAS_LATER_ENTRIES.map((idea, i) => (
-                  <IdeaRow key={i} idea={idea} lang={lang} />
+              <div className="flex flex-col gap-5">
+                {ideasLaterGroups.map((g) => (
+                  <section key={g.groupId}>
+                    <h4 className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                      {t(`settings.roadmapIdeaGroup_${g.groupId}` as const)}
+                    </h4>
+                    <ul className="mt-2 flex flex-col gap-2">
+                      {g.ideas.map((idea) => (
+                        <IdeaRow
+                          key={`${g.groupId}-${idea.ideaLaterOrder ?? 0}-${pickLocale(idea.title, lang)}`}
+                          idea={idea}
+                          lang={lang}
+                        />
+                      ))}
+                    </ul>
+                  </section>
                 ))}
-              </ul>
+              </div>
             </div>
           </details>
 
