@@ -11,6 +11,22 @@ import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank, type NotificationD
 import { getVapidPublicKey } from '@/lib/notifications/pushSubscription'
 import { useVault } from '@/vault/VaultProvider'
 
+function formatMinutesAsTimeValue(mins: number): string {
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+function minutesFromTimeInputValue(value: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(value.trim())
+  if (!m) return null
+  const h = Number(m[1])
+  const min = Number(m[2])
+  if (!Number.isInteger(h) || h < 0 || h > 23) return null
+  if (!Number.isInteger(min) || min < 0 || min > 59) return null
+  return h * 60 + min
+}
+
 function GroupRow({
   initialName,
   isDefault,
@@ -106,6 +122,7 @@ function SettingsPageInner() {
     setPriorityLabel,
     setEodEnabled,
     setEodAutoCloseAtDayEnd,
+    setEodPushReminderMinutes,
     setNotificationDeliveryMode,
     subscribePushNotifications,
     sendTestPushNotification,
@@ -123,6 +140,12 @@ function SettingsPageInner() {
 
   const deliveryMode: NotificationDeliveryMode =
     vault.notificationPreferences?.deliveryMode ?? 'off'
+  const eodPushReminder = vault.eodPreferences?.pushReminderMinutesFromMidnight
+  const eodPushReminderOn = typeof eodPushReminder === 'number'
+  const eodPushTimeValue = eodPushReminderOn
+    ? formatMinutesAsTimeValue(eodPushReminder)
+    : formatMinutesAsTimeValue(20 * 60 + 30)
+
   const hasEmailLogin = Boolean(session?.user?.email)
   const canEdit = remoteHydrated && !decryptFailed
   const showQaSection = Boolean(supabase && (isAdmin || isBetaTester))
@@ -220,6 +243,53 @@ function SettingsPageInner() {
             onChange={(e) => void setEodAutoCloseAtDayEnd(e.target.checked)}
           />
           <span className="text-sm leading-snug text-zinc-300">{t('settings.eodAutoCloseToggle')}</span>
+        </label>
+        <h3 className="mt-6 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {t('settings.eodPushReminderTitle')}
+        </h3>
+        <p className="mt-2 text-xs text-zinc-500">{t('settings.eodPushReminderHelp')}</p>
+        {deliveryMode === 'off' ? (
+          <p className="mt-2 text-xs text-amber-500/90">{t('settings.eodPushReminderNeedNotifications')}</p>
+        ) : null}
+        <label
+          className={`mt-3 flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3 ${
+            vault.eodPreferences?.enabled === false || !canEdit || deliveryMode === 'off'
+              ? 'cursor-not-allowed opacity-50'
+              : 'cursor-pointer'
+          }`}
+        >
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={eodPushReminderOn}
+            disabled={!canEdit || vault.eodPreferences?.enabled === false || deliveryMode === 'off'}
+            onChange={(e) => {
+              if (e.target.checked) {
+                const initial =
+                  typeof vault.eodPreferences?.pushReminderMinutesFromMidnight === 'number'
+                    ? vault.eodPreferences.pushReminderMinutesFromMidnight
+                    : 20 * 60 + 30
+                void setEodPushReminderMinutes(initial)
+              } else {
+                void setEodPushReminderMinutes(null)
+              }
+            }}
+          />
+          <span className="text-sm leading-snug text-zinc-300">{t('settings.eodPushReminderToggle')}</span>
+        </label>
+        <label className="mt-3 flex flex-col gap-1">
+          <span className="text-xs text-zinc-500">{t('settings.eodPushReminderTime')}</span>
+          <input
+            type="time"
+            step={60}
+            className="max-w-[12rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            value={eodPushTimeValue}
+            disabled={!canEdit || vault.eodPreferences?.enabled === false || deliveryMode === 'off' || !eodPushReminderOn}
+            onChange={(e) => {
+              const parsed = minutesFromTimeInputValue(e.target.value)
+              if (parsed !== null) void setEodPushReminderMinutes(parsed)
+            }}
+          />
         </label>
       </section>
 

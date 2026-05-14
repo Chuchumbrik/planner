@@ -31,6 +31,7 @@ import {
   applySetTaskScheduledLocalDate,
   applySetEodAutoCloseAtDayEnd,
   applySetEodEnabled,
+  applySetEodPushReminderMinutes,
   applySetNotificationDeliveryMode,
   applySetTaskTimePlan,
   applyToggleChecklistItem,
@@ -121,6 +122,8 @@ type VaultContextValue = {
   completeEodForLocalDate: (dateKey: string) => Promise<void>
   setEodEnabled: (enabled: boolean) => Promise<void>
   setEodAutoCloseAtDayEnd: (value: boolean) => Promise<void>
+  /** Локальное время напоминания EOD по push (минуты от полуночи) или `null` — выключено. */
+  setEodPushReminderMinutes: (minutes: number | null) => Promise<void>
   setNotificationDeliveryMode: (mode: NotificationDeliveryMode) => Promise<void>
   /** Разрешение ОС + подписка Web Push и запись в Supabase; вернуть итог для UI. */
   subscribePushNotifications: () => Promise<'ok' | 'denied' | 'unconfigured' | 'no_sw'>
@@ -609,6 +612,13 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
+  const setEodPushReminderMinutes = useCallback(
+    async (minutes: number | null) => {
+      await mutate((v) => applySetEodPushReminderMinutes(v, minutes))
+    },
+    [mutate],
+  )
+
   const setNotificationDeliveryMode = useCallback(
     async (mode: NotificationDeliveryMode) => {
       await mutate((v) => applySetNotificationDeliveryMode(v, mode))
@@ -698,6 +708,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       completeEodForLocalDate,
       setEodEnabled,
       setEodAutoCloseAtDayEnd,
+      setEodPushReminderMinutes,
       setNotificationDeliveryMode,
       subscribePushNotifications,
       sendTestPushNotification,
@@ -737,6 +748,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       completeEodForLocalDate,
       setEodEnabled,
       setEodAutoCloseAtDayEnd,
+      setEodPushReminderMinutes,
       setNotificationDeliveryMode,
       subscribePushNotifications,
       sendTestPushNotification,

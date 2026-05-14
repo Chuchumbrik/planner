@@ -24,6 +24,7 @@ import {
   type VaultPayloadV7,
   type VaultPayloadV8,
   type NotificationPreferences,
+  type EodPreferences,
 } from './types'
 
 function isColorKey(x: unknown): x is TaskColorKey {
@@ -320,6 +321,14 @@ function repairV6(v: VaultPayloadV6): VaultPayloadV6 {
   const eodRaw = v.eodPreferences && typeof v.eodPreferences === 'object' ? v.eodPreferences : {}
   const autoClose =
     'autoCloseAtDayEnd' in eodRaw && (eodRaw as { autoCloseAtDayEnd?: unknown }).autoCloseAtDayEnd === true
+  const rawRem = (eodRaw as { pushReminderMinutesFromMidnight?: unknown }).pushReminderMinutesFromMidnight
+  let pushRem: number | undefined
+  if (typeof rawRem === 'number' && Number.isFinite(rawRem)) {
+    const r = Math.round(rawRem)
+    if (r >= 0 && r <= 1439) pushRem = r
+  }
+  const eodPreferences: EodPreferences = { enabled: eodOn, autoCloseAtDayEnd: autoClose }
+  if (pushRem !== undefined) eodPreferences.pushReminderMinutesFromMidnight = pushRem
   return {
     schemaVersion: 6,
     priorityLabels: r5.priorityLabels,
@@ -330,7 +339,7 @@ function repairV6(v: VaultPayloadV6): VaultPayloadV6 {
     })),
     drafts: r5.drafts,
     eodCompletedLocalDates: normalizeEodCompletedDates(v.eodCompletedLocalDates),
-    eodPreferences: { enabled: eodOn, autoCloseAtDayEnd: autoClose },
+    eodPreferences,
   }
 }
 

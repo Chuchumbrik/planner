@@ -3,7 +3,9 @@ import { localDateKey, parseLocalDateKey, shiftLocalDateKey } from '@motivator/c
 
 export const NOTIFICATION_SCHEDULE_HORIZON_DAYS = 14
 
-export type NotificationFireKind = 'task_start' | 'task_end'
+export type NotificationFireKind = 'task_start' | 'task_end' | 'eod_reminder'
+
+const EOD_TASK_ID = '__eod__'
 
 export type FireRowInput = {
   task_id: string
@@ -36,6 +38,31 @@ export function computeScheduledFireRequests(
   const nowMs = now.getTime()
   const todayKey = localDateKey(now)
   const rows: FireRowInput[] = []
+
+  const eodPush = vault.eodPreferences?.pushReminderMinutesFromMidnight
+  if (
+    vault.eodPreferences?.enabled !== false &&
+    typeof eodPush === 'number' &&
+    Number.isFinite(eodPush)
+  ) {
+    const mins = Math.round(eodPush)
+    if (mins >= 0 && mins <= 1439) {
+      const done = vault.eodCompletedLocalDates ?? []
+      if (!done.includes(todayKey)) {
+        const fireIso = fireAtUtcIso(todayKey, mins)
+        if (fireIso && Date.parse(fireIso) > nowMs) {
+          rows.push({
+            task_id: EOD_TASK_ID,
+            kind: 'eod_reminder',
+            fire_at_utc: fireIso,
+            dedupe_key: `eod_reminder|${todayKey}|${mins}`,
+            title: null,
+            locale: opts.locale,
+          })
+        }
+      }
+    }
+  }
 
   for (let i = 0; i < NOTIFICATION_SCHEDULE_HORIZON_DAYS; i++) {
     const dayKey = shiftLocalDateKey(todayKey, i)
