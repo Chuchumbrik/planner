@@ -1834,6 +1834,22 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    title: {
+      ru: 'Однодневные «пункты дня» (лёгкие привычки)',
+      en: 'Daily one-off check-ins (lightweight habits)',
+    },
+    summary: {
+      ru: 'После MVP: отмечать за календарный день **отдельные цели** вроде «день без …» рядом с задачами — без полной модели повторов, оценки и времени; пересечение с областью **«Привычки»** и ритуалом EOD — отдельное продуктовое решение.',
+      en: 'Post-MVP: mark lightweight daily goals (e.g. a “streak day”) alongside tasks—without full repeats, estimates, or timeblocking; product alignment with **Habits** and EOD is TBD.',
+    },
+    detailBullets: [
+      {
+        ru: 'Формулировка из обратной связи GitHub **#4**; при переносе в Obsidian сверить с **`15-Идеи-для-развития.md`** (§ про привычки).',
+        en: 'Wording from GitHub feedback **#4**; when mirroring to Obsidian, align with **`15-Идеи-для-развития.md`** (habits section).',
+      },
+    ],
+  },
+  {
     title: { ru: 'Поиск по задачам', en: 'Task search' },
     summary: {
       ru: 'Поле поиска по загруженному vault: заголовок, при необходимости группа, теги, текст чек-листа — только на клиенте, без отправки запросов на сервер в явном виде.',
@@ -1843,6 +1859,26 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Дебаунс и опционально индекс в памяти при росте данных — см. **`15-Идеи-для-развития.md`**, §3.',
         en: 'Debounce and optional in-memory index as data grows — see **`15-Идеи-для-развития.md`**, §3.',
+      },
+      {
+        ru: 'Пожелание GitHub **#5**: расширить поиск **фильтрами по группе и цвету** и добавить **сводную статистику** по найденным задачам (после базового поиска по названию на клиенте).',
+        en: 'GitHub **#5** asks for **group/color filters** on search plus **aggregate stats** over matches (after baseline client-side title search).',
+      },
+    ],
+  },
+  {
+    title: {
+      ru: '«Мои дефекты»: история обращений в настройках',
+      en: '“My defects”: in-app submission history in settings',
+    },
+    summary: {
+      ru: 'После MVP: пункт **«Мои дефекты»** — мини-карточки обращений, заведённых через приложение, со статусом (**исправлено** / **в плане** / **отклонено**) по метаданным GitHub или отдельной таблице; без утечки текста vault.',
+      en: 'Post-MVP: a **“My defects”** entry — mini cards for in-app filings with status (**fixed** / **planned** / **declined**) from GitHub metadata or a service table; no vault plaintext leakage.',
+    },
+    detailBullets: [
+      {
+        ru: 'Описание сценария — feedback GitHub **#9**; потребуется контракт с GitHub (labels, state) или зеркало в Supabase.',
+        en: 'Scenario from GitHub **#9**; needs a contract with GitHub (labels/state) or a Supabase mirror.',
       },
     ],
   },
