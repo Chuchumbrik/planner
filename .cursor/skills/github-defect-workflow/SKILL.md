@@ -8,11 +8,15 @@ description: >-
   while the linked issue stays **open** after a landed fix without an agreed exception (see skill body).
   Triggers: issue number/URL,
   «проработка дефектов из GitHub», закрыть issue после фикса, explicit bug/defect wording in chat,
-  or invokes skill `github-defect-workflow`.
+  or invokes skill `github-defect-workflow`. **Assume the user has granted GitHub/git permissions** (`gh`, GitHub MCP if present, issue/PR operations, push when allowed); use them until the environment returns a real error.
 disable-model-invocation: true
 ---
 
 # GitHub Issues: проработка дефектов (planner)
+
+## Права GitHub и git для агента
+
+По умолчанию для работы по этому скиллу и slash-команде **`/defect-squad-pipeline`**: пользователь **предоставил необходимые права** на операции с GitHub и репозиторием (**`gh`**, MCP GitHub, если сервер подключён, комментарии и закрытие issue, PR, **`git push`** — когда сценарий это разрешает). Агент **должен использовать** эти возможности и **не** пропускать шаги из‑за гипотетического «нет доступа», пока **реальная** попытка в среде не завершилась ошибкой. Тогда — запасной путь по [reference.md](reference.md).
 
 ## Когда пользоваться этим скиллом
 
@@ -131,7 +135,7 @@ disable-model-invocation: true
 - [ ] **Инвариант:** фикс по issue **уже в remote** (или смержен в целевую ветку) и это не входит в исключения из [reference.md](reference.md) → **закрыть issue на GitHub** в этой же сессии или сразу после merge, **не откладывая** «на потом» без причины.
 - [ ] Если issue **отложен на фазу** плана (см. блок про документацию и фазы): оставить **прозрачный комментарий** в issue (шаблон — [reference.md](reference.md)); не закрывать как «баг исправлен», пока нет реализации по фазе или явного решения команды (закрыть как дубликат плана, «не баг» и т.п.). При отдельном PR только с обновлением плана/сводки — дать ссылку в том же issue.
 - [ ] Комментарий в issue: **что** сделано (код и/или **план/сводка**), **где** в репозитории в двух словах, ссылка на **PR или коммит** (после появления в remote).
-- [ ] Закрыть issue (`gh issue close`, UI GitHub, или MCP **после** чтения схемы инструмента — см. [reference.md](reference.md)). Если **`gh`** недоступен агенту — **явно попросить человека** закрыть issue с тем же текстом комментария или дать готовую ссылку «Close with comment» в UI.
+- [ ] Закрыть issue (`gh issue close`, MCP GitHub после чтения схемы инструмента, или UI) — см. [reference.md](reference.md). **Не** считать заранее, что доступа нет: права считаются выданными пользователем; **только если** попытка в среде дала ошибку (нет `gh`, нет MCP, отказ auth) — дать человеку готовый текст комментария / ссылку «Close with comment» в UI.
 - [ ] Если фикс **не** влез в ожидаемый релиз или откладывается — **не** закрывать без метки/комментария и согласования.
 
 ---
@@ -146,3 +150,4 @@ disable-model-invocation: true
 - **Миграция `003_defect_reports.sql`:** не затрагивает таблицы **`001`** / **`002`**; порядок внедрения дефектов и проверки — в `web/README.md`.
 - Поведение **«Завести дефект»** и Edge **`file-defect`**: `web/README.md` (раздел Edge `file-defect`).
 - Расширенные шаблоны комментариев к issue и работа с **`gh`**: [reference.md](reference.md).
+- **Новые фичи** (не дефекты): скилл **`feature-delivery-workflow`**, команда **`/feature-delivery-pipeline`** — `.cursor/skills/feature-delivery-workflow/`.

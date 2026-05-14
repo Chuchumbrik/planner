@@ -332,6 +332,15 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
+        releasedInVersion: { ru: '0.6.55', en: '0.6.55' },
+        changes: [
+          {
+            ru: '**Техн. / внутреннее:** расширены скиллы и команды Cursor — пайплайн дефектов (**`github-defect-workflow`**, **`/defect-squad-pipeline`**) и фич (**`feature-delivery-workflow`**, **`/feature-delivery-pipeline`**); карточки агентов в **`.cursor/agents/`**; уточнены предположения о правах **`gh`** / GitHub.',
+            en: '**Internal:** Cursor skills/commands — defect pipeline (**`github-defect-workflow`**, **`/defect-squad-pipeline`**) and feature pipeline (**`feature-delivery-workflow`**, **`/feature-delivery-pipeline`**); agent cards under **`.cursor/agents/`**; clarified defaults for **`gh`** / GitHub access.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.54', en: '0.6.54' },
         changes: [
           {
