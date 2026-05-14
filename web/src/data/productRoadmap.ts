@@ -310,6 +310,26 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.6.53', en: '0.6.53' },
+        changes: [
+          {
+            ru: '**«Завести дефект»** (`FileDefectModal`): в **зоне скриншотов** при фокусе (**клик** или **Tab**) — **вставка изображения из буфера** (**Ctrl+V** / **⌘V**); те же лимиты (**до 2**, **PNG / JPEG / WebP**, **до 3 МБ**), что у кнопки и drag-and-drop; хелпер **`collectImageFilesFromClipboard`** (`defectClipboardFiles.ts`).',
+            en: '**File a defect** (`FileDefectModal`): when the **screenshot drop zone** is focused (**click** or **Tab**), **paste an image from the clipboard** (**Ctrl+V** / **⌘V**); same limits (**2 max**, **PNG / JPEG / WebP**, **3 MB** each) as the file button and drag-and-drop; helper **`collectImageFilesFromClipboard`** (`defectClipboardFiles.ts`).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Можно вставить скрин из буфера без сохранения файла на диск: сначала кликните по области скриншотов (или дойдите до неё Tab-ом), затем вставьте.',
+            en: 'Paste a screenshot without saving a file first: click the screenshot area (or Tab to it), then paste.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-13', en: '2026-05-13' },
     items: [
       {

@@ -299,7 +299,8 @@
       "other": "Other"
     },
     "fileDefectScreenshotsLabel": "Screenshots (up to 2, 3 MB each, PNG / JPEG / WebP)",
-    "fileDefectScreenshotsHint": "Files upload to private storage; the issue will include time-limited links. Drag files here or use the button.",
+    "fileDefectScreenshotsHint": "Files upload to private storage; the issue will include time-limited links. Drag files here, use the button, or focus this area (click or Tab) and paste an image (Ctrl+V / ⌘V).",
+    "fileDefectScreenshotsRegionAria": "Screenshot attachments: drag files, add via button, or paste an image from the clipboard when this area is focused.",
     "fileDefectAddScreenshot": "Add file",
     "fileDefectExtraToggle": "Additional information",
     "fileDefectRecommendSteps": "The description is long — please add reproduction steps below if you can.",

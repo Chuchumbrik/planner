@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import Markdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { collectImageFilesFromClipboard } from '@/lib/defectClipboardFiles'
 import { buildDefectIssueMarkdownPreview } from '@/lib/defectIssueMarkdownPreview'
 import { collectDefectDeviceMeta } from '@/lib/defectDeviceMeta'
 import { DEFECT_TEMPLATE_IDS, type DefectTemplateId } from '@/lib/defectTemplates'
@@ -428,7 +429,10 @@ export function FileDefectModal({
               ) : null}
 
               <div
-                className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-2"
+                tabIndex={0}
+                role="region"
+                aria-label={t('settings.fileDefectScreenshotsRegionAria')}
+                className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-2 outline-none ring-emerald-600/0 transition-[box-shadow] focus-visible:ring-2 focus-visible:ring-emerald-600/50"
                 onDragOver={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -439,6 +443,14 @@ export function FileDefectModal({
                   if (attachments.length >= MAX_FILES) return
                   const f = e.dataTransfer.files
                   if (f?.length) void addFiles(f)
+                }}
+                onPaste={(e) => {
+                  if (attachments.length >= MAX_FILES) return
+                  const files = collectImageFilesFromClipboard(e.clipboardData)
+                  if (files.length === 0) return
+                  e.preventDefault()
+                  e.stopPropagation()
+                  void addFiles(files)
                 }}
               >
                 <p className="text-xs text-zinc-500">{t('settings.fileDefectScreenshotsLabel')}</p>
