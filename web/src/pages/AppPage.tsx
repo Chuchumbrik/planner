@@ -914,23 +914,6 @@ function AppPageInner() {
                 {filtersPanelOpen ? '▴' : '▾'}
               </span>
             </button>
-            {vault.drafts.length > 0 ? (
-              <button
-                type="button"
-                disabled={!canEdit}
-                aria-haspopup="dialog"
-                aria-expanded={draftsModalOpen}
-                aria-label={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-                title={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-                className="absolute -right-0.5 -top-1.5 z-10 flex h-6 min-w-[1.35rem] items-center justify-center rounded-full border border-amber-700/80 bg-amber-500 px-1 text-[11px] font-bold text-amber-950 shadow-md hover:bg-amber-400 disabled:opacity-40"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setDraftsModalOpen(true)
-                }}
-              >
-                {vault.drafts.length > 99 ? '99+' : vault.drafts.length}
-              </button>
-            ) : null}
           </div>
           {view === 'day' && eodEnabled ? (
             selectedDay > todayKeyApp ? null : selectedDay < todayKeyApp ? (
@@ -961,17 +944,36 @@ function AppPageInner() {
               </button>
             )
           ) : null}
-          <button
-            type="button"
-            disabled={!canEdit}
-            className="inline-flex shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
-            onClick={() => {
-              setResumeDraft(null)
-              setCreateOpen(true)
-            }}
-          >
-            {t('app.openCreateTask')}
-          </button>
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              disabled={!canEdit}
+              className="inline-flex shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+              onClick={() => {
+                setResumeDraft(null)
+                setCreateOpen(true)
+              }}
+            >
+              {t('app.openCreateTask')}
+            </button>
+            {vault.drafts.length > 0 ? (
+              <button
+                type="button"
+                disabled={!canEdit}
+                aria-haspopup="dialog"
+                aria-expanded={draftsModalOpen}
+                aria-label={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
+                title={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
+                className="absolute -right-0.5 -top-1.5 z-10 flex h-6 min-w-[1.35rem] items-center justify-center rounded-full border border-amber-700/80 bg-amber-500 px-1 text-[11px] font-bold text-amber-950 shadow-md hover:bg-amber-400 disabled:opacity-40"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setDraftsModalOpen(true)
+                }}
+              >
+                {vault.drafts.length > 99 ? '99+' : vault.drafts.length}
+              </button>
+            ) : null}
+          </div>
         </div>
 
         {filtersPanelOpen ? (

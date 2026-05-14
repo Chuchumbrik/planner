@@ -313,6 +313,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.54', en: '0.6.54' },
+        changes: [
+          {
+            ru: '**Планировщик `/app`:** счётчик **черновиков** перенесён с кнопки **«Фильтры»** на кнопку **«Создать задачу»** — открытие списка черновиков по бейджу (**`AppPage`**).',
+            en: '**Planner `/app`:** the **drafts** count badge moved from **Filters** to **Create task** — draft list still opens from the badge (**`AppPage`**).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Черновики относятся к созданию задачи, а не к фильтрам: бейдж стоит рядом с зелёной кнопкой создания.',
+            en: 'Drafts belong to task creation, not filters: the badge sits on the green create button.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.53', en: '0.6.53' },
         changes: [
           {
