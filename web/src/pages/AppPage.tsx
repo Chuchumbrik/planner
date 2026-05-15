@@ -15,6 +15,10 @@ import { TaskEditModal } from '@/components/TaskEditModal'
 import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
 import { tasksVisibleInPlannerView } from '@/lib/plannerFilterScope'
+import {
+  humanizeConnectivityError,
+  isLikelyNetworkFetchFailure,
+} from '@/lib/connectivityHints'
 import { readPlannerChartsHidden, writePlannerChartsHidden } from '@/lib/plannerChartsPref'
 import {
   DEFAULT_GROUP_ID,
@@ -81,20 +85,6 @@ function formatSynced(ts: number | null, locale: string): string | null {
   }
 }
 
-function humanizeRemoteError(raw: string | null, t: (k: string) => string): string {
-  if (!raw) return ''
-  const lower = raw.toLowerCase()
-  if (
-    lower.includes('typeerror') ||
-    lower.includes('load failed') ||
-    lower.includes('failed to fetch') ||
-    lower.includes('networkerror') ||
-    (lower.includes('fetch') && lower.includes('fail'))
-  ) {
-    return t('app.syncErrorGeneric')
-  }
-  return raw
-}
 
 function formatDayHeading(dateKey: string, locale: string): string {
   const [y, m, d] = dateKey.split('-').map(Number)
@@ -930,9 +920,12 @@ function AppPageInner() {
 
       {remoteError ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
-          <p className="min-w-0 flex-1 leading-snug">
-            {humanizeRemoteError(remoteError, t)}
-          </p>
+          <div className="min-w-0 flex-1 leading-snug">
+            <p>{humanizeConnectivityError(remoteError, t)}</p>
+            {isLikelyNetworkFetchFailure(remoteError) ? (
+              <p className="mt-1 text-xs text-amber-200/85">{t('app.syncErrorRegionalHint')}</p>
+            ) : null}
+          </div>
           <button
             type="button"
             className="shrink-0 rounded-lg border border-amber-600/60 bg-amber-950/50 px-3 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-900/40"

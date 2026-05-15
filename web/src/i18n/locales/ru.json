@@ -23,6 +23,7 @@
     "syncReady": "Готово к работе",
     "syncErrorPrefix": "Синхронизация:",
     "syncErrorGeneric": "Не удалось загрузить или сохранить данные. Проверьте сеть и попробуйте снова.",
+    "syncErrorRegionalHint": "В РФ хостинг приложения (Vercel) и API (Supabase) иногда недоступны без VPN — варианты обхода для команды описаны в web/README.md (раздел «Доступ из РФ»). Полное решение — отдельный деплой/прокси (фаза 12, идеи в сводке).",
     "syncRetry": "Повторить",
     "syncIconAria": "Статус синхронизации",
     "accountMenuAria": "Меню аккаунта",
@@ -489,7 +490,8 @@
     "envHint": "Задайте переменные {{url}} и {{key}} в {{env}} и на Vercel.",
     "envUrl": "VITE_SUPABASE_URL",
     "envKey": "VITE_SUPABASE_ANON_KEY",
-    "envFile": "web/.env.local"
+    "envFile": "web/.env.local",
+    "networkRegionalHint": "Похоже на блокировку или недоступность хостинга/API из РФ. Варианты для команды — в web/README.md («Доступ из РФ»)."
   },
   "onboarding": {
     "title": "Ключ шифрования",
