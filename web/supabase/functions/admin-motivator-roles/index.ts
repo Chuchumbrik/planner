@@ -26,6 +26,7 @@ function wireRoleFromUser(appMeta: Record<string, unknown> | undefined): Motivat
   const r = appMeta?.motivator_role
   if (r === 'admin') return 'admin'
   if (r === 'beta_tester') return 'beta_tester'
+  // absent, null, or cleared — regular user (see setRole: null to remove merged key)
   return 'user'
 }
 
@@ -177,7 +178,8 @@ Deno.serve(async (req) => {
   const prevMeta = { ...(target.user.app_metadata as Record<string, unknown>) }
   const nextMeta: Record<string, unknown> = { ...prevMeta }
   if (role === 'user') {
-    delete nextMeta.motivator_role
+    // GoTrue merges app_metadata: omitting a key does not remove it — set null to clear.
+    nextMeta.motivator_role = null
   } else {
     nextMeta.motivator_role = role
   }
