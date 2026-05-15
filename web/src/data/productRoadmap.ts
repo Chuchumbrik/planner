@@ -303,7 +303,7 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'DR-004: create/edit task; second checkbox tap within the window; expiry without response clears pending without recording completion.',
       },
       {
-        ru: 'Роли **`user` / `beta_tester` / `admin`**: в настройках для **admin** — блок **«Пользователи и роли»** (Edge **`admin-motivator-roles`**); при фокусе вкладки — **`SessionSyncInformer`**, если роль в JWT изменилась на сервере. Ограничения видимости экранов по ролям (фаза 8) — в плане.',
+        ru: 'Роли **`user` / `beta_tester` / `admin`**: в настройках для **admin** — блок **«Пользователи и роли»** (Edge **`admin-motivator-roles`**); при фокусе вкладки — **`SessionSyncInformer`**, если роль в JWT изменилась на сервере. Ограничения видимости экранов по ролям (фаза 7) — в плане.',
         en: '**`user` / `beta_tester` / `admin`**: settings **Users & roles** for **admin** (Edge **`admin-motivator-roles`**); on tab focus — **`SessionSyncInformer`** when the server-side role in the JWT changed. Screen-level role gating (phase 8) remains planned.',
       },
       {
@@ -327,6 +327,36 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
+      {
+        releasedInVersion: { ru: '0.7.0', en: '0.7.0' },
+        changes: [
+          {
+            ru: '**Фаза 7 (7a), `0.7.0`:** `/settings` — резервная копия **seed** (копия, файл, QR, предупреждения DR-006), группы разделов; юридика (заглушки `/legal/*`, cookie-баннер); обратная связь — **`VITE_FEEDBACK_URL`**; подсказка при ошибке расшифровки vault.',
+            en: '**Phase 7 (7a), `0.7.0`:** `/settings` — **seed** backup (copy, file, QR, DR-006 warnings), grouped sections; legal placeholders (`/legal/*`, cookie banner); feedback via **`VITE_FEEDBACK_URL`**; decrypt-failure help on planner and settings.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В настройках можно сохранить seed вне браузера; политики и cookie — в приложении; удаление аккаунта с восстановлением — в следующей части фазы 7.',
+            en: 'Settings let you back up the seed outside the browser; policies and cookies are in-app; account deletion with recovery comes in the next phase 7 slice.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.6.64', en: '0.6.64' },
+        changes: [
+          {
+            ru: '**План до 1.0.0** (`MVP_PHASES_PLANNED`, `17-План-реализации-MVP.md`): **«Дизайн и адаптивность»** — **фаза 13** (после offline-first, чеклиста, домена и веток); **фаза 12** — **`dev` → `main`** непосредственно перед дизайном; **7–9** — настройки, монетизация, offline-first.',
+            en: '**Roadmap to 1.0.0** (`MVP_PHASES_PLANNED`, `17-План-реализации-MVP.md`): **Design & responsiveness** is **phase 13** (after offline-first, checklist, domain, branches); **phase 12** — **`dev` → `main`** right before design; **7–9** — settings, monetization, offline-first.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Следующая крупная продуктовая веха по плану — **настройки и аккаунт (фаза 7)**; визуальная полировка и правила недели/месяца — в **конце**, перед `1.0.0`.',
+            en: 'The next major product milestone in the plan is **settings & account (phase 7)**; visual polish and week/month rules land **at the end**, before `1.0.0`.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.6.64', en: '0.6.64' },
         changes: [
@@ -1731,11 +1761,155 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
 
 /**
  * Оставшийся охват до 1.0.0 (источник — `obsidian-motivator/17-План-реализации-MVP.md`).
- * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — фазы **7–13**.
+ * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — фазы **7–13** (порядок: **7** аккаунт → **8** монетизация → **9** offline → **10** чеклист → **11** домен → **12** ветки → **13** дизайн).
  */
 export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   {
     id: 7,
+    title: { ru: 'Настройки, аккаунт, юридика', en: 'Settings, account, legal' },
+    summary: {
+      ru: 'Настройки по блокам; пароль; seed; удаление и 30 дней; тексты; feedback; cookie. Роли и ограничения UI по permissions — отдельная доработка (см. буллеты ниже).',
+      en: 'Grouped settings; password; seed; deletion & 30 days; legal; feedback; cookie. Role-based UI gating — separate pass (see bullets).',
+    },
+    plain: {
+      ru: 'Собрать всё про аккаунт в понятные коробки: сменить пароль, бережно показать секретный ключ, если человек хочет уйти — объяснить что будет и как вернуться, повесить короткие тексты «кто мы и какие правила», кнопку «напишите нам», маленькое окошко про куки. Про «кто тут админ» — отдельным заходом позже. Задумать привычную «лицевую» иконку в углу экрана с менюшкой (настройки, выйти, отчёты…) — как у многих сайтов.',
+      en: 'Pack everything about your account into clear boxes: change password, gently show the secret key, if someone wants to leave — explain what happens and how to come back, short “who we are and the rules,” a **write to us** button, a tiny cookie notice. “Who is admin” — a separate pass later. Plan a familiar corner **profile** icon with a little menu (settings, sign out, reports…) — like many sites.',
+    },
+    detailBullets: [
+      {
+        ru: '**Идея к проработке:** привычный паттерн «иконка аккаунта / аватар» в шапке приложения с выпадающим меню — как у большинства сервисов: оттуда короткие ссылки на **настройки**, **выход**, **отчёты**, дорожную карту / релиз-ноты при необходимости и т.д.; состав пунктов, порядок и неперегруз шапки — отдельное UX-решение.',
+        en: '**Idea to explore:** familiar **account / avatar** control in the app header with a dropdown — like most services: quick links to **settings**, **sign out**, **reports**, roadmap / release notes when needed, etc.; item list, order, and keeping the header light are a separate UX decision.',
+      },
+      {
+        ru: 'Отдельный экран или улучшенный поток онбординга seed (ТЗ §4).',
+        en: 'Dedicated screen or improved seed onboarding flow (TZ §4).',
+      },
+      {
+        ru: 'Серверная политика удаления (Supabase и др.) и UX восстановления по ключу.',
+        en: 'Server deletion policy (Supabase et al.) and key-based recovery UX.',
+      },
+      {
+        ru: 'Обратная связь: кнопка / ссылка (форма, email, тикеты — по решению продукта), заметная до релиза 1.0.0.',
+        en: 'Feedback: button/link (form, email, tickets — product decision), visible before 1.0.0.',
+      },
+      {
+        ru: 'Cookie: баннер или плашка, сохранение выбора, ссылки на политику; согласовать с DR-006 и юрисдикцией.',
+        en: 'Cookie: banner or bar, persist choice, link to policy; align with DR-006 and jurisdiction.',
+      },
+      {
+        ru: '**Permissions (отложено в текущей сборке):** роли **пользователь / бета-тестер / администратор**, источник на сервере (`app_metadata.motivator_role`, RLS). Задел в коде — `motivatorRole.ts`, контекст Auth; включение ограничений UI (например дорожной карты только админам) — при отдельной задаче.',
+        en: '**Permissions (deferred in current build):** **user / beta tester / admin**, server-side (`app_metadata.motivator_role`, RLS). Hooks exist (`motivatorRole.ts`, Auth context); UI gating (e.g. roadmap admins-only) — separate task.',
+      },
+    ],
+  },
+  {
+    id: 8,
+    title: { ru: 'Монетизация и push', en: 'Monetization & push' },
+    summary: {
+      ru: 'Freemium + премиум (DR-010); проверка тарифа; PWA push — по решению спринта.',
+      en: 'Freemium + premium (DR-010); entitlement checks; PWA push per sprint.',
+    },
+    plain: {
+      ru: 'Когда планировщик уже не ломается от повседневной жизни — можно добавить «особый пропуск» за деньги (что именно — решит продукт) и опциональные напоминания на телефон, если человек согласился.',
+      en: 'When the planner doesn’t break in daily life — we can add a **paid extra ticket** (what exactly — product decides) and optional phone nudges if people agree.',
+    },
+    detailBullets: [
+      {
+        ru: 'Бесплатный уровень и платный **premium** (лимиты или функции — по продукту); связка с учёткой после ядра планирования.',
+        en: 'Free tier and paid **premium** (limits or features — product call); billing tied after core planning ships.',
+      },
+      {
+        ru: 'После стабилизации отчётов и ритуалов — чтобы не блокировать MVP-трек.',
+        en: 'After reports and rituals stabilize — avoids blocking the MVP track.',
+      },
+    ],
+  },
+  {
+    id: 9,
+    title: { ru: 'Offline-first', en: 'Offline-first' },
+    summary: {
+      ru: 'Очередь синка и конфликты по архитектурным документам.',
+      en: 'Sync queue and conflicts per architecture docs.',
+    },
+    plain: {
+      ru: 'Чтобы приложение не «пропадало», если интернет ненадолго исчез, и чтобы два изменения с разных устройств не съедали друг друга — нужна аккуратная очередь сохранений и понятные правила «кто главный», когда истории разошлись.',
+      en: 'So the app doesn’t “vanish” when the internet blinks, and two edits from different devices don’t eat each other — we need a tidy save queue and clear rules for “who wins” when stories diverge.',
+    },
+    detailBullets: [
+      {
+        ru: 'Целевое усиление после стабилизации модели событий и основных сценариев.',
+        en: 'Target hardening after events model and main flows stabilize.',
+      },
+    ],
+  },
+  {
+    id: 10,
+    title: { ru: 'Чеклист к релизу 1.0.0', en: 'Release checklist for 1.0.0' },
+    summary: {
+      ru: 'Закрытие Scope по ТЗ, регрессия, актуализация деплоя и документации; **семантический тег `1.0.0`** — после фаз **11–13** (домен, ветки, дизайн).',
+      en: 'Close Scope vs TZ, regression, refresh deploy/docs; the **`1.0.0` semver tag** lands after phases **11–13** (domain, branches, design).',
+    },
+    plain: {
+      ru: 'Пройти приёмочный чек-лист как перед контрольной и убедиться, что продукт держит обещания ТЗ; финальный **переход на `1.0.0`** — после **домена**, **ветки `main`** и **полировки UI**, см. фазы 11–13.',
+      en: 'Run the acceptance checklist like an exam and verify the product meets TZ; the formal bump to **`1.0.0`** comes **after domain**, a stable **`main`**, and the **UI polish** pass — see phases 11–13.',
+    },
+    detailBullets: [
+      {
+        ru: 'Закрытие Scope по 16-TZ и 03-Scope; регрессия сценариев день / неделя / месяц / отчёты / аккаунт; актуализация Vercel/README.',
+        en: 'Close Scope per 16-TZ and 03-Scope; regress day / week / month / reports / account; refresh Vercel/README.',
+      },
+    ],
+  },
+  {
+    id: 11,
+    title: { ru: 'Домен продукта', en: 'Product domain' },
+    summary: {
+      ru: 'Выбор имени, покупка у регистратора, DNS и привязка к деплою (**Vercel** / выбранный хостинг), HTTPS.',
+      en: 'Pick a name, purchase from a registrar, configure DNS and bind to the deployment (**Vercel** or chosen host), HTTPS.',
+    },
+    plain: {
+      ru: 'Закрепить **свой адрес сайта** вместо только технического URL хостинга: купить домен, настроить записи так, чтобы приложение открывалось по человеческому имени и с защищённым соединением.',
+      en: 'Give the app a **proper site address**, not only the host’s default URL: buy a domain, wire DNS so the app loads on a human-readable name with HTTPS.',
+    },
+    detailBullets: [
+      {
+        ru: 'Регистратор и зона **по решению продукта**; проверка доступности имени; продление и владелец записей — зафиксировать в документации команды.',
+        en: 'Registrar and TLD — **product decision**; name availability; renewal and DNS ownership — captured in team docs.',
+      },
+      {
+        ru: 'Связка с **Vercel** (или текущим пайплайном): домен в проекте, верификация, при необходимости перенос с прежнего URL.',
+        en: 'Tie to **Vercel** (or current pipeline): project domain, verification, migrate from prior URL if needed.',
+      },
+      {
+        ru: '**Доступ из РФ (#37):** оценить **Custom Domain** Supabase + свой домен SPA; при недостаточности — прокси или зеркало в РФ (см. **`web/README.md`** → «Доступ из РФ»).',
+        en: '**Russia access (#37):** evaluate Supabase **Custom Domain** + product SPA domain; if insufficient — RU proxy or static mirror (see **`web/README.md`** → “Access from Russia”).',
+      },
+    ],
+  },
+  {
+    id: 12,
+    title: { ru: 'Процесс веток: dev → main', en: 'Branch flow: dev → main' },
+    summary: {
+      ru: 'Основная разработка в ветке **`dev`** (или согласованном эквиваленте); после тестирования — слияние в **`main`** как стабильная линия и источник продакшен-деплоя.',
+      en: 'Day-to-day work on **`dev`** (or agreed equivalent); after testing — merge to **`main`** as the stable line and production deploy source.',
+    },
+    plain: {
+      ru: 'Чтобы не ломать прод «полпути», договориться: новые фичи и правки копятся в **отдельной ветке**, проверяются, и только потом попадают в **основную**, откуда уходит сборка для пользователей.',
+      en: 'Agree a rhythm so production isn’t broken mid-flight: features land on a **working branch**, get verified, then merge to **main** where the user-facing build comes from.',
+    },
+    detailBullets: [
+      {
+        ru: 'Зафиксировать в репозитории: правила PR, кто мержит в `main`, минимальный набор проверок перед слиянием (линт, ручной смоук — по команде).',
+        en: 'Document in-repo: PR rules, who merges to `main`, minimum checks before merge (lint, manual smoke — team call).',
+      },
+      {
+        ru: 'Согласовать с **`obsidian-motivator/14-V1-минимальный-запуск-Vercel.md`**: какая ветка триггерит preview vs production.',
+        en: 'Align with **`obsidian-motivator/14-V1-минимальный-запуск-Vercel.md`**: which branch triggers preview vs production.',
+      },
+    ],
+  },
+  {
+    id: 13,
     title: { ru: 'Дизайн и адаптивность', en: 'Design & responsiveness' },
     summary: {
       ru: 'Проработка визуального слоя и макета: единый стиль, типографика и отступы; комфорт на **широких экранах** (сетка, использование ширины, читаемые колонки); полировка под **мобильные** и узкие окна (touch, навигация, модалки и формы без горизонтального скролла). **Отдельно — продуктовая доводка представления задач** во **вкладке «Неделя»** и **календаре месяца:** как они рисуются во времени, нужен ли таймлайн, что делать с прошедшим слотом и невыполненным, как не прятать важное без выбора пользователя.',
@@ -1778,153 +1952,9 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
         ru: 'Согласовать с существующей тёмной темой и токенами цвета; при необходимости — лёгкая дизайн-спека в репозитории (без обязательного Figma).',
         en: 'Align with the existing dark theme and color tokens; optional lightweight design notes in-repo (Figma not mandatory).',
       },
-    ],
-  },
-  {
-    id: 8,
-    title: { ru: 'Настройки, аккаунт, юридика', en: 'Settings, account, legal' },
-    summary: {
-      ru: 'Настройки по блокам; пароль; seed; удаление и 30 дней; тексты; feedback; cookie. Роли и ограничения UI по permissions — отдельная доработка (см. буллеты ниже).',
-      en: 'Grouped settings; password; seed; deletion & 30 days; legal; feedback; cookie. Role-based UI gating — separate pass (see bullets).',
-    },
-    plain: {
-      ru: 'Собрать всё про аккаунт в понятные коробки: сменить пароль, бережно показать секретный ключ, если человек хочет уйти — объяснить что будет и как вернуться, повесить короткие тексты «кто мы и какие правила», кнопку «напишите нам», маленькое окошко про куки. Про «кто тут админ» — отдельным заходом позже. Задумать привычную «лицевую» иконку в углу экрана с менюшкой (настройки, выйти, отчёты…) — как у многих сайтов.',
-      en: 'Pack everything about your account into clear boxes: change password, gently show the secret key, if someone wants to leave — explain what happens and how to come back, short “who we are and the rules,” a **write to us** button, a tiny cookie notice. “Who is admin” — a separate pass later. Plan a familiar corner **profile** icon with a little menu (settings, sign out, reports…) — like many sites.',
-    },
-    detailBullets: [
       {
-        ru: '**Идея к проработке:** привычный паттерн «иконка аккаунта / аватар» в шапке приложения с выпадающим меню — как у большинства сервисов: оттуда короткие ссылки на **настройки**, **выход**, **отчёты**, дорожную карту / релиз-ноты при необходимости и т.д.; состав пунктов, порядок и неперегруз шапки — отдельное UX-решение.',
-        en: '**Idea to explore:** familiar **account / avatar** control in the app header with a dropdown — like most services: quick links to **settings**, **sign out**, **reports**, roadmap / release notes when needed, etc.; item list, order, and keeping the header light are a separate UX decision.',
-      },
-      {
-        ru: 'Отдельный экран или улучшенный поток онбординга seed (ТЗ §4).',
-        en: 'Dedicated screen or improved seed onboarding flow (TZ §4).',
-      },
-      {
-        ru: 'Серверная политика удаления (Supabase и др.) и UX восстановления по ключу.',
-        en: 'Server deletion policy (Supabase et al.) and key-based recovery UX.',
-      },
-      {
-        ru: 'Обратная связь: кнопка / ссылка (форма, email, тикеты — по решению продукта), заметная до релиза 1.0.0.',
-        en: 'Feedback: button/link (form, email, tickets — product decision), visible before 1.0.0.',
-      },
-      {
-        ru: 'Cookie: баннер или плашка, сохранение выбора, ссылки на политику; согласовать с DR-006 и юрисдикцией.',
-        en: 'Cookie: banner or bar, persist choice, link to policy; align with DR-006 and jurisdiction.',
-      },
-      {
-        ru: '**Permissions (отложено в текущей сборке):** роли **пользователь / бета-тестер / администратор**, источник на сервере (`app_metadata.motivator_role`, RLS). Задел в коде — `motivatorRole.ts`, контекст Auth; включение ограничений UI (например дорожной карты только админам) — при отдельной задаче.',
-        en: '**Permissions (deferred in current build):** **user / beta tester / admin**, server-side (`app_metadata.motivator_role`, RLS). Hooks exist (`motivatorRole.ts`, Auth context); UI gating (e.g. roadmap admins-only) — separate task.',
-      },
-    ],
-  },
-  {
-    id: 9,
-    title: { ru: 'Монетизация и push', en: 'Monetization & push' },
-    summary: {
-      ru: 'Freemium + премиум (DR-010); проверка тарифа; PWA push — по решению спринта.',
-      en: 'Freemium + premium (DR-010); entitlement checks; PWA push per sprint.',
-    },
-    plain: {
-      ru: 'Когда планировщик уже не ломается от повседневной жизни — можно добавить «особый пропуск» за деньги (что именно — решит продукт) и опциональные напоминания на телефон, если человек согласился.',
-      en: 'When the planner doesn’t break in daily life — we can add a **paid extra ticket** (what exactly — product decides) and optional phone nudges if people agree.',
-    },
-    detailBullets: [
-      {
-        ru: 'Бесплатный уровень и платный **premium** (лимиты или функции — по продукту); связка с учёткой после ядра планирования.',
-        en: 'Free tier and paid **premium** (limits or features — product call); billing tied after core planning ships.',
-      },
-      {
-        ru: 'После стабилизации отчётов и ритуалов — чтобы не блокировать MVP-трек.',
-        en: 'After reports and rituals stabilize — avoids blocking the MVP track.',
-      },
-    ],
-  },
-  {
-    id: 10,
-    title: { ru: 'Offline-first', en: 'Offline-first' },
-    summary: {
-      ru: 'Очередь синка и конфликты по архитектурным документам.',
-      en: 'Sync queue and conflicts per architecture docs.',
-    },
-    plain: {
-      ru: 'Чтобы приложение не «пропадало», если интернет ненадолго исчез, и чтобы два изменения с разных устройств не съедали друг друга — нужна аккуратная очередь сохранений и понятные правила «кто главный», когда истории разошлись.',
-      en: 'So the app doesn’t “vanish” when the internet blinks, and two edits from different devices don’t eat each other — we need a tidy save queue and clear rules for “who wins” when stories diverge.',
-    },
-    detailBullets: [
-      {
-        ru: 'Целевое усиление после стабилизации модели событий и основных сценариев.',
-        en: 'Target hardening after events model and main flows stabilize.',
-      },
-    ],
-  },
-  {
-    id: 11,
-    title: { ru: 'Чеклист к релизу 1.0.0', en: 'Release checklist for 1.0.0' },
-    summary: {
-      ru: 'Закрытие Scope по ТЗ, регрессия, актуализация деплоя и документации; **семантический тег `1.0.0`** ставится после фаз **12–13**.',
-      en: 'Close Scope vs TZ, regression, refresh deploy/docs; the **`1.0.0` semver tag** lands after phases **12–13**.',
-    },
-    plain: {
-      ru: 'Пройти приёмочный чек-лист как перед контрольной и убедиться, что продукт держит обещания ТЗ; финальный **переход на `1.0.0`** по правилам репозитория — после **домена** и **ветки `main`**, см. фазы 12–13.',
-      en: 'Run the acceptance checklist like an exam and verify the product meets TZ; the formal bump to **`1.0.0`** per repo rules comes **after domain** and a stable **`main`** — see phases 12–13.',
-    },
-    detailBullets: [
-      {
-        ru: 'Закрытие Scope по 16-TZ и 03-Scope; регрессия сценариев день / неделя / месяц / отчёты / аккаунт; актуализация Vercel/README.',
-        en: 'Close Scope per 16-TZ and 03-Scope; regress day / week / month / reports / account; refresh Vercel/README.',
-      },
-    ],
-  },
-  {
-    id: 12,
-    title: { ru: 'Домен продукта', en: 'Product domain' },
-    summary: {
-      ru: 'Выбор имени, покупка у регистратора, DNS и привязка к деплою (**Vercel** / выбранный хостинг), HTTPS.',
-      en: 'Pick a name, purchase from a registrar, configure DNS and bind to the deployment (**Vercel** or chosen host), HTTPS.',
-    },
-    plain: {
-      ru: 'Закрепить **свой адрес сайта** вместо только технического URL хостинга: купить домен, настроить записи так, чтобы приложение открывалось по человеческому имени и с защищённым соединением.',
-      en: 'Give the app a **proper site address**, not only the host’s default URL: buy a domain, wire DNS so the app loads on a human-readable name with HTTPS.',
-    },
-    detailBullets: [
-      {
-        ru: 'Регистратор и зона **по решению продукта**; проверка доступности имени; продление и владелец записей — зафиксировать в документации команды.',
-        en: 'Registrar and TLD — **product decision**; name availability; renewal and DNS ownership — captured in team docs.',
-      },
-      {
-        ru: 'Связка с **Vercel** (или текущим пайплайном): домен в проекте, верификация, при необходимости перенос с прежнего URL.',
-        en: 'Tie to **Vercel** (or current pipeline): project domain, verification, migrate from prior URL if needed.',
-      },
-      {
-        ru: '**Доступ из РФ (#37):** оценить **Custom Domain** Supabase + свой домен SPA; при недостаточности — прокси или зеркало в РФ (см. **`web/README.md`** → «Доступ из РФ»).',
-        en: '**Russia access (#37):** evaluate Supabase **Custom Domain** + product SPA domain; if insufficient — RU proxy or static mirror (see **`web/README.md`** → “Access from Russia”).',
-      },
-    ],
-  },
-  {
-    id: 13,
-    title: { ru: 'Процесс веток: dev → main', en: 'Branch flow: dev → main' },
-    summary: {
-      ru: 'Основная разработка в ветке **`dev`** (или согласованном эквиваленте); после тестирования — слияние в **`main`** как стабильная линия и источник продакшен-деплоя.',
-      en: 'Day-to-day work on **`dev`** (or agreed equivalent); after testing — merge to **`main`** as the stable line and production deploy source.',
-    },
-    plain: {
-      ru: 'Чтобы не ломать прод «полпути», договориться: новые фичи и правки копятся в **отдельной ветке**, проверяются, и только потом попадают в **основную**, откуда уходит сборка для пользователей.',
-      en: 'Agree a rhythm so production isn’t broken mid-flight: features land on a **working branch**, get verified, then merge to **main** where the user-facing build comes from.',
-    },
-    detailBullets: [
-      {
-        ru: 'Зафиксировать в репозитории: правила PR, кто мержит в `main`, минимальный набор проверок перед слиянием (линт, ручной смоук — по команде).',
-        en: 'Document in-repo: PR rules, who merges to `main`, minimum checks before merge (lint, manual smoke — team call).',
-      },
-      {
-        ru: 'Согласовать с **`obsidian-motivator/14-V1-минимальный-запуск-Vercel.md`**: какая ветка триггерит preview vs production.',
-        en: 'Align with **`obsidian-motivator/14-V1-минимальный-запуск-Vercel.md`**: which branch triggers preview vs production.',
-      },
-      {
-        ru: 'После выполнения критериев этой фазы — **`1.0.0`** в `web/package.json` и сборка по политике репозитория.',
-        en: 'When this phase’s criteria are met — ship **`1.0.0`** in `web/package.json` per repo policy.',
+        ru: 'После закрытия этой фазы (и фаз **7–12**) — **`1.0.0`** в `web/package.json` и публичный контракт версий по политике репозитория.',
+        en: 'After this phase (and phases **7–12**) — ship **`1.0.0`** in `web/package.json` and the public version contract per repo policy.',
       },
     ],
   },

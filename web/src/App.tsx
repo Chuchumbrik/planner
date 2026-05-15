@@ -8,6 +8,8 @@ import { LoginPage } from '@/pages/LoginPage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { ReportsPage } from '@/pages/ReportsPage'
 import { SettingsPage } from '@/pages/SettingsPage'
+import { LegalDocumentPage } from '@/pages/LegalDocumentPage'
+import { CookieConsentGate } from '@/components/CookieConsentGate'
 
 export function App() {
   const { session, loading } = useAuth()
@@ -46,8 +48,10 @@ export function App() {
           path="/settings"
           element={session ? <SettingsPage /> : <Navigate to="/login" replace />}
         />
+        <Route path="/legal/:docId" element={<LegalDocumentPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <CookieConsentGate />
     </div>
   )
 }

@@ -202,7 +202,32 @@
   "settings": {
     "title": "Settings",
     "back": "← Back to day",
+    "intro": "Seed backup, planning, notifications, account, and legal links. Account deletion with recovery window ships in the next phase 7 update.",
     "seedHint": "Seed is stored locally. Copy it on onboarding or add export later.",
+    "seedBackupTitle": "Seed backup (DR-006)",
+    "seedBackupHelp": "Your seed and KDF password are the only way to recover encrypted data. Keep a copy outside this browser.",
+    "seedMissing": "No seed in this browser. Complete onboarding or import a seed at /onboarding.",
+    "seedWarningTitle": "Critical",
+    "seedWarningBody": "Losing your seed or KDF password means permanent loss of vault access. The Motivator team cannot recover your data.",
+    "seedWarningBullet1": "Do not paste the seed into chats, email, or casual screenshots.",
+    "seedWarningBullet2": "Store an offline copy (paper, password manager, encrypted file).",
+    "seedWarningBullet3": "The QR code encodes the same seed — show it only on devices you trust.",
+    "seedWarningAck": "I understand the risks and want to reveal the seed",
+    "seedReveal": "Show seed",
+    "seedHide": "Hide",
+    "seedCopy": "Copy",
+    "seedCopied": "Copied",
+    "seedDownload": "Download .txt",
+    "seedLabel": "Seed (base64)",
+    "seedQrHint": "QR to move to another device (private setting only).",
+    "seedQrAlt": "QR code with seed",
+    "seedQrUnavailable": "Could not generate a QR code in this browser.",
+    "sectionPlanning": "Planning",
+    "sectionPlanningHelp": "Priority labels, groups, and End-of-Day ritual.",
+    "sectionAccount": "Account",
+    "sectionAccountHelp": "Interface language and email sign-in password.",
+    "sectionLegal": "Legal & feedback",
+    "sectionLegalHelp": "Policies and a feedback channel. Placeholder copy until final legal text is published.",
     "signOut": "Sign out",
     "groupsTitle": "Groups & projects",
     "newGroupPlaceholder": "New group…",
@@ -521,6 +546,41 @@
     "sessionInformerDismiss": "Dismiss"
   },
   "vault": {
-    "decryptError": "Could not decrypt vault. Check seed and password."
+    "decryptError": "Could not decrypt vault. Check seed and password.",
+    "decryptHelpTitle": "Cannot decrypt your data",
+    "decryptHelpBody": "The server returned a vault, but the key in this browser does not match. Editing is disabled until access is restored.",
+    "decryptHelpStepSeed": "Confirm this browser has the same seed used when the vault was created (Settings → seed backup).",
+    "decryptHelpStepPassword": "Check the KDF password — same as onboarding (empty if you left it empty).",
+    "decryptHelpStepSupport": "If seed or password changed on another device, import the current pair or use feedback in Settings.",
+    "decryptHelpSettingsLink": "Open seed backup in Settings"
+  },
+  "legal": {
+    "cookieTitle": "Cookies & local storage",
+    "cookieBody": "We use essential cookies and localStorage for sign-in, seed, and preferences. No third-party analytics in this build.",
+    "cookieAccept": "Accept",
+    "cookieDecline": "Essential only",
+    "privacyLink": "Privacy policy",
+    "termsLink": "Terms of use",
+    "personalDataLink": "Personal data processing",
+    "feedbackLink": "Feedback",
+    "feedbackUnavailable": "Feedback channel is not configured (VITE_FEEDBACK_URL).",
+    "backToSettings": "← Settings",
+    "doc": {
+      "privacy": {
+        "title": "Privacy policy",
+        "body": "MVP draft. Final text will be published separately.",
+        "placeholder": "The full Motivator privacy policy will appear here. Until then, see README and specs (DR-009). Set VITE_LEGAL_PRIVACY_URL for an external page."
+      },
+      "terms": {
+        "title": "Terms of use",
+        "body": "MVP draft.",
+        "placeholder": "Service terms will appear here. Use VITE_LEGAL_TERMS_URL for an external document."
+      },
+      "personalData": {
+        "title": "Personal data",
+        "body": "MVP draft (jurisdiction-specific notices to follow).",
+        "placeholder": "Personal data processing notice will appear here. VITE_LEGAL_PERSONAL_DATA_URL for an external page."
+      }
+    }
   }
 }
