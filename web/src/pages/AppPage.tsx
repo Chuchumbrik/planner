@@ -635,6 +635,7 @@ function AppPageInner() {
   }
 
   async function handleSignOut() {
+    if (!window.confirm(t('settings.signOutConfirm'))) return
     setAccountMenuOpen(false)
     await lock()
     await signOut()

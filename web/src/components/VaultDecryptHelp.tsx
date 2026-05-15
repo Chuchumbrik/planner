@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { VaultRecoverKeyPanel } from '@/components/VaultRecoverKeyPanel'
 
 type Props = {
   className?: string
@@ -21,6 +22,7 @@ export function VaultDecryptHelp({ className = '' }: Props) {
         <li>{t('vault.decryptHelpStepPassword')}</li>
         <li>{t('vault.decryptHelpStepSupport')}</li>
       </ul>
+      <VaultRecoverKeyPanel className="mt-4" />
       <Link
         className="mt-3 inline-block text-xs font-medium text-emerald-400 hover:text-emerald-300"
         to="/settings#seed-backup"

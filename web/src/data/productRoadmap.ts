@@ -328,6 +328,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.1', en: '0.7.1' },
+        changes: [
+          {
+            ru: '**Фаза 7 (7a.1), `0.7.1` (DR-014):** онбординг по наличию vault на сервере (новый — только генерация + подтверждение сохранения seed; возврат — только импорт); восстановление ключа на `/app` без выхода; предупреждение при выходе; сброс пароля аккаунта; согласие на ПД при регистрации; после входа — `/app`.',
+            en: '**Phase 7 (7a.1), `0.7.1` (DR-014):** onboarding by remote vault (new users — generate + saved-seed ack; returning — import only); in-app key recovery without sign-out; sign-out seed warning; account password reset; PD consent on register; post-login → `/app`.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Новым пользователям больше не предлагают «случайно» сгенерировать новый ключ, если данные уже на сервере; при неверном ключе можно ввести seed прямо в планировщике.',
+            en: 'Returning users are not offered a fresh seed when data already exists on the server; if decryption fails you can re-enter the seed in the planner.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.0', en: '0.7.0' },
         changes: [
           {
@@ -1781,8 +1796,8 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
         en: '**Idea to explore:** familiar **account / avatar** control in the app header with a dropdown — like most services: quick links to **settings**, **sign out**, **reports**, roadmap / release notes when needed, etc.; item list, order, and keeping the header light are a separate UX decision.',
       },
       {
-        ru: 'Отдельный экран или улучшенный поток онбординга seed (ТЗ §4).',
-        en: 'Dedicated screen or improved seed onboarding flow (TZ §4).',
+        ru: '**7a (0.7.0):** экспорт seed, юридика, cookie. **7a.1 (DR-014):** два экрана онбординга + recovery. **7c (DR-014):** полная ротация seed и/или KDF в настройках — перешифровка vault и замена ciphertext; бэкап нового seed (DR-006).',
+        en: '**7a (0.7.0):** seed export, legal, cookie. **7a.1 (DR-014):** split onboarding + recovery. **7c (DR-014):** full seed and/or KDF rotation in settings — re-encrypt vault, replace server ciphertext; backup new seed (DR-006).',
       },
       {
         ru: 'Серверная политика удаления (Supabase и др.) и UX восстановления по ключу.',
