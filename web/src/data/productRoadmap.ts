@@ -325,6 +325,26 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.6.57', en: '0.6.57' },
+        changes: [
+          {
+            ru: '**Web Push / #31:** расписание срабатываний для **повторяющихся** задач — те же правила, что на вкладке «День» (`taskOccursOnDate` в **`computeScheduledFireRequests`**), а не только `scheduledLocalDate`.',
+            en: '**Web Push / #31:** notification schedule for **recurring** tasks now follows the Day tab rules (`taskOccursOnDate` in **`computeScheduledFireRequests`**), not only `scheduledLocalDate`.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Если задача с повтором и временем начала стоит в плане на сегодня, push в это время снова попадает в расписание.',
+            en: 'Recurring tasks with a start time on today’s plan are included in push scheduling again.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
     items: [
       {
