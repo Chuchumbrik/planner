@@ -1,5 +1,5 @@
 import type { NotificationDeliveryMode, VaultPayload } from '@motivator/core'
-import { localDateKey, parseLocalDateKey, shiftLocalDateKey } from '@motivator/core'
+import { localDateKey, parseLocalDateKey, shiftLocalDateKey, taskOccursOnDate } from '@motivator/core'
 
 export const NOTIFICATION_SCHEDULE_HORIZON_DAYS = 14
 
@@ -67,8 +67,7 @@ export function computeScheduledFireRequests(
   for (let i = 0; i < NOTIFICATION_SCHEDULE_HORIZON_DAYS; i++) {
     const dayKey = shiftLocalDateKey(todayKey, i)
     for (const task of vault.tasks) {
-      if (task.done) continue
-      if (task.scheduledLocalDate !== dayKey) continue
+      if (!taskOccursOnDate(task, dayKey)) continue
       if (task.timeMode !== 'start' && task.timeMode !== 'end') continue
 
       const mins = task.timeMinutesFromMidnight
