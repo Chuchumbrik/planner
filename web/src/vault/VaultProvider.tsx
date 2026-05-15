@@ -302,6 +302,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
         if (!row?.ciphertext) {
           const empty = emptyVault()
+          let remoteReady = false
           try {
             const ciphertext = await encryptUtf8(JSON.stringify(empty), cryptoKey)
             await vaultRemote.upsertVault(session.user.id, ciphertext, 1)
@@ -312,12 +313,13 @@ export function VaultProvider({ children }: { children: ReactNode }) {
             setDecryptFailed(false)
             versionRef.current = 1
             setLastSyncedAt(Date.now())
+            remoteReady = true
           } catch (e) {
             if (!cancelled) {
               setRemoteError(e instanceof Error ? e.message : String(e))
             }
           }
-          if (!cancelled) setRemoteHydrated(true)
+          if (!cancelled) setRemoteHydrated(remoteReady)
           return
         }
 
@@ -338,7 +340,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       } catch (e) {
         if (!cancelled) {
           setRemoteError(e instanceof Error ? e.message : String(e))
-          setRemoteHydrated(true)
+          // Не помечаем гидрацию завершённой: иначе можно редактировать локальный vault без успешной загрузки/создания строки на сервере (#46).
+          setRemoteHydrated(false)
         }
       }
     })()

@@ -18,6 +18,8 @@
     "dayTitle": "Day",
     "settings": "Settings",
     "syncLoadingVault": "Loading vault from server…",
+    "syncBlockingTitle": "Connecting to the server",
+    "syncBlockingHint": "Editing stays off until data loads — so tasks are not lost if the network drops mid-sync.",
     "syncSaving": "Saving…",
     "syncDone": "Synced {{time}}",
     "syncReady": "Ready",

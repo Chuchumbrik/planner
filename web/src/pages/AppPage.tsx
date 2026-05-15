@@ -198,6 +198,27 @@ function PlannerChevronRight() {
   )
 }
 
+/** Иконка переключателя «диаграммы» (кольцо + столбцы) — вместо длинной подписи на мобилке. */
+function PlannerChartsIcon({ chartsHidden }: { chartsHidden: boolean }) {
+  if (chartsHidden) {
+    return (
+      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+        <path d="M3 3h2v14H3V3zm4 6h2v8H7V9zm4-4h2v12h-2V5zm4 3h2v9h-2V8z" opacity="0.35" />
+        <path
+          fillRule="evenodd"
+          d="M2.293 2.293a1 1 0 011.414 0l14 14a1 1 0 01-1.414 1.414l-14-14a1 1 0 010-1.414z"
+          clipRule="evenodd"
+        />
+      </svg>
+    )
+  }
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+      <path d="M3 14h2.5v4H3v-4zm4.25-6h2.5v10h-2.5V8zm4.25-4h2.5v14h-2.5V4zm4.25 3h2.5v11h-2.5V7z" />
+    </svg>
+  )
+}
+
 type EodModalContext = { dateKey: string; mode: 'ritual' | 'report' }
 
 function AppPageInner() {
@@ -759,7 +780,36 @@ function AppPageInner() {
   ))
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-8">
+    <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-8">
+      {!remoteHydrated && !decryptFailed ? (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-zinc-950/90 px-6 backdrop-blur-sm"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="app-sync-blocking-title"
+          aria-describedby="app-sync-blocking-desc"
+        >
+          <div
+            className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-500/25 border-t-emerald-400"
+            aria-hidden
+          />
+          <p id="app-sync-blocking-title" className="max-w-sm text-center text-base font-medium text-zinc-100">
+            {t('app.syncBlockingTitle')}
+          </p>
+          <p id="app-sync-blocking-desc" className="max-w-sm text-center text-sm text-zinc-400">
+            {remoteError ? humanizeConnectivityError(remoteError, t) : t('app.syncBlockingHint')}
+          </p>
+          {remoteError ? (
+            <button
+              type="button"
+              className="rounded-lg border border-amber-600/70 bg-amber-950/50 px-4 py-2 text-sm font-medium text-amber-100 hover:bg-amber-900/40"
+              onClick={() => retryRemoteHydrate()}
+            >
+              {t('app.syncRetry')}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-emerald-400/90">
@@ -876,9 +926,9 @@ function AppPageInner() {
       </header>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
-      <nav aria-label={t('app.viewNavAria')}>
+      <nav aria-label={t('app.viewNavAria')} className="min-w-0 flex-1 overflow-visible">
         <div
-          className="inline-flex w-full max-w-md rounded-lg border border-zinc-700/90 bg-zinc-900/50 p-0.5"
+          className="inline-flex w-full min-w-0 rounded-lg border border-zinc-700/90 bg-zinc-900/50 p-0.5 shadow-sm"
           role="tablist"
         >
           {(['day', 'week', 'month'] as const).map((v) => {
@@ -891,7 +941,7 @@ function AppPageInner() {
                 type="button"
                 role="tab"
                 aria-selected={active}
-                className={`min-w-0 flex-1 rounded-md px-2 py-1.5 text-center text-sm font-medium transition-colors sm:px-3 ${
+                className={`min-w-0 flex-1 rounded-md px-1.5 py-2 text-center text-xs font-medium leading-tight transition-colors ring-offset-0 ring-offset-zinc-900 sm:px-3 sm:text-sm ${
                   active
                     ? 'bg-zinc-800 text-emerald-300 shadow-sm ring-1 ring-zinc-600/80'
                     : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'
@@ -906,8 +956,10 @@ function AppPageInner() {
       </nav>
       <button
         type="button"
-        className="shrink-0 rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-        aria-pressed={chartsHidden}
+        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-zinc-700 p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+        aria-pressed={!chartsHidden}
+        aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+        title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
         onClick={() => {
           setChartsHidden((prev) => {
             const next = !prev
@@ -916,13 +968,13 @@ function AppPageInner() {
           })
         }}
       >
-        {chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+        <PlannerChartsIcon chartsHidden={chartsHidden} />
       </button>
       </div>
 
       {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
 
-      {remoteError && !decryptFailed ? (
+      {remoteHydrated && remoteError && !decryptFailed ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
           <div className="min-w-0 flex-1 leading-snug">
             <p>{humanizeConnectivityError(remoteError, t)}</p>
@@ -1420,8 +1472,8 @@ function AppPageInner() {
             </div>
             {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
               <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:pt-1">
-                <div className="flex min-h-0 w-full flex-row items-stretch gap-2 lg:flex-col lg:gap-2">
-                  <div className="flex min-h-0 min-w-0 flex-1 basis-0 justify-center">
+                <div className="flex w-full min-w-0 flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-2">
+                  <div className="flex min-h-0 min-w-0 flex-1 justify-center lg:justify-center">
                     <PeriodPlanDonut
                       progress={weekPlanProgress}
                       title={t('app.periodPlanWeekRingTitle')}
@@ -1430,7 +1482,7 @@ function AppPageInner() {
                       ringStroke={weekPlanUiWide ? 10 : 8}
                     />
                   </div>
-                  <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:w-full">
+                  <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 lg:w-full">
                     <PeriodPlanBreakdownChart
                       compact={!weekPlanUiWide}
                       rows={weekBreakdownChartRows}
@@ -1440,31 +1492,31 @@ function AppPageInner() {
                           : t('app.periodBreakdownChartTitleColor')
                       }
                     />
+                    <div className="flex flex-wrap justify-center gap-1">
+                      <button
+                        type="button"
+                        className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
+                          periodSlotsMode === 'group'
+                            ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
+                            : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
+                        }`}
+                        onClick={() => setPeriodSlotsMode('group')}
+                      >
+                        {t('app.periodBreakdownByGroup')}
+                      </button>
+                      <button
+                        type="button"
+                        className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
+                          periodSlotsMode === 'color'
+                            ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
+                            : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
+                        }`}
+                        onClick={() => setPeriodSlotsMode('color')}
+                      >
+                        {t('app.periodBreakdownByColor')}
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex justify-center gap-1">
-                  <button
-                    type="button"
-                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                      periodSlotsMode === 'group'
-                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                    }`}
-                    onClick={() => setPeriodSlotsMode('group')}
-                  >
-                    {t('app.periodBreakdownByGroup')}
-                  </button>
-                  <button
-                    type="button"
-                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                      periodSlotsMode === 'color'
-                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                    }`}
-                    onClick={() => setPeriodSlotsMode('color')}
-                  >
-                    {t('app.periodBreakdownByColor')}
-                  </button>
                 </div>
               </div>
             ) : null}
@@ -1541,7 +1593,15 @@ function AppPageInner() {
                   title={t('app.periodPlanMonthRingTitle')}
                   subtitle={monthLabel(monthYear, monthIndex, locale)}
                 />
-                <div className="flex justify-center gap-1">
+                <PeriodPlanBreakdownChart
+                  rows={monthBreakdownChartRows}
+                  title={
+                    periodSlotsMode === 'group'
+                      ? t('app.periodBreakdownChartTitleGroup')
+                      : t('app.periodBreakdownChartTitleColor')
+                  }
+                />
+                <div className="flex flex-wrap justify-center gap-1">
                   <button
                     type="button"
                     className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
@@ -1565,14 +1625,6 @@ function AppPageInner() {
                     {t('app.periodBreakdownByColor')}
                   </button>
                 </div>
-                <PeriodPlanBreakdownChart
-                  rows={monthBreakdownChartRows}
-                  title={
-                    periodSlotsMode === 'group'
-                      ? t('app.periodBreakdownChartTitleGroup')
-                      : t('app.periodBreakdownChartTitleColor')
-                  }
-                />
               </div>
             ) : null}
           </div>
