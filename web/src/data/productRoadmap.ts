@@ -325,6 +325,26 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.6.58', en: '0.6.58' },
+        changes: [
+          {
+            ru: '**Планировщик `/app`, вкладка «День» / #30, #21:** список плана на день сортируется по **времени начала/окончания** слота (`getTaskSlotMinutes`), а не только по приоритету; задачи без времени — после задач со временем.',
+            en: '**Planner `/app`, Day tab / #30, #21:** the day plan list sorts by **scheduled start/end** slot time (`getTaskSlotMinutes`), not only priority; tasks without time follow timed tasks.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Задачи с временем в плане идут по часам — удобнее ориентироваться в течение дня.',
+            en: 'Timed tasks in the day plan appear in clock order — easier to scan your schedule.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-14', en: '2026-05-14' },
     items: [
       {

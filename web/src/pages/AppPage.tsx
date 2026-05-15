@@ -33,6 +33,7 @@ import {
   plannedPeriodSlotsByGroupId,
   taskOccursOnDate,
   tasksScheduledForPlannerDay,
+  getTaskSlotMinutes,
   weekDayKeys,
   withTaskPatch,
   type PriorityRank,
@@ -128,11 +129,21 @@ function sortByPriorityThenTitle(a: Task, b: Task): number {
   return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
 }
 
-/** Невыполненные выше, затем по приоритету и названию. */
+/** Невыполненные выше; с временем — по началу слота; без времени — после них, по приоритету и названию. */
 function sortDayPlan(a: Task, b: Task, dayKey: string): number {
   const aDone = isMainTaskDoneForDay(a, dayKey)
   const bDone = isMainTaskDoneForDay(b, dayKey)
   if (aDone !== bDone) return aDone ? 1 : -1
+
+  const sa = getTaskSlotMinutes(a, dayKey)
+  const sb = getTaskSlotMinutes(b, dayKey)
+  if (sa && sb) {
+    if (sa.start !== sb.start) return sa.start - sb.start
+    if (sa.end !== sb.end) return sa.end - sb.end
+    return sortByPriorityThenTitle(a, b)
+  }
+  if (sa && !sb) return -1
+  if (!sa && sb) return 1
   return sortByPriorityThenTitle(a, b)
 }
 
