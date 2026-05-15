@@ -99,9 +99,23 @@ export function AdminMotivatorRolePanel({
     return users.filter((u) => u.email.toLowerCase().includes(q) || u.id.toLowerCase().includes(q))
   }, [users, search])
 
-  async function applyRole(userId: string, role: MotivatorRoleRow['motivator_role']) {
+  async function applyRole(
+    user: MotivatorRoleRow,
+    role: MotivatorRoleRow['motivator_role'],
+  ) {
+    if (role === user.motivator_role) return
+    if (user.id === currentUserId && user.motivator_role === 'admin' && role !== 'admin') {
+      if (!window.confirm(t('settings.adminRolesConfirmSelfDemote'))) return
+      if (!window.confirm(t('settings.adminRolesConfirmSelfDemoteAgain'))) return
+    } else if (user.id !== currentUserId) {
+      const label = t(`settings.adminRolesOption${role === 'admin' ? 'Admin' : role === 'beta_tester' ? 'Beta' : 'User'}`)
+      if (!window.confirm(t('settings.adminRolesConfirmChange', { email: user.email || user.id, role: label }))) {
+        return
+      }
+    }
     setLoadError(null)
-    setRowBusyId(userId)
+    setRowBusyId(user.id)
+    const userId = user.id
     try {
       const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
         body: { action: 'setRole', userId, role },
@@ -186,7 +200,7 @@ export function AdminMotivatorRolePanel({
                   onChange={(e) => {
                     const v = e.target.value as MotivatorRoleRow['motivator_role']
                     if (v === u.motivator_role) return
-                    void applyRole(u.id, v)
+                    void applyRole(u, v)
                   }}
                 >
                   <option value="user">{t('settings.adminRolesOptionUser')}</option>
@@ -235,7 +249,7 @@ export function AdminMotivatorRolePanel({
                       onChange={(e) => {
                         const v = e.target.value as MotivatorRoleRow['motivator_role']
                         if (v === u.motivator_role) return
-                        void applyRole(u.id, v)
+                        void applyRole(u, v)
                       }}
                     >
                       <option value="user">{t('settings.adminRolesOptionUser')}</option>

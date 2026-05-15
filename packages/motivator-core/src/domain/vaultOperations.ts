@@ -308,6 +308,33 @@ export function applyRemoveTask(vault: VaultPayload, id: string): VaultPayload {
   }
 }
 
+/** Убрать одно вхождение повторяющейся задачи из плана на локальный день (серия сохраняется). */
+export function applySkipTaskOccurrenceForDay(
+  vault: VaultPayload,
+  taskId: string,
+  dateKey: string,
+  deps: VaultDeps,
+): VaultPayload {
+  if (!LOCAL_DATE_KEY_PATTERN.test(dateKey)) return vault
+  const now = deps.nowIso()
+  return {
+    ...vault,
+    tasks: vault.tasks.map((t) => {
+      if (t.id !== taskId || !t.recurrence) return t
+      const prev = t.skippedOccurrenceLocalDates ?? []
+      if (prev.includes(dateKey)) return t
+      const next = [...new Set([...prev, dateKey])].sort()
+      const completed = (t.completedOccurrenceLocalDates ?? []).filter((d) => d !== dateKey)
+      return {
+        ...t,
+        skippedOccurrenceLocalDates: next,
+        completedOccurrenceLocalDates: completed,
+        updatedAt: now,
+      }
+    }),
+  }
+}
+
 export function applySetTaskColor(
   vault: VaultPayload,
   taskId: string,

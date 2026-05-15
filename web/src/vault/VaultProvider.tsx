@@ -22,6 +22,7 @@ import {
   applyPatchTask,
   applyRemoveChecklistItem,
   applyRemoveTask,
+  applySkipTaskOccurrenceForDay,
   applyRenameGroup,
   applySetPriorityLabel,
   applySetTaskColor,
@@ -101,6 +102,7 @@ type VaultContextValue = {
   deleteDraft: (draftId: string) => Promise<void>
   toggleTask: (id: string, occurrenceDayKey?: string) => Promise<void>
   removeTask: (id: string) => Promise<void>
+  skipTaskOccurrenceForDay: (taskId: string, dateKey: string) => Promise<void>
   setTaskColor: (taskId: string, colorKey: TaskColorKey) => Promise<void>
   setTaskGroup: (taskId: string, groupId: string) => Promise<void>
   addChecklistItem: (taskId: string, title: string) => Promise<void>
@@ -476,6 +478,13 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate],
   )
 
+  const skipTaskOccurrenceForDay = useCallback(
+    async (taskId: string, dateKey: string) => {
+      await mutate((v) => applySkipTaskOccurrenceForDay(v, taskId, dateKey, vaultDepsDefault))
+    },
+    [mutate],
+  )
+
   const setTaskColor = useCallback(
     async (taskId: string, colorKey: TaskColorKey) => {
       await mutate((v) => applySetTaskColor(v, taskId, colorKey, vaultDepsDefault))
@@ -691,6 +700,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       deleteDraft,
       toggleTask,
       removeTask,
+      skipTaskOccurrenceForDay,
       setTaskColor,
       setTaskGroup,
       addChecklistItem,
@@ -731,6 +741,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       deleteDraft,
       toggleTask,
       removeTask,
+      skipTaskOccurrenceForDay,
       setTaskColor,
       setTaskGroup,
       addChecklistItem,

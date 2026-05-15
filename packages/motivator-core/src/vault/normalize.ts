@@ -201,7 +201,7 @@ function migrateV6toV7(v: VaultPayloadV6): VaultPayloadV7 {
     schemaVersion: 7,
     priorityLabels: v.priorityLabels,
     groups: v.groups,
-    tasks: v.tasks.map(normalizeDoubleConfirmFieldsOnTask),
+    tasks: v.tasks.map((t) => normalizeDoubleConfirmFieldsOnTask(normalizeRecurrenceOccurrenceFieldsOnTask(t))),
     drafts: v.drafts,
     eodCompletedLocalDates: v.eodCompletedLocalDates,
     eodPreferences: v.eodPreferences,
@@ -240,6 +240,24 @@ function repairV8(v: VaultPayloadV8): VaultPayloadV8 {
     ...repaired7,
     schemaVersion: 8,
     notificationPreferences: normalizeNotificationPreferences(v.notificationPreferences),
+  }
+}
+
+function normalizeSkippedOccurrenceDates(raw: unknown): string[] {
+  return normalizeCompletedOccurrenceDates(raw)
+}
+
+function normalizeRecurrenceOccurrenceFieldsOnTask(t: Task): Task {
+  const skipped = t.recurrence
+    ? normalizeSkippedOccurrenceDates(t.skippedOccurrenceLocalDates)
+    : []
+  const completed = t.recurrence
+    ? normalizeCompletedOccurrenceDates(t.completedOccurrenceLocalDates)
+    : []
+  return {
+    ...t,
+    completedOccurrenceLocalDates: completed,
+    skippedOccurrenceLocalDates: skipped.length > 0 ? skipped : undefined,
   }
 }
 
