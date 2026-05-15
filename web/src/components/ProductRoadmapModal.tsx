@@ -230,6 +230,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
 
   const releaseNotesByDay = useMemo(() => groupReleaseNotesForUi(RELEASE_NOTES_BLOCKS), [])
   const ideasLaterGroups = useMemo(() => groupIdeasLaterForDisplay(IDEAS_LATER_ENTRIES), [])
+  const ideasLaterTotal = IDEAS_LATER_ENTRIES.length
 
   useEffect(() => {
     if (!open) return
@@ -413,18 +414,32 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
 
           <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-violet-400/95 hover:bg-zinc-900/80">
-              <span>{t('settings.roadmapIdeas')}</span>
+              <span>
+                {t('settings.roadmapIdeas')}{' '}
+                <span className="font-normal tabular-nums text-violet-400/70">
+                  ({t('settings.roadmapIdeasCount', { count: ideasLaterTotal })})
+                </span>
+              </span>
               <Chevron />
             </summary>
             <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
               <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapIdeasHint')}</p>
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
                 {ideasLaterGroups.map((g) => (
-                  <section key={g.groupId}>
-                    <h4 className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-                      {t(`settings.roadmapIdeaGroup_${g.groupId}` as const)}
-                    </h4>
-                    <ul className="mt-2 flex flex-col gap-2">
+                  <details
+                    key={g.groupId}
+                    className="group/details rounded-lg border border-zinc-800/90 bg-zinc-950/40 [&_summary::-webkit-details-marker]:hidden"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold text-violet-400/90 hover:bg-zinc-900/55">
+                      <span className="min-w-0 text-left">
+                        {t(`settings.roadmapIdeaGroup_${g.groupId}` as const)}{' '}
+                        <span className="font-normal tabular-nums text-zinc-500">
+                          ({t('settings.roadmapIdeasCount', { count: g.ideas.length })})
+                        </span>
+                      </span>
+                      <Chevron nested />
+                    </summary>
+                    <ul className="flex flex-col gap-2 border-t border-zinc-800/80 px-3 py-3">
                       {g.ideas.map((idea) => (
                         <IdeaRow
                           key={`${g.groupId}-${idea.ideaLaterOrder ?? 0}-${pickLocale(idea.title, lang)}`}
@@ -433,7 +448,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                         />
                       ))}
                     </ul>
-                  </section>
+                  </details>
                 ))}
               </div>
             </div>

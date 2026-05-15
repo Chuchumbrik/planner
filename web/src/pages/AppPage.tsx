@@ -911,13 +911,13 @@ function AppPageInner() {
       ) : null}
 
       <div className="mb-6 flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="scrollbar-site flex flex-nowrap items-center gap-1.5 overflow-x-auto">
           <div className="relative shrink-0">
             <button
               type="button"
               disabled={!canEdit}
               aria-expanded={filtersPanelOpen}
-              className="inline-flex items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-2 pr-5 text-sm font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-zinc-600 bg-zinc-900 px-2.5 py-1.5 pr-4 text-xs font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5 sm:text-sm"
               onClick={() => setFiltersPanelOpen((v) => !v)}
             >
               {t('app.filterToggle')}
@@ -931,7 +931,7 @@ function AppPageInner() {
               <button
                 type="button"
                 disabled={!canEdit}
-                className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:border-zinc-500 disabled:opacity-40"
+                className="shrink-0 whitespace-nowrap rounded-lg border border-zinc-600 px-2.5 py-1.5 text-xs text-zinc-200 hover:border-zinc-500 disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm"
                 onClick={() =>
                   setEodModalContext({ dateKey: selectedDay, mode: 'report' })
                 }
@@ -942,7 +942,7 @@ function AppPageInner() {
               <button
                 type="button"
                 disabled={!canEdit}
-                className={`rounded-lg border px-3 py-2 text-sm hover:border-zinc-500 disabled:opacity-40 ${
+                className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs hover:border-zinc-500 disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm ${
                   eodDoneToday
                     ? 'border-emerald-800 text-emerald-300'
                     : 'border-violet-700 text-violet-200'
@@ -959,7 +959,7 @@ function AppPageInner() {
             <button
               type="button"
               disabled={!canEdit}
-              className="inline-flex shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+              className="inline-flex shrink-0 whitespace-nowrap rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40 sm:px-4 sm:py-2 sm:text-sm"
               onClick={() => {
                 setResumeDraft(null)
                 setCreateOpen(true)
