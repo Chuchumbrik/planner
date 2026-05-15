@@ -195,6 +195,7 @@ function SettingsPageInner() {
   const notifModeDirty = notifModeDraft !== deliveryMode
 
   async function handleSignOut() {
+    if (!window.confirm(t('settings.signOutConfirm'))) return
     await lock()
     await signOut()
   }

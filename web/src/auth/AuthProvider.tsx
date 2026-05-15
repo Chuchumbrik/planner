@@ -24,6 +24,8 @@ type AuthContextValue = {
     password: string,
   ) => Promise<{ error: Error | null; session: Session | null }>
   signOut: () => Promise<void>
+  /** Supabase: письмо со ссылкой сброса пароля аккаунта. */
+  requestPasswordReset: (email: string) => Promise<{ error: Error | null }>
   /** Проверка текущего пароля через повторный вход, затем Supabase `updateUser`. */
   updatePassword: (
     currentPassword: string,
@@ -75,6 +77,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }, [])
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    if (!supabase) return { error: new Error('Supabase не настроен') }
+    const redirectTo =
+      typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+    return { error: error ? new Error(error.message) : null }
+  }, [])
+
   const updatePassword = useCallback(
     async (currentPassword: string, newPassword: string) => {
       if (!supabase) return { error: new Error('Supabase не настроен') }
@@ -100,11 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
+      requestPasswordReset,
       updatePassword,
       isAdmin: isMotivatorAdmin(session),
       isBetaTester: isMotivatorBetaTester(session),
     }),
-    [session, loading, signIn, signUp, signOut, updatePassword],
+    [session, loading, signIn, signUp, signOut, requestPasswordReset, updatePassword],
   )
 
   if (!isSupabaseConfigured) {
@@ -123,6 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             session: null,
           }),
           signOut: async () => {},
+          requestPasswordReset: async () => ({
+            error: new Error('Задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY'),
+          }),
           updatePassword: async () => ({
             error: new Error('Задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY'),
           }),

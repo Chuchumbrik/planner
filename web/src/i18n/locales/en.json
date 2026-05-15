@@ -229,6 +229,7 @@
     "sectionLegal": "Legal & feedback",
     "sectionLegalHelp": "Policies and a feedback channel. Placeholder copy until final legal text is published.",
     "signOut": "Sign out",
+    "signOutConfirm": "Sign out? The seed and derivation password will be removed from this browser. To open the same tasks again you will need the same seed and password as during setup.",
     "groupsTitle": "Groups & projects",
     "newGroupPlaceholder": "New group…",
     "addGroup": "Add group",
@@ -516,11 +517,24 @@
     "envUrl": "VITE_SUPABASE_URL",
     "envKey": "VITE_SUPABASE_ANON_KEY",
     "envFile": "web/.env.local",
-    "networkRegionalHint": "This looks like the app host or API being unreachable from Russia. Team rollout options are in web/README.md (“Access from Russia”)."
+    "networkRegionalHint": "This looks like the app host or API being unreachable from Russia. Team rollout options are in web/README.md (“Access from Russia”).",
+    "forgotPasswordLink": "Forgot password?",
+    "forgotPasswordTitle": "Reset password",
+    "forgotPasswordIntro": "We will email a link to reset your account password (not the vault derivation password).",
+    "forgotPasswordSubmit": "Send link",
+    "forgotPasswordSent": "If an account exists for this email, a message was sent. Check Spam.",
+    "forgotPasswordBack": "← Back to sign in",
+    "registerPdConsent": "I agree to personal data processing (<link>policy</link>).",
+    "registerPdRequired": "Personal data consent is required to register."
   },
   "onboarding": {
     "title": "Encryption key",
     "intro": "Seed is combined with a derivation password (optional in V1 — less secure). After sign-out the seed is cleared — to open the same tasks again, paste <strong>the same</strong> seed and derivation password as the first time.",
+    "restoreTitle": "Restore encryption key",
+    "restoreIntro": "Encrypted data already exists on the server. Paste your saved seed and derivation password from the first setup.",
+    "setupTitle": "New encryption key",
+    "setupIntro": "Generate a seed, store it safely, and confirm you did. Without the seed after sign-out, data cannot be recovered.",
+    "setupSavedAck": "I saved the seed in a safe place",
     "tabNew": "New seed",
     "tabImport": "I already have a seed",
     "generate": "Generate seed",
@@ -552,7 +566,11 @@
     "decryptHelpStepSeed": "Confirm this browser has the same seed used when the vault was created (Settings → seed backup).",
     "decryptHelpStepPassword": "Check the KDF password — same as onboarding (empty if you left it empty).",
     "decryptHelpStepSupport": "If seed or password changed on another device, import the current pair or use feedback in Settings.",
-    "decryptHelpSettingsLink": "Open seed backup in Settings"
+    "decryptHelpSettingsLink": "Open seed backup in Settings",
+    "recoverKeyCta": "Re-enter seed",
+    "recoverKeyTitle": "Restore data access",
+    "recoverKeyHint": "Paste the current seed and derivation password. Sign-out is not required.",
+    "recoverKeySubmit": "Apply key"
   },
   "legal": {
     "cookieTitle": "Cookies & local storage",
