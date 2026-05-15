@@ -14,6 +14,7 @@ import { WeekGrid } from '@/components/WeekGrid'
 import { TaskEditModal } from '@/components/TaskEditModal'
 import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
+import { VaultDecryptHelp } from '@/components/VaultDecryptHelp'
 import { tasksVisibleInPlannerView } from '@/lib/plannerFilterScope'
 import {
   humanizeConnectivityError,
@@ -918,7 +919,9 @@ function AppPageInner() {
       </button>
       </div>
 
-      {remoteError ? (
+      {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
+
+      {remoteError && !decryptFailed ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
           <div className="min-w-0 flex-1 leading-snug">
             <p>{humanizeConnectivityError(remoteError, t)}</p>

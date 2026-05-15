@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { AdminMotivatorRolePanel } from '@/components/AdminMotivatorRolePanel'
 import { RequireVault } from '@/components/RequireVault'
+import { SeedExportPanel } from '@/components/SeedExportPanel'
+import { SettingsLegalSection } from '@/components/SettingsLegalSection'
+import { VaultDecryptHelp } from '@/components/VaultDecryptHelp'
 import { supabase } from '@/lib/supabase'
 import { APP_VERSION } from '@/version'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank, type NotificationDeliveryMode } from '@motivator/core'
@@ -110,6 +113,26 @@ const EOD_DEFAULT_PUSH_REMINDER_MINUTES = 20 * 60 + 30
 
 const SETTINGS_CARD = 'rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3'
 
+function SettingsSection({
+  id,
+  title,
+  description,
+  children,
+}: {
+  id?: string
+  title: string
+  description?: string
+  children: ReactNode
+}) {
+  return (
+    <section id={id} className="mt-8 scroll-mt-6">
+      <h2 className="text-sm font-medium text-zinc-300">{title}</h2>
+      {description ? <p className="mt-2 text-xs text-zinc-500">{description}</p> : null}
+      {children}
+    </section>
+  )
+}
+
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
   const { signOut, session, updatePassword, isAdmin } = useAuth()
@@ -215,8 +238,11 @@ function SettingsPageInner() {
           {t('settings.back')}
         </Link>
         <h1 className="mt-3 text-xl font-semibold text-white">{t('settings.title')}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-zinc-400">{t('settings.seedHint')}</p>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-400">{t('settings.intro')}</p>
       </header>
+
+      {decryptFailed ? <VaultDecryptHelp className="mt-4" /> : null}
+
       {savePending ? (
         <p className="mt-3 text-xs text-zinc-500" role="status" aria-live="polite">
           {t('settings.savePending')}
@@ -227,8 +253,20 @@ function SettingsPageInner() {
         </p>
       ) : null}
 
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-zinc-300">{t('settings.priorityLabelsTitle')}</h2>
+      <SettingsSection
+        id="seed-backup"
+        title={t('settings.seedBackupTitle')}
+        description={t('settings.seedBackupHelp')}
+      >
+        <div className={`mt-4 ${SETTINGS_CARD}`}>
+          <SeedExportPanel />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection title={t('settings.sectionPlanning')} description={t('settings.sectionPlanningHelp')}>
+        <h3 className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {t('settings.priorityLabelsTitle')}
+        </h3>
         <p className="mt-2 text-xs text-zinc-500">{t('settings.priorityLabelsHelp')}</p>
         <div className={`mt-4 flex flex-col gap-3 ${SETTINGS_CARD}`}>
           {PRIORITY_RANKS.map((rank) => (
@@ -241,10 +279,49 @@ function SettingsPageInner() {
             />
           ))}
         </div>
-      </section>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-zinc-300">{t('settings.eodTitle')}</h2>
+        <h3 className="mt-8 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {t('settings.groupsTitle')}
+        </h3>
+        <form
+          className="mt-3 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (!canEdit) return
+            void addGroup(newGroupName).then(() => setNewGroupName(''))
+          }}
+        >
+          <input
+            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            placeholder={t('settings.newGroupPlaceholder')}
+            value={newGroupName}
+            disabled={!canEdit}
+            onChange={(e) => setNewGroupName(e.target.value)}
+          />
+          <button
+            type="submit"
+            disabled={!canEdit}
+            className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+          >
+            {t('settings.addGroup')}
+          </button>
+        </form>
+        <div className="mt-4 flex flex-col gap-2">
+          {sortedGroups.map((g) => (
+            <GroupRow
+              key={`${g.id}-${g.name}`}
+              initialName={g.name}
+              isDefault={g.id === DEFAULT_GROUP_ID}
+              canEdit={canEdit}
+              onRename={(name) => void renameGroup(g.id, name)}
+              onDelete={() => void deleteGroup(g.id)}
+            />
+          ))}
+        </div>
+
+        <h3 className="mt-8 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {t('settings.eodTitle')}
+        </h3>
         <p className="mt-2 text-xs text-zinc-500">{t('settings.eodHelp')}</p>
         <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3">
           <input
@@ -342,11 +419,12 @@ function SettingsPageInner() {
             })}
           </button>
         </div>
-      </section>
+      </SettingsSection>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-zinc-300">{t('settings.notificationsTitle')}</h2>
-        <p className="mt-2 text-xs text-zinc-500">{t('settings.notificationsHelp')}</p>
+      <SettingsSection
+        title={t('settings.notificationsTitle')}
+        description={t('settings.notificationsHelp')}
+      >
         <div className="mt-4 flex flex-col gap-3 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3">
           {(
             [
@@ -424,14 +502,12 @@ function SettingsPageInner() {
             ) : null}
           </div>
         ) : null}
-      </section>
+      </SettingsSection>
 
-      {supabase && isAdmin ? (
-        <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
-      ) : null}
-
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-zinc-300">{t('common.language')}</h2>
+      <SettingsSection title={t('settings.sectionAccount')} description={t('settings.sectionAccountHelp')}>
+        <h3 className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {t('common.language')}
+        </h3>
         <div className={`mt-4 ${SETTINGS_CARD}`}>
           <select
             className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
@@ -442,10 +518,10 @@ function SettingsPageInner() {
             <option value="en">{t('common.langEnFlag')}</option>
           </select>
         </div>
-      </section>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-zinc-300">{t('settings.accountPasswordTitle')}</h2>
+        <h3 className="mt-8 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {t('settings.accountPasswordTitle')}
+        </h3>
         <p className="mt-2 text-xs text-zinc-500">{t('settings.accountPasswordHelp')}</p>
         <form
           className={`mt-4 flex flex-col gap-3 ${SETTINGS_CARD}`}
@@ -502,47 +578,17 @@ function SettingsPageInner() {
             {pwBusy ? t('common.loading') : t('settings.changePasswordSubmit')}
           </button>
         </form>
-      </section>
+      </SettingsSection>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-zinc-300">{t('settings.groupsTitle')}</h2>
-        <form
-          className="mt-3 flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (!canEdit) return
-            void addGroup(newGroupName).then(() => setNewGroupName(''))
-          }}
-        >
-          <input
-            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-            placeholder={t('settings.newGroupPlaceholder')}
-            value={newGroupName}
-            disabled={!canEdit}
-            onChange={(e) => setNewGroupName(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={!canEdit}
-            className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
-          >
-            {t('settings.addGroup')}
-          </button>
-        </form>
-
-        <div className="mt-4 flex flex-col gap-2">
-          {sortedGroups.map((g) => (
-            <GroupRow
-              key={`${g.id}-${g.name}`}
-              initialName={g.name}
-              isDefault={g.id === DEFAULT_GROUP_ID}
-              canEdit={canEdit}
-              onRename={(name) => void renameGroup(g.id, name)}
-              onDelete={() => void deleteGroup(g.id)}
-            />
-          ))}
+      <SettingsSection title={t('settings.sectionLegal')} description={t('settings.sectionLegalHelp')}>
+        <div className={`mt-4 ${SETTINGS_CARD}`}>
+          <SettingsLegalSection />
         </div>
-      </section>
+      </SettingsSection>
+
+      {supabase && isAdmin ? (
+        <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
+      ) : null}
 
       <p className="mt-10 text-center text-xs text-zinc-600">
         {t('settings.appVersion', { version: APP_VERSION })}
