@@ -328,6 +328,29 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.60', en: '0.6.60' },
+        changes: [
+          {
+            ru: '**«Краткая сводка» / #16, #17:** блок **«Идеи на потом»** — **раскрываемые группы**; в заголовке секции и группы — **число идей**.',
+            en: '**Brief summary / #16, #17:** **Ideas for later** — **collapsible thematic groups**; section and group headers show **idea counts**.',
+          },
+          {
+            ru: '**Планировщик `/app` / #18:** панель **фильтров**, **EOD/отчёт** и **создание задачи** — в **одну строку** на узком экране (`flex-nowrap`, компактные кнопки).',
+            en: '**Planner `/app` / #18:** **filters**, **EOD/report**, and **create task** toolbar stays on **one row** on narrow screens (`flex-nowrap`, compact buttons).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В сводке можно раскрыть одну тему идей и сразу видеть, сколько карточек в группе.',
+            en: 'In the brief summary you can expand one idea theme and see how many cards are in that group.',
+          },
+          {
+            ru: 'На телефоне кнопки планировщика не переносятся на вторую строку — при необходимости прокрутка по горизонтали.',
+            en: 'On phone, planner action buttons stay on one line — horizontal scroll if needed.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.59', en: '0.6.59' },
         changes: [
           {
