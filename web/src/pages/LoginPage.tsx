@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import {
+  humanizeConnectivityError,
+  isLikelyNetworkFetchFailure,
+} from '@/lib/connectivityHints'
 import { isSupabaseConfigured } from '@/lib/supabase'
 
 export function LoginPage() {
@@ -25,7 +29,10 @@ export function LoginPage() {
       const { error: err } = await signIn(email.trim(), password)
       setPending(false)
       if (err) {
-        setError(err.message)
+        setError(humanizeConnectivityError(err.message, t))
+        setInfo(
+          isLikelyNetworkFetchFailure(err.message) ? t('login.networkRegionalHint') : null,
+        )
         return
       }
       navigate('/onboarding', { replace: true })
@@ -35,7 +42,10 @@ export function LoginPage() {
     const { error: err, session } = await signUp(email.trim(), password)
     setPending(false)
     if (err) {
-      setError(err.message)
+      setError(humanizeConnectivityError(err.message, t))
+      setInfo(
+        isLikelyNetworkFetchFailure(err.message) ? t('login.networkRegionalHint') : null,
+      )
       return
     }
 

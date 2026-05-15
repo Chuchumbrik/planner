@@ -328,6 +328,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.63', en: '0.6.63' },
+        changes: [
+          {
+            ru: '**Доступ из РФ / #37:** в **`web/README.md`** — раздел **«Доступ из РФ (без VPN)»** (таблица контуров Vercel/Supabase, варианты 1–5); при сетевых ошибках на **`/app`** и входе — подсказка про VPN/хостинг (`connectivityHints.ts`, **`app.syncErrorRegionalHint`**, **`login.networkRegionalHint`**).',
+            en: '**Access from Russia / #37:** **`web/README.md`** — **“Access from Russia (without VPN)”** (Vercel/Supabase matrix, options 1–5); on network failures on **`/app`** and sign-in — hint about VPN/hosting (`connectivityHints.ts`, **`app.syncErrorRegionalHint`**, **`login.networkRegionalHint`**).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Если приложение «не коннектится» из РФ, в интерфейсе видно, что дело может быть в хостинге, а не только в Wi‑Fi; полный обход — отдельный деплой (см. README).',
+            en: 'If the app “won’t connect” from Russia, the UI explains hosting may be the cause—not only Wi‑Fi; a full fix needs a separate deploy (see README).',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.62', en: '0.6.62' },
         changes: [
           {
@@ -1866,6 +1881,10 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
         ru: 'Связка с **Vercel** (или текущим пайплайном): домен в проекте, верификация, при необходимости перенос с прежнего URL.',
         en: 'Tie to **Vercel** (or current pipeline): project domain, verification, migrate from prior URL if needed.',
       },
+      {
+        ru: '**Доступ из РФ (#37):** оценить **Custom Domain** Supabase + свой домен SPA; при недостаточности — прокси или зеркало в РФ (см. **`web/README.md`** → «Доступ из РФ»).',
+        en: '**Russia access (#37):** evaluate Supabase **Custom Domain** + product SPA domain; if insufficient — RU proxy or static mirror (see **`web/README.md`** → “Access from Russia”).',
+      },
     ],
   },
   {
@@ -2034,6 +2053,24 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Пожелание GitHub **#5**: расширить поиск **фильтрами по группе и цвету** и добавить **сводную статистику** по найденным задачам (после базового поиска по названию на клиенте).',
         en: 'GitHub **#5** asks for **group/color filters** on search plus **aggregate stats** over matches (after baseline client-side title search).',
+      },
+    ],
+  },
+  {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 5,
+    title: {
+      ru: 'Доступность для РФ: деплой и API без VPN',
+      en: 'Russia availability: deploy and API without VPN',
+    },
+    summary: {
+      ru: 'После MVP / в связке с **фазой 12**: выкат **доступного из РФ** контура — свой домен, **Custom Domain** Supabase, **прокси** или **зеркало статики** + cron для push; критерий — вход, синхронизация vault и Web Push без VPN (GitHub **#37**).',
+      en: 'Post-MVP / with **phase 12**: ship an **RU-reachable** stack — product domain, Supabase **Custom Domain**, **proxy** or **static mirror** + push cron; acceptance: sign-in, vault sync, and Web Push work without VPN (GitHub **#37**).',
+    },
+    detailBullets: [
+      {
+        ru: 'Варианты и чеклист — **`web/README.md`** («Доступ из РФ»); не путать с временным VPN для команды.',
+        en: 'Options and checklist — **`web/README.md`** (“Access from Russia”); distinct from temporary team VPN.',
       },
     ],
   },

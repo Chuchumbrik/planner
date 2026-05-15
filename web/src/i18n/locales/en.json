@@ -23,6 +23,7 @@
     "syncReady": "Ready",
     "syncErrorPrefix": "Sync:",
     "syncErrorGeneric": "Could not load or save data. Check your network and try again.",
+    "syncErrorRegionalHint": "In Russia, the app host (Vercel) and API (Supabase) are sometimes unreachable without a VPN — see web/README.md (“Access from Russia”) for team rollout options. A full fix needs a dedicated deploy or proxy (phase 12, ideas in Brief summary).",
     "syncRetry": "Retry",
     "syncIconAria": "Sync status",
     "accountMenuAria": "Account menu",
@@ -489,7 +490,8 @@
     "envHint": "Set {{url}} and {{key}} in {{env}} and on Vercel.",
     "envUrl": "VITE_SUPABASE_URL",
     "envKey": "VITE_SUPABASE_ANON_KEY",
-    "envFile": "web/.env.local"
+    "envFile": "web/.env.local",
+    "networkRegionalHint": "This looks like the app host or API being unreachable from Russia. Team rollout options are in web/README.md (“Access from Russia”)."
   },
   "onboarding": {
     "title": "Encryption key",
