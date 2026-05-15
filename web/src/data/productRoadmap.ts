@@ -325,6 +325,38 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-16', en: '2026-05-16' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.2', en: '0.7.2' },
+        changes: [
+          {
+            ru: '**Vault / #46, #48:** при ошибке **первой** загрузки с сервера **`remoteHydrated`** остаётся **false** (раньше ставился **true** — можно было править без сохранённой строки на сервере); при первом **создании** пустого vault без успешного **upsert** — тоже **false**. Пока гидрация не завершена — **полноэкранный** оверлей с текстом и кнопкой **«Повторить»** при ошибке.',
+            en: '**Vault / #46, #48:** on **initial** fetch failure **`remoteHydrated`** stays **false** (it was **true** before — edits could run without a server row); first **empty** vault without successful **upsert** — also **false**. Until hydrate completes — **full-screen** overlay with copy and **Retry** on error.',
+          },
+          {
+            ru: '**Планировщик / #43, #47:** вкладки **День·Неделя·Месяц** — `min-w-0`, компактнее на узком экране; переключатель **диаграмм** — **иконка** + `aria-label` / `title`. **Месяц:** кнопки **группа/цвет** под **столбчатой** диаграммой (как на неделе).',
+            en: '**Planner / #43, #47:** **Day·Week·Month** tabs — `min-w-0`, tighter on narrow screens; **charts** toggle — **icon** + `aria-label` / `title`. **Month:** **group/color** toggles **below** the **bar** chart (like week).',
+          },
+          {
+            ru: '**Карточка задачи / #45:** пункты чек-листа сдвинуты **правее** (`pl-4` / `md:pl-5`) для читаемости.',
+            en: '**Task card / #45:** checklist rows indented **further right** (`pl-4` / `md:pl-5`).',
+          },
+          {
+            ru: '**Идеи на потом:** GitHub **#44** (сетка недели по слотам + метка EOD), **#49** (админ-мониторинг посещений).',
+            en: '**Ideas for later:** GitHub **#44** (week grid span + EOD marker), **#49** (admin visit monitoring).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Пока «крутится» загрузка vault, весь экран занят пояснением — не нужно искать маленькую иконку синхронизации.',
+            en: 'While the vault loads, a full-screen message explains the wait — no need to hunt for the tiny sync icon.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
       {
@@ -2117,6 +2149,18 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
     ],
   },
   {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 45,
+    title: {
+      ru: 'Неделя: сетка по фактическим задачам и метка EOD',
+      en: 'Week: grid from earliest task and EOD reminder marker',
+    },
+    summary: {
+      ru: 'Пожелание GitHub **#44**: сетка недели **не обязана** показывать весь календарный день — от **раннего** слота до **позднего** + запас; при включённом **push напоминании** завершить день — **метка времени** на вкладках **День** и **Неделя**.',
+      en: 'GitHub **#44**: week grid can **span only busy hours** (earliest to latest slot plus padding); with **EOD push reminder** on, show a **time marker** on **Day** and **Week**.',
+    },
+  },
+  {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 5,
     title: {
@@ -2133,6 +2177,18 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
         en: 'Options and checklist — **`web/README.md`** (“Access from Russia”); distinct from temporary team VPN.',
       },
     ],
+  },
+  {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 7,
+    title: {
+      ru: 'Админ: мониторинг посещений',
+      en: 'Admin: visit analytics',
+    },
+    summary: {
+      ru: 'Пожелание GitHub **#49**: пункт **«Мониторинг»** для **admin** — график посещений с фильтром по роли и периоду; нужны **события** на сервере (Edge/аналитика), приватность и согласование с **DR-007**.',
+      en: 'GitHub **#49**: **Monitoring** for **admins** — visit chart with role and time filters; needs **server-side events** (Edge/analytics), privacy, alignment with **DR-007**.',
+    },
   },
   {
     ideaLaterGroup: 'reliability_accounts',

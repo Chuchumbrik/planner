@@ -208,7 +208,7 @@ export function TaskMiniCard({
         </button>
       </div>
       {task.checklist.length > 0 && onToggleChecklistItem ? (
-        <ul className="border-t border-zinc-800/90 px-3 pb-2 pt-2">
+        <ul className="border-t border-zinc-800/90 pl-4 pr-3 pb-2 pt-2 md:pl-5">
           {task.checklist.map((item) => {
             const cid = `${checklistFieldId}-${item.id}`
             return (

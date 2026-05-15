@@ -18,6 +18,8 @@
     "dayTitle": "День",
     "settings": "Настройки",
     "syncLoadingVault": "Загрузка vault с сервера…",
+    "syncBlockingTitle": "Подключаемся к серверу",
+    "syncBlockingHint": "Пока данные не загрузились, правки отключены — так задачи не потеряются при обрыве сети.",
     "syncSaving": "Сохранение…",
     "syncDone": "Синхронизировано {{time}}",
     "syncReady": "Готово к работе",
