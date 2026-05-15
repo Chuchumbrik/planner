@@ -328,6 +328,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.64', en: '0.6.64' },
+        changes: [
+          {
+            ru: '**Настройки / #39:** смена роли на **обычный пользователь** снова сохраняется — Edge **`admin-motivator-roles`** пишет **`motivator_role: null`** (мерж Supabase не удалял ключ при `delete`); карточки секций и блок ролей на телефоне — в стиле `/app`.',
+            en: '**Settings / #39:** demoting to **regular user** persists again — Edge **`admin-motivator-roles`** sets **`motivator_role: null`** (Supabase merge kept the key after `delete`); settings section cards and admin roles on phone match `/app` styling.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Если в списке пользователей выбрали «обычный пользователь», роль больше не откатывается к бета-тестеру после обновления.',
+            en: 'Choosing “regular user” in the admin list no longer snaps back to beta tester after refresh.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.63', en: '0.6.63' },
         changes: [
           {

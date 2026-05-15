@@ -108,6 +108,8 @@ const MIN_ACCOUNT_PASSWORD_LEN = 6
 /** Дефолт времени EOD push-напоминания (20:30 локально). */
 const EOD_DEFAULT_PUSH_REMINDER_MINUTES = 20 * 60 + 30
 
+const SETTINGS_CARD = 'rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3'
+
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
   const { signOut, session, updatePassword, isAdmin } = useAuth()
@@ -207,14 +209,14 @@ function SettingsPageInner() {
   const sortedGroups = [...vault.groups].sort((a, b) => a.sortOrder - b.sortOrder)
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-8">
-      <div className="mb-6">
+    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-8 pb-12">
+      <header className="mb-6">
         <Link className="text-sm text-emerald-400 hover:text-emerald-300" to="/app">
           {t('settings.back')}
         </Link>
-      </div>
-      <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
-      <p className="mt-2 text-sm text-zinc-400">{t('settings.seedHint')}</p>
+        <h1 className="mt-3 text-xl font-semibold text-white">{t('settings.title')}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-400">{t('settings.seedHint')}</p>
+      </header>
       {savePending ? (
         <p className="mt-3 text-xs text-zinc-500" role="status" aria-live="polite">
           {t('settings.savePending')}
@@ -228,7 +230,7 @@ function SettingsPageInner() {
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('settings.priorityLabelsTitle')}</h2>
         <p className="mt-2 text-xs text-zinc-500">{t('settings.priorityLabelsHelp')}</p>
-        <div className="mt-4 flex flex-col gap-3">
+        <div className={`mt-4 flex flex-col gap-3 ${SETTINGS_CARD}`}>
           {PRIORITY_RANKS.map((rank) => (
             <PriorityLabelField
               key={`${rank}-${vault.priorityLabels[rank]}`}
@@ -430,20 +432,25 @@ function SettingsPageInner() {
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('common.language')}</h2>
-        <select
-          className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white"
-          value={i18n.language === 'en' ? 'en' : 'ru'}
-          onChange={(e) => void i18n.changeLanguage(e.target.value)}
-        >
-          <option value="ru">{t('common.langRuFlag')}</option>
-          <option value="en">{t('common.langEnFlag')}</option>
-        </select>
+        <div className={`mt-4 ${SETTINGS_CARD}`}>
+          <select
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
+            value={i18n.language === 'en' ? 'en' : 'ru'}
+            onChange={(e) => void i18n.changeLanguage(e.target.value)}
+          >
+            <option value="ru">{t('common.langRuFlag')}</option>
+            <option value="en">{t('common.langEnFlag')}</option>
+          </select>
+        </div>
       </section>
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('settings.accountPasswordTitle')}</h2>
         <p className="mt-2 text-xs text-zinc-500">{t('settings.accountPasswordHelp')}</p>
-        <form className="mt-4 flex flex-col gap-3" onSubmit={(e) => void handlePasswordSubmit(e)}>
+        <form
+          className={`mt-4 flex flex-col gap-3 ${SETTINGS_CARD}`}
+          onSubmit={(e) => void handlePasswordSubmit(e)}
+        >
           <label className="flex flex-col gap-1 text-xs text-zinc-500">
             <span>{t('settings.currentPassword')}</span>
             <input

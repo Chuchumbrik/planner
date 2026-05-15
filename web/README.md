@@ -4,7 +4,7 @@
 
 **Целевой объём MVP для разработки** (релиз продукта **v1.0.0**) зафиксирован в [`obsidian-motivator/16-TZ-MVP-v1.0.md`](../obsidian-motivator/16-TZ-MVP-v1.0.md); поэтапный план внедрения — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md).
 
-**Текущая версия веб-клиента** в репозитории: **`0.6.63`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
+**Текущая версия веб-клиента** в репозитории: **`0.6.64`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
 
 ### Версионирование
 
@@ -354,7 +354,7 @@ curl.exe -s -S -X POST "https://planner-tawny-omega.vercel.app/api/defect-attach
 
 - **Назначение:** для пользователя с **`app_metadata.motivator_role === admin`** — получить список учётных записей **Supabase Auth** и изменить **`motivator_role`** (`admin` / `beta_tester` / обычный пользователь — снятие ключа) у любого пользователя по **UUID**. Вызов только с JWT сессии; проверка роли через **Service Role** на Edge.
 - **UI:** экран **`/settings`**, блок **«Пользователи и роли»** ([`web/src/components/AdminMotivatorRolePanel.tsx`](./src/components/AdminMotivatorRolePanel.tsx)): поиск по подстроке **email** или **UUID** (фильтр на клиенте после загрузки списка), выпадающий список роли в строке, кнопка обновления списка. После смены **своей** роли выполняется **`refreshSession()`**.
-- **Edge:** [`web/supabase/functions/admin-motivator-roles/index.ts`](./supabase/functions/admin-motivator-roles/index.ts) — тело JSON: `{ "action": "list" }` или `{ "action": "setRole", "userId": "<uuid>", "role": "admin" | "beta_tester" | "user" }`. Список собирается постранично через **`auth.admin.listUsers`** (до **40** страниц по **100** записей; при необходимости увеличьте лимиты в коде).
+- **Edge:** [`web/supabase/functions/admin-motivator-roles/index.ts`](./supabase/functions/admin-motivator-roles/index.ts) — тело JSON: `{ "action": "list" }` или `{ "action": "setRole", "userId": "<uuid>", "role": "admin" | "beta_tester" | "user" }`. Список собирается постранично через **`auth.admin.listUsers`** (до **40** страниц по **100** записей; при необходимости увеличьте лимиты в коде). Для роли **`user`** Edge выставляет **`motivator_role: null`** в **`app_metadata`** (GoTrue **мержит** метаданные: простое удаление ключа из объекта **не** снимает роль — см. фикс **#39**).
 - **Секреты:** те же **`SUPABASE_URL`**, **`SUPABASE_ANON_KEY`**, **`SUPABASE_SERVICE_ROLE_KEY`**, что и у **`file-defect`** (отдельные GitHub-секреты **не** нужны).
 
 **Деплой:** `npx supabase functions deploy admin-motivator-roles --project-ref ntpkveicqetjjvlnfrwc` (для задокументированного проекта; иначе тот же **project ref**, что в **`VITE_SUPABASE_URL`**).

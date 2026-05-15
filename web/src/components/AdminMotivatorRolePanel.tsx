@@ -148,12 +148,13 @@ export function AdminMotivatorRolePanel({
       <h2 className="text-sm font-medium text-zinc-300">{t('settings.adminRolesTitle')}</h2>
       <p className="mt-2 text-xs text-zinc-500">{t('settings.adminRolesHelp')}</p>
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <input
           type="search"
           autoComplete="off"
           placeholder={t('settings.adminRolesSearchPlaceholder')}
-          className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600"
+          className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-600"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -184,7 +185,7 @@ export function AdminMotivatorRolePanel({
         {filtered.map((u) => {
           const busy = rowBusyId === u.id
           return (
-            <div key={u.id} className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3">
+            <div key={u.id} className="rounded-lg border border-zinc-700/80 bg-zinc-950/60 px-3 py-3">
               <div className="min-w-0 break-all text-sm text-zinc-200">{u.email || u.id}</div>
               {u.id === currentUserId ? (
                 <div className="mt-0.5 text-[10px] text-zinc-600">{t('settings.adminRolesYou')}</div>
@@ -194,7 +195,7 @@ export function AdminMotivatorRolePanel({
                   {t('settings.adminRolesColRole')}
                 </span>
                 <select
-                  className="w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-white disabled:opacity-40"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white disabled:opacity-40"
                   value={u.motivator_role}
                   disabled={busy || loadBusy}
                   onChange={(e) => {
@@ -213,7 +214,7 @@ export function AdminMotivatorRolePanel({
         })}
       </div>
 
-      <div className="mt-4 hidden overflow-x-auto rounded-lg border border-zinc-800 md:block">
+        <div className="mt-4 hidden overflow-x-auto rounded-lg border border-zinc-700/80 bg-zinc-950/40 md:block">
         <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-800 bg-zinc-900/60 text-xs uppercase tracking-wide text-zinc-500">
@@ -243,7 +244,7 @@ export function AdminMotivatorRolePanel({
                   </td>
                   <td className="px-3 py-2 align-middle">
                     <select
-                      className="w-full max-w-[11rem] rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-white disabled:opacity-40"
+                      className="w-full max-w-[11rem] rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white disabled:opacity-40"
                       value={u.motivator_role}
                       disabled={busy || loadBusy}
                       onChange={(e) => {
@@ -262,6 +263,7 @@ export function AdminMotivatorRolePanel({
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </section>
   )
