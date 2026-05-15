@@ -328,6 +328,25 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.61', en: '0.6.61' },
+        changes: [
+          {
+            ru: '**Планировщик `/app` / #21:** переключатель **День · Неделя · Месяц** — **сегментированные вкладки**, не отдельные кнопки.',
+            en: '**Planner `/app` / #21:** **Day · Week · Month** switcher uses a **segmented tab** control instead of separate buttons.',
+          },
+          {
+            ru: '**Настройки `/settings` / #22–#26:** явная кнопка **сброса времени EOD push** на 20:30; **флаги** в выборе языка; режим уведомлений — **черновик + «Сохранить»** (кнопка неактивна без изменений); информер **«Сохранение…» / «Сохранено»**; блок QA «завести дефект» убран (есть глобальная кнопка); **пользователи и роли** — карточки на телефоне без горизонтального скролла (#23).',
+            en: '**Settings `/settings` / #22–#26:** explicit **EOD push time reset** to 20:30; **flags** in language picker; notification mode **draft + Save** (disabled when unchanged); **Saving… / Saved** status; settings QA defect block removed (global button remains); **users & roles** — **card layout on phone** (#23).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Вид дня/недели/месяца читается как вкладки; в настройках понятнее, когда изменения уже на сервере.',
+            en: 'Day/week/month reads as tabs; settings make it clearer when changes have synced.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.60', en: '0.6.60' },
         changes: [
           {

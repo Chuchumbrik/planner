@@ -878,21 +878,33 @@ function AppPageInner() {
         </div>
       </header>
 
-      <nav className="mb-4 flex flex-wrap gap-2 border-b border-zinc-800 pb-3">
-        {(['day', 'week', 'month'] as const).map((v) => (
-          <button
-            key={v}
-            type="button"
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-              view === v
-                ? 'bg-emerald-600 text-emerald-950'
-                : 'border border-zinc-700 text-zinc-300 hover:bg-zinc-900'
-            }`}
-            onClick={() => handleTab(v)}
-          >
-            {v === 'day' ? t('app.viewDay') : v === 'week' ? t('app.viewWeek') : t('app.viewMonth')}
-          </button>
-        ))}
+      <nav className="mb-4 border-b border-zinc-800 pb-3" aria-label={t('app.viewNavAria')}>
+        <div
+          className="inline-flex w-full max-w-md rounded-lg border border-zinc-700/90 bg-zinc-900/50 p-0.5"
+          role="tablist"
+        >
+          {(['day', 'week', 'month'] as const).map((v) => {
+            const active = view === v
+            const label =
+              v === 'day' ? t('app.viewDay') : v === 'week' ? t('app.viewWeek') : t('app.viewMonth')
+            return (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                className={`min-w-0 flex-1 rounded-md px-2 py-1.5 text-center text-sm font-medium transition-colors sm:px-3 ${
+                  active
+                    ? 'bg-zinc-800 text-emerald-300 shadow-sm ring-1 ring-zinc-600/80'
+                    : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'
+                }`}
+                onClick={() => handleTab(v)}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
       </nav>
 
       {remoteError ? (

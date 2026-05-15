@@ -8,7 +8,9 @@
     "add": "Добавить",
     "language": "Язык",
     "langRu": "Русский",
-    "langEn": "English"
+    "langEn": "English",
+    "langRuFlag": "🇷🇺 Русский",
+    "langEnFlag": "🇬🇧 English"
   },
   "app": {
     "brand": "Мотиватор",
@@ -99,6 +101,7 @@
     "doubleConfirmCancelPending": "Отменить ожидание",
     "doubleConfirmBadge": "Подтвердить",
     "doubleConfirmTimeLeft": "Осталось ~{{minutes}} мин на подтверждение",
+    "viewNavAria": "Режим просмотра планировщика",
     "viewDay": "День",
     "viewWeek": "Неделя",
     "viewMonth": "Месяц",
@@ -253,6 +256,9 @@
     "eodPushReminderToggle": "Напомнить в выбранное время, если сегодня ритуал ещё не пройден",
     "eodPushReminderHelp": "Один раз в день в локальное время (если ритуал включён и день ещё не в списке завершённых). Требуется режим уведомлений «гибрид» или «полный» и настроенный cron для Edge send-due.",
     "eodPushReminderTime": "Время напоминания",
+    "eodPushReminderResetDefault": "Сбросить на {{time}}",
+    "savePending": "Сохранение настроек…",
+    "saveDone": "Настройки сохранены",
     "eodPushReminderNeedNotifications": "Включите уведомления (не «выключено»), чтобы напоминание попало в расписание.",
     "notificationsTitle": "Уведомления (Web Push)",
     "notificationsHelp": "Режим хранится в зашифрованном vault. В гибридном и полном режиме клиент после расшифровки синхронизирует в Supabase расписание срабатываний по времени начала или завершения задачи в плане (см. web/README). Фактическую отправку push выполняют Edge Function и cron после их настройки в проекте.",
