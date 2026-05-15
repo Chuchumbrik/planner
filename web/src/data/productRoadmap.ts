@@ -328,6 +328,29 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-15', en: '2026-05-15' },
     items: [
       {
+        releasedInVersion: { ru: '0.6.62', en: '0.6.62' },
+        changes: [
+          {
+            ru: '**Планировщик / #19–#20:** на мобилке **кольцо и столбчатая диаграмма** делят ширину поровну; **скрытие диаграмм** на всех вкладках (localStorage, кнопка у переключателя вида).',
+            en: '**Planner / #19–#20:** on mobile, **ring and bar chart** share width equally; **hide charts** on all tabs (localStorage, toggle near view switcher).',
+          },
+          {
+            ru: '**Редактирование задачи / #29:** у повторов — **убрать из плана на этот день** (`skippedOccurrenceLocalDates`) или **удалить задачу целиком**.',
+            en: '**Task edit / #29:** for repeats — **remove from this day’s plan** (`skippedOccurrenceLocalDates`) or **delete entire task**.',
+          },
+          {
+            ru: '**Настройки / #28:** снятие **admin** с себя — **двойное** подтверждение; смена роли **другому** пользователю — одно предупреждение.',
+            en: '**Settings / #28:** demoting **your own** admin role — **double** confirm; changing **another** user’s role — single prompt.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Диаграммы можно спрятать, если мешают; повторяющуюся задачу можно убрать только с выбранного дня.',
+            en: 'You can hide charts if they clutter the view; a recurring task can be removed from one day only.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.6.61', en: '0.6.61' },
         changes: [
           {
@@ -1985,6 +2008,15 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
         en: 'Wording from GitHub feedback **#4**; when mirroring to Obsidian, align with **`15-Идеи-для-развития.md`** (habits section).',
       },
     ],
+  },
+  {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 35,
+    title: { ru: 'Настройки: drag-and-drop приоритетов и групп', en: 'Settings: drag-and-drop priorities and groups' },
+    summary: {
+      ru: 'Перетаскивание для смены порядка групп и «критичности» приоритетов (1–5) без ручного ввода номеров — GitHub **#27**.',
+      en: 'Drag-and-drop to reorder groups and priority ranks (1–5) without retyping levels — GitHub **#27**.',
+    },
   },
   {
     ideaLaterGroup: 'everyday_core',

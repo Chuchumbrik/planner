@@ -80,6 +80,11 @@ export type Task = {
    */
   completedOccurrenceLocalDates: string[]
   /**
+   * Для задач с повтором: локальные дни (YYYY-MM-DD), когда вхождение **убрано из плана**
+   * («удалить только этот день»), без удаления всей серии.
+   */
+  skippedOccurrenceLocalDates?: string[]
+  /**
    * Участвует во вечернем ритуале End-of-Day ([[DR-002]]). По умолчанию true.
    */
   includeInEodRitual?: boolean

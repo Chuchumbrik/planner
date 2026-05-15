@@ -57,9 +57,14 @@ export function recurrenceRuleMatchesDate(task: Task, dateKey: string): boolean 
  * Есть ли у задачи слот на календарный день — **включая** уже выполненное вхождение повтора
  * и выполненную разовую задачу с этой датой в плане (для списков «выполненные внизу»).
  */
+export function isOccurrenceSkippedOnDate(task: Task, dateKey: string): boolean {
+  return (task.skippedOccurrenceLocalDates ?? []).includes(dateKey)
+}
+
 export function taskHasOccurrenceOnDate(task: Task, dateKey: string): boolean {
   if (task.recurrence) {
     if (task.done) return false
+    if (isOccurrenceSkippedOnDate(task, dateKey)) return false
     return recurrenceRuleMatchesDate(task, dateKey)
   }
   return task.scheduledLocalDate === dateKey

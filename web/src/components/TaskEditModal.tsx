@@ -86,6 +86,8 @@ type Props = {
   onApplyTaskPatch: (patch: Partial<Task>) => void
   onClose: () => void
   onRemove: () => void
+  /** Повтор: убрать только вхождение на occurrenceDayKey (серия остаётся). */
+  onSkipOccurrenceForDay?: (dateKey: string) => void
   onSetColor: (key: TaskColorKey) => void
   onSetGroup: (groupId: string) => void
   onSetPriorityRank: (rank: Task['priorityRank']) => void
@@ -112,6 +114,7 @@ export function TaskEditModal({
   onApplyTaskPatch,
   onClose,
   onRemove,
+  onSkipOccurrenceForDay,
   onSetColor,
   onSetGroup,
   onSetPriorityRank,
@@ -309,11 +312,19 @@ export function TaskEditModal({
     })
   }
 
-  function requestRemove() {
+  function requestRemoveEntireTask() {
     if (task.checklist.length > 0) {
       if (!window.confirm(t('app.confirmDeleteTaskWithChecklist'))) return
     }
+    if (task.recurrence && !window.confirm(t('app.confirmDeleteTaskEntire'))) return
     onRemove()
+    onClose()
+  }
+
+  function requestSkipOccurrence() {
+    if (!onSkipOccurrenceForDay) return
+    if (!window.confirm(t('app.confirmSkipOccurrenceForDay', { date: occurrenceDayKey }))) return
+    onSkipOccurrenceForDay(occurrenceDayKey)
     onClose()
   }
 
@@ -980,10 +991,20 @@ export function TaskEditModal({
             type="button"
             disabled={!canEdit}
             className="rounded-lg border border-red-900/50 px-3 py-2 text-sm text-red-300 hover:bg-red-950/40 disabled:opacity-40"
-            onClick={() => requestRemove()}
+            onClick={() => requestRemoveEntireTask()}
           >
-            {t('common.delete')}
+            {task.recurrence ? t('app.deleteTaskEntireSeries') : t('common.delete')}
           </button>
+          {task.recurrence && onSkipOccurrenceForDay ? (
+            <button
+              type="button"
+              disabled={!canEdit}
+              className="rounded-lg border border-amber-900/50 px-3 py-2 text-sm text-amber-200 hover:bg-amber-950/40 disabled:opacity-40"
+              onClick={() => requestSkipOccurrence()}
+            >
+              {t('app.removeFromPlanThisDay')}
+            </button>
+          ) : null}
           <button
             type="button"
             className="ml-auto rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"

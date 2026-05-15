@@ -15,6 +15,7 @@ import { TaskEditModal } from '@/components/TaskEditModal'
 import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
 import { tasksVisibleInPlannerView } from '@/lib/plannerFilterScope'
+import { readPlannerChartsHidden, writePlannerChartsHidden } from '@/lib/plannerChartsPref'
 import {
   DEFAULT_GROUP_ID,
   PRIORITY_RANKS,
@@ -225,6 +226,7 @@ function AppPageInner() {
     deleteDraft,
     toggleTask,
     removeTask,
+    skipTaskOccurrenceForDay,
     setTaskColor,
     setTaskGroup,
     addChecklistItem,
@@ -276,6 +278,9 @@ function AppPageInner() {
   const accountMenuRef = useRef<HTMLDivElement>(null)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const [roadmapModalOpen, setRoadmapModalOpen] = useState(false)
+  const [chartsHidden, setChartsHidden] = useState(() =>
+    typeof window !== 'undefined' ? readPlannerChartsHidden() : false,
+  )
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
@@ -878,7 +883,8 @@ function AppPageInner() {
         </div>
       </header>
 
-      <nav className="mb-4 border-b border-zinc-800 pb-3" aria-label={t('app.viewNavAria')}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+      <nav aria-label={t('app.viewNavAria')}>
         <div
           className="inline-flex w-full max-w-md rounded-lg border border-zinc-700/90 bg-zinc-900/50 p-0.5"
           role="tablist"
@@ -906,6 +912,21 @@ function AppPageInner() {
           })}
         </div>
       </nav>
+      <button
+        type="button"
+        className="shrink-0 rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+        aria-pressed={chartsHidden}
+        onClick={() => {
+          setChartsHidden((prev) => {
+            const next = !prev
+            writePlannerChartsHidden(next)
+            return next
+          })
+        }}
+      >
+        {chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+      </button>
+      </div>
 
       {remoteError ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
@@ -1309,9 +1330,11 @@ function AppPageInner() {
                   </ul>
                 )}
               </div>
-              <div className="flex w-full min-w-0 flex-1 justify-center lg:min-h-[1px] lg:justify-center lg:pt-0.5">
-                <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
-              </div>
+              {!chartsHidden ? (
+                <div className="flex w-full min-w-0 flex-1 justify-center lg:min-h-[1px] lg:justify-center lg:pt-0.5">
+                  <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
+                </div>
+              ) : null}
             </div>
           </section>
 
@@ -1398,10 +1421,10 @@ function AppPageInner() {
                 onTaskClick={(id, day) => openTaskEditor(id, day)}
               />
             </div>
-            {weekPlanProgress.plannedTaskCount > 0 ? (
+            {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
               <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:pt-1">
-                <div className="flex min-h-0 flex-row items-stretch gap-2 lg:flex-col lg:gap-2">
-                  <div className="flex w-[min(104px,28vw)] max-w-[112px] shrink-0 justify-center self-start lg:w-full lg:max-w-none">
+                <div className="flex min-h-0 w-full flex-row items-stretch gap-2 lg:flex-col lg:gap-2">
+                  <div className="flex min-h-0 min-w-0 flex-1 basis-0 justify-center">
                     <PeriodPlanDonut
                       progress={weekPlanProgress}
                       title={t('app.periodPlanWeekRingTitle')}
@@ -1514,7 +1537,7 @@ function AppPageInner() {
                 }}
               />
             </div>
-            {monthPlanProgress.plannedTaskCount > 0 ? (
+            {monthPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
               <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:justify-end lg:pt-1">
                 <PeriodPlanDonut
                   progress={monthPlanProgress}
@@ -1589,6 +1612,11 @@ function AppPageInner() {
           onApplyTaskPatch={(patch) => void patchTask(editingTask.id, patch)}
           onClose={closeTaskEditor}
           onRemove={() => void removeTask(editingTask.id)}
+          onSkipOccurrenceForDay={
+            editingTask.recurrence
+              ? (dayKey) => void skipTaskOccurrenceForDay(editingTask.id, dayKey)
+              : undefined
+          }
           onSetColor={(key) => void setTaskColor(editingTask.id, key)}
           onSetGroup={(gid) => void setTaskGroup(editingTask.id, gid)}
           onSetPriorityRank={(rank) => void setTaskPriorityRank(editingTask.id, rank)}

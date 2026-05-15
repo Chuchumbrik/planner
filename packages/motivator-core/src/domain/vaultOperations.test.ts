@@ -6,12 +6,14 @@ import {
   applyCreateTask,
   applyDeleteGroup,
   applyRemoveTask,
+  applySkipTaskOccurrenceForDay,
   applyRenameGroup,
   applySetEodEnabled,
   applySetNotificationDeliveryMode,
   applyToggleChecklistItem,
 } from './vaultOperations'
 import { localDateKey } from '../lib/localDate'
+import { taskOccursOnDate } from '../lib/recurrence'
 import { DEFAULT_GROUP_ID, emptyVault } from '../vault/types'
 
 const deps = {
@@ -63,6 +65,32 @@ describe('vaultOperations', () => {
     const id = v.tasks[0]!.id
     const cut = applyRemoveTask(v, id)
     expect(cut.tasks).toHaveLength(0)
+  })
+
+  it('applySkipTaskOccurrenceForDay убирает вхождение с дня без удаления задачи', () => {
+    const v = applyCreateTask(
+      emptyVault(),
+      {
+        title: 'Repeat',
+        groupId: DEFAULT_GROUP_ID,
+        colorKey: 'zinc',
+        priorityRank: 3,
+        scheduledLocalDate: '2026-05-10',
+        estimatedMinutes: null,
+        timeMode: 'none',
+        timeMinutesFromMidnight: null,
+        recurrence: { kind: 'daily' },
+        recurrenceAnchorLocalDate: '2026-05-10',
+      },
+      deps,
+    )
+    const id = v.tasks[0]!.id
+    const next = applySkipTaskOccurrenceForDay(v, id, '2026-05-12', deps)
+    const task = next.tasks[0]!
+    expect(task.skippedOccurrenceLocalDates).toContain('2026-05-12')
+    expect(taskOccursOnDate(task, '2026-05-12')).toBe(false)
+    expect(taskOccursOnDate(task, '2026-05-11')).toBe(true)
+    expect(next.tasks).toHaveLength(1)
   })
 
   it('applyRenameGroup не меняет vault при пустом имени (через домен)', () => {
