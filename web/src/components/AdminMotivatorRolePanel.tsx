@@ -161,8 +161,46 @@ export function AdminMotivatorRolePanel({
 
       <p className="mt-3 text-xs text-amber-600/85">{t('settings.adminRolesSelfHint')}</p>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-800">
-        <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
+      <div className="mt-4 flex flex-col gap-2 md:hidden">
+        {filtered.length === 0 && !loadBusy ? (
+          <p className="rounded-lg border border-zinc-800 px-3 py-6 text-center text-xs text-zinc-500">
+            {t('settings.adminRolesEmpty')}
+          </p>
+        ) : null}
+        {filtered.map((u) => {
+          const busy = rowBusyId === u.id
+          return (
+            <div key={u.id} className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3">
+              <div className="min-w-0 break-all text-sm text-zinc-200">{u.email || u.id}</div>
+              {u.id === currentUserId ? (
+                <div className="mt-0.5 text-[10px] text-zinc-600">{t('settings.adminRolesYou')}</div>
+              ) : null}
+              <label className="mt-2 flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+                  {t('settings.adminRolesColRole')}
+                </span>
+                <select
+                  className="w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-white disabled:opacity-40"
+                  value={u.motivator_role}
+                  disabled={busy || loadBusy}
+                  onChange={(e) => {
+                    const v = e.target.value as MotivatorRoleRow['motivator_role']
+                    if (v === u.motivator_role) return
+                    void applyRole(u.id, v)
+                  }}
+                >
+                  <option value="user">{t('settings.adminRolesOptionUser')}</option>
+                  <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
+                  <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
+                </select>
+              </label>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="mt-4 hidden overflow-x-auto rounded-lg border border-zinc-800 md:block">
+        <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-800 bg-zinc-900/60 text-xs uppercase tracking-wide text-zinc-500">
               <th className="px-3 py-2 font-medium">{t('settings.adminRolesColEmail')}</th>

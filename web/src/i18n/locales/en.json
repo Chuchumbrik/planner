@@ -8,7 +8,9 @@
     "add": "Add",
     "language": "Language",
     "langRu": "Russian",
-    "langEn": "English"
+    "langEn": "English",
+    "langRuFlag": "🇷🇺 Russian",
+    "langEnFlag": "🇬🇧 English"
   },
   "app": {
     "brand": "Motivator",
@@ -99,6 +101,7 @@
     "doubleConfirmCancelPending": "Cancel waiting",
     "doubleConfirmBadge": "Confirm",
     "doubleConfirmTimeLeft": "~{{minutes}} min left to confirm",
+    "viewNavAria": "Planner view mode",
     "viewDay": "Day",
     "viewWeek": "Week",
     "viewMonth": "Month",
@@ -253,6 +256,9 @@
     "eodPushReminderToggle": "Remind at the chosen time if today’s ritual is not done yet",
     "eodPushReminderHelp": "Once per day at local time (ritual enabled and today not yet in completed EOD dates). Requires hybrid/full notification mode and a cron hitting the send-due Edge function.",
     "eodPushReminderTime": "Reminder time",
+    "eodPushReminderResetDefault": "Reset to {{time}}",
+    "savePending": "Saving settings…",
+    "saveDone": "Settings saved",
     "eodPushReminderNeedNotifications": "Turn notifications on (not “off”) so the reminder can be scheduled.",
     "notificationsTitle": "Notifications (Web Push)",
     "notificationsHelp": "The mode is stored in your encrypted vault. In hybrid and full modes, the client syncs a schedule of task start/end times to Supabase after decrypt (see web/README). Actual push delivery requires the Edge Function and a cron job configured for your project.",

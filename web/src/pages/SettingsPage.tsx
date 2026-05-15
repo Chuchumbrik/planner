@@ -1,8 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
-import { useDefectReport } from '@/defect/useDefectReport'
 import { AdminMotivatorRolePanel } from '@/components/AdminMotivatorRolePanel'
 import { RequireVault } from '@/components/RequireVault'
 import { supabase } from '@/lib/supabase'
@@ -106,16 +105,18 @@ function PriorityLabelField({
 }
 
 const MIN_ACCOUNT_PASSWORD_LEN = 6
+/** Дефолт времени EOD push-напоминания (20:30 локально). */
+const EOD_DEFAULT_PUSH_REMINDER_MINUTES = 20 * 60 + 30
 
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
-  const { signOut, session, updatePassword, isAdmin, isBetaTester } = useAuth()
-  const { openDefectReport } = useDefectReport()
+  const { signOut, session, updatePassword, isAdmin } = useAuth()
   const {
     lock,
     vault,
     remoteHydrated,
     decryptFailed,
+    savePending,
     addGroup,
     renameGroup,
     deleteGroup,
@@ -137,18 +138,36 @@ function SettingsPageInner() {
   const [notifPushHint, setNotifPushHint] = useState<string | null>(null)
   const [testPushBusy, setTestPushBusy] = useState(false)
   const [testPushError, setTestPushError] = useState<string | null>(null)
+  const [notifModeDraft, setNotifModeDraft] = useState<NotificationDeliveryMode>('off')
+  const [notifModeSaving, setNotifModeSaving] = useState(false)
+  const [savedFlash, setSavedFlash] = useState(false)
+  const savePendingWasRef = useRef(false)
 
   const deliveryMode: NotificationDeliveryMode =
     vault.notificationPreferences?.deliveryMode ?? 'off'
+
+  useEffect(() => {
+    setNotifModeDraft(deliveryMode)
+  }, [deliveryMode])
+
+  useEffect(() => {
+    if (savePendingWasRef.current && !savePending && remoteHydrated && !decryptFailed) {
+      setSavedFlash(true)
+      const id = window.setTimeout(() => setSavedFlash(false), 2500)
+      savePendingWasRef.current = false
+      return () => window.clearTimeout(id)
+    }
+    savePendingWasRef.current = savePending
+  }, [savePending, remoteHydrated, decryptFailed])
   const eodPushReminder = vault.eodPreferences?.pushReminderMinutesFromMidnight
   const eodPushReminderOn = typeof eodPushReminder === 'number'
   const eodPushTimeValue = eodPushReminderOn
     ? formatMinutesAsTimeValue(eodPushReminder)
-    : formatMinutesAsTimeValue(20 * 60 + 30)
+    : formatMinutesAsTimeValue(EOD_DEFAULT_PUSH_REMINDER_MINUTES)
 
   const hasEmailLogin = Boolean(session?.user?.email)
   const canEdit = remoteHydrated && !decryptFailed
-  const showQaSection = Boolean(supabase && (isAdmin || isBetaTester))
+  const notifModeDirty = notifModeDraft !== deliveryMode
 
   async function handleSignOut() {
     await lock()
@@ -196,6 +215,15 @@ function SettingsPageInner() {
       </div>
       <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
       <p className="mt-2 text-sm text-zinc-400">{t('settings.seedHint')}</p>
+      {savePending ? (
+        <p className="mt-3 text-xs text-zinc-500" role="status" aria-live="polite">
+          {t('settings.savePending')}
+        </p>
+      ) : savedFlash ? (
+        <p className="mt-3 text-xs text-emerald-400/90" role="status" aria-live="polite">
+          {t('settings.saveDone')}
+        </p>
+      ) : null}
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('settings.priorityLabelsTitle')}</h2>
@@ -268,7 +296,7 @@ function SettingsPageInner() {
                 const initial =
                   typeof vault.eodPreferences?.pushReminderMinutesFromMidnight === 'number'
                     ? vault.eodPreferences.pushReminderMinutesFromMidnight
-                    : 20 * 60 + 30
+                    : EOD_DEFAULT_PUSH_REMINDER_MINUTES
                 void setEodPushReminderMinutes(initial)
               } else {
                 void setEodPushReminderMinutes(null)
@@ -277,20 +305,41 @@ function SettingsPageInner() {
           />
           <span className="text-sm leading-snug text-zinc-300">{t('settings.eodPushReminderToggle')}</span>
         </label>
-        <label className="mt-3 flex flex-col gap-1">
-          <span className="text-xs text-zinc-500">{t('settings.eodPushReminderTime')}</span>
-          <input
-            type="time"
-            step={60}
-            className="max-w-[12rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-            value={eodPushTimeValue}
-            disabled={!canEdit || vault.eodPreferences?.enabled === false || deliveryMode === 'off' || !eodPushReminderOn}
-            onChange={(e) => {
-              const parsed = minutesFromTimeInputValue(e.target.value)
-              if (parsed !== null) void setEodPushReminderMinutes(parsed)
-            }}
-          />
-        </label>
+        <div className="mt-3 flex flex-wrap items-end gap-2">
+          <label className="flex min-w-0 flex-col gap-1">
+            <span className="text-xs text-zinc-500">{t('settings.eodPushReminderTime')}</span>
+            <input
+              type="time"
+              step={60}
+              className="max-w-[12rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              value={eodPushTimeValue}
+              disabled={
+                !canEdit || vault.eodPreferences?.enabled === false || deliveryMode === 'off' || !eodPushReminderOn
+              }
+              onChange={(e) => {
+                const parsed = minutesFromTimeInputValue(e.target.value)
+                if (parsed !== null) void setEodPushReminderMinutes(parsed)
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={
+              !canEdit ||
+              vault.eodPreferences?.enabled === false ||
+              deliveryMode === 'off' ||
+              !eodPushReminderOn ||
+              (typeof eodPushReminder !== 'number' ||
+                eodPushReminder === EOD_DEFAULT_PUSH_REMINDER_MINUTES)
+            }
+            className="shrink-0 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-700 disabled:opacity-40"
+            onClick={() => void setEodPushReminderMinutes(EOD_DEFAULT_PUSH_REMINDER_MINUTES)}
+          >
+            {t('settings.eodPushReminderResetDefault', {
+              time: formatMinutesAsTimeValue(EOD_DEFAULT_PUSH_REMINDER_MINUTES),
+            })}
+          </button>
+        </div>
       </section>
 
       <section className="mt-8">
@@ -309,15 +358,26 @@ function SettingsPageInner() {
                 type="radio"
                 name="notification-delivery"
                 className="mt-1"
-                checked={deliveryMode === value}
-                disabled={!canEdit}
-                onChange={() => void setNotificationDeliveryMode(value)}
+                checked={notifModeDraft === value}
+                disabled={!canEdit || notifModeSaving}
+                onChange={() => setNotifModeDraft(value)}
               />
               <span className="text-sm leading-snug text-zinc-300">{label}</span>
             </label>
           ))}
           <p className="text-xs text-zinc-500">{t('settings.notificationsModeHybridHint')}</p>
           <p className="text-xs text-amber-600/90">{t('settings.notificationsModeFullHint')}</p>
+          <button
+            type="button"
+            disabled={!canEdit || !notifModeDirty || notifModeSaving}
+            className="mt-1 w-fit rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+            onClick={() => {
+              setNotifModeSaving(true)
+              void setNotificationDeliveryMode(notifModeDraft).finally(() => setNotifModeSaving(false))
+            }}
+          >
+            {notifModeSaving ? t('common.loading') : t('common.save')}
+          </button>
         </div>
         {deliveryMode !== 'off' ? (
           <div className="mt-4 flex flex-col gap-2">
@@ -368,20 +428,6 @@ function SettingsPageInner() {
         <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
       ) : null}
 
-      {showQaSection ? (
-        <section className="mt-8">
-          <h2 className="text-sm font-medium text-zinc-300">{t('settings.qaSectionTitle')}</h2>
-          <p className="mt-2 text-xs text-zinc-500">{t('settings.qaSectionHelp')}</p>
-          <button
-            type="button"
-            className="mt-4 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700"
-            onClick={() => openDefectReport()}
-          >
-            {t('settings.fileDefectOpen')}
-          </button>
-        </section>
-      ) : null}
-
       <section className="mt-8">
         <h2 className="text-sm font-medium text-zinc-300">{t('common.language')}</h2>
         <select
@@ -389,8 +435,8 @@ function SettingsPageInner() {
           value={i18n.language === 'en' ? 'en' : 'ru'}
           onChange={(e) => void i18n.changeLanguage(e.target.value)}
         >
-          <option value="ru">{t('common.langRu')}</option>
-          <option value="en">{t('common.langEn')}</option>
+          <option value="ru">{t('common.langRuFlag')}</option>
+          <option value="en">{t('common.langEnFlag')}</option>
         </select>
       </section>
 
