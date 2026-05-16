@@ -11,7 +11,7 @@ import {
 const HOUR_HEIGHT_PX = 42
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
-/** Одна сетка для заголовков и тела: выравнивание колонок и скролл только в нижней строке (subgrid). */
+/** Заголовки и тело: одна сетка; вертикальный скролл только у семи колонок дней (#60). */
 const GRID_COLS = '56px repeat(7, minmax(0, 1fr))' as const
 
 function parseDayParts(dateKey: string): { y: number; m: number; d: number } {
@@ -132,29 +132,32 @@ export function WeekGrid({
           )
         })}
 
-        {/* Строка 3: часы + слоты — общие колонки родителя (subgrid), скролл не смещает заголовки */}
+        {/* Строка 3: ось часов; скролл только у колонок дней */}
+        <div
+          className="border-b border-r border-zinc-800 bg-zinc-950 pr-1"
+          style={{ gridRow: 3, gridColumn: 1 }}
+        >
+          <div style={{ height: gridHeight }}>
+            {HOURS.map((h) => (
+              <div
+                key={h}
+                style={{ height: HOUR_HEIGHT_PX }}
+                className="border-t border-zinc-800/60 text-[11px] leading-none text-zinc-500"
+              >
+                {String(h).padStart(2, '0')}:00
+              </div>
+            ))}
+          </div>
+        </div>
         <div
           className="week-grid-v-scroll min-h-0 overflow-y-auto overscroll-y-contain border-b border-zinc-800"
           style={{
-            gridColumn: '1 / -1',
-            gridRow: '3',
+            gridRow: 3,
+            gridColumn: '2 / -1',
             display: 'grid',
-            gridTemplateColumns: 'subgrid',
+            gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
           }}
         >
-          <div className="sticky left-0 z-10 shrink-0 border-r border-zinc-800 bg-zinc-950 pr-1">
-            <div style={{ height: gridHeight }}>
-              {HOURS.map((h) => (
-                <div
-                  key={h}
-                  style={{ height: HOUR_HEIGHT_PX }}
-                  className="border-t border-zinc-800/60 text-[11px] leading-none text-zinc-500"
-                >
-                  {String(h).padStart(2, '0')}:00
-                </div>
-              ))}
-            </div>
-          </div>
           {weekDays.map((day) => {
             const slotted = slottedTasks(day)
             return (
