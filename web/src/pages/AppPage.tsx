@@ -199,6 +199,67 @@ function PlannerChevronRight() {
 }
 
 /** Иконка переключателя «диаграммы» (кольцо + столбцы) — вместо длинной подписи на мобилке. */
+/** Навигация периода: стрелки по обе стороны подписи даты/недели/месяца (#61). */
+function PlannerPeriodNav({
+  canEdit,
+  dateLabel,
+  onPrev,
+  onNext,
+  onJumpToCurrent,
+  prevAriaLabel,
+  nextAriaLabel,
+  jumpLabel,
+  className = 'mb-4',
+}: {
+  canEdit: boolean
+  dateLabel: string
+  onPrev: () => void
+  onNext: () => void
+  onJumpToCurrent: () => void
+  prevAriaLabel: string
+  nextAriaLabel: string
+  jumpLabel: string
+  className?: string
+}) {
+  const arrowBtn =
+    'shrink-0 rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40'
+  return (
+    <div className={`flex flex-nowrap items-center gap-1.5 sm:gap-2 ${className}`}>
+      <button
+        type="button"
+        disabled={!canEdit}
+        className={arrowBtn}
+        onClick={onPrev}
+        aria-label={prevAriaLabel}
+      >
+        <span className="sr-only">{prevAriaLabel}</span>
+        <PlannerChevronLeft />
+      </button>
+      <p className="min-w-0 flex-1 truncate px-0.5 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
+        {dateLabel}
+      </p>
+      <button
+        type="button"
+        disabled={!canEdit}
+        className={arrowBtn}
+        onClick={onNext}
+        aria-label={nextAriaLabel}
+      >
+        <span className="sr-only">{nextAriaLabel}</span>
+        <PlannerChevronRight />
+      </button>
+      <button
+        type="button"
+        disabled={!canEdit}
+        className="ml-auto shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
+        onClick={onJumpToCurrent}
+      >
+        {jumpLabel}
+      </button>
+    </div>
+  )
+}
+
 function PlannerChartsIcon({ chartsHidden }: { chartsHidden: boolean }) {
   if (chartsHidden) {
     return (
@@ -1303,41 +1364,16 @@ function AppPageInner() {
 
       {view === 'day' && (
         <>
-          <div className="mb-4 flex flex-nowrap items-center justify-between gap-2">
-            <div className="flex shrink-0 items-center gap-0.5">
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-                onClick={() => setSelectedDay(shiftLocalDateKey(selectedDay, -1))}
-                aria-label={t('app.dayPrev')}
-              >
-                <span className="sr-only">{t('app.dayPrev')}</span>
-                <PlannerChevronLeft />
-              </button>
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-                onClick={() => setSelectedDay(shiftLocalDateKey(selectedDay, 1))}
-                aria-label={t('app.dayNext')}
-              >
-                <span className="sr-only">{t('app.dayNext')}</span>
-                <PlannerChevronRight />
-              </button>
-            </div>
-            <p className="min-w-0 flex-1 truncate px-1 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
-              {formatDayHeading(selectedDay, locale)}
-            </p>
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
-              onClick={() => setSelectedDay(localDateKey())}
-            >
-              {t('app.today')}
-            </button>
-          </div>
+          <PlannerPeriodNav
+            canEdit={canEdit}
+            dateLabel={formatDayHeading(selectedDay, locale)}
+            onPrev={() => setSelectedDay(shiftLocalDateKey(selectedDay, -1))}
+            onNext={() => setSelectedDay(shiftLocalDateKey(selectedDay, 1))}
+            onJumpToCurrent={() => setSelectedDay(localDateKey())}
+            prevAriaLabel={t('app.dayPrev')}
+            nextAriaLabel={t('app.dayNext')}
+            jumpLabel={t('app.today')}
+          />
 
           <section className="mb-8">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -1424,41 +1460,17 @@ function AppPageInner() {
 
       {view === 'week' && (
         <section className="flex min-h-0 flex-1 flex-col space-y-3">
-          <div className="flex flex-nowrap items-center justify-between gap-2">
-            <div className="flex shrink-0 items-center gap-0.5">
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-                onClick={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, -1))}
-                aria-label={t('app.weekPrev')}
-              >
-                <span className="sr-only">{t('app.weekPrev')}</span>
-                <PlannerChevronLeft />
-              </button>
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-                onClick={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, 1))}
-                aria-label={t('app.weekNext')}
-              >
-                <span className="sr-only">{t('app.weekNext')}</span>
-                <PlannerChevronRight />
-              </button>
-            </div>
-            <p className="min-w-0 flex-1 truncate px-1 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
-              {formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
-            </p>
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
-              onClick={() => setWeekStartMonday(startOfWeekMonday(localDateKey()))}
-            >
-              {t('app.weekThis')}
-            </button>
-          </div>
+          <PlannerPeriodNav
+            canEdit={canEdit}
+            className=""
+            dateLabel={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+            onPrev={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, -1))}
+            onNext={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, 1))}
+            onJumpToCurrent={() => setWeekStartMonday(startOfWeekMonday(localDateKey()))}
+            prevAriaLabel={t('app.weekPrev')}
+            nextAriaLabel={t('app.weekNext')}
+            jumpLabel={t('app.weekThis')}
+          />
           <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col-reverse gap-4 lg:flex-row lg:items-stretch lg:justify-center lg:gap-8">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <WeekGrid
@@ -1526,53 +1538,29 @@ function AppPageInner() {
 
       {view === 'month' && (
         <section className="space-y-4">
-          <div className="flex flex-nowrap items-center justify-between gap-2">
-            <div className="flex shrink-0 items-center gap-0.5">
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-                onClick={() => {
-                  const d = new Date(monthYear, monthIndex - 1, 1)
-                  setMonthYear(d.getFullYear())
-                  setMonthIndex(d.getMonth())
-                }}
-                aria-label={t('app.monthPrev')}
-              >
-                <span className="sr-only">{t('app.monthPrev')}</span>
-                <PlannerChevronLeft />
-              </button>
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-                onClick={() => {
-                  const d = new Date(monthYear, monthIndex + 1, 1)
-                  setMonthYear(d.getFullYear())
-                  setMonthIndex(d.getMonth())
-                }}
-                aria-label={t('app.monthNext')}
-              >
-                <span className="sr-only">{t('app.monthNext')}</span>
-                <PlannerChevronRight />
-              </button>
-            </div>
-            <p className="min-w-0 flex-1 truncate px-1 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
-              {monthLabel(monthYear, monthIndex, locale)}
-            </p>
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
-              onClick={() => {
-                const now = parseLocalDateKey(localDateKey())!
-                setMonthYear(now.getFullYear())
-                setMonthIndex(now.getMonth())
-              }}
-            >
-              {t('app.monthThis')}
-            </button>
-          </div>
+          <PlannerPeriodNav
+            canEdit={canEdit}
+            className=""
+            dateLabel={monthLabel(monthYear, monthIndex, locale)}
+            onPrev={() => {
+              const d = new Date(monthYear, monthIndex - 1, 1)
+              setMonthYear(d.getFullYear())
+              setMonthIndex(d.getMonth())
+            }}
+            onNext={() => {
+              const d = new Date(monthYear, monthIndex + 1, 1)
+              setMonthYear(d.getFullYear())
+              setMonthIndex(d.getMonth())
+            }}
+            onJumpToCurrent={() => {
+              const now = parseLocalDateKey(localDateKey())!
+              setMonthYear(now.getFullYear())
+              setMonthIndex(now.getMonth())
+            }}
+            prevAriaLabel={t('app.monthPrev')}
+            nextAriaLabel={t('app.monthNext')}
+            jumpLabel={t('app.monthThis')}
+          />
           <div className="mx-auto flex w-full max-w-5xl flex-col-reverse items-stretch gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
             <div className="mx-auto w-full max-w-md min-w-0 flex-1 lg:mx-0">
               <MonthCalendar

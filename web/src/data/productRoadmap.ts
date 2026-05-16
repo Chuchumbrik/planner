@@ -328,6 +328,23 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-16', en: '2026-05-16' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Неделя / #60:** вертикальный скролл только у **семи колонок дней** — заголовки и «без времени» остаются на одной сетке с телом, колонки не «уезжают» из‑за полосы прокрутки.',
+            en: '**Week / #60:** vertical scroll only on the **seven day columns** — headers and unslotted row stay aligned with the time grid; scrollbar no longer shifts columns.',
+          },
+          {
+            ru: '**Навигация даты / #61:** на **День**, **Неделе** и **Месяце** стрелки **слева и справа** от подписи периода (кнопка «сегодня» / «эта неделя» / «этот месяц» — справа).',
+            en: '**Date nav / #61:** on **Day**, **Week**, and **Month**, prev/next arrows sit **on both sides** of the period label (“today” / current week / current month on the right).',
+          },
+          {
+            ru: '**Идеи на потом (сводка):** GitHub **#51–#59** — будильник ОС, конструктор виджетов, день в альбомной ориентации, админ-трекер, слайдеры-факты, «тайм-щит», инфоблоки недели/месяца, режимы команда/наставник, темы оформления.',
+            en: '**Ideas for later:** GitHub **#51–#59** — OS alarms, per-view widgets, landscape day timeline, admin tracker, fact carousels, time shield, week/month info blocks, team/mentor modes, themes.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.2', en: '0.7.2' },
         changes: [
           {
@@ -2207,6 +2224,87 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
         en: 'Scenario from GitHub **#9**; needs a contract with GitHub (labels/state) or a Supabase mirror.',
       },
     ],
+  },
+  {
+    ideaLaterGroup: 'collaboration_integrations',
+    ideaLaterOrder: 52,
+    title: { ru: 'Интеграция с будильником телефона', en: 'OS alarm integration' },
+    summary: {
+      ru: 'GitHub **#51**: опционально использовать **системные будильники** как канал напоминаний рядом с Web Push — отдельная настройка и ограничения платформ.',
+      en: 'GitHub **#51**: optional **OS alarms** as a reminder channel alongside Web Push — separate setting and platform limits.',
+    },
+  },
+  {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 52,
+    title: { ru: 'Конструктор виджетов вкладок', en: 'Per-view widget layout' },
+    summary: {
+      ru: 'GitHub **#52**: на **День / Неделя / Месяц** — настраиваемые блоки и кнопка **«Настройка вида»** для каждой вкладки.',
+      en: 'GitHub **#52**: **Day / Week / Month** — configurable blocks and a **layout settings** control per tab.',
+    },
+  },
+  {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 53,
+    title: { ru: 'День: горизонтальный таймлайн', en: 'Day: landscape timeline' },
+    summary: {
+      ru: 'GitHub **#53**: просмотр **дня** в **альбомной** ориентации с **таймлайном** (см. скрин в issue).',
+      en: 'GitHub **#53**: **landscape** **day** view with a **timeline** (see issue screenshot).',
+    },
+  },
+  {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 8,
+    title: { ru: 'Админ: единый трекер задач и обращений', en: 'Admin: unified work tracker' },
+    summary: {
+      ru: 'GitHub **#54**: админ-раздел — задачи, планы, обращения, дефекты, мониторинг в одном контуре (связь с **#49**).',
+      en: 'GitHub **#54**: admin hub — tasks, plans, tickets, defects, monitoring (overlaps **#49**).',
+    },
+  },
+  {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 54,
+    title: { ru: 'Слайдеры с фактами и статистикой', en: 'Insight carousels' },
+    summary: {
+      ru: 'GitHub **#55**: карусели с **полезными фактами** по аккаунту и приложению (не баг UI — продуктовый контент).',
+      en: 'GitHub **#55**: carousels with **account** and **product** insights (content feature, not a layout defect).',
+    },
+  },
+  {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 55,
+    title: { ru: '«Тайм-щит»: занятость и свободные окна', en: 'Time shield: busy vs free windows' },
+    summary: {
+      ru: 'GitHub **#56**: для пользователя — **тайм-щит** и статистика: когда чаще задачи, когда свободное время (на базе vault, клиент/отчёты).',
+      en: 'GitHub **#56**: **time shield** for users — when tasks cluster vs free windows (vault analytics).',
+    },
+  },
+  {
+    ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 56,
+    title: { ru: 'Неделя/месяц: инфоблоки вместо диаграмм', en: 'Week/month: info blocks vs charts' },
+    summary: {
+      ru: 'GitHub **#57**: альтернатива столбчатым диаграммам — **компактные информативные блоки** по задачам за период (см. скрин).',
+      en: 'GitHub **#57**: alternative to bar charts — **compact info blocks** for the period (see screenshot).',
+    },
+  },
+  {
+    ideaLaterGroup: 'collaboration_integrations',
+    ideaLaterOrder: 55,
+    title: { ru: 'Режимы «команда» и «наставник»', en: 'Team and mentor modes' },
+    summary: {
+      ru: 'GitHub **#58**: **команда** — общий таск-трекер; **наставник** — помощник, который может заводить задачи в ваш план (политики доступа, vault).',
+      en: 'GitHub **#58**: **team** shared tracker; **mentor** can add tasks to your plan (access policy, vault).',
+    },
+  },
+  {
+    ideaLaterGroup: 'surface_ai_fun',
+    ideaLaterOrder: 10,
+    title: { ru: 'Темы и цветовая гамма', en: 'Themes and color schemes' },
+    summary: {
+      ru: 'GitHub **#59**: авто-подстройка **темы** под устройство и ручная настройка **палитры** интерфейса.',
+      en: 'GitHub **#59**: **theme** sync with device settings and manual **palette** tuning.',
+    },
   },
   {
     ideaLaterGroup: 'everyday_core',
