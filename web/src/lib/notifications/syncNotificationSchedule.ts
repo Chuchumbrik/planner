@@ -3,6 +3,17 @@ import type { NotificationDeliveryMode, VaultPayload } from '@motivator/core'
 
 import { computeScheduledFireRequests, type FireRowInput } from './computeScheduledFires'
 
+function fireRowsToRpcPayload(rows: FireRowInput[]): Record<string, string | null>[] {
+  return rows.map((r) => ({
+    task_id: r.task_id,
+    kind: r.kind,
+    fire_at_utc: r.fire_at_utc,
+    dedupe_key: r.dedupe_key,
+    title: r.title,
+    locale: r.locale,
+  }))
+}
+
 export async function deleteScheduledFiresForUser(
   client: SupabaseClient,
   userId: string,
@@ -39,26 +50,17 @@ export async function upsertPushSubscriptionRow(
   if (error) throw error
 }
 
+/**
+ * Атомарно заменяет все `scheduled` срабатывания текущего пользователя (RPC в Postgres).
+ */
 export async function replaceScheduledFires(
   client: SupabaseClient,
-  userId: string,
+  _userId: string,
   rows: FireRowInput[],
 ): Promise<void> {
-  await deleteScheduledFiresForUser(client, userId)
-  if (rows.length === 0) return
-
-  const { error } = await client.from('notification_fire_requests').insert(
-    rows.map((r) => ({
-      user_id: userId,
-      task_id: r.task_id,
-      kind: r.kind,
-      fire_at_utc: r.fire_at_utc,
-      dedupe_key: r.dedupe_key,
-      title: r.title,
-      locale: r.locale,
-      status: 'scheduled' as const,
-    })),
-  )
+  const { error } = await client.rpc('replace_user_scheduled_fires', {
+    p_rows: fireRowsToRpcPayload(rows),
+  })
   if (error) throw error
 }
 
@@ -70,7 +72,7 @@ export async function syncNotificationScheduleFromVault(
   locale: 'ru' | 'en',
 ): Promise<void> {
   if (deliveryMode === 'off') {
-    await deleteScheduledFiresForUser(client, userId)
+    await replaceScheduledFires(client, userId, [])
     return
   }
 

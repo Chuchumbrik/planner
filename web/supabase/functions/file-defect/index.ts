@@ -26,6 +26,9 @@ const MAX_ROUTE = 512
 const MAX_BODY_JSON = 96_000
 const MAX_ATTACHMENTS = 2
 const MAX_VIEWPORT = 40
+/** Максимум отправок дефектов на пользователя за скользящее окно (см. defect_submissions). */
+const DEFECT_RATE_LIMIT_PER_HOUR = 10
+const DEFECT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
 
 const DEFECT_TYPES = ['bug', 'ui_ux', 'performance', 'enhancement', 'other'] as const
 type DefectType = (typeof DEFECT_TYPES)[number]
@@ -249,6 +252,20 @@ Deno.serve(async (req) => {
   }
   if (!validateAttachmentPaths(attachmentPaths, uid)) {
     return json(400, { error: 'invalid_attachments' })
+  }
+
+  const rateSince = new Date(Date.now() - DEFECT_RATE_LIMIT_WINDOW_MS).toISOString()
+  const { count: recentCount, error: rateErr } = await admin
+    .from('defect_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', uid)
+    .gte('created_at', rateSince)
+
+  if (rateErr) {
+    return json(500, { error: 'rate_check_failed' })
+  }
+  if ((recentCount ?? 0) >= DEFECT_RATE_LIMIT_PER_HOUR) {
+    return json(429, { error: 'rate_limited' })
   }
 
   const typeOverrides = parseTypeLabelOverrides(typeLabelsRaw)

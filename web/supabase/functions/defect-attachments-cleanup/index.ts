@@ -25,11 +25,13 @@ Deno.serve(async (req) => {
   }
 
   const cronSecret = Deno.env.get('CRON_SECRET') ?? ''
-  if (cronSecret) {
-    const auth = req.headers.get('authorization') ?? ''
-    if (auth !== `Bearer ${cronSecret}`) {
-      return json(401, { error: 'unauthorized' })
-    }
+  if (!cronSecret) {
+    return json(500, { error: 'cron_secret_not_configured' })
+  }
+
+  const auth = req.headers.get('authorization') ?? req.headers.get('Authorization') ?? ''
+  if (auth !== `Bearer ${cronSecret}`) {
+    return json(401, { error: 'unauthorized' })
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''

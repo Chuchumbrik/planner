@@ -325,6 +325,38 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-19', en: '2026-05-19' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Бэкенд (техн.):** Edge **`send-due`** — claim просроченных напоминаний без гонок cron, пакетная загрузка подписок, снятие «мёртвых» Web Push; обязательный **`CRON_SECRET`**; прокси Vercel передаёт тот же секрет на Edge.',
+            en: '**Backend (tech.):** Edge **`send-due`** — claim due reminders without cron races, batched subscription fetch, stale Web Push cleanup; mandatory **`CRON_SECRET`**; Vercel proxy forwards the same secret to Edge.',
+          },
+          {
+            ru: '**Уведомления:** синхронизация расписания в Supabase — **одна** транзакция (**`replace_user_scheduled_fires`**, миграция **`005`**); меньше риска «пустого» окна между удалением и вставкой строк.',
+            en: '**Notifications:** schedule sync to Supabase in **one** transaction (**`replace_user_scheduled_fires`**, migration **`005`**); lower risk of a gap between delete and insert.',
+          },
+          {
+            ru: '**Дефекты (QA):** лимит отправок в GitHub; явный deny RLS на **`defect_submissions`** для клиента.',
+            en: '**Defects (QA):** submission rate limit to GitHub; explicit client deny RLS on **`defect_submissions`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Напоминания в браузере должны стабильнее доходить при минутном cron и не дублироваться при двух тиках подряд.',
+            en: 'Browser reminders should be more reliable with per-minute cron and less likely to duplicate if two ticks overlap.',
+          },
+          {
+            ru: 'После изменения задач с временем расписание push на сервере обновляется целиком за один шаг — без промежутка «всё удалено, новое ещё не записано».',
+            en: 'After editing timed tasks, the server push schedule is replaced in one step — no window where everything was deleted but nothing inserted yet.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-16', en: '2026-05-16' },
     items: [
       {

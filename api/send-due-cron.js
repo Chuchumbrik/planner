@@ -5,6 +5,7 @@
  * - CRON_SECRET — случайная строка; запрос должен иметь Authorization: Bearer <CRON_SECRET>
  * - SUPABASE_SEND_DUE_URL — https://<ref>.supabase.co/functions/v1/send-due
  * - SUPABASE_CRON_ANON_KEY — legacy anon public (JWT eyJ…), тот же смысл, что VITE_SUPABASE_ANON_KEY
+ *   (заголовок apikey на шлюз Supabase; Authorization на Edge — тот же CRON_SECRET)
  */
 module.exports = async (req, res) => {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -33,7 +34,8 @@ module.exports = async (req, res) => {
     const r = await fetch(url, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${anon}`,
+        Authorization: `Bearer ${expected}`,
+        apikey: anon,
         'Content-Type': 'application/json',
       },
       body: '{}',
