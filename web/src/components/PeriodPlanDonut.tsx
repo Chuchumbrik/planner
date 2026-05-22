@@ -1,4 +1,5 @@
 import type { PlannedDayProgress } from '@motivator/core'
+import { CHART_CARD_SHELL, CHART_CARD_TITLE } from '@/lib/designClasses'
 import { getPlanProgressLabels } from '@/components/PlanDayProgressCaption'
 import { PlanProgressRing } from '@/components/PlanProgressRing'
 import { useTranslation } from 'react-i18next'
@@ -34,14 +35,16 @@ export function PeriodPlanDonut({
 
   return (
     <div
-      className="flex flex-col items-center gap-1 rounded-xl border border-zinc-800/90 bg-zinc-950/50 px-4 py-3 lg:border-zinc-800/60 lg:bg-zinc-950/30"
+      className={CHART_CARD_SHELL}
       role={ariaLabel ? 'img' : undefined}
       aria-label={ariaLabel ?? undefined}
     >
       <div className="flex flex-col items-center gap-0.5 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{title}</p>
+        <p className={CHART_CARD_TITLE}>{title}</p>
         {subtitle ? (
-          <p className="max-w-[16rem] text-center text-[10px] leading-snug text-zinc-500">{subtitle}</p>
+          <p className="max-w-[16rem] text-center text-[10px] leading-snug text-on-surface-variant">
+            {subtitle}
+          </p>
         ) : null}
       </div>
       <PlanProgressRing
@@ -52,7 +55,7 @@ export function PeriodPlanDonut({
         centerLabel={
           pctLabels ? (
             <span
-              className={`font-semibold tabular-nums leading-none text-zinc-100 ${
+              className={`font-semibold tabular-nums leading-none text-on-surface ${
                 ringSize >= 120 ? 'text-lg' : 'text-base'
               }`}
             >

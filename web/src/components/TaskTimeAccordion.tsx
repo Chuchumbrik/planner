@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { FIELD_LABEL, MOTIVATOR_INPUT, PLAN_ACCORDION, PLAN_ACCORDION_SUMMARY } from '@/lib/designClasses'
 import { minutesToTimeInput, timeInputToMinutes, type TaskTimeMode } from '@motivator/core'
 
 export type TaskTimeAccordionProps = {
@@ -23,8 +24,7 @@ export type TaskTimeAccordionProps = {
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => i)
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => i)
 
-const selectClass =
-  'w-full min-w-[5rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-40'
+const selectClass = `${MOTIVATOR_INPUT} w-full min-w-[5rem]`
 
 function clampDayMinute(m: number): number {
   return Math.max(0, Math.min(24 * 60 - 1, m))
@@ -102,16 +102,16 @@ export function TaskTimeAccordion({
   }
 
   return (
-    <details className="plan-accordion group mt-4 rounded-lg border border-zinc-800 bg-zinc-900/60 open:border-zinc-700/90">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-zinc-900/80 [&::-webkit-details-marker]:hidden">
+    <details className={PLAN_ACCORDION}>
+      <summary className={PLAN_ACCORDION_SUMMARY}>
         <span className="flex min-w-0 flex-col gap-0.5 text-left">
-          <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          <span className="font-display text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
             {t('app.timeSection')}
           </span>
-          <span className="truncate text-sm text-zinc-200">{summaryPreview}</span>
+          <span className="truncate text-sm text-on-surface">{summaryPreview}</span>
         </span>
         <span
-          className="plan-accordion-chevron shrink-0 text-zinc-500 transition-transform duration-150 ease-out group-open:text-zinc-400"
+          className="plan-accordion-chevron shrink-0 text-on-surface-variant transition-transform duration-150 ease-out group-open:text-primary"
           aria-hidden
         >
           <svg
@@ -129,9 +129,9 @@ export function TaskTimeAccordion({
         </span>
       </summary>
 
-      <div className="border-t border-zinc-800/90 px-3 pb-3 pt-3">
+      <div className="border-t border-surface-variant px-3 pb-3 pt-3">
         <div className="flex flex-col gap-2">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-on-surface">
             <input
               type="radio"
               name={radioName}
@@ -141,7 +141,7 @@ export function TaskTimeAccordion({
             />
             {t('app.timeNone')}
           </label>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-on-surface">
             <input
               type="radio"
               name={radioName}
@@ -151,7 +151,7 @@ export function TaskTimeAccordion({
             />
             {t('app.timeStart')}
           </label>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-on-surface">
             <input
               type="radio"
               name={radioName}
@@ -172,7 +172,7 @@ export function TaskTimeAccordion({
             }
           }}
         >
-          <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+          <label className={`flex min-w-[6rem] flex-1 flex-col gap-1 ${FIELD_LABEL}`}>
             <span>{t('app.estimatedHours')}</span>
             <select
               aria-label={`${t('app.timeClock')} · ${t('app.estimatedHours')}`}
@@ -188,7 +188,7 @@ export function TaskTimeAccordion({
               ))}
             </select>
           </label>
-          <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+          <label className={`flex min-w-[6rem] flex-1 flex-col gap-1 ${FIELD_LABEL}`}>
             <span>{t('app.estimatedMinutesPart')}</span>
             <select
               aria-label={`${t('app.timeClock')} · ${t('app.estimatedMinutesPart')}`}

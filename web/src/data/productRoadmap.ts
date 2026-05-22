@@ -325,6 +325,26 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-22', en: '2026-05-22' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Design 2.0 (ветка `design-2.0`):** единая тёмная тема по Stitch — primary `#4edea3`, шрифты Inter/Geist, карточки и поля **`motivator-*`**; оболочка **`MotivatorShell`** (навигация, план **Free**); обновлены лендинг, вход, онбординг, планировщик (день/неделя/месяц), модалки задач и EOD, настройки, отчёты, «Краткая сводка», дефекты, cookie-баннер; статические прототипы **`/prototype/*`**.',
+            en: '**Design 2.0 (`design-2.0` branch):** unified dark Stitch theme — primary `#4edea3`, Inter/Geist, **`motivator-*`** cards and inputs; **`MotivatorShell`** (nav, **Free** tier); refreshed landing, login, onboarding, planner (day/week/month), task & EOD modals, settings, reports, Brief summary, defect flow, cookie banner; static **`/prototype/*`** screens.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Интерфейс выглядит как один продукт: меньше «серого zinc», больше фирменного зелёного и читаемых подписей; на телефоне — нижняя навигация, на широком экране — боковая панель.',
+            en: 'The UI reads as one product: less generic gray zinc, more brand green and clearer labels; bottom nav on phones, sidebar on wide screens.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-16', en: '2026-05-16' },
     items: [
       {

@@ -1,3 +1,4 @@
+import { CHART_BREAKDOWN_SHELL, CHART_BREAKDOWN_SHELL_COMPACT, CHART_CARD_TITLE } from '@/lib/designClasses'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -39,13 +40,11 @@ export function PeriodPlanBreakdownChart({ rows, title, compact = false }: Props
     ? 'mt-1.5 h-[min(200px,34vh)] w-full min-w-0 lg:mt-2 lg:h-[min(220px,40vh)] lg:min-h-[240px]'
     : 'mt-2 h-[min(220px,40vh)] w-full min-w-0 sm:h-[240px]'
 
-  const shellClass = compact
-    ? 'flex min-h-0 min-w-0 flex-1 flex-col rounded-xl border border-zinc-800/90 bg-zinc-950/50 px-2 py-2 lg:border-zinc-800/60 lg:bg-zinc-950/30 lg:py-3'
-    : 'w-full min-w-0 rounded-xl border border-zinc-800/90 bg-zinc-950/50 px-2 py-3 lg:border-zinc-800/60 lg:bg-zinc-950/30'
+  const shellClass = compact ? CHART_BREAKDOWN_SHELL_COMPACT : CHART_BREAKDOWN_SHELL
 
   return (
     <div className={shellClass}>
-      <p className="px-1 text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+      <p className={`${CHART_CARD_TITLE} px-1`}>
         {title}
       </p>
       <div className={chartHeightClass}>
@@ -55,18 +54,18 @@ export function PeriodPlanBreakdownChart({ rows, title, compact = false }: Props
             data={data}
             margin={{ top: 4, right: compact ? 6 : 12, left: compact ? 2 : 4, bottom: 4 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#353437" horizontal={false} />
             <XAxis
               type="number"
               domain={[0, 100]}
-              tick={{ fill: '#a1a1aa', fontSize: compact ? 9 : 10 }}
+              tick={{ fill: '#9e9da3', fontSize: compact ? 9 : 10 }}
               tickFormatter={(v) => `${v}%`}
             />
             <YAxis
               type="category"
               dataKey="nameShort"
               width={yAxisWidth}
-              tick={{ fill: '#d4d4d8', fontSize: compact ? 9 : 10 }}
+              tick={{ fill: '#e6e1e6', fontSize: compact ? 9 : 10 }}
             />
             <Tooltip
               formatter={(value: number) => [`${value}%`, t('app.periodBreakdownDone')]}
@@ -75,13 +74,14 @@ export function PeriodPlanBreakdownChart({ rows, title, compact = false }: Props
                 return row?.name ?? ''
               }}
               contentStyle={{
-                background: '#18181b',
-                border: '1px solid #3f3f46',
+                background: '#201f22',
+                border: '1px solid #353437',
                 borderRadius: 8,
                 fontSize: 12,
+                color: '#e6e1e6',
               }}
             />
-            <Bar dataKey="pct" fill="#10b981" radius={[0, 4, 4, 0]} maxBarSize={18} />
+            <Bar dataKey="pct" fill="#4edea3" radius={[0, 4, 4, 0]} maxBarSize={18} />
           </BarChart>
         </ResponsiveContainer>
       </div>

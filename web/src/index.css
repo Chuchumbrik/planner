@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './styles/motivator-theme.css';
 
 @layer base {
   /**
@@ -57,12 +58,10 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Скроллбар в стиле тёмной темы (модалки и пр.) */
@@ -98,7 +97,7 @@ body {
 .week-grid-v-scroll {
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: #52525b rgb(9 9 11);
+  scrollbar-color: #353437 #0e0e10;
 }
 
 .week-grid-v-scroll::-webkit-scrollbar {
@@ -106,18 +105,18 @@ body {
 }
 
 .week-grid-v-scroll::-webkit-scrollbar-track {
-  background: rgb(9 9 11);
+  background: #0e0e10;
   border-radius: 9999px;
 }
 
 .week-grid-v-scroll::-webkit-scrollbar-thumb {
-  background: #52525b;
+  background: #353437;
   border-radius: 9999px;
-  border: 2px solid rgb(9 9 11);
+  border: 2px solid #0e0e10;
 }
 
 .week-grid-v-scroll::-webkit-scrollbar-thumb:hover {
-  background: #71717a;
+  background: #4edea3;
 }
 
 /* Раскрывающиеся блоки (цвет, время) — поворот шеврона при open */

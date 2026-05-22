@@ -9,6 +9,10 @@ import { OnboardingPage } from '@/pages/OnboardingPage'
 import { ReportsPage } from '@/pages/ReportsPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { LegalDocumentPage } from '@/pages/LegalDocumentPage'
+import { AdminDashboardPrototypePage } from '@/pages/prototypes/AdminDashboardPrototypePage'
+import { AiInsightsPrototypePage } from '@/pages/prototypes/AiInsightsPrototypePage'
+import { DeepFocusPrototypePage } from '@/pages/prototypes/DeepFocusPrototypePage'
+import { SecurityLogPrototypePage } from '@/pages/prototypes/SecurityLogPrototypePage'
 import { CookieConsentGate } from '@/components/CookieConsentGate'
 
 export function App() {
@@ -17,14 +21,14 @@ export function App() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-100">
-        <p className="text-sm text-zinc-400">{t('shell.loading')}</p>
+      <div className="flex min-h-screen items-center justify-center bg-background text-on-surface">
+        <p className="text-sm text-on-surface-variant">{t('shell.loading')}</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-background text-on-surface">
       {session ? <SessionSyncInformer session={session} /> : null}
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -47,6 +51,22 @@ export function App() {
         <Route
           path="/settings"
           element={session ? <SettingsPage /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/prototype/deep-focus"
+          element={session ? <DeepFocusPrototypePage /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/prototype/ai-insights"
+          element={session ? <AiInsightsPrototypePage /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/prototype/security-log"
+          element={session ? <SecurityLogPrototypePage /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/prototype/admin-dashboard"
+          element={session ? <AdminDashboardPrototypePage /> : <Navigate to="/login" replace />}
         />
         <Route path="/legal/:docId" element={<LegalDocumentPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

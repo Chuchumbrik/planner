@@ -82,17 +82,17 @@ export function SessionSyncInformer({ session }: { session: Session }) {
 
   return (
     <div
-      className="fixed inset-x-0 top-0 z-[100] border-b border-emerald-800/60 bg-emerald-950/95 px-4 py-2.5 text-center text-sm text-emerald-100 shadow-lg backdrop-blur-sm"
+      className="fixed inset-x-0 top-0 z-[100] border-b border-primary/40 bg-primary/15 px-4 py-2.5 text-center text-sm text-on-surface shadow-lg backdrop-blur-sm"
       role="status"
     >
       <div className="mx-auto flex max-w-3xl flex-col items-center gap-1 sm:flex-row sm:justify-center sm:gap-4">
         <p>
           <span className="font-medium">{t('shell.sessionInformerRoleTitle')}</span>{' '}
-          <span className="text-emerald-200/90">{detail}</span>
+          <span className="text-primary">{detail}</span>
         </p>
         <button
           type="button"
-          className="shrink-0 rounded-md border border-emerald-700/80 px-2.5 py-1 text-xs text-emerald-100 hover:bg-emerald-900/80"
+          className="btn-secondary shrink-0 px-2.5 py-1 text-xs"
           onClick={() => {
             dismissedKeyRef.current = `${notice.before}>${notice.after}`
             setNotice(null)

@@ -1,6 +1,7 @@
 import type { TFunction } from 'i18next'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/cn'
 import {
   isMainTaskDoneForDay,
   TASK_COLOR_HEX,
@@ -17,24 +18,23 @@ function formatTimeSnippet(task: Task, t: TFunction): string | null {
   return `${t('app.timeEndShort')} · ${clockLabel}`
 }
 
+function formatClockOnly(task: Task): string | null {
+  if (task.timeMode === 'none' || task.timeMinutesFromMidnight == null) return null
+  const hours = Math.floor(task.timeMinutesFromMidnight / 60)
+  const minutes = task.timeMinutesFromMidnight % 60
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
 type Props = {
   task: Task
   priorityLabels: PriorityLabels
   canEdit: boolean
-  /** День карточки (YYYY-MM-DD); для повторов нужен, чтобы отмечать вхождение за день */
   occurrenceDayKey?: string
-  /** false — только просмотр состояния галочки (выполнение только для календарного «сегодня») */
   completionToggleAllowed?: boolean
   onToggle: () => void
   onOpen: () => void
-  /** Отметка пунктов чек-листа с карточки (день / бэклог) */
   onToggleChecklistItem?: (itemId: string) => void
-  /** DR-004: снять ожидание второго шага без выполнения */
   onClearDoubleConfirm?: () => void
-  /**
-   * Необязательный фон/рамка всей строки (вкладка «День», секция плана).
-   * При ожидании DR-004 не применяется — приоритет у состояния двойного подтверждения.
-   */
   planRowSurfaceClass?: string
 }
 
@@ -107,6 +107,7 @@ export function TaskMiniCard({
     task.checklist.some((s) => !s.done)
 
   const timeSnip = formatTimeSnippet(task, t)
+  const clockOnly = formatClockOnly(task)
 
   const toggleDoneDisabled =
     !canEdit || blockCompleteMain || !completionToggleAllowed
@@ -116,22 +117,27 @@ export function TaskMiniCard({
       ? t('app.completionOnlyToday')
       : undefined
 
-  const shellClass = [
-    'rounded-lg border border-l-4 transition-colors',
+  const shellClass = cn(
+    'rounded-xl border border-l-4 transition-colors',
     pendingHere
-      ? 'animate-dc-pending border-amber-700/50 bg-zinc-900/60 ring-1 ring-amber-600/25'
-      : planRowSurfaceClass ?? 'border-zinc-800 bg-zinc-900/60',
-    flash === 'success' ? 'animate-task-done-success' : '',
-    flash === 'soft' ? 'animate-task-soft-miss' : '',
-  ]
-    .filter(Boolean)
-    .join(' ')
+      ? 'animate-dc-pending border-amber-700/50 bg-surface-container ring-1 ring-amber-600/25'
+      : (planRowSurfaceClass ??
+          'border-surface-variant bg-surface-container-low hover:bg-surface-container'),
+    flash === 'success' && 'animate-task-done-success',
+    flash === 'soft' && 'animate-task-soft-miss',
+  )
+
+  const chipClass =
+    'rounded border border-outline-variant bg-surface-variant px-2 py-0.5 font-display text-[11px] text-on-surface-variant'
 
   return (
     <div className={shellClass} style={{ borderLeftColor: leftAccent }}>
-      <div className="flex items-start gap-2 px-3 py-2">
+      <div className="flex items-start gap-3 p-4">
         <label
-          className={`flex shrink-0 items-center pt-0.5 ${toggleDoneDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          className={cn(
+            'flex shrink-0 items-center pt-0.5',
+            toggleDoneDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
+          )}
           title={toggleDoneTitle}
           onClick={(e) => e.stopPropagation()}
         >
@@ -141,7 +147,7 @@ export function TaskMiniCard({
             disabled={toggleDoneDisabled}
             onChange={() => onToggle()}
             aria-label={t('app.toggleTaskDone')}
-            className="h-5 w-5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40 md:h-3.5 md:w-3.5"
+            className="h-5 w-5 rounded border-outline-variant bg-surface-container-low text-primary focus:ring-primary/40 disabled:opacity-40 md:h-4 md:w-4"
           />
         </label>
         <button
@@ -150,42 +156,48 @@ export function TaskMiniCard({
           className="min-w-0 flex-1 text-left disabled:opacity-50"
           onClick={() => canEdit && onOpen()}
         >
-          <span
-            className={`block text-sm ${mainDone ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}
-          >
-            {task.title}
-          </span>
-          <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500">
-            <span className="rounded bg-zinc-800/80 px-1.5 py-0.5 text-zinc-400">
-              {priorityLabels[task.priorityRank]}
+          <div className="flex items-start justify-between gap-3">
+            <span
+              className={cn(
+                'block text-sm font-semibold leading-snug',
+                mainDone ? 'text-on-surface-variant line-through' : 'text-on-surface',
+              )}
+            >
+              {task.title}
             </span>
-            {task.recurrence ? (
-              <span className="rounded bg-violet-950/60 px-1.5 py-0.5 text-violet-300/90">
-                {t('app.recurrenceBadge')}
+            {clockOnly ? (
+              <span className="shrink-0 font-mono text-sm tabular-nums text-on-surface-variant">
+                {mainDone ? t('app.taskDoneShort') : clockOnly}
               </span>
             ) : null}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className={chipClass}>{priorityLabels[task.priorityRank]}</span>
+            {task.recurrence ? (
+              <span className={cn(chipClass, 'text-tertiary')}>{t('app.recurrenceBadge')}</span>
+            ) : null}
             {pendingHere ? (
-              <span className="rounded bg-amber-950/70 px-1.5 py-0.5 text-amber-200/95">
+              <span className={cn(chipClass, 'border-amber-800/60 text-amber-200/95')}>
                 {t('app.doubleConfirmBadge')}
               </span>
             ) : null}
             {task.estimatedMinutes != null ? (
-              <span>
+              <span className={chipClass}>
                 {t('app.estimatedMinutesShort', { n: task.estimatedMinutes })}
               </span>
             ) : null}
-            {timeSnip ? <span>{timeSnip}</span> : null}
+            {timeSnip && !clockOnly ? <span className={chipClass}>{timeSnip}</span> : null}
             {task.checklist.length > 0 ? (
-              <span>
+              <span className={chipClass}>
                 {t('app.checklistProgress', {
                   done: task.checklist.filter((c) => c.done).length,
                   total: task.checklist.length,
                 })}
               </span>
             ) : null}
-          </span>
+          </div>
           {pendingHere && minutesLeft != null ? (
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-amber-200/90">
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-amber-200/90">
               <span>
                 {t('app.doubleConfirmTimeLeft', {
                   minutes: minutesLeft,
@@ -208,16 +220,18 @@ export function TaskMiniCard({
         </button>
       </div>
       {task.checklist.length > 0 && onToggleChecklistItem ? (
-        <ul className="border-t border-zinc-800/90 pl-4 pr-3 pb-2 pt-2 md:pl-5">
+        <ul className="border-t border-surface-variant/80 pl-4 pr-3 pb-3 pt-2 md:pl-6">
           {task.checklist.map((item) => {
             const cid = `${checklistFieldId}-${item.id}`
             return (
-              <li key={item.id}>
+              <li key={item.id} className="border-l border-outline-variant/60 pl-3">
                 <label
                   htmlFor={cid}
-                  className={`flex min-h-11 cursor-pointer items-center gap-2.5 rounded-md py-1 pl-0.5 pr-1 hover:bg-zinc-900/50 md:min-h-8 md:gap-2 md:py-0.5 ${
-                    !canEdit || !completionToggleAllowed ? 'cursor-default hover:bg-transparent' : ''
-                  }`}
+                  className={cn(
+                    'flex min-h-11 cursor-pointer items-center gap-2.5 rounded-md py-1 pr-1 hover:bg-surface-container-high/50 md:min-h-8 md:gap-2 md:py-0.5',
+                    (!canEdit || !completionToggleAllowed) &&
+                      'cursor-default hover:bg-transparent',
+                  )}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <input
@@ -231,12 +245,15 @@ export function TaskMiniCard({
                     onChange={() => onToggleChecklistItem(item.id)}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={item.title}
-                    className="h-4 w-4 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40 md:h-3.5 md:w-3.5"
+                    className="h-4 w-4 shrink-0 rounded border-outline-variant bg-surface-container-low text-primary disabled:opacity-40"
                   />
                   <span
-                    className={`min-w-0 flex-1 text-sm leading-snug md:leading-tight ${
-                      item.done ? 'text-zinc-500 line-through' : 'text-zinc-300'
-                    }`}
+                    className={cn(
+                      'min-w-0 flex-1 text-sm leading-snug',
+                      item.done
+                        ? 'text-on-surface-variant line-through'
+                        : 'text-on-surface-variant',
+                    )}
                   >
                     {item.title}
                   </span>

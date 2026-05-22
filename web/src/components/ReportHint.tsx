@@ -3,7 +3,7 @@ export function ReportHint({ label }: { label: string }) {
   return (
     <button
       type="button"
-      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-zinc-600/70 bg-zinc-900/80 text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-surface-variant bg-surface-container-low text-on-surface-variant transition hover:border-primary/40 hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
       title={label}
       aria-label={label}
     >

@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { motivatorAppRole } from '@/lib/motivatorRole'
+import { AiCommandStub } from '@/components/planner/AiCommandStub'
+import { MotivatorShell } from '@/components/layout/MotivatorShell'
+import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { PeriodPlanBreakdownChart } from '@/components/PeriodPlanBreakdownChart'
@@ -20,6 +23,22 @@ import {
   humanizeConnectivityError,
   isLikelyNetworkFetchFailure,
 } from '@/lib/connectivityHints'
+import {
+  DRAFT_LIST_ITEM,
+  EMPTY_STATE_BOX,
+  FILTER_PANEL,
+  MODAL_CLOSE_BTN,
+  MODAL_HEADER,
+  MODAL_SHELL,
+  MOTIVATOR_INPUT,
+  PLANNER_NAV_BTN,
+  PLANNER_SECTION_HEAD,
+  SETTINGS_BTN_SECONDARY,
+  SETTINGS_LABEL,
+  VIEW_TABLIST,
+  periodBreakdownToggle,
+  viewTab,
+} from '@/lib/designClasses'
 import { readPlannerChartsHidden, writePlannerChartsHidden } from '@/lib/plannerChartsPref'
 import {
   DEFAULT_GROUP_ID,
@@ -60,13 +79,13 @@ function dayPlanRowSurfaceClass(opts: {
   const past = selectedDay < todayKey
   if (isPlannedTaskFullyCompleteForDay(task, selectedDay)) {
     return past
-      ? 'border-emerald-900/45 bg-emerald-950/50'
-      : 'border-emerald-900/35 bg-emerald-950/32'
+      ? 'border-primary/35 bg-primary/15'
+      : 'border-primary/25 bg-primary/10'
   }
   if (eodClosedForDay) {
     return past
-      ? 'border-amber-900/45 bg-amber-950/48'
-      : 'border-amber-900/30 bg-amber-950/22'
+      ? 'border-tertiary-container/40 bg-tertiary-container/10'
+      : 'border-tertiary-container/30 bg-tertiary-container/5'
   }
   return undefined
 }
@@ -221,27 +240,25 @@ function PlannerPeriodNav({
   jumpLabel: string
   className?: string
 }) {
-  const arrowBtn =
-    'shrink-0 rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40'
   return (
     <div className={`flex flex-nowrap items-center gap-1.5 sm:gap-2 ${className}`}>
       <button
         type="button"
         disabled={!canEdit}
-        className={arrowBtn}
+        className={PLANNER_NAV_BTN}
         onClick={onPrev}
         aria-label={prevAriaLabel}
       >
         <span className="sr-only">{prevAriaLabel}</span>
         <PlannerChevronLeft />
       </button>
-      <p className="min-w-0 flex-1 truncate px-0.5 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
+      <p className="min-w-0 flex-1 truncate px-0.5 text-center font-display text-xs leading-tight text-on-surface sm:text-sm">
         {dateLabel}
       </p>
       <button
         type="button"
         disabled={!canEdit}
-        className={arrowBtn}
+        className={PLANNER_NAV_BTN}
         onClick={onNext}
         aria-label={nextAriaLabel}
       >
@@ -251,7 +268,7 @@ function PlannerPeriodNav({
       <button
         type="button"
         disabled={!canEdit}
-        className="ml-auto shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
+        className="btn-secondary ml-auto shrink-0 px-2 py-1.5 text-xs disabled:opacity-40 sm:px-3 sm:text-sm"
         onClick={onJumpToCurrent}
       >
         {jumpLabel}
@@ -810,16 +827,16 @@ function AppPageInner() {
   const draftListItems = vault.drafts.map((d) => (
     <li
       key={d.id}
-      className="flex flex-wrap items-center justify-between gap-2 rounded border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm"
+      className={DRAFT_LIST_ITEM}
     >
-      <span className="min-w-0 flex-1 truncate text-zinc-200">
+      <span className="min-w-0 flex-1 truncate text-on-surface">
         {d.title.trim() ? d.title : t('app.draftUntitled')}
       </span>
       <div className="flex shrink-0 gap-2">
         <button
           type="button"
           disabled={!canEdit}
-          className="rounded border border-emerald-800 px-2 py-1 text-xs text-emerald-300 hover:bg-emerald-950/50 disabled:opacity-40"
+          className="rounded-lg border border-primary/50 px-2 py-1 text-xs text-primary hover:bg-primary/10 disabled:opacity-40"
           onClick={() => {
             setResumeDraft(d)
             setCreateOpen(true)
@@ -831,7 +848,7 @@ function AppPageInner() {
         <button
           type="button"
           disabled={!canEdit}
-          className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
+          className="rounded-lg border border-surface-variant px-2 py-1 text-xs text-on-surface-variant hover:bg-surface-container disabled:opacity-40"
           onClick={() => void deleteDraft(d.id)}
         >
           {t('common.delete')}
@@ -840,24 +857,127 @@ function AppPageInner() {
     </li>
   ))
 
+  const plannerHeaderActions = (
+    <>
+      <button
+        type="button"
+        className={`rounded p-2 transition-colors active:scale-95 ${
+          remoteError
+            ? 'text-error hover:bg-error-container/30'
+            : savePending
+              ? 'text-on-surface-variant hover:bg-surface-container'
+              : 'text-on-surface-variant hover:bg-surface-container hover:text-primary'
+        }`}
+        title={syncHint}
+        aria-label={t('app.syncIconAria')}
+      >
+        <span className="sr-only">{syncHint}</span>
+        <MaterialIcon
+          name={savePending ? 'progress_activity' : remoteError ? 'cloud_off' : 'cloud_done'}
+          size={22}
+          className={savePending ? 'animate-spin' : undefined}
+        />
+      </button>
+      <div className="relative" ref={accountMenuRef}>
+        <button
+          type="button"
+          className="rounded p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface active:scale-95"
+          aria-expanded={accountMenuOpen}
+          aria-haspopup="menu"
+          onClick={() => setAccountMenuOpen((v) => !v)}
+        >
+          <span className="sr-only">{t('app.accountMenuAria')}</span>
+          <MaterialIcon name="account_circle" size={24} />
+        </button>
+        {accountMenuOpen ? (
+          <div
+            className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-surface-variant bg-surface-container-low py-1 shadow-xl"
+            role="menu"
+          >
+            <div
+              className="border-b border-surface-variant px-3 py-2 text-xs text-on-surface-variant"
+              role="presentation"
+            >
+              {t('app.accountMenuRoleLine', { role: accountRoleLabel })}
+            </div>
+            <Link
+              to="/app/reports"
+              role="menuitem"
+              className="block px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high"
+              onClick={() => setAccountMenuOpen(false)}
+            >
+              {t('app.reportsNav')}
+            </Link>
+            {eodEnabled ? (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={!canEdit}
+                className="block w-full px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container-high disabled:opacity-40"
+                onClick={() => {
+                  setAccountMenuOpen(false)
+                  setEodModalContext({ dateKey: todayKeyApp, mode: 'ritual' })
+                }}
+              >
+                {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container-high"
+              onClick={() => {
+                setAccountMenuOpen(false)
+                setRoadmapModalOpen(true)
+              }}
+            >
+              {t('settings.roadmapTempButton')}
+            </button>
+            <Link
+              to="/settings"
+              role="menuitem"
+              className="block px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high"
+              onClick={() => setAccountMenuOpen(false)}
+            >
+              {t('app.settings')}
+            </Link>
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-3 py-2 text-left text-sm text-on-surface-variant hover:bg-surface-container-high"
+              onClick={() => void handleSignOut()}
+            >
+              {t('settings.signOut')}
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </>
+  )
+
   return (
-    <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-8">
+    <MotivatorShell
+      activeNav="planner"
+      title={t('app.plannerTitle')}
+      headerActions={plannerHeaderActions}
+    >
+      <div className="relative flex min-h-0 flex-col">
       {!remoteHydrated && !decryptFailed ? (
         <div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-zinc-950/90 px-6 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-background/90 px-6 backdrop-blur-sm"
           role="alertdialog"
           aria-modal="true"
           aria-labelledby="app-sync-blocking-title"
           aria-describedby="app-sync-blocking-desc"
         >
           <div
-            className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-500/25 border-t-emerald-400"
+            className="h-10 w-10 animate-spin rounded-full border-2 border-primary/25 border-t-primary"
             aria-hidden
           />
-          <p id="app-sync-blocking-title" className="max-w-sm text-center text-base font-medium text-zinc-100">
+          <p id="app-sync-blocking-title" className="max-w-sm text-center text-base font-medium text-on-surface">
             {t('app.syncBlockingTitle')}
           </p>
-          <p id="app-sync-blocking-desc" className="max-w-sm text-center text-sm text-zinc-400">
+          <p id="app-sync-blocking-desc" className="max-w-sm text-center text-sm text-on-surface-variant">
             {remoteError ? humanizeConnectivityError(remoteError, t) : t('app.syncBlockingHint')}
           </p>
           {remoteError ? (
@@ -871,127 +991,10 @@ function AppPageInner() {
           ) : null}
         </div>
       ) : null}
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-emerald-400/90">
-            {t('app.brand')}
-          </p>
-          <h1 className="text-xl font-semibold text-white">{t('app.plannerTitle')}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={`rounded-md border px-2 py-1.5 text-xs hover:bg-zinc-900/80 disabled:opacity-40 ${
-              remoteError
-                ? 'border-amber-900/50 text-amber-300/90'
-                : savePending
-                  ? 'border-zinc-700/80 text-zinc-500'
-                  : 'border-transparent text-zinc-600 hover:text-zinc-400'
-            }`}
-            title={syncHint}
-            aria-label={t('app.syncIconAria')}
-          >
-            <span className="sr-only">{syncHint}</span>
-            <span aria-hidden className="text-[0.85rem] leading-none opacity-90">
-              {savePending ? '…' : remoteError ? '⚠' : '✓'}
-            </span>
-          </button>
-          <div className="relative" ref={accountMenuRef}>
-            <button
-              type="button"
-              className="rounded-lg border border-zinc-700 px-2.5 py-2 text-zinc-300 hover:bg-zinc-900"
-              aria-expanded={accountMenuOpen}
-              aria-haspopup="menu"
-              onClick={() => setAccountMenuOpen((v) => !v)}
-            >
-              <span className="sr-only">{t('app.accountMenuAria')}</span>
-              <svg
-                aria-hidden
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                />
-              </svg>
-            </button>
-            {accountMenuOpen ? (
-              <div
-                className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-zinc-700 bg-zinc-950 py-1 shadow-xl"
-                role="menu"
-              >
-                <div
-                  className="border-b border-zinc-800 px-3 py-2 text-xs text-zinc-400"
-                  role="presentation"
-                >
-                  {t('app.accountMenuRoleLine', { role: accountRoleLabel })}
-                </div>
-                <Link
-                  to="/app/reports"
-                  role="menuitem"
-                  className="block px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                  onClick={() => setAccountMenuOpen(false)}
-                >
-                  {t('app.reportsNav')}
-                </Link>
-                {eodEnabled ? (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={!canEdit}
-                    className="block w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-                    onClick={() => {
-                      setAccountMenuOpen(false)
-                      setEodModalContext({ dateKey: todayKeyApp, mode: 'ritual' })
-                    }}
-                  >
-                    {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="block w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900"
-                  onClick={() => {
-                    setAccountMenuOpen(false)
-                    setRoadmapModalOpen(true)
-                  }}
-                >
-                  {t('settings.roadmapTempButton')}
-                </button>
-                <Link
-                  to="/settings"
-                  role="menuitem"
-                  className="block px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                  onClick={() => setAccountMenuOpen(false)}
-                >
-                  {t('app.settings')}
-                </Link>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="block w-full px-3 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-900"
-                  onClick={() => void handleSignOut()}
-                >
-                  {t('settings.signOut')}
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </header>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
-      <nav aria-label={t('app.viewNavAria')} className="min-w-0 flex-1 overflow-visible">
-        <div
-          className="inline-flex w-full min-w-0 rounded-lg border border-zinc-700/90 bg-zinc-900/50 p-0.5 shadow-sm"
-          role="tablist"
-        >
+      <div className="mb-4 flex flex-col gap-3 border-b border-surface-variant pb-3 lg:flex-row lg:items-center lg:justify-between">
+      <nav aria-label={t('app.viewNavAria')} className="min-w-0 flex-1 overflow-visible lg:max-w-md">
+        <div className={VIEW_TABLIST} role="tablist">
           {(['day', 'week', 'month'] as const).map((v) => {
             const active = view === v
             const label =
@@ -1002,11 +1005,7 @@ function AppPageInner() {
                 type="button"
                 role="tab"
                 aria-selected={active}
-                className={`min-w-0 flex-1 rounded-md px-1.5 py-2 text-center text-xs font-medium leading-tight transition-colors ring-offset-0 ring-offset-zinc-900 sm:px-3 sm:text-sm ${
-                  active
-                    ? 'bg-zinc-800 text-emerald-300 shadow-sm ring-1 ring-zinc-600/80'
-                    : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'
-                }`}
+                className={viewTab(active)}
                 onClick={() => handleTab(v)}
               >
                 {label}
@@ -1017,7 +1016,7 @@ function AppPageInner() {
       </nav>
       <button
         type="button"
-        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-zinc-700 p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+        className={`${PLANNER_NAV_BTN} inline-flex shrink-0 items-center justify-center`}
         aria-pressed={!chartsHidden}
         aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
         title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
@@ -1032,6 +1031,7 @@ function AppPageInner() {
         <PlannerChartsIcon chartsHidden={chartsHidden} />
       </button>
       </div>
+      {view === 'day' ? <AiCommandStub /> : null}
 
       {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
 
@@ -1060,11 +1060,11 @@ function AppPageInner() {
               type="button"
               disabled={!canEdit}
               aria-expanded={filtersPanelOpen}
-              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-zinc-600 bg-zinc-900 px-2.5 py-1.5 pr-4 text-xs font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5 sm:text-sm"
+              className={`${SETTINGS_BTN_SECONDARY} inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 pr-4 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5`}
               onClick={() => setFiltersPanelOpen((v) => !v)}
             >
               {t('app.filterToggle')}
-              <span className="text-zinc-500" aria-hidden>
+              <span className="text-on-surface-variant" aria-hidden>
                 {filtersPanelOpen ? '▴' : '▾'}
               </span>
             </button>
@@ -1074,7 +1074,7 @@ function AppPageInner() {
               <button
                 type="button"
                 disabled={!canEdit}
-                className="shrink-0 whitespace-nowrap rounded-lg border border-zinc-600 px-2.5 py-1.5 text-xs text-zinc-200 hover:border-zinc-500 disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm"
+                className="btn-secondary shrink-0 whitespace-nowrap px-2.5 py-1.5 text-xs disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm"
                 onClick={() =>
                   setEodModalContext({ dateKey: selectedDay, mode: 'report' })
                 }
@@ -1085,10 +1085,10 @@ function AppPageInner() {
               <button
                 type="button"
                 disabled={!canEdit}
-                className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs hover:border-zinc-500 disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm ${
+                className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm ${
                   eodDoneToday
-                    ? 'border-emerald-800 text-emerald-300'
-                    : 'border-violet-700 text-violet-200'
+                    ? 'border-primary/50 text-primary hover:bg-primary/10'
+                    : 'border-secondary/50 text-secondary hover:bg-secondary/10'
                 }`}
                 onClick={() =>
                   setEodModalContext({ dateKey: todayKeyApp, mode: 'ritual' })
@@ -1102,7 +1102,7 @@ function AppPageInner() {
             <button
               type="button"
               disabled={!canEdit}
-              className="inline-flex shrink-0 whitespace-nowrap rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40 sm:px-4 sm:py-2 sm:text-sm"
+              className="btn-primary inline-flex shrink-0 whitespace-nowrap px-2.5 py-1.5 text-xs disabled:opacity-40 sm:px-4 sm:py-2 sm:text-sm"
               onClick={() => {
                 setResumeDraft(null)
                 setCreateOpen(true)
@@ -1138,24 +1138,26 @@ function AppPageInner() {
               onClick={() => setFiltersPanelOpen(false)}
             />
             <div className="relative z-[45] md:z-auto">
-              <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 shadow-inner max-md:fixed max-md:inset-0 max-md:z-[45] max-md:flex max-md:flex-col max-md:overflow-hidden max-md:rounded-none max-md:border-0 max-md:bg-zinc-950 max-md:p-0 md:p-3">
-                <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3 md:hidden">
-                  <span className="text-sm font-medium text-zinc-200">{t('app.filtersTitle')}</span>
+              <div className={FILTER_PANEL}>
+                <div className="flex shrink-0 items-center justify-between border-b border-surface-variant px-4 py-3 md:hidden">
+                  <span className="font-display text-sm font-medium text-on-surface">{t('app.filtersTitle')}</span>
                   <button
                     type="button"
-                    className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
+                    className={SETTINGS_BTN_SECONDARY}
                     onClick={() => setFiltersPanelOpen(false)}
                   >
                     {t('app.filtersSheetDone')}
                   </button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-3 md:overflow-visible md:p-0">
-                  <p className="mb-3 hidden text-xs font-medium text-zinc-400 md:block">{t('app.filtersTitle')}</p>
+                  <p className="mb-3 hidden font-display text-xs font-medium text-on-surface-variant md:block">
+                    {t('app.filtersTitle')}
+                  </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+              <label className={`flex min-w-[10rem] flex-col gap-1 ${SETTINGS_LABEL}`}>
                 <span>{t('app.group')}</span>
                 <select
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  className={`${MOTIVATOR_INPUT} disabled:opacity-50`}
                   value={filterGroupId}
                   disabled={!canEdit}
                   onFocus={() => setOpenFilterMenu(null)}
@@ -1174,40 +1176,40 @@ function AppPageInner() {
                 </select>
               </label>
 
-              <div className="flex min-w-[11rem] flex-col gap-1 text-xs text-zinc-500">
+              <div className={`flex min-w-[11rem] flex-col gap-1 ${SETTINGS_LABEL}`}>
                 <span>{t('app.filterPriorities')}</span>
                 <div className="relative" ref={priorityMenuRef}>
                   <button
                     type="button"
                     disabled={!canEdit}
                     aria-expanded={openFilterMenu === 'priorities'}
-                    className="flex w-full cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-white disabled:opacity-50"
+                    className={`${MOTIVATOR_INPUT} flex w-full cursor-pointer list-none items-center justify-between gap-2 text-left disabled:opacity-50`}
                     onClick={() =>
                       setOpenFilterMenu((v) => (v === 'priorities' ? null : 'priorities'))
                     }
                   >
                     <span className="min-w-0 flex-1 truncate">{priorityFilterSummary}</span>
-                    <span className="shrink-0 text-zinc-500" aria-hidden>
+                    <span className="shrink-0 text-on-surface-variant" aria-hidden>
                       ▾
                     </span>
                   </button>
                   {openFilterMenu === 'priorities' ? (
                     <div
-                      className="absolute left-0 top-full z-30 mt-1 min-w-[14rem] rounded-lg border border-zinc-700 bg-zinc-950 p-2 shadow-xl"
+                      className="absolute left-0 top-full z-30 mt-1 min-w-[14rem] rounded-xl border border-surface-variant bg-surface-container-lowest p-2 shadow-xl"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
                         {priorityRanksForFilterMenu.map((r) => (
                           <label
                             key={r}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
+                            className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-on-surface hover:bg-surface-container"
                           >
                             <input
                               type="checkbox"
                               checked={priorityEnabled.has(r)}
                               disabled={!canEdit}
                               onChange={() => togglePriority(r)}
-                              className="h-3.5 w-3.5 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                              className="h-3.5 w-3.5 shrink-0 rounded border-outline-variant bg-surface-container-low text-primary disabled:opacity-40"
                             />
                             <span>{vault.priorityLabels[r]}</span>
                           </label>
@@ -1216,7 +1218,7 @@ function AppPageInner() {
                       <button
                         type="button"
                         disabled={!canEdit}
-                        className="mt-2 w-full rounded border border-zinc-700 px-2 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
+                        className="btn-secondary mt-2 w-full px-2 py-1.5 text-xs disabled:opacity-40"
                         onClick={() => selectAllPriorities()}
                       >
                         {t('app.filterPrioritiesAllShort')}
@@ -1226,10 +1228,10 @@ function AppPageInner() {
                 </div>
               </div>
 
-              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+              <label className={`flex min-w-[10rem] flex-col gap-1 ${SETTINGS_LABEL}`}>
                 <span>{t('app.filterColor')}</span>
                 <select
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  className={`${MOTIVATOR_INPUT} disabled:opacity-50`}
                   value={filterColor}
                   disabled={!canEdit}
                   onFocus={() => setOpenFilterMenu(null)}
@@ -1248,10 +1250,10 @@ function AppPageInner() {
                 </select>
               </label>
 
-              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+              <label className={`flex min-w-[10rem] flex-col gap-1 ${SETTINGS_LABEL}`}>
                 <span>{t('app.filterRepeats')}</span>
                 <select
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  className={`${MOTIVATOR_INPUT} disabled:opacity-50`}
                   value={filterRepeats}
                   disabled={!canEdit}
                   onFocus={() => setOpenFilterMenu(null)}
@@ -1319,16 +1321,16 @@ function AppPageInner() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="drafts-modal-title"
-              className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl"
+              className={MODAL_SHELL}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-800 px-4 py-3">
-                <h2 id="drafts-modal-title" className="text-sm font-semibold text-amber-200/90">
+              <div className={MODAL_HEADER}>
+                <h2 id="drafts-modal-title" className="font-display text-sm font-semibold text-amber-300">
                   {t('app.draftsTitle')}
                 </h2>
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                  className={`rounded-lg px-2 py-1 ${MODAL_CLOSE_BTN}`}
                   aria-label={t('common.close')}
                   onClick={() => setDraftsModalOpen(false)}
                 >
@@ -1376,15 +1378,11 @@ function AppPageInner() {
           />
 
           <section className="mb-8">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              {t('app.sectionPlanned')}
-            </h2>
+            <h2 className={PLANNER_SECTION_HEAD}>{t('app.sectionPlanned')}</h2>
             <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-10">
               <div className="min-w-0 w-full lg:max-w-lg lg:shrink-0">
                 {plannedForDay.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-zinc-700 px-4 py-8 text-center text-sm text-zinc-500">
-                    {t('app.emptyPlannedDay')}
-                  </p>
+                  <p className={EMPTY_STATE_BOX}>{t('app.emptyPlannedDay')}</p>
                 ) : (
                   <ul className="flex flex-col gap-3">
                     {plannedForDay.map((task) => (
@@ -1428,9 +1426,7 @@ function AppPageInner() {
               {t('app.sectionBacklog')}
             </h2>
             {backlogTasks.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-zinc-800 px-4 py-6 text-center text-sm text-zinc-600">
-                {t('app.emptyBacklog')}
-              </p>
+              <p className={`${EMPTY_STATE_BOX} py-6`}>{t('app.emptyBacklog')}</p>
             ) : (
               <ul className="flex max-w-lg flex-col gap-3">
                 {backlogTasks.map((task) => (
@@ -1507,22 +1503,14 @@ function AppPageInner() {
                     <div className="flex flex-wrap justify-center gap-1">
                       <button
                         type="button"
-                        className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                          periodSlotsMode === 'group'
-                            ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                            : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                        }`}
+                        className={periodBreakdownToggle(periodSlotsMode === 'group')}
                         onClick={() => setPeriodSlotsMode('group')}
                       >
                         {t('app.periodBreakdownByGroup')}
                       </button>
                       <button
                         type="button"
-                        className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                          periodSlotsMode === 'color'
-                            ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                            : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                        }`}
+                        className={periodBreakdownToggle(periodSlotsMode === 'color')}
                         onClick={() => setPeriodSlotsMode('color')}
                       >
                         {t('app.periodBreakdownByColor')}
@@ -1592,22 +1580,14 @@ function AppPageInner() {
                 <div className="flex flex-wrap justify-center gap-1">
                   <button
                     type="button"
-                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                      periodSlotsMode === 'group'
-                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                    }`}
+                    className={periodBreakdownToggle(periodSlotsMode === 'group')}
                     onClick={() => setPeriodSlotsMode('group')}
                   >
                     {t('app.periodBreakdownByGroup')}
                   </button>
                   <button
                     type="button"
-                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                      periodSlotsMode === 'color'
-                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                    }`}
+                    className={periodBreakdownToggle(periodSlotsMode === 'color')}
                     onClick={() => setPeriodSlotsMode('color')}
                   >
                     {t('app.periodBreakdownByColor')}
@@ -1697,7 +1677,8 @@ function AppPageInner() {
           }
         />
       ) : null}
-    </div>
+      </div>
+    </MotivatorShell>
   )
 }
 

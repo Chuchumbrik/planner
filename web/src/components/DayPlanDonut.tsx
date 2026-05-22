@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { plannedDayCompletionWeights, type Task } from '@motivator/core'
+import { CHART_CARD_SHELL, CHART_CARD_TITLE } from '@/lib/designClasses'
 import { getPlanProgressLabels } from '@/components/PlanDayProgressCaption'
 import { PlanProgressRing } from '@/components/PlanProgressRing'
 
@@ -31,27 +32,21 @@ export function DayPlanDonut({ plannedTasksForDay, dayKey }: DayPlanDonutProps) 
       })
 
   return (
-    <div
-      className="flex flex-col items-center gap-1 rounded-xl border border-zinc-800/90 bg-zinc-950/50 px-4 py-3 lg:border-zinc-800/60 lg:bg-zinc-950/30"
-      role="img"
-      aria-label={ariaLabel}
-    >
-      <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-        {t('eod.chartTitle')}
-      </p>
+    <div className={CHART_CARD_SHELL} role="img" aria-label={ariaLabel}>
+      <p className={CHART_CARD_TITLE}>{t('eod.chartTitle')}</p>
       <PlanProgressRing
         frac={frac}
         empty={empty}
         centerLabel={
           pctLabels ? (
-            <span className="text-lg font-semibold tabular-nums leading-none text-zinc-100">
+            <span className="text-lg font-semibold tabular-nums leading-none text-on-surface">
               {t('eod.chartPercentLine', { pct: pctLabels.pctStr })}
             </span>
           ) : undefined
         }
       />
       {empty ? (
-        <p className="max-w-[14rem] text-center text-xs leading-snug text-zinc-400">
+        <p className="max-w-[14rem] text-center text-xs leading-snug text-on-surface-variant">
           {t('eod.chartEmptyPlan')}
         </p>
       ) : null}

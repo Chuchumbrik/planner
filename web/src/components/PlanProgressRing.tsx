@@ -35,7 +35,7 @@ export function PlanProgressRing({
         cy={cy}
         r={r}
         fill="none"
-        stroke="rgb(39 39 42)"
+        stroke="#353437"
         strokeWidth={stroke}
         strokeLinecap="round"
       />
@@ -45,7 +45,7 @@ export function PlanProgressRing({
           cy={cy}
           r={r}
           fill="none"
-          stroke="rgb(5 150 105)"
+          stroke="#4edea3"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={`${dashDone} ${dashRest}`}
@@ -57,7 +57,7 @@ export function PlanProgressRing({
           cy={cy}
           r={r}
           fill="none"
-          stroke="rgb(63 63 70)"
+          stroke="#2a2a2c"
           strokeWidth={stroke}
           strokeDasharray="6 8"
         />

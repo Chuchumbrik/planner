@@ -1,6 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
+import {
+  CHECKBOX_INPUT,
+  FIELD_LABEL,
+  FIELDSET,
+  FIELDSET_LEGEND,
+  MODAL_CLOSE_BTN,
+  MODAL_FOOTER,
+  MODAL_HEADER,
+  MODAL_SHELL,
+  MODAL_TITLE,
+  MOTIVATOR_INPUT,
+  SETTINGS_BTN_SECONDARY,
+  weekdayToggle,
+} from '@/lib/designClasses'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
 import {
@@ -541,12 +555,12 @@ export function CreateTaskModal({
           if (e.target === e.currentTarget) handleAttemptClose()
         }}
       >
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl sm:max-h-[min(90vh,800px)]">
-        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/80 px-4 pb-3 pt-4">
-          <h2 className="text-sm font-semibold text-zinc-200">{t('app.createTaskTitle')}</h2>
+      <div className={MODAL_SHELL}>
+        <div className={MODAL_HEADER}>
+          <h2 className={MODAL_TITLE}>{t('app.createTaskTitle')}</h2>
           <button
             type="button"
-            className="text-zinc-500 hover:text-zinc-300"
+            className={MODAL_CLOSE_BTN}
             onClick={() => handleAttemptClose()}
           >
             ✕
@@ -555,7 +569,7 @@ export function CreateTaskModal({
 
         <div className="scrollbar-site flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-2 pt-3">
         <div ref={titleRef} className="scroll-mt-24">
-        <label className="flex flex-col gap-1 text-xs text-zinc-500">
+        <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
           <span className="flex flex-wrap items-center justify-between gap-2">
             <span>
               {t('app.taskTitle')}
@@ -564,12 +578,12 @@ export function CreateTaskModal({
                 *
               </span>
             </span>
-            <span className="font-normal text-zinc-600">
+            <span className="font-normal text-on-surface-variant">
               {snap.title.length}/{MAX_TASK_TITLE_CHARS}
             </span>
           </span>
           <input
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            className={MOTIVATOR_INPUT}
             value={snap.title}
             disabled={!canEdit}
             onChange={(e) =>
@@ -579,10 +593,10 @@ export function CreateTaskModal({
         </label>
         </div>
 
-        <label className="flex flex-col gap-1 text-xs text-zinc-500">
+        <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
           <span>{t('app.priorityShort')}</span>
           <select
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            className={MOTIVATOR_INPUT}
             value={snap.priorityRank}
             disabled={!canEdit}
             onChange={(e) =>
@@ -597,8 +611,8 @@ export function CreateTaskModal({
           </select>
         </label>
 
-        <fieldset ref={scheduleRef} className="rounded-lg border border-zinc-800 p-3">
-          <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
+        <fieldset ref={scheduleRef} className={FIELDSET}>
+          <legend className={FIELDSET_LEGEND}>{t('app.scheduleSection')}</legend>
           <div className="flex flex-col gap-3">
             {!snap.backlogOnly ? (
               <LocalDatePickerField
@@ -621,10 +635,10 @@ export function CreateTaskModal({
                 disabled={!canEdit}
               />
             ) : null}
-            <label className="flex cursor-pointer items-center gap-2.5 text-xs leading-snug text-zinc-400">
+            <label className="flex cursor-pointer items-center gap-2.5 text-xs leading-snug text-on-surface-variant">
               <input
                 type="checkbox"
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-zinc-600 bg-zinc-900"
+                className={`mt-0.5 ${CHECKBOX_INPUT}`}
                 checked={snap.backlogOnly}
                 disabled={!canEdit}
                 onChange={(e) =>
@@ -681,7 +695,7 @@ export function CreateTaskModal({
         </div>
 
         <div ref={estimateRef} className="scroll-mt-24 flex flex-col gap-2">
-          <span className="text-xs text-zinc-500">
+          <span className={FIELD_LABEL}>
             {t('app.estimatedTimeSection')}
             {plannedWithEstimateRequired ? (
               <span className="text-amber-400/90" aria-hidden>
@@ -691,13 +705,13 @@ export function CreateTaskModal({
             ) : null}
           </span>
           <div className="flex flex-wrap items-end gap-3">
-            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+            <label className={`flex min-w-[6rem] flex-1 flex-col gap-1 ${FIELD_LABEL}`}>
               <span>{t('app.estimatedHours')}</span>
               <input
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                className={MOTIVATOR_INPUT}
                 placeholder="0"
                 value={snap.estimatedHours}
                 disabled={!canEdit}
@@ -714,13 +728,13 @@ export function CreateTaskModal({
                 }}
               />
             </label>
-            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+            <label className={`flex min-w-[6rem] flex-1 flex-col gap-1 ${FIELD_LABEL}`}>
               <span>{t('app.estimatedMinutesPart')}</span>
               <input
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                className={MOTIVATOR_INPUT}
                 placeholder="0"
                 value={snap.estimatedMinutesPart}
                 disabled={!canEdit}
@@ -738,16 +752,16 @@ export function CreateTaskModal({
               />
             </label>
           </div>
-          <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
+          <p className="text-[10px] leading-snug text-on-surface-variant">{t('app.estimateHint')}</p>
           {floatingEstimateWarning ? (
             <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
           ) : null}
         </div>
 
-        <fieldset ref={recurrenceRef} className="rounded-lg border border-zinc-800 p-3">
-          <legend className="px-1 text-xs text-zinc-500">{t('app.recurrenceSection')}</legend>
+        <fieldset ref={recurrenceRef} className={FIELDSET}>
+          <legend className={FIELDSET_LEGEND}>{t('app.recurrenceSection')}</legend>
           <select
-            className="mb-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            className={`mb-2 w-full ${MOTIVATOR_INPUT}`}
             value={snap.recurrenceKind}
             disabled={!canEdit}
             onChange={(e) => {
@@ -769,13 +783,13 @@ export function CreateTaskModal({
           </select>
 
           {snap.recurrenceKind === 'everyNDays' && (
-            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
               <span>{t('app.everyNDaysLabel')}</span>
               <input
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                className={MOTIVATOR_INPUT}
                 value={String(snap.everyNDays)}
                 disabled={!canEdit}
                 onChange={(e) =>
@@ -795,11 +809,7 @@ export function CreateTaskModal({
                   key={d}
                   type="button"
                   disabled={!canEdit}
-                  className={`rounded border px-2 py-1 text-[11px] disabled:opacity-40 ${
-                    snap.weekdays.includes(d)
-                      ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                      : 'border-zinc-700 text-zinc-500'
-                  }`}
+                  className={`${weekdayToggle(snap.weekdays.includes(d))} px-2 py-1 text-[11px] disabled:opacity-40`}
                   onClick={() =>
                     setSnap((s) => ({ ...s, weekdays: toggleWeekday(s.weekdays, d) }))
                   }
@@ -832,7 +842,7 @@ export function CreateTaskModal({
 
         <details
           ref={additionalSettingsRef}
-          className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
+          className="motivator-card p-3"
           onToggle={(e) => {
             const el = e.currentTarget
             if (el.open) {
@@ -842,14 +852,14 @@ export function CreateTaskModal({
             }
           }}
         >
-          <summary className="cursor-pointer list-none text-xs font-medium text-zinc-400 [&::-webkit-details-marker]:hidden">
+          <summary className="cursor-pointer list-none font-display text-xs font-medium text-on-surface-variant [&::-webkit-details-marker]:hidden">
             {t('app.createTaskAdditionalSettings')}
           </summary>
-          <div className="mt-3 flex flex-col gap-4 border-t border-zinc-800/80 pt-3">
-            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+          <div className="mt-3 flex flex-col gap-4 border-t border-surface-variant pt-3">
+            <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
               <span>{t('app.group')}</span>
               <select
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                className={MOTIVATOR_INPUT}
                 value={snap.groupId}
                 disabled={!canEdit}
                 onChange={(e) => setSnap((s) => ({ ...s, groupId: e.target.value }))}
@@ -892,10 +902,10 @@ export function CreateTaskModal({
                 }
               }}
             />
-            <label className="flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
+            <label className={`flex cursor-pointer items-start gap-2 ${FIELD_LABEL}`}>
               <input
                 type="checkbox"
-                className="mt-0.5"
+                className={`mt-0.5 ${CHECKBOX_INPUT}`}
                 checked={snap.doubleConfirmEnabled}
                 disabled={!canEdit}
                 onChange={(e) =>
@@ -904,13 +914,13 @@ export function CreateTaskModal({
               />
               <span className="leading-snug">{t('app.doubleConfirmEnable')}</span>
             </label>
-            <p className="text-[10px] leading-snug text-zinc-600">{t('app.doubleConfirmHintShort')}</p>
+            <p className="text-[10px] leading-snug text-on-surface-variant">{t('app.doubleConfirmHintShort')}</p>
           </div>
         </details>
 
         </div>
 
-        <div className="shrink-0 border-t border-zinc-800 bg-zinc-950 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+        <div className={MODAL_FOOTER}>
           {saveAttempted && blockingLinesForSave.length > 0 ? (
             <div className="mb-3 rounded-lg border border-amber-900/35 bg-amber-950/20 px-3 py-2">
               <p className="text-[11px] font-medium text-amber-200/95">{t('app.createTaskFooterHint')}</p>
@@ -925,14 +935,14 @@ export function CreateTaskModal({
             <button
               type="button"
               disabled={!canEdit}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+              className="btn-primary px-4 py-2 text-sm disabled:opacity-40"
               onClick={() => void handleSave()}
             >
               {t('common.save')}
             </button>
             <button
               type="button"
-              className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+              className={SETTINGS_BTN_SECONDARY}
               onClick={() => handleAttemptClose()}
             >
               {t('common.cancel')}
@@ -954,24 +964,24 @@ export function CreateTaskModal({
             role="alertdialog"
             aria-modal
             aria-labelledby="create-task-close-title"
-            className="w-full max-w-sm rounded-xl border border-zinc-600 bg-zinc-950 p-4 shadow-2xl"
+            className="motivator-card w-full max-w-sm p-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 id="create-task-close-title" className="text-sm font-semibold text-zinc-100">
+            <h3 id="create-task-close-title" className={MODAL_TITLE}>
               {t('app.createTaskCloseTitle')}
             </h3>
-            <p className="mt-2 text-sm leading-snug text-zinc-400">{closeConfirmHint}</p>
+            <p className="mt-2 text-sm leading-snug text-on-surface-variant">{closeConfirmHint}</p>
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
-                className="rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
+                className={SETTINGS_BTN_SECONDARY}
                 onClick={() => setCloseConfirmOpen(false)}
               >
                 {t('app.createTaskCloseStay')}
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-zinc-100 px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-white"
+                className="btn-primary px-3 py-2 text-sm"
                 onClick={() => void finalizeDismissWithoutSave()}
               >
                 {t('app.createTaskCloseLeave')}

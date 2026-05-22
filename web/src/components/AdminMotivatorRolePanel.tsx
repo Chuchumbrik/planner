@@ -2,6 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
+import {
+  MOTIVATOR_INPUT,
+  SETTINGS_BTN_SECONDARY,
+  SETTINGS_CARD,
+  SETTINGS_SUBHEAD,
+} from '@/lib/designClasses'
 
 export type MotivatorRoleRow = {
   id: string
@@ -145,23 +151,23 @@ export function AdminMotivatorRolePanel({
 
   return (
     <section className="mt-8">
-      <h2 className="text-sm font-medium text-zinc-300">{t('settings.adminRolesTitle')}</h2>
-      <p className="mt-2 text-xs text-zinc-500">{t('settings.adminRolesHelp')}</p>
+      <h2 className="font-display text-sm font-semibold text-on-surface">{t('settings.adminRolesTitle')}</h2>
+      <p className="mt-2 text-xs text-on-surface-variant">{t('settings.adminRolesHelp')}</p>
 
-      <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+      <div className={`mt-4 ${SETTINGS_CARD}`}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <input
           type="search"
           autoComplete="off"
           placeholder={t('settings.adminRolesSearchPlaceholder')}
-          className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder:text-zinc-600"
+          className={`${MOTIVATOR_INPUT} min-w-0 flex-1 placeholder:text-on-surface-variant`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <button
           type="button"
           disabled={loadBusy}
-          className="shrink-0 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+          className={`${SETTINGS_BTN_SECONDARY} shrink-0`}
           onClick={() => void load()}
         >
           {loadBusy ? t('common.loading') : t('settings.adminRolesRefresh')}
@@ -178,24 +184,24 @@ export function AdminMotivatorRolePanel({
 
       <div className="mt-4 flex flex-col gap-2 md:hidden">
         {filtered.length === 0 && !loadBusy ? (
-          <p className="rounded-lg border border-zinc-800 px-3 py-6 text-center text-xs text-zinc-500">
+          <p className="rounded-xl border border-surface-variant px-3 py-6 text-center text-xs text-on-surface-variant">
             {t('settings.adminRolesEmpty')}
           </p>
         ) : null}
         {filtered.map((u) => {
           const busy = rowBusyId === u.id
           return (
-            <div key={u.id} className="rounded-lg border border-zinc-700/80 bg-zinc-950/60 px-3 py-3">
-              <div className="min-w-0 break-all text-sm text-zinc-200">{u.email || u.id}</div>
+            <div key={u.id} className="motivator-card px-3 py-3">
+              <div className="min-w-0 break-all text-sm text-on-surface">{u.email || u.id}</div>
               {u.id === currentUserId ? (
-                <div className="mt-0.5 text-[10px] text-zinc-600">{t('settings.adminRolesYou')}</div>
+                <div className="mt-0.5 text-[10px] text-on-surface-variant">{t('settings.adminRolesYou')}</div>
               ) : null}
               <label className="mt-2 flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+                <span className={`${SETTINGS_SUBHEAD} mt-0 text-[10px]`}>
                   {t('settings.adminRolesColRole')}
                 </span>
                 <select
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white disabled:opacity-40"
+                  className={MOTIVATOR_INPUT}
                   value={u.motivator_role}
                   disabled={busy || loadBusy}
                   onChange={(e) => {
@@ -214,10 +220,10 @@ export function AdminMotivatorRolePanel({
         })}
       </div>
 
-        <div className="mt-4 hidden overflow-x-auto rounded-lg border border-zinc-700/80 bg-zinc-950/40 md:block">
+        <div className="motivator-card mt-4 hidden overflow-x-auto p-0 md:block">
         <table className="w-full border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-zinc-800 bg-zinc-900/60 text-xs uppercase tracking-wide text-zinc-500">
+            <tr className="border-b border-surface-variant bg-surface-container-low font-display text-xs uppercase tracking-wide text-on-surface-variant">
               <th className="px-3 py-2 font-medium">{t('settings.adminRolesColEmail')}</th>
               <th className="px-3 py-2 font-medium">{t('settings.adminRolesColRole')}</th>
             </tr>
@@ -225,7 +231,7 @@ export function AdminMotivatorRolePanel({
           <tbody>
             {filtered.length === 0 && !loadBusy ? (
               <tr>
-                <td colSpan={2} className="px-3 py-6 text-center text-xs text-zinc-500">
+                <td colSpan={2} className="px-3 py-6 text-center text-xs text-on-surface-variant">
                   {t('settings.adminRolesEmpty')}
                 </td>
               </tr>
@@ -233,18 +239,18 @@ export function AdminMotivatorRolePanel({
             {filtered.map((u) => {
               const busy = rowBusyId === u.id
               return (
-                <tr key={u.id} className="border-b border-zinc-800/80 last:border-0">
+                <tr key={u.id} className="border-b border-surface-variant/80 last:border-0">
                   <td className="max-w-[14rem] px-3 py-2 align-middle">
-                    <div className="truncate text-zinc-200" title={u.email || u.id}>
+                    <div className="truncate text-on-surface" title={u.email || u.id}>
                       {u.email || u.id}
                     </div>
                     {u.id === currentUserId ? (
-                      <div className="text-[10px] text-zinc-600">{t('settings.adminRolesYou')}</div>
+                      <div className="text-[10px] text-on-surface-variant">{t('settings.adminRolesYou')}</div>
                     ) : null}
                   </td>
                   <td className="px-3 py-2 align-middle">
                     <select
-                      className="w-full max-w-[11rem] rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white disabled:opacity-40"
+                      className={`${MOTIVATOR_INPUT} max-w-[11rem]`}
                       value={u.motivator_role}
                       disabled={busy || loadBusy}
                       onChange={(e) => {

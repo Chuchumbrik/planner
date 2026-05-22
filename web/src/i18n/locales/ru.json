@@ -14,6 +14,11 @@
   },
   "app": {
     "brand": "Мотиватор",
+    "brandLatin": "Motivator",
+    "aiCommandStubPlaceholder": "AI-команда (скоро): «Запланируй фокус в 14:00»",
+    "aiCommandStubAria": "Поле AI-команды (в разработке)",
+    "aiCommandStubHint": "Интеллектуальные команды появятся в одной из следующих версий.",
+    "aiCommandStubBadge": "скоро",
     "tasks": "Задачи",
     "dayTitle": "День",
     "settings": "Настройки",
@@ -139,6 +144,8 @@
     "filterColor": "Цвет метки",
     "filterColorAll": "Все цвета",
     "toggleTaskDone": "Отметить выполненной",
+    "taskDoneShort": "Готово",
+    "taskDoneShort": "Готово",
     "completionOnlyToday": "Отметить выполнение можно только при просмотре календарного сегодняшнего дня — переключитесь на «Сегодня».",
     "filterRepeats": "Повторы",
     "filterRepeatsAll": "Все задачи",
@@ -464,7 +471,11 @@
     "chartAriaProgress": "{{pctStr}}%. Доля выполнения по задачам: {{doneSumStr}} из {{taskCountStr}} задач.",
     "chartEmptyPlan": "Нет задач в плане на этот день — круг показывает пустой контур.",
     "finishRitual": "Завершить ритуал",
-    "alreadyDone": "Ритуал за этот день уже отмечен как завершённый."
+    "alreadyDone": "Ритуал за этот день уже отмечен как завершённый.",
+    "panelStatusLabel": "Статус",
+    "panelStatusTitle": "Фаза рефлексии",
+    "statCompleted": "Сделано по плану",
+    "statRemaining": "Не закрыто"
   },
   "reports": {
     "title": "Отчёты",
@@ -500,7 +511,18 @@
     "title": "Планировщик с заботой о ритме дня",
     "subtitle": "Минимальная веб-версия: вход, клиентское шифрование и список задач.",
     "login": "Войти",
-    "docsHint": "Документация — папка obsidian-motivator в репозитории"
+    "docsHint": "Документация — папка obsidian-motivator в репозитории",
+    "heroBadge": "Клиентское шифрование · PWA",
+    "heroTitle": "Ваш приватный vault для продуктивности",
+    "heroSubtitle": "Планировщик с шифрованием на устройстве: день, неделя и месяц. На сервер уходит только ciphertext — без трекеров и лишнего шума.",
+    "ctaPrimary": "Открыть vault",
+    "ctaSecondary": "Узнать о безопасности",
+    "feature1Title": "Шифрование на устройстве",
+    "feature1Body": "Задачи и настройки шифруются в браузере перед отправкой в облако.",
+    "feature2Title": "День · Неделя · Месяц",
+    "feature2Body": "План на день, таймблокинг недели и обзор месяца в одном интерфейсе.",
+    "feature3Title": "Ритуал и отчёты",
+    "feature3Body": "Завершение дня, стрик и аналитика — на клиенте после расшифровки vault."
   },
   "login": {
     "loginTitle": "Вход",
@@ -533,8 +555,11 @@
     "title": "Ключ шифрования",
     "intro": "Seed используется вместе с паролем деривации (можно оставить пустым в V1 — менее безопасно). После выхода из аккаунта seed стирается из браузера — чтобы снова открыть те же задачи, вставьте <strong>тот же</strong> seed и тот же пароль деривации, что при первом входе.",
     "restoreTitle": "Восстановление ключа",
+    "restoreBadge": "Безопасное восстановление",
     "restoreIntro": "На сервере уже есть зашифрованные данные. Вставьте сохранённый seed и пароль деривации — те же, что при первой настройке.",
+    "securityNotice": "Никому не передавайте seed. Поддержка Мотиватор / Motivator никогда не запросит его.",
     "setupTitle": "Новый ключ шифрования",
+    "setupBadge": "Первичная настройка",
     "setupIntro": "Сгенерируйте seed, сохраните его в надёжном месте и подтвердите, что сделали это. Без seed после выхода из аккаунта данные не восстановить.",
     "setupSavedAck": "Я сохранил(а) seed в надёжном месте",
     "tabNew": "Новый seed",
@@ -559,7 +584,24 @@
     "roleLabelAdmin": "Администратор",
     "sessionInformerRoleTitle": "Обновились права в аккаунте.",
     "sessionInformerRoleDetail": "Роль изменилась: {{before}} → {{after}}.",
-    "sessionInformerDismiss": "Скрыть"
+    "sessionInformerDismiss": "Скрыть",
+    "brandSubtitle": "Productivity Vault",
+    "navPlanner": "Планировщик",
+    "navReports": "Отчёты",
+    "navSettings": "Настройки",
+    "sideNavAria": "Основная навигация",
+    "bottomNavAria": "Навигация приложения",
+    "vaultLocked": "Vault защищён",
+    "clientEncrypted": "Данные на устройстве",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "planUpgrade": "Перейти на Premium",
+    "planUpgradeHint": "Монетизация (фаза 8) — заглушка интерфейса",
+    "title": {
+      "planner": "Планировщик",
+      "reports": "Отчёты",
+      "settings": "Настройки"
+    }
   },
   "vault": {
     "decryptError": "Не удалось расшифровать vault. Проверьте seed и пароль.",
@@ -601,6 +643,62 @@
         "body": "Черновик для фазы MVP (152-ФЗ / GDPR — по юрисдикции продукта).",
         "placeholder": "Здесь будет описание обработки ПДн. VITE_LEGAL_PERSONAL_DATA_URL — внешняя страница."
       }
+    }
+  },
+  "prototype": {
+    "bannerTitle": "Статический прототип",
+    "bannerBody": "Макет из Design 2.0 (Stitch). Данные вымышленные, кнопки не выполняют действий в продукте.",
+    "backToSettings": "← Настройки",
+    "settingsSectionTitle": "Прототипы интерфейса",
+    "settingsSectionHelp": "Превью экранов вне текущего MVP — для согласования дизайна.",
+    "nav": {
+      "deepFocus": "Deep Focus",
+      "aiInsights": "AI Insights",
+      "securityLog": "Журнал безопасности",
+      "admin": "Админ-панель"
+    },
+    "deepFocus": {
+      "title": "Deep Focus (прототип)",
+      "intro": "Сессия глубокой работы с таймером и блоками bio/AI — не в MVP.",
+      "bioTitle": "Bio-feedback",
+      "heartRate": "Пульс",
+      "sessionLabel": "Активная сессия",
+      "taskName": "Архитектура Q3 (пример)",
+      "pause": "Пауза",
+      "complete": "Завершить",
+      "aiTitle": "AI Insights",
+      "aiBody": "Рекомендации по ритму дня появятся позже."
+    },
+    "aiInsights": {
+      "title": "AI Insights (прототип)",
+      "intro": "Аналитика с подсказками модели — отдельно от вкладки «Отчёты».",
+      "item1": "Пик продуктивности: 10:00–12:30",
+      "item2": "Риск перегрузки: среда",
+      "item3": "Ритуал EOD: 4 дня подряд",
+      "chartTitle": "Недельный тренд (mock)"
+    },
+    "securityLog": {
+      "title": "Журнал безопасности (прототип)",
+      "intro": "События входа, синхронизации и ключей — планируется после MVP.",
+      "colTime": "Время",
+      "colEvent": "Событие",
+      "colStatus": "Статус",
+      "statusOk": "OK",
+      "e1": "Vault расшифрован на устройстве",
+      "e2": "Синхронизация ciphertext",
+      "e3": "Web Push: подписка обновлена",
+      "e4": "Вход в аккаунт"
+    },
+    "admin": {
+      "title": "Админ-панель (прототип)",
+      "intro": "Сводка для администратора; часть уже есть в «Пользователи и роли».",
+      "statUsers": "Пользователи",
+      "statDefects": "Открытые дефекты",
+      "statSync": "Uptime sync",
+      "recentTitle": "Последние события",
+      "recent1": "Новая регистрация — beta_tester",
+      "recent2": "Дефект #42 — в работе",
+      "recent3": "Cron send-due — OK"
     }
   }
 }

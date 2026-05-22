@@ -14,6 +14,11 @@
   },
   "app": {
     "brand": "Motivator",
+    "brandLatin": "Мотиватор",
+    "aiCommandStubPlaceholder": "AI command (soon): “Schedule focus at 2pm”",
+    "aiCommandStubAria": "AI command field (in development)",
+    "aiCommandStubHint": "Intelligent commands will ship in a future release.",
+    "aiCommandStubBadge": "soon",
     "tasks": "Tasks",
     "dayTitle": "Day",
     "settings": "Settings",
@@ -139,6 +144,7 @@
     "filterColor": "Label color",
     "filterColorAll": "All colors",
     "toggleTaskDone": "Mark done",
+    "taskDoneShort": "Done",
     "completionOnlyToday": "You can only toggle completion on calendar today — switch to Today’s day view.",
     "filterRepeats": "Repeats",
     "filterRepeatsAll": "All tasks",
@@ -464,7 +470,11 @@
     "chartAriaProgress": "{{pctStr}}%. Progress by task shares: {{doneSumStr}} of {{taskCountStr}} tasks.",
     "chartEmptyPlan": "No tasks planned for this day — the ring shows an empty outline.",
     "finishRitual": "Finish ritual",
-    "alreadyDone": "This day’s ritual is already marked complete."
+    "alreadyDone": "This day’s ritual is already marked complete.",
+    "panelStatusLabel": "Status",
+    "panelStatusTitle": "Reflection phase",
+    "statCompleted": "Planned done",
+    "statRemaining": "Still open"
   },
   "reports": {
     "title": "Reports",
@@ -500,7 +510,18 @@
     "title": "A planner that respects your rhythm",
     "subtitle": "Minimal web app: sign-in, client-side encryption, tasks.",
     "login": "Sign in",
-    "docsHint": "Docs — obsidian-motivator folder in the repo"
+    "docsHint": "Docs — obsidian-motivator folder in the repo",
+    "heroBadge": "Client-side encryption · PWA",
+    "heroTitle": "Your private productivity vault",
+    "heroSubtitle": "A planner encrypted on your device: day, week, and month views. Only ciphertext leaves your machine — no trackers, no noise.",
+    "ctaPrimary": "Open your vault",
+    "ctaSecondary": "How security works",
+    "feature1Title": "Encrypted on device",
+    "feature1Body": "Tasks and settings are encrypted in the browser before cloud sync.",
+    "feature2Title": "Day · Week · Month",
+    "feature2Body": "Daily plan, weekly timeblocking, and a month overview in one UI.",
+    "feature3Title": "Ritual & reports",
+    "feature3Body": "End-of-day, streaks, and analytics — computed client-side after decrypt."
   },
   "login": {
     "loginTitle": "Sign in",
@@ -533,8 +554,11 @@
     "title": "Encryption key",
     "intro": "Seed is combined with a derivation password (optional in V1 — less secure). After sign-out the seed is cleared — to open the same tasks again, paste <strong>the same</strong> seed and derivation password as the first time.",
     "restoreTitle": "Restore encryption key",
+    "restoreBadge": "Secure restoration",
     "restoreIntro": "Encrypted data already exists on the server. Paste your saved seed and derivation password from the first setup.",
+    "securityNotice": "Never share your seed. Motivator / Мотиватор support will never ask for it.",
     "setupTitle": "New encryption key",
+    "setupBadge": "First-time setup",
     "setupIntro": "Generate a seed, store it safely, and confirm you did. Without the seed after sign-out, data cannot be recovered.",
     "setupSavedAck": "I saved the seed in a safe place",
     "tabNew": "New seed",
@@ -559,7 +583,24 @@
     "roleLabelAdmin": "Administrator",
     "sessionInformerRoleTitle": "Your account permissions were updated.",
     "sessionInformerRoleDetail": "Role changed: {{before}} → {{after}}.",
-    "sessionInformerDismiss": "Dismiss"
+    "sessionInformerDismiss": "Dismiss",
+    "brandSubtitle": "Productivity Vault",
+    "navPlanner": "Planner",
+    "navReports": "Reports",
+    "navSettings": "Settings",
+    "sideNavAria": "Main navigation",
+    "bottomNavAria": "App navigation",
+    "vaultLocked": "Vault secured",
+    "clientEncrypted": "Client-side data",
+    "planFree": "Free",
+    "planPremium": "Premium",
+    "planUpgrade": "Upgrade to Premium",
+    "planUpgradeHint": "Monetization (phase 8) — UI placeholder",
+    "title": {
+      "planner": "Planner",
+      "reports": "Reports",
+      "settings": "Settings"
+    }
   },
   "vault": {
     "decryptError": "Could not decrypt vault. Check seed and password.",
@@ -601,6 +642,62 @@
         "body": "MVP draft (jurisdiction-specific notices to follow).",
         "placeholder": "Personal data processing notice will appear here. VITE_LEGAL_PERSONAL_DATA_URL for an external page."
       }
+    }
+  },
+  "prototype": {
+    "bannerTitle": "Static prototype",
+    "bannerBody": "Design 2.0 (Stitch) mock. Fictional data; controls do not affect the live product.",
+    "backToSettings": "← Settings",
+    "settingsSectionTitle": "UI prototypes",
+    "settingsSectionHelp": "Previews of screens outside current MVP — for design alignment.",
+    "nav": {
+      "deepFocus": "Deep Focus",
+      "aiInsights": "AI Insights",
+      "securityLog": "Security log",
+      "admin": "Admin dashboard"
+    },
+    "deepFocus": {
+      "title": "Deep Focus (prototype)",
+      "intro": "Deep work session with timer and bio/AI blocks — not in MVP.",
+      "bioTitle": "Bio-feedback",
+      "heartRate": "Heart rate",
+      "sessionLabel": "Active session",
+      "taskName": "Q3 architecture (sample)",
+      "pause": "Pause",
+      "complete": "Complete",
+      "aiTitle": "AI Insights",
+      "aiBody": "Rhythm recommendations will come later."
+    },
+    "aiInsights": {
+      "title": "AI Insights (prototype)",
+      "intro": "Model-assisted analytics — separate from the Reports tab.",
+      "item1": "Peak productivity: 10:00–12:30",
+      "item2": "Overload risk: Wednesday",
+      "item3": "EOD ritual: 4 days in a row",
+      "chartTitle": "Weekly trend (mock)"
+    },
+    "securityLog": {
+      "title": "Security log (prototype)",
+      "intro": "Sign-in, sync, and key events — planned post-MVP.",
+      "colTime": "Time",
+      "colEvent": "Event",
+      "colStatus": "Status",
+      "statusOk": "OK",
+      "e1": "Vault decrypted on device",
+      "e2": "Ciphertext sync",
+      "e3": "Web Push: subscription updated",
+      "e4": "Account sign-in"
+    },
+    "admin": {
+      "title": "Admin dashboard (prototype)",
+      "intro": "Operator overview; part of this exists under Users & roles.",
+      "statUsers": "Users",
+      "statDefects": "Open defects",
+      "statSync": "Sync uptime",
+      "recentTitle": "Recent events",
+      "recent1": "New signup — beta_tester",
+      "recent2": "Defect #42 — in progress",
+      "recent3": "Cron send-due — OK"
     }
   }
 }

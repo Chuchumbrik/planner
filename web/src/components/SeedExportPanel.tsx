@@ -1,6 +1,10 @@
 import { useCallback, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  CHECKBOX_INPUT,
+  SETTINGS_BTN_SECONDARY,
+} from '@/lib/designClasses'
+import {
   getStoredSeedB64,
   hasAcknowledgedSeedWarning,
   setAcknowledgedSeedWarning,
@@ -77,7 +81,7 @@ export function SeedExportPanel({ className = '' }: Props) {
   }, [canReveal, revealed, seed, loadQr])
 
   if (!seed) {
-    return <p className={`text-sm text-zinc-400 ${className}`}>{t('settings.seedMissing')}</p>
+    return <p className={`text-sm text-on-surface-variant ${className}`}>{t('settings.seedMissing')}</p>
   }
 
   return (
@@ -96,10 +100,10 @@ export function SeedExportPanel({ className = '' }: Props) {
       </div>
 
       {!ack ? (
-        <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm text-zinc-300">
+        <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm text-on-surface">
           <input
             type="checkbox"
-            className="mt-0.5"
+            className={`mt-0.5 ${CHECKBOX_INPUT}`}
             checked={ack}
             onChange={(e) => {
               const next = e.target.checked
@@ -115,7 +119,7 @@ export function SeedExportPanel({ className = '' }: Props) {
         <button
           type="button"
           disabled={!canReveal}
-          className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+          className={SETTINGS_BTN_SECONDARY}
           onClick={toggleReveal}
         >
           {revealed ? t('settings.seedHide') : t('settings.seedReveal')}
@@ -123,7 +127,7 @@ export function SeedExportPanel({ className = '' }: Props) {
         <button
           type="button"
           disabled={!canReveal}
-          className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+          className={SETTINGS_BTN_SECONDARY}
           onClick={() => void handleCopy()}
         >
           {copyDone ? t('settings.seedCopied') : t('settings.seedCopy')}
@@ -131,7 +135,7 @@ export function SeedExportPanel({ className = '' }: Props) {
         <button
           type="button"
           disabled={!canReveal}
-          className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+          className={SETTINGS_BTN_SECONDARY}
           onClick={handleDownload}
         >
           {t('settings.seedDownload')}
@@ -140,25 +144,27 @@ export function SeedExportPanel({ className = '' }: Props) {
 
       {revealed && canReveal ? (
         <div className="mt-4 space-y-4">
-          <div className="rounded-lg border border-zinc-700 bg-black/40 p-3">
-            <p className="text-xs uppercase tracking-wide text-zinc-500">{t('settings.seedLabel')}</p>
-            <p className="mt-2 break-all font-mono text-xs text-emerald-300">{seed}</p>
+          <div className="motivator-card bg-black/40 p-3">
+            <p className="font-display text-xs uppercase tracking-wide text-on-surface-variant">
+              {t('settings.seedLabel')}
+            </p>
+            <p className="mt-2 break-all font-mono text-xs text-primary">{seed}</p>
           </div>
           {qrDataUrl ? (
             <div className="flex flex-col items-start gap-2">
-              <p className="text-xs text-zinc-500">{t('settings.seedQrHint')}</p>
+              <p className="text-xs text-on-surface-variant">{t('settings.seedQrHint')}</p>
               <img
                 src={qrDataUrl}
                 alt={t('settings.seedQrAlt')}
-                className="rounded border border-zinc-700 bg-white p-2"
+                className="rounded-lg border border-surface-variant bg-white p-2"
                 width={200}
                 height={200}
               />
             </div>
           ) : qrError ? (
-            <p className="text-xs text-zinc-500">{t('settings.seedQrUnavailable')}</p>
+            <p className="text-xs text-on-surface-variant">{t('settings.seedQrUnavailable')}</p>
           ) : qrLoading ? (
-            <p className="text-xs text-zinc-500">{t('common.loading')}</p>
+            <p className="text-xs text-on-surface-variant">{t('common.loading')}</p>
           ) : null}
         </div>
       ) : null}

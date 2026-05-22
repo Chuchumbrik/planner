@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/cn'
 import {
   getTaskSlotMinutes,
   isMainTaskDoneForDay,
@@ -11,8 +12,11 @@ import {
 const HOUR_HEIGHT_PX = 42
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
-/** Заголовки и тело: одна сетка; вертикальный скролл только у семи колонок дней (#60). */
 const GRID_COLS = '56px repeat(7, minmax(0, 1fr))' as const
+
+const GRID_BORDER = 'border-surface-variant'
+const GRID_MUTED = 'text-on-surface-variant'
+const GRID_SURFACE = 'bg-surface-container-lowest'
 
 function parseDayParts(dateKey: string): { y: number; m: number; d: number } {
   const [y, m, d] = dateKey.split('-').map(Number)
@@ -38,7 +42,6 @@ type Props = {
   priorityLabels: PriorityLabels
   locale: string
   canEdit: boolean
-  /** columnDayKey — календарный день колонки (для повторов и отметки «выполнено за день») */
   onTaskClick: (taskId: string, columnDayKey: string) => void
 }
 
@@ -79,41 +82,49 @@ export function WeekGrid({
     })
   }
 
+  const cellBorder = `border-b border-r ${GRID_BORDER}`
+
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+    <div className="motivator-card flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden p-0">
       <div
-        className="grid w-full min-w-0 border-x border-t border-zinc-800"
+        className={cn('grid w-full min-w-0 border-x border-t', GRID_BORDER)}
         style={{
           gridTemplateColumns: GRID_COLS,
           gridTemplateRows: `auto auto minmax(200px, min(78dvh, 900px))`,
         }}
       >
-        {/* Строка 1: дни недели */}
-        <div className="border-b border-r border-zinc-800 p-2 text-zinc-600" />
+        <div className={cn(cellBorder, 'p-2', GRID_MUTED)} />
         {weekDays.map((day) => {
           const { weekday, dayNum } = dayHeader(day, locale)
           return (
             <div
               key={day}
-              className="border-b border-l border-zinc-800 p-2 text-center text-xs text-zinc-200"
+              className={cn(
+                'border-b border-l p-2 text-center text-xs',
+                GRID_BORDER,
+                'bg-surface-container-low',
+              )}
             >
-              <div className="text-[10px] uppercase text-zinc-500">{weekday}</div>
-              <div className="text-sm font-semibold">{dayNum}</div>
+              <div className={cn('font-display text-[10px] uppercase', GRID_MUTED)}>{weekday}</div>
+              <div className="font-display text-sm font-bold text-on-surface">{dayNum}</div>
             </div>
           )
         })}
 
-        {/* Строка 2: без времени */}
-        <div className="border-b border-r border-zinc-800 p-1" />
+        <div className={cn(cellBorder, 'p-1')} />
         {weekDays.map((day) => {
           const uns = unslottedTasks(day)
           return (
             <div
               key={`u-${day}`}
-              className="flex min-h-[2rem] flex-wrap content-start gap-1 border-b border-l border-zinc-800 p-1"
+              className={cn(
+                'flex min-h-[2rem] flex-wrap content-start gap-1 border-b border-l p-1',
+                GRID_BORDER,
+                'bg-surface-container-low/50',
+              )}
             >
               {uns.length === 0 ? (
-                <span className="text-[10px] text-zinc-700">—</span>
+                <span className={cn('text-[10px]', GRID_MUTED)}>—</span>
               ) : (
                 uns.map((task) => (
                   <button
@@ -121,7 +132,11 @@ export function WeekGrid({
                     type="button"
                     disabled={!canEdit}
                     title={task.title}
-                    className="max-w-full truncate rounded bg-zinc-800/90 px-1.5 py-0.5 text-left text-[10px] text-zinc-300 hover:bg-zinc-700 disabled:opacity-40"
+                    className={cn(
+                      'max-w-full truncate rounded border border-outline-variant px-1.5 py-0.5',
+                      'text-left text-[10px] text-on-surface-variant',
+                      'hover:bg-surface-container-high disabled:opacity-40',
+                    )}
                     onClick={() => onTaskClick(task.id, day)}
                   >
                     {task.title}
@@ -132,9 +147,8 @@ export function WeekGrid({
           )
         })}
 
-        {/* Строка 3: ось часов; скролл только у колонок дней */}
         <div
-          className="border-b border-r border-zinc-800 bg-zinc-950 pr-1"
+          className={cn('border-b border-r pr-1', GRID_BORDER, GRID_SURFACE)}
           style={{ gridRow: 3, gridColumn: 1 }}
         >
           <div style={{ height: gridHeight }}>
@@ -142,7 +156,11 @@ export function WeekGrid({
               <div
                 key={h}
                 style={{ height: HOUR_HEIGHT_PX }}
-                className="border-t border-zinc-800/60 text-[11px] leading-none text-zinc-500"
+                className={cn(
+                  'border-t font-mono text-[11px] leading-none',
+                  'border-surface-variant/50',
+                  GRID_MUTED,
+                )}
               >
                 {String(h).padStart(2, '0')}:00
               </div>
@@ -150,7 +168,7 @@ export function WeekGrid({
           </div>
         </div>
         <div
-          className="week-grid-v-scroll min-h-0 overflow-y-auto overscroll-y-contain border-b border-zinc-800"
+          className="week-grid-v-scroll min-h-0 overflow-y-auto overscroll-y-contain border-b border-surface-variant"
           style={{
             gridRow: 3,
             gridColumn: '2 / -1',
@@ -163,13 +181,13 @@ export function WeekGrid({
             return (
               <div
                 key={day}
-                className="relative border-l border-zinc-800"
+                className={cn('relative border-l', GRID_BORDER, 'bg-surface-container-lowest/80')}
                 style={{ height: gridHeight }}
               >
                 {HOURS.map((h) => (
                   <div
                     key={h}
-                    className="pointer-events-none absolute left-0 right-0 border-t border-zinc-800/40"
+                    className="pointer-events-none absolute left-0 right-0 border-t border-surface-variant/40"
                     style={{ top: h * HOUR_HEIGHT_PX }}
                   />
                 ))}
@@ -177,18 +195,23 @@ export function WeekGrid({
                   const slot = getTaskSlotMinutes(task, day)
                   if (!slot) return null
                   const top = (slot.start / 60) * HOUR_HEIGHT_PX
-                  const height = Math.max(
-                    ((slot.end - slot.start) / 60) * HOUR_HEIGHT_PX,
-                    18,
-                  )
+                  const height = Math.max(((slot.end - slot.start) / 60) * HOUR_HEIGHT_PX, 18)
                   const accent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
+                  const done = isMainTaskDoneForDay(task, day)
                   return (
                     <button
                       key={task.id}
                       type="button"
                       disabled={!canEdit}
                       title={`${task.title} · ${priorityLabels[task.priorityRank]}`}
-                      className="absolute left-0.5 right-0.5 overflow-hidden rounded border border-zinc-700/80 bg-zinc-900/95 px-1 py-0.5 text-left text-[10px] leading-tight text-zinc-100 shadow-sm hover:bg-zinc-800 disabled:opacity-40 border-l-[3px]"
+                      className={cn(
+                        'absolute left-0.5 right-0.5 overflow-hidden rounded border border-l-[3px] px-1 py-0.5',
+                        'text-left text-[10px] leading-tight shadow-sm disabled:opacity-40',
+                        'border-surface-variant hover:bg-surface-container-high',
+                        done
+                          ? 'bg-primary/10 text-on-surface-variant line-through opacity-70'
+                          : 'bg-surface-container text-on-surface',
+                      )}
                       style={{ top, height, zIndex: 2, borderLeftColor: accent }}
                       onClick={() => onTaskClick(task.id, day)}
                     >
@@ -201,7 +224,7 @@ export function WeekGrid({
           })}
         </div>
       </div>
-      <p className="mt-2 shrink-0 border-t border-zinc-800 pt-2 text-[11px] leading-snug text-zinc-400">
+      <p className="shrink-0 border-t border-surface-variant px-4 py-3 text-[11px] leading-snug text-on-surface-variant">
         {t('app.weekGridHint')}
       </p>
     </div>

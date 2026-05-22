@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { BrandMark } from '@/components/brand/BrandMark'
+import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { APP_VERSION } from '@/version'
 import { useVault } from '@/vault/VaultProvider'
 
@@ -11,8 +13,8 @@ export function HomePage() {
 
   if (loading || !ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-zinc-400">{t('shell.loading')}</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-sm text-on-surface-variant">{t('shell.loading')}</p>
       </div>
     )
   }
@@ -20,23 +22,76 @@ export function HomePage() {
   if (session && unlocked) return <Navigate to="/app" replace />
   if (session && !unlocked) return <Navigate to="/onboarding" replace />
 
+  const features = [
+    { icon: 'encrypted', titleKey: 'home.feature1Title', bodyKey: 'home.feature1Body' },
+    { icon: 'calendar_view_month', titleKey: 'home.feature2Title', bodyKey: 'home.feature2Body' },
+    { icon: 'insights', titleKey: 'home.feature3Title', bodyKey: 'home.feature3Body' },
+  ] as const
+
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-8 px-6 py-16">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-emerald-400/90">
-          {t('home.badge', { version: APP_VERSION })}
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">{t('home.title')}</h1>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">{t('home.subtitle')}</p>
-      </div>
-      <div className="flex flex-col gap-3 sm:flex-row">
+    <div className="min-h-screen bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-surface-variant bg-background/90 px-4 backdrop-blur-sm md:px-10">
+        <BrandMark size="sm" />
         <Link
-          className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-medium text-emerald-950 hover:bg-emerald-400"
+          className="btn-primary px-5 py-2.5 active:scale-[0.98] transition-transform"
           to="/login"
         >
           {t('home.login')}
         </Link>
-      </div>
+      </header>
+
+      <main className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 grid-pattern opacity-25" aria-hidden />
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 h-[480px] w-full max-w-[900px] -translate-x-1/2 rounded-full bg-primary/5 blur-[100px]"
+          aria-hidden
+        />
+
+        <section className="relative z-10 mx-auto max-w-[1200px] px-4 pb-20 pt-16 text-center md:px-10 md:pt-24">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-surface-variant bg-surface-container-high px-3 py-1">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" aria-hidden />
+            <span className="font-display text-xs tracking-wide text-on-surface-variant">
+              {t('home.heroBadge')} · {t('home.badge', { version: APP_VERSION })}
+            </span>
+          </div>
+          <h1 className="mx-auto max-w-3xl font-display text-3xl font-bold leading-tight tracking-tight text-on-surface md:text-5xl md:leading-[1.15]">
+            {t('home.heroTitle')}
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">
+            {t('home.heroSubtitle')}
+          </p>
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              className="btn-primary emerald-glow w-full px-8 py-4 active:scale-[0.98] transition-transform sm:w-auto"
+              to="/login"
+            >
+              {t('home.ctaPrimary')}
+            </Link>
+            <a
+              className="btn-secondary w-full px-8 py-4 active:scale-[0.98] transition-transform sm:w-auto"
+              href="https://github.com/Chuchumbrik/planner"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {t('home.ctaSecondary')}
+            </a>
+          </div>
+        </section>
+
+        <section className="relative z-10 mx-auto max-w-[1200px] px-4 pb-24 md:px-10">
+          <div className="grid gap-4 md:grid-cols-3">
+            {features.map((f) => (
+              <article key={f.icon} className="motivator-card p-6 transition-colors hover:bg-surface-container-high">
+                <MaterialIcon name={f.icon} className="text-primary" size={28} />
+                <h2 className="mt-4 font-display text-base font-semibold text-on-surface">
+                  {t(f.titleKey)}
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{t(f.bodyKey)}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   )
 }

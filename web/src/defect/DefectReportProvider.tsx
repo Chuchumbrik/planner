@@ -50,7 +50,7 @@ export function DefectReportProvider({ children }: { children: ReactNode }) {
       {showFab ? (
         <button
           type="button"
-          className="fixed z-40 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-800/80 bg-emerald-950/95 text-xl text-emerald-100 shadow-xl backdrop-blur-sm hover:bg-emerald-900/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/80"
+          className="fixed z-40 flex h-14 w-14 items-center justify-center rounded-full border border-primary/50 bg-surface-container-lowest/95 text-xl text-primary shadow-xl backdrop-blur-sm hover:bg-primary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/80"
           style={{
             right: 'max(1rem, env(safe-area-inset-right, 0px))',
             bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
