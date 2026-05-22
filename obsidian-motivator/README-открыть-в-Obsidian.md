@@ -19,4 +19,19 @@
 
 При любых изменениях в продукте или коде: **сначала обновить или проверить соответствие** этому хранилищу, затем реализация.
 
-Код приложения предполагается в родительской папке `planner` (рядом с `obsidian-motivator`), когда репозиторий будет инициализирован.
+Код приложения — в родительской папке `planner` (рядом с `obsidian-motivator`).
+
+## Синхронизация с gbrain (второй мозг)
+
+После правок в `.md` этого vault:
+
+```powershell
+cd C:\Users\mussh\Projects\planner\obsidian-motivator
+gbrain import . --no-embed
+gbrain embed --stale
+gbrain extract all
+```
+
+Проверка: `gbrain search "DR-001"` или `gbrain query "журнал решений"`.
+
+Источник в brain: `motivator-docs` (путь к этой папке). Страницы индексируются в federated-поиске. Obsidian остаётся источником истины; gbrain — зеркало для AI в Cursor (`@gbrain`). После смены `~/.cursor/mcp.json` перезагрузите MCP в Cursor.
