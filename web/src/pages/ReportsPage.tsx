@@ -10,7 +10,16 @@ import {
   totalCompletionMarksInRange,
 } from '@motivator/core'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
-import { SETTINGS_CARD, SETTINGS_SUBHEAD, VIEW_TABLIST, viewTab } from '@/lib/designClasses'
+import {
+  ALERT_WARNING_MUTED,
+  ALERT_WARNING_BODY,
+  ALERT_WARNING_TITLE,
+  SETTINGS_CARD,
+  SETTINGS_SUBHEAD,
+  STAT_KPI_VALUE,
+  VIEW_TABLIST,
+  viewTab,
+} from '@/lib/designClasses'
 import { ReportHint } from '@/components/ReportHint'
 import { RequireVault } from '@/components/RequireVault'
 import { useVault } from '@/vault/VaultProvider'
@@ -102,7 +111,7 @@ function ReportsPageInner() {
             </p>
             <ReportHint label={t('reports.hintKpiStreak')} />
           </div>
-          <p className="mt-1 font-display text-2xl font-semibold text-primary">{analytics.streak}</p>
+          <p className={`mt-1 ${STAT_KPI_VALUE}`}>{analytics.streak}</p>
           <p className="mt-2 text-[11px] leading-snug text-on-surface-variant">{t('reports.kpiStreakHint')}</p>
         </div>
         <div className={SETTINGS_CARD}>
@@ -112,7 +121,7 @@ function ReportsPageInner() {
             </p>
             <ReportHint label={t('reports.hintKpiCompletionRate')} />
           </div>
-          <p className="mt-1 text-2xl font-semibold text-cyan-400/95">
+          <p className={`mt-1 ${STAT_KPI_VALUE}`}>
             {t('reports.kpiCompletionRateValue', { pct })}
           </p>
           <p className="mt-1 text-xs text-on-surface-variant">
@@ -163,9 +172,9 @@ function ReportsPageInner() {
         )}
       </section>
 
-      <section className="mb-8 rounded-lg border border-amber-900/35 bg-amber-950/15 p-4">
-        <h2 className="text-sm font-semibold text-amber-200/90">{t('reports.dr013Title')}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-amber-100/70">{t('reports.dr013Body')}</p>
+      <section className={`${ALERT_WARNING_MUTED} mb-8`}>
+        <h2 className={ALERT_WARNING_TITLE}>{t('reports.dr013Title')}</h2>
+        <p className={`mt-2 ${ALERT_WARNING_BODY}`}>{t('reports.dr013Body')}</p>
       </section>
 
       <section className="mb-6">

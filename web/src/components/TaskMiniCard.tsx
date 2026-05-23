@@ -3,6 +3,13 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 import {
+  TASK_CARD_BODY,
+  TASK_CARD_SHELL,
+  TASK_GROUP_CHIP,
+  TASK_META_CHIP,
+  TASK_OVERDUE_CHIP,
+} from '@/lib/designClasses'
+import {
   isMainTaskDoneForDay,
   TASK_COLOR_HEX,
   type PriorityLabels,
@@ -31,6 +38,8 @@ type Props = {
   canEdit: boolean
   occurrenceDayKey?: string
   completionToggleAllowed?: boolean
+  groupName?: string | null
+  overdue?: boolean
   onToggle: () => void
   onOpen: () => void
   onToggleChecklistItem?: (itemId: string) => void
@@ -44,6 +53,8 @@ export function TaskMiniCard({
   canEdit,
   occurrenceDayKey,
   completionToggleAllowed = true,
+  groupName,
+  overdue = false,
   onToggle,
   onOpen,
   onToggleChecklistItem,
@@ -118,7 +129,7 @@ export function TaskMiniCard({
       : undefined
 
   const shellClass = cn(
-    'rounded-xl border border-l-4 transition-colors',
+    TASK_CARD_SHELL,
     pendingHere
       ? 'animate-dc-pending border-amber-700/50 bg-surface-container ring-1 ring-amber-600/25'
       : (planRowSurfaceClass ??
@@ -127,15 +138,12 @@ export function TaskMiniCard({
     flash === 'soft' && 'animate-task-soft-miss',
   )
 
-  const chipClass =
-    'rounded border border-outline-variant bg-surface-variant px-2 py-0.5 font-display text-[11px] text-on-surface-variant'
-
   return (
     <div className={shellClass} style={{ borderLeftColor: leftAccent }}>
-      <div className="flex items-start gap-3 p-4">
+      <div className={TASK_CARD_BODY}>
         <label
           className={cn(
-            'flex shrink-0 items-center pt-0.5',
+            'flex h-11 w-11 shrink-0 items-center justify-center md:h-6 md:w-6',
             toggleDoneDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
           )}
           title={toggleDoneTitle}
@@ -147,7 +155,7 @@ export function TaskMiniCard({
             disabled={toggleDoneDisabled}
             onChange={() => onToggle()}
             aria-label={t('app.toggleTaskDone')}
-            className="h-5 w-5 rounded border-outline-variant bg-surface-container-low text-primary focus:ring-primary/40 disabled:opacity-40 md:h-4 md:w-4"
+            className="h-6 w-6 rounded border-outline-variant bg-surface-container-low text-primary focus:ring-primary/40 disabled:opacity-40 md:h-5 md:w-5"
           />
         </label>
         <button
@@ -159,36 +167,40 @@ export function TaskMiniCard({
           <div className="flex items-start justify-between gap-3">
             <span
               className={cn(
-                'block text-sm font-semibold leading-snug',
+                'block text-body-sm font-semibold leading-snug',
                 mainDone ? 'text-on-surface-variant line-through' : 'text-on-surface',
               )}
             >
               {task.title}
             </span>
             {clockOnly ? (
-              <span className="shrink-0 font-mono text-sm tabular-nums text-on-surface-variant">
+              <span className="shrink-0 text-mono-data text-on-surface-variant">
                 {mainDone ? t('app.taskDoneShort') : clockOnly}
               </span>
             ) : null}
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span className={chipClass}>{priorityLabels[task.priorityRank]}</span>
+            {groupName ? <span className={TASK_GROUP_CHIP}>{groupName}</span> : null}
+            <span className={TASK_META_CHIP}>{priorityLabels[task.priorityRank]}</span>
             {task.recurrence ? (
-              <span className={cn(chipClass, 'text-tertiary')}>{t('app.recurrenceBadge')}</span>
+              <span className={cn(TASK_META_CHIP, 'text-tertiary')}>{t('app.recurrenceBadge')}</span>
+            ) : null}
+            {overdue && !mainDone ? (
+              <span className={TASK_OVERDUE_CHIP}>{t('app.taskOverdueBadge')}</span>
             ) : null}
             {pendingHere ? (
-              <span className={cn(chipClass, 'border-amber-800/60 text-amber-200/95')}>
+              <span className={cn(TASK_META_CHIP, 'border-amber-800/60 text-amber-200/95')}>
                 {t('app.doubleConfirmBadge')}
               </span>
             ) : null}
             {task.estimatedMinutes != null ? (
-              <span className={chipClass}>
+              <span className={TASK_META_CHIP}>
                 {t('app.estimatedMinutesShort', { n: task.estimatedMinutes })}
               </span>
             ) : null}
-            {timeSnip && !clockOnly ? <span className={chipClass}>{timeSnip}</span> : null}
+            {timeSnip && !clockOnly ? <span className={TASK_META_CHIP}>{timeSnip}</span> : null}
             {task.checklist.length > 0 ? (
-              <span className={chipClass}>
+              <span className={TASK_META_CHIP}>
                 {t('app.checklistProgress', {
                   done: task.checklist.filter((c) => c.done).length,
                   total: task.checklist.length,
@@ -197,7 +209,7 @@ export function TaskMiniCard({
             ) : null}
           </div>
           {pendingHere && minutesLeft != null ? (
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-amber-200/90">
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-amber-200/90">
               <span>
                 {t('app.doubleConfirmTimeLeft', {
                   minutes: minutesLeft,
@@ -220,7 +232,7 @@ export function TaskMiniCard({
         </button>
       </div>
       {task.checklist.length > 0 && onToggleChecklistItem ? (
-        <ul className="border-t border-surface-variant/80 pl-4 pr-3 pb-3 pt-2 md:pl-6">
+        <ul className="border-t border-surface-variant/80 px-sm pb-sm pt-2 md:px-md">
           {task.checklist.map((item) => {
             const cid = `${checklistFieldId}-${item.id}`
             return (
@@ -249,7 +261,7 @@ export function TaskMiniCard({
                   />
                   <span
                     className={cn(
-                      'min-w-0 flex-1 text-sm leading-snug',
+                      'min-w-0 flex-1 text-body-sm leading-snug',
                       item.done
                         ? 'text-on-surface-variant line-through'
                         : 'text-on-surface-variant',

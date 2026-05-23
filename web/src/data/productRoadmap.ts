@@ -325,6 +325,26 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-23', en: '2026-05-23' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Design 2.0 — дизайн-система и планировщик:** подключён **Geist**, шкала типографики и **`designClasses`**; **MotivatorShell** — safe-area, крупные зоны нажатия, версия внизу sidebar; **День** — stat-карточки, mobile **FAB «+»**, chips групп на карточках, подсветка **просрочки**; **Неделя** и **Месяц** — stat-ряд, колонка «сегодня», просрочка в сетке/ячейках, подсказка **«скрыто фильтром»**, ширина контента до **1200px**.',
+            en: '**Design 2.0 — design system & planner:** **Geist** font, typography scale and **`designClasses`**; **MotivatorShell** — safe-area, larger tap targets, version in sidebar footer; **Day** — stat cards, mobile **FAB “+”**, group chips on cards, **overdue** styling; **Week** and **Month** — stat row, “today” column, overdue in grid/cells, **“hidden by filter”** hint, content width up to **1200px**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На телефоне создать задачу можно круглой кнопкой «+» внизу; на неделе и в месяце видно, что день уже прошёл или задача «висит» после времени слота.',
+            en: 'On your phone, use the round “+” button to add a task; on Week and Month you can see past days and tasks that slipped past their time slot.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-22', en: '2026-05-22' },
     items: [
       {

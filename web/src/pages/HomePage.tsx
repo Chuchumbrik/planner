@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
+import { PAGE_CONTAINER } from '@/lib/designClasses'
 import { APP_VERSION } from '@/version'
 import { useVault } from '@/vault/VaultProvider'
 
@@ -47,17 +48,17 @@ export function HomePage() {
           aria-hidden
         />
 
-        <section className="relative z-10 mx-auto max-w-[1200px] px-4 pb-20 pt-16 text-center md:px-10 md:pt-24">
+        <section className={`relative z-10 pb-20 pt-16 text-center md:pt-24 ${PAGE_CONTAINER}`}>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-surface-variant bg-surface-container-high px-3 py-1">
             <span className="h-2 w-2 animate-pulse rounded-full bg-primary" aria-hidden />
-            <span className="font-display text-xs tracking-wide text-on-surface-variant">
+            <span className="text-label-sm text-on-surface-variant">
               {t('home.heroBadge')} · {t('home.badge', { version: APP_VERSION })}
             </span>
           </div>
-          <h1 className="mx-auto max-w-3xl font-display text-3xl font-bold leading-tight tracking-tight text-on-surface md:text-5xl md:leading-[1.15]">
+          <h1 className="mx-auto max-w-3xl text-headline-lg-mobile text-on-surface md:text-headline-xl">
             {t('home.heroTitle')}
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">
+          <p className="mx-auto mt-6 max-w-2xl text-body-md text-on-surface-variant md:text-body-lg">
             {t('home.heroSubtitle')}
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -78,15 +79,15 @@ export function HomePage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-[1200px] px-4 pb-24 md:px-10">
+        <section className={`relative z-10 pb-24 ${PAGE_CONTAINER}`}>
           <div className="grid gap-4 md:grid-cols-3">
             {features.map((f) => (
-              <article key={f.icon} className="motivator-card p-6 transition-colors hover:bg-surface-container-high">
+              <article key={f.icon} className="motivator-card p-md transition-colors hover:bg-surface-container-high">
                 <MaterialIcon name={f.icon} className="text-primary" size={28} />
-                <h2 className="mt-4 font-display text-base font-semibold text-on-surface">
+                <h2 className="mt-4 text-headline-md text-on-surface">
                   {t(f.titleKey)}
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{t(f.bodyKey)}</p>
+                <p className="mt-2 text-body-sm text-on-surface-variant">{t(f.bodyKey)}</p>
               </article>
             ))}
           </div>

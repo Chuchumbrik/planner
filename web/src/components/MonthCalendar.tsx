@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
+import type { PlannerDaySummary } from '@/lib/plannerPeriodStats'
 import type { MonthMatrixCell } from '@motivator/core'
 
 type Props = {
   matrix: MonthMatrixCell[][]
-  taskCountByDay: Record<string, number>
+  daySummaries: Record<string, PlannerDaySummary>
+  todayKey: string
   locale: string
   canEdit: boolean
   onPickDay: (dateKey: string) => void
@@ -12,7 +14,8 @@ type Props = {
 
 export function MonthCalendar({
   matrix,
-  taskCountByDay,
+  daySummaries,
+  todayKey,
   locale,
   canEdit,
   onPickDay,
@@ -35,8 +38,8 @@ export function MonthCalendar({
   })()
 
   return (
-    <div className="motivator-card w-full p-4 md:p-5">
-      <div className="mb-3 grid grid-cols-7 gap-1.5 text-center font-display text-[10px] uppercase tracking-wide text-on-surface-variant">
+    <div className="motivator-card w-full p-sm md:p-md">
+      <div className="mb-3 grid grid-cols-7 gap-1.5 text-center text-label-sm uppercase text-on-surface-variant">
         {weekDayLabels.map((wd, i) => (
           <div key={i}>{wd}</div>
         ))}
@@ -46,34 +49,68 @@ export function MonthCalendar({
           <div key={ri} className="grid grid-cols-7 gap-1.5">
             {row.map((cell, ci) => {
               if ('pad' in cell) {
-                return <div key={`p-${ri}-${ci}`} className="min-h-[3.25rem]" />
+                return <div key={`p-${ri}-${ci}`} className="min-h-[3.75rem]" />
               }
               const { dateKey } = cell
               const d = Number(dateKey.slice(8, 10))
-              const n = taskCountByDay[dateKey] ?? 0
-              const hasTasks = n > 0
+              const summary = daySummaries[dateKey] ?? { total: 0, done: 0, overdue: 0 }
+              const { total, done, overdue } = summary
+              const isToday = dateKey === todayKey
+              const isPast = dateKey < todayKey
+              const open = total - done
+
               return (
                 <button
                   key={dateKey}
                   type="button"
                   disabled={!canEdit}
                   className={cn(
-                    'flex min-h-[3.25rem] flex-col items-center justify-start rounded-lg border px-1 py-1.5',
+                    'flex min-h-[3.75rem] flex-col items-center justify-start rounded-card border px-1 py-1.5',
                     'text-sm transition active:scale-[0.98] disabled:opacity-40',
-                    hasTasks
-                      ? 'border-primary/35 bg-primary/10 hover:bg-primary/15'
-                      : 'border-surface-variant bg-surface-container-low hover:bg-surface-container',
+                    isToday
+                      ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/25'
+                      : total > 0
+                        ? overdue > 0
+                          ? 'border-tertiary/35 bg-tertiary-container/10 hover:bg-tertiary-container/15'
+                          : 'border-primary/25 bg-primary/10 hover:bg-primary/15'
+                        : 'border-surface-variant bg-surface-container-low hover:bg-surface-container',
+                    isPast && !isToday && 'opacity-75',
                   )}
                   onClick={() => onPickDay(dateKey)}
                 >
-                  <span className="font-display font-semibold text-on-surface">{d}</span>
-                  {hasTasks ? (
-                    <span
-                      className="mt-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded border border-primary/40 bg-primary/20 px-1 font-mono text-[10px] font-medium text-primary"
-                      title={t('app.monthDayTasks', { count: n })}
-                    >
-                      {n > 99 ? '99+' : n}
-                    </span>
+                  <span
+                    className={cn(
+                      'font-display text-sm font-semibold',
+                      isToday ? 'text-primary' : 'text-on-surface',
+                    )}
+                  >
+                    {d}
+                  </span>
+                  {total > 0 ? (
+                    <div className="mt-1 flex flex-col items-center gap-0.5">
+                      <span
+                        className={cn(
+                          'flex h-5 min-w-[1.35rem] items-center justify-center rounded border px-1 font-mono text-[10px] font-medium',
+                          overdue > 0
+                            ? 'border-tertiary/40 bg-tertiary-container/15 text-tertiary'
+                            : 'border-primary/35 bg-primary/15 text-primary',
+                        )}
+                        title={t('app.monthDayTasks', { count: total })}
+                      >
+                        {total > 99 ? '99+' : total}
+                      </span>
+                      {open > 0 ? (
+                        <span className="text-[9px] leading-none text-on-surface-variant">
+                          {overdue > 0
+                            ? t('app.monthDayOverdueShort', { count: overdue })
+                            : t('app.monthDayOpenShort', { count: open })}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] leading-none text-primary/80">
+                          {t('app.monthDayDoneShort')}
+                        </span>
+                      )}
+                    </div>
                   ) : (
                     <span className="mt-1 h-5 w-5 rounded border border-dashed border-outline-variant" />
                   )}

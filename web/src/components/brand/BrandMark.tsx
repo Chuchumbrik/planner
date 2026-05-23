@@ -38,12 +38,12 @@ export function BrandMark({
         <span className="text-on-surface">{t('app.brandLatin')}</span>
       </p>
       {showSubtitle ? (
-        <p className="mt-1 font-display text-xs tracking-wide text-on-surface-variant/80">
+        <p className="mt-1 text-label-sm text-on-surface-variant/80">
           {t('shell.brandSubtitle')}
         </p>
       ) : null}
       {showVersion && version ? (
-        <p className="mt-2 font-mono text-[10px] text-on-surface-variant/60">
+        <p className="mt-2 text-mono-data text-on-surface-variant/60">
           {t('home.badge', { version })}
         </p>
       ) : null}

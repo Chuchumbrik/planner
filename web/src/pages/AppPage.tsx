@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { motivatorAppRole } from '@/lib/motivatorRole'
 import { AiCommandStub } from '@/components/planner/AiCommandStub'
+import { DayPlannerStatsRow } from '@/components/planner/DayPlannerStatsRow'
+import { PeriodPlannerStatsRow } from '@/components/planner/PeriodPlannerStatsRow'
+import { PlannerCreateFab } from '@/components/planner/PlannerCreateFab'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
@@ -19,6 +22,7 @@ import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
 import { VaultDecryptHelp } from '@/components/VaultDecryptHelp'
 import { tasksVisibleInPlannerView } from '@/lib/plannerFilterScope'
+import { cn } from '@/lib/cn'
 import {
   humanizeConnectivityError,
   isLikelyNetworkFetchFailure,
@@ -26,6 +30,9 @@ import {
 import {
   DRAFT_LIST_ITEM,
   EMPTY_STATE_BOX,
+  FILTER_CHIP,
+  FILTER_CHIP_DISMISS,
+  FILTER_CHIP_RESET,
   FILTER_PANEL,
   MODAL_CLOSE_BTN,
   MODAL_HEADER,
@@ -39,7 +46,13 @@ import {
   periodBreakdownToggle,
   viewTab,
 } from '@/lib/designClasses'
+import { isPlannerTaskOverdue } from '@/lib/plannerTaskDayStatus'
 import { readPlannerChartsHidden, writePlannerChartsHidden } from '@/lib/plannerChartsPref'
+import {
+  countHiddenByFilterInDays,
+  countOverdueInDays,
+  summarizePlannerDay,
+} from '@/lib/plannerPeriodStats'
 import {
   DEFAULT_GROUP_ID,
   PRIORITY_RANKS,
@@ -53,6 +66,7 @@ import {
   startOfWeekMonday,
   isMainTaskDoneForDay,
   isPlannedTaskFullyCompleteForDay,
+  plannedDayCompletionWeights,
   plannedPeriodProgress,
   plannedPeriodSlotsByColorKey,
   plannedPeriodSlotsByGroupId,
@@ -86,6 +100,9 @@ function dayPlanRowSurfaceClass(opts: {
     return past
       ? 'border-tertiary-container/40 bg-tertiary-container/10'
       : 'border-tertiary-container/30 bg-tertiary-container/5'
+  }
+  if (isPlannerTaskOverdue(task, selectedDay, todayKey)) {
+    return 'border-tertiary/45 bg-tertiary-container/10'
   }
   return undefined
 }
@@ -630,6 +647,57 @@ function AppPageInner() {
     return list
   }, [filteredVaultTasks, selectedDay])
 
+  const dayPlanProgress = useMemo(
+    () => plannedDayCompletionWeights(plannedForDay, selectedDay),
+    [plannedForDay, selectedDay],
+  )
+
+  const dayDoneCount = useMemo(
+    () =>
+      plannedForDay.filter((t) => isPlannedTaskFullyCompleteForDay(t, selectedDay)).length,
+    [plannedForDay, selectedDay],
+  )
+
+  const hiddenPlannedByFilterCount = useMemo(() => {
+    const all = tasksScheduledForPlannerDay(vault.tasks, selectedDay)
+    const visible = new Set(plannedForDay.map((t) => t.id))
+    return all.filter((t) => !visible.has(t.id)).length
+  }, [vault.tasks, selectedDay, plannedForDay])
+
+  const hiddenWeekByFilterCount = useMemo(
+    () => countHiddenByFilterInDays(vault.tasks, filteredVaultTasks, weekDays),
+    [vault.tasks, filteredVaultTasks, weekDays],
+  )
+
+  const hiddenMonthByFilterCount = useMemo(
+    () => countHiddenByFilterInDays(vault.tasks, filteredVaultTasks, monthDayKeysForPlan),
+    [vault.tasks, filteredVaultTasks, monthDayKeysForPlan],
+  )
+
+  const weekOverdueCount = useMemo(
+    () => countOverdueInDays(filteredVaultTasks, weekDays, todayKeyApp),
+    [filteredVaultTasks, weekDays, todayKeyApp],
+  )
+
+  const monthOverdueCount = useMemo(
+    () => countOverdueInDays(filteredVaultTasks, monthDayKeysForPlan, todayKeyApp),
+    [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp],
+  )
+
+  const monthDaySummaries = useMemo(() => {
+    const map: Record<string, ReturnType<typeof summarizePlannerDay>> = {}
+    for (const key of monthDayKeysForPlan) {
+      map[key] = summarizePlannerDay(filteredVaultTasks, key, todayKeyApp)
+    }
+    return map
+  }, [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp])
+
+  const groupNameById = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const g of vault.groups) m.set(g.id, g.name)
+    return m
+  }, [vault.groups])
+
   const eodClosedForSelectedDay = useMemo(
     () => Boolean(vault.eodCompletedLocalDates?.includes(selectedDay)),
     [vault.eodCompletedLocalDates, selectedDay],
@@ -680,20 +748,6 @@ function AppPageInner() {
     list.sort(sortBacklogTasks)
     return list
   }, [filteredVaultTasks])
-
-  const taskCountByDay = useMemo(() => {
-    const map: Record<string, number> = {}
-    const daysInMonth = new Date(monthYear, monthIndex + 1, 0).getDate()
-    for (let d = 1; d <= daysInMonth; d++) {
-      const key = `${monthYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-      let c = 0
-      for (const task of filteredVaultTasks) {
-        if (taskOccursOnDate(task, key)) c++
-      }
-      map[key] = c
-    }
-    return map
-  }, [filteredVaultTasks, monthYear, monthIndex])
 
   const editingTask = editId ? vault.tasks.find((x) => x.id === editId) : undefined
 
@@ -958,6 +1012,7 @@ function AppPageInner() {
   return (
     <MotivatorShell
       activeNav="planner"
+      wide
       title={t('app.plannerTitle')}
       headerActions={plannerHeaderActions}
     >
@@ -1098,7 +1153,7 @@ function AppPageInner() {
               </button>
             )
           ) : null}
-          <div className="relative shrink-0">
+          <div className={cn('relative shrink-0', view === 'day' && 'max-md:hidden')}>
             <button
               type="button"
               disabled={!canEdit}
@@ -1284,14 +1339,11 @@ function AppPageInner() {
             aria-live="polite"
           >
             {activeFilterChips.map((c) => (
-              <span
-                key={c.key}
-                className="inline-flex max-w-full items-center gap-1 rounded-full border border-cyan-800/50 bg-cyan-950/40 py-1 pl-2.5 pr-1 text-[11px] text-cyan-100"
-              >
+              <span key={c.key} className={FILTER_CHIP}>
                 <span className="min-w-0 truncate">{c.label}</span>
                 <button
                   type="button"
-                  className="shrink-0 rounded-full px-1.5 py-0.5 text-cyan-200/90 hover:bg-cyan-900/60"
+                  className={FILTER_CHIP_DISMISS}
                   onClick={c.onRemove}
                   aria-label={t('common.close')}
                 >
@@ -1299,14 +1351,28 @@ function AppPageInner() {
                 </button>
               </span>
             ))}
-            <button
-              type="button"
-              className="text-[11px] font-medium text-cyan-300/95 underline decoration-cyan-600/80 underline-offset-2 hover:text-cyan-200"
-              onClick={resetAllFilters}
-            >
+            <button type="button" className={FILTER_CHIP_RESET} onClick={resetAllFilters}>
               {t('app.filtersResetAll')}
             </button>
           </div>
+        ) : null}
+
+        {view === 'day' && hiddenPlannedByFilterCount > 0 ? (
+          <p className="mb-3 text-label-sm text-on-surface-variant" role="status">
+            {t('app.filtersHiddenCount', { count: hiddenPlannedByFilterCount })}
+          </p>
+        ) : null}
+
+        {view === 'week' && hiddenWeekByFilterCount > 0 ? (
+          <p className="mb-3 text-label-sm text-on-surface-variant" role="status">
+            {t('app.filtersHiddenCount', { count: hiddenWeekByFilterCount })}
+          </p>
+        ) : null}
+
+        {view === 'month' && hiddenMonthByFilterCount > 0 ? (
+          <p className="mb-3 text-label-sm text-on-surface-variant" role="status">
+            {t('app.filtersHiddenCount', { count: hiddenMonthByFilterCount })}
+          </p>
         ) : null}
 
         {draftsModalOpen && vault.drafts.length > 0 ? (
@@ -1377,8 +1443,27 @@ function AppPageInner() {
             jumpLabel={t('app.today')}
           />
 
+          <DayPlannerStatsRow
+            progress={dayPlanProgress}
+            doneCount={dayDoneCount}
+            eodEnabled={eodEnabled}
+            eodClosedForDay={eodClosedForSelectedDay}
+            selectedDay={selectedDay}
+            todayKey={todayKeyApp}
+          />
+
           <section className="mb-8">
-            <h2 className={PLANNER_SECTION_HEAD}>{t('app.sectionPlanned')}</h2>
+            <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+              <h2 className={cn(PLANNER_SECTION_HEAD, 'mb-0')}>{t('app.sectionPlanned')}</h2>
+              {plannedForDay.length > 0 ? (
+                <span className="text-label-sm text-on-surface-variant">
+                  {t('app.dayPlanCount', {
+                    done: dayDoneCount,
+                    total: plannedForDay.length,
+                  })}
+                </span>
+              ) : null}
+            </div>
             <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-10">
               <div className="min-w-0 w-full lg:max-w-lg lg:shrink-0">
                 {plannedForDay.length === 0 ? (
@@ -1393,6 +1478,8 @@ function AppPageInner() {
                           canEdit={canEdit}
                           occurrenceDayKey={selectedDay}
                           completionToggleAllowed={canToggleTaskCompletionOnDayView}
+                          groupName={groupNameById.get(task.groupId) ?? null}
+                          overdue={isPlannerTaskOverdue(task, selectedDay, todayKeyApp)}
                           planRowSurfaceClass={dayPlanRowSurfaceClass({
                             selectedDay,
                             todayKey: todayKeyApp,
@@ -1422,9 +1509,7 @@ function AppPageInner() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-amber-500/90">
-              {t('app.sectionBacklog')}
-            </h2>
+            <h2 className={PLANNER_SECTION_HEAD}>{t('app.sectionBacklog')}</h2>
             {backlogTasks.length === 0 ? (
               <p className={`${EMPTY_STATE_BOX} py-6`}>{t('app.emptyBacklog')}</p>
             ) : (
@@ -1451,6 +1536,15 @@ function AppPageInner() {
               </ul>
             )}
           </section>
+
+          <PlannerCreateFab
+            disabled={!canEdit}
+            ariaLabel={t('app.openCreateTask')}
+            onClick={() => {
+              setResumeDraft(null)
+              setCreateOpen(true)
+            }}
+          />
         </>
       )}
 
@@ -1467,11 +1561,18 @@ function AppPageInner() {
             nextAriaLabel={t('app.weekNext')}
             jumpLabel={t('app.weekThis')}
           />
-          <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col-reverse gap-4 lg:flex-row lg:items-stretch lg:justify-center lg:gap-8">
+          <PeriodPlannerStatsRow
+            mode="week"
+            progress={weekPlanProgress}
+            periodLabel={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+            overdueCount={weekOverdueCount}
+          />
+          <div className="mx-auto flex min-h-0 w-full max-w-desktop flex-1 flex-col-reverse gap-4 xl:flex-row xl:items-stretch xl:justify-between xl:gap-8">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <WeekGrid
                 weekDays={weekDays}
                 tasks={filteredVaultTasks}
+                todayKey={todayKeyApp}
                 priorityLabels={vault.priorityLabels}
                 locale={locale}
                 canEdit={canEdit}
@@ -1479,7 +1580,7 @@ function AppPageInner() {
               />
             </div>
             {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:pt-1">
+              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:pt-1">
                 <div className="flex w-full min-w-0 flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-2">
                   <div className="flex min-h-0 min-w-0 flex-1 justify-center lg:justify-center">
                     <PeriodPlanDonut
@@ -1549,11 +1650,18 @@ function AppPageInner() {
             nextAriaLabel={t('app.monthNext')}
             jumpLabel={t('app.monthThis')}
           />
-          <div className="mx-auto flex w-full max-w-5xl flex-col-reverse items-stretch gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
-            <div className="mx-auto w-full max-w-md min-w-0 flex-1 lg:mx-0">
+          <PeriodPlannerStatsRow
+            mode="month"
+            progress={monthPlanProgress}
+            periodLabel={monthLabel(monthYear, monthIndex, locale)}
+            overdueCount={monthOverdueCount}
+          />
+          <div className="mx-auto flex w-full max-w-desktop flex-col-reverse items-stretch gap-6 xl:flex-row xl:items-start xl:justify-between xl:gap-10">
+            <div className="mx-auto w-full min-w-0 flex-1 xl:mx-0 xl:max-w-2xl">
               <MonthCalendar
                 matrix={monthMatrix}
-                taskCountByDay={taskCountByDay}
+                daySummaries={monthDaySummaries}
+                todayKey={todayKeyApp}
                 locale={locale}
                 canEdit={canEdit}
                 onPickDay={(dateKey) => {
@@ -1563,7 +1671,7 @@ function AppPageInner() {
               />
             </div>
             {monthPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:justify-end lg:pt-1">
+              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:justify-end xl:pt-1">
                 <PeriodPlanDonut
                   progress={monthPlanProgress}
                   title={t('app.periodPlanMonthRingTitle')}
