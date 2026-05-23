@@ -6,7 +6,7 @@ export function DeepFocusPrototypePage() {
   const { t } = useTranslation()
 
   return (
-    <PrototypePageLayout titleKey="prototype.deepFocus.title">
+    <PrototypePageLayout activeNav="prototype-deep-focus" titleKey="prototype.deepFocus.title">
       <p className="mb-6 text-sm text-on-surface-variant">{t('prototype.deepFocus.intro')}</p>
       <div className="grid gap-4 lg:grid-cols-12">
         <section className="glass-panel space-y-4 rounded-card p-sm lg:col-span-3">

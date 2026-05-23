@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useEffect } from 'react'
 import { useAuth } from '@/auth/AuthProvider'
 import { SessionSyncInformer } from '@/components/SessionSyncInformer'
 import { AppPage } from '@/pages/AppPage'
@@ -13,7 +14,30 @@ import { AdminDashboardPrototypePage } from '@/pages/prototypes/AdminDashboardPr
 import { AiInsightsPrototypePage } from '@/pages/prototypes/AiInsightsPrototypePage'
 import { DeepFocusPrototypePage } from '@/pages/prototypes/DeepFocusPrototypePage'
 import { SecurityLogPrototypePage } from '@/pages/prototypes/SecurityLogPrototypePage'
+import { RequireTesterPreview } from '@/components/auth/RequireTesterPreview'
 import { CookieConsentGate } from '@/components/CookieConsentGate'
+
+function SwNotificationNavigation() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: string; url?: string } | null
+      if (data?.type !== 'motivator:navigate' || typeof data.url !== 'string') return
+      try {
+        const target = new URL(data.url, window.location.origin)
+        if (target.origin !== window.location.origin) return
+        navigate(`${target.pathname}${target.search}${target.hash}`)
+      } catch {
+        /* ignore malformed url */
+      }
+    }
+    navigator.serviceWorker?.addEventListener('message', onMessage)
+    return () => navigator.serviceWorker?.removeEventListener('message', onMessage)
+  }, [navigate])
+
+  return null
+}
 
 export function App() {
   const { session, loading } = useAuth()
@@ -29,6 +53,7 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
+      <SwNotificationNavigation />
       {session ? <SessionSyncInformer session={session} /> : null}
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -54,19 +79,51 @@ export function App() {
         />
         <Route
           path="/prototype/deep-focus"
-          element={session ? <DeepFocusPrototypePage /> : <Navigate to="/login" replace />}
+          element={
+            session ? (
+              <RequireTesterPreview>
+                <DeepFocusPrototypePage />
+              </RequireTesterPreview>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
         <Route
           path="/prototype/ai-insights"
-          element={session ? <AiInsightsPrototypePage /> : <Navigate to="/login" replace />}
+          element={
+            session ? (
+              <RequireTesterPreview>
+                <AiInsightsPrototypePage />
+              </RequireTesterPreview>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
         <Route
           path="/prototype/security-log"
-          element={session ? <SecurityLogPrototypePage /> : <Navigate to="/login" replace />}
+          element={
+            session ? (
+              <RequireTesterPreview>
+                <SecurityLogPrototypePage />
+              </RequireTesterPreview>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
         <Route
           path="/prototype/admin-dashboard"
-          element={session ? <AdminDashboardPrototypePage /> : <Navigate to="/login" replace />}
+          element={
+            session ? (
+              <RequireTesterPreview>
+                <AdminDashboardPrototypePage />
+              </RequireTesterPreview>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
         <Route path="/legal/:docId" element={<LegalDocumentPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

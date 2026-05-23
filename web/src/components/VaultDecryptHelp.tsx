@@ -28,7 +28,7 @@ export function VaultDecryptHelp({ className = '' }: Props) {
       <VaultRecoverKeyPanel className="mt-4" />
       <Link
         className="mt-3 inline-block text-label-sm font-medium text-primary hover:text-primary-fixed"
-        to="/settings#seed-backup"
+        to="/settings#privacy"
       >
         {t('vault.decryptHelpSettingsLink')}
       </Link>

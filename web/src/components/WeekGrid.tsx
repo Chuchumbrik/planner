@@ -216,80 +216,78 @@ export function WeekGrid({
         })}
 
         <div
-          className={cn('border-b border-r pr-1', GRID_BORDER, GRID_SURFACE)}
-          style={{ gridRow: 3, gridColumn: 1 }}
-        >
-          <div style={{ height: gridHeight }}>
-            {HOURS.map((h) => (
-              <div
-                key={h}
-                style={{ height: HOUR_HEIGHT_PX }}
-                className={cn(
-                  'border-t font-mono text-[11px] leading-none',
-                  'border-surface-variant/50',
-                  GRID_MUTED,
-                )}
-              >
-                {String(h).padStart(2, '0')}:00
-              </div>
-            ))}
-          </div>
-        </div>
-        <div
           className="week-grid-v-scroll min-h-0 overflow-y-auto overscroll-y-contain border-b border-surface-variant"
           style={{
             gridRow: 3,
-            gridColumn: '2 / -1',
+            gridColumn: '1 / -1',
             display: 'grid',
-            gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+            gridTemplateColumns: GRID_COLS,
           }}
         >
-          {weekDays.map((day) => {
-            const slotted = slottedTasks(day)
-            return (
-              <div
-                key={day}
-                className={columnClass(
-                  day,
-                  cn('relative border-l', GRID_BORDER, 'bg-surface-container-lowest/80'),
-                )}
-                style={{ height: gridHeight }}
-              >
-                {HOURS.map((h) => (
-                  <div
-                    key={h}
-                    className="pointer-events-none absolute left-0 right-0 border-t border-surface-variant/40"
-                    style={{ top: h * HOUR_HEIGHT_PX }}
-                  />
-                ))}
-                {slotted.map((task) => {
-                  const slot = getTaskSlotMinutes(task, day)
-                  if (!slot) return null
-                  const top = (slot.start / 60) * HOUR_HEIGHT_PX
-                  const height = Math.max(((slot.end - slot.start) / 60) * HOUR_HEIGHT_PX, 22)
-                  const accent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
-                  const done = isMainTaskDoneForDay(task, day)
-                  const clock = formatSlotClock(task, day)
-                  return (
-                    <button
-                      key={task.id}
-                      type="button"
-                      disabled={!canEdit}
-                      title={`${task.title} · ${priorityLabels[task.priorityRank]}`}
-                      className={taskBlockClass(task, day, done)}
-                      style={{ top, height, zIndex: 2, borderLeftColor: accent }}
-                      onClick={() => onTaskClick(task.id, day)}
-                    >
-                      {clock ? (
-                        <span className="text-mono-data text-[9px] text-on-surface-variant">{clock}</span>
-                      ) : null}
-                      <span className="line-clamp-2 font-medium">{task.title}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            )
-          })}
+        <div
+          className={cn('border-b border-r pr-1', GRID_BORDER, GRID_SURFACE)}
+          style={{ height: gridHeight }}
+        >
+          {HOURS.map((h) => (
+            <div
+              key={h}
+              style={{ height: HOUR_HEIGHT_PX }}
+              className={cn(
+                'border-t font-mono text-[11px] leading-none',
+                'border-surface-variant/50',
+                GRID_MUTED,
+              )}
+            >
+              {String(h).padStart(2, '0')}:00
+            </div>
+          ))}
+        </div>
+        {weekDays.map((day) => {
+          const slotted = slottedTasks(day)
+          return (
+            <div
+              key={day}
+              className={columnClass(
+                day,
+                cn('relative border-l', GRID_BORDER, 'bg-surface-container-lowest/80'),
+              )}
+              style={{ height: gridHeight }}
+            >
+              {HOURS.map((h) => (
+                <div
+                  key={h}
+                  className="pointer-events-none absolute left-0 right-0 border-t border-surface-variant/40"
+                  style={{ top: h * HOUR_HEIGHT_PX }}
+                />
+              ))}
+              {slotted.map((task) => {
+                const slot = getTaskSlotMinutes(task, day)
+                if (!slot) return null
+                const top = (slot.start / 60) * HOUR_HEIGHT_PX
+                const height = Math.max(((slot.end - slot.start) / 60) * HOUR_HEIGHT_PX, 22)
+                const accent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
+                const done = isMainTaskDoneForDay(task, day)
+                const clock = formatSlotClock(task, day)
+                return (
+                  <button
+                    key={task.id}
+                    type="button"
+                    disabled={!canEdit}
+                    title={`${task.title} · ${priorityLabels[task.priorityRank]}`}
+                    className={taskBlockClass(task, day, done)}
+                    style={{ top, height, zIndex: 2, borderLeftColor: accent }}
+                    onClick={() => onTaskClick(task.id, day)}
+                  >
+                    {clock ? (
+                      <span className="text-mono-data text-[9px] text-on-surface-variant">{clock}</span>
+                    ) : null}
+                    <span className="line-clamp-2 font-medium">{task.title}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })}
         </div>
       </div>
       <p className="shrink-0 border-t border-surface-variant px-4 py-3 text-body-sm leading-snug text-on-surface-variant">

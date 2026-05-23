@@ -8,16 +8,18 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { isMotivatorAdmin, isMotivatorBetaTester } from '@/lib/motivatorRole'
+import { isMotivatorAdmin, isMotivatorBetaTester, isMotivatorTesterOrAdmin } from '@/lib/motivatorRole'
 import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 
 type AuthContextValue = {
   session: Session | null
   loading: boolean
-  /** Роль из Supabase `app_metadata.motivator_role`; для будущего gated UI (пока без ограничений в интерфейсе). */
+  /** Роль из Supabase `app_metadata.motivator_role`. */
   isAdmin: boolean
-  /** Бета-тестер (`motivator_role === beta_tester`) — для будущего gated UI. */
+  /** Бета-тестер (`motivator_role === beta_tester`). */
   isBetaTester: boolean
+  /** Admin или beta_tester — прототипы `/prototype/*`, AI-заглушка и аналогичный preview UI. */
+  canAccessPreviewFeatures: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (
     email: string,
@@ -114,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updatePassword,
       isAdmin: isMotivatorAdmin(session),
       isBetaTester: isMotivatorBetaTester(session),
+      canAccessPreviewFeatures: isMotivatorTesterOrAdmin(session),
     }),
     [session, loading, signIn, signUp, signOut, requestPasswordReset, updatePassword],
   )
@@ -126,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           loading: false,
           isAdmin: false,
           isBetaTester: false,
+          canAccessPreviewFeatures: false,
           signIn: async () => ({
             error: new Error('Задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY'),
           }),

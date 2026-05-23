@@ -12,7 +12,7 @@ export function SecurityLogPrototypePage() {
   const { t } = useTranslation()
 
   return (
-    <PrototypePageLayout titleKey="prototype.securityLog.title">
+    <PrototypePageLayout activeNav="prototype-security-log" titleKey="prototype.securityLog.title">
       <p className="mb-6 text-sm text-on-surface-variant">{t('prototype.securityLog.intro')}</p>
       <div className="motivator-card overflow-hidden">
         <table className="w-full text-left text-sm">

@@ -12,7 +12,7 @@ export function AdminDashboardPrototypePage() {
   const { t } = useTranslation()
 
   return (
-    <PrototypePageLayout titleKey="prototype.admin.title">
+    <PrototypePageLayout activeNav="prototype-admin" titleKey="prototype.admin.title">
       <p className="mb-6 text-sm text-on-surface-variant">{t('prototype.admin.intro')}</p>
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         {MOCK_STATS.map((s) => (

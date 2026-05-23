@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/auth/AuthProvider'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
-import { DesignPrototypesSection } from '@/components/settings/DesignPrototypesSection'
+import { SettingsTabLayout } from '@/components/settings/SettingsTabLayout'
+import { useSettingsTab } from '@/components/settings/useSettingsTab'
 import { AdminMotivatorRolePanel } from '@/components/AdminMotivatorRolePanel'
 import { RequireVault } from '@/components/RequireVault'
 import { SeedExportPanel } from '@/components/SeedExportPanel'
@@ -122,26 +123,6 @@ const MIN_ACCOUNT_PASSWORD_LEN = 6
 /** Дефолт времени EOD push-напоминания (20:30 локально). */
 const EOD_DEFAULT_PUSH_REMINDER_MINUTES = 20 * 60 + 30
 
-function SettingsSection({
-  id,
-  title,
-  description,
-  children,
-}: {
-  id?: string
-  title: string
-  description?: string
-  children: ReactNode
-}) {
-  return (
-    <section id={id} className="mt-8 scroll-mt-6">
-      <h2 className="font-display text-sm font-semibold text-on-surface">{title}</h2>
-      {description ? <p className="mt-2 text-xs text-on-surface-variant">{description}</p> : null}
-      {children}
-    </section>
-  )
-}
-
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
   const { signOut, session, updatePassword, isAdmin } = useAuth()
@@ -202,6 +183,8 @@ function SettingsPageInner() {
   const hasEmailLogin = Boolean(session?.user?.email)
   const canEdit = remoteHydrated && !decryptFailed
   const notifModeDirty = notifModeDraft !== deliveryMode
+  const showAdminTab = Boolean(supabase && isAdmin)
+  const [activeTab, setActiveTab] = useSettingsTab(showAdminTab)
 
   async function handleSignOut() {
     if (!window.confirm(t('settings.signOutConfirm'))) return
@@ -243,31 +226,119 @@ function SettingsPageInner() {
 
   return (
     <MotivatorShell activeNav="settings" wide>
-      <p className="mb-6 text-sm leading-relaxed text-on-surface-variant">{t('settings.intro')}</p>
-
-      {decryptFailed ? <VaultDecryptHelp className="mt-4" /> : null}
+      {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
 
       {savePending ? (
-        <p className="mt-3 text-xs text-on-surface-variant" role="status" aria-live="polite">
+        <p className="mb-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
           {t('settings.savePending')}
         </p>
       ) : savedFlash ? (
-        <p className="mt-3 text-xs text-primary" role="status" aria-live="polite">
+        <p className="mb-3 text-label-sm text-primary" role="status" aria-live="polite">
           {t('settings.saveDone')}
         </p>
       ) : null}
 
-      <SettingsSection
-        id="seed-backup"
-        title={t('settings.seedBackupTitle')}
-        description={t('settings.seedBackupHelp')}
+      <SettingsTabLayout
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        showAdminTab={showAdminTab}
       >
-        <div className={`mt-4 ${SETTINGS_CARD}`}>
-          <SeedExportPanel />
-        </div>
-      </SettingsSection>
+        {activeTab === 'general' ? (
+          <div className="space-y-md">
+            <div>
+              <h3 className={SETTINGS_SUBHEAD}>{t('common.language')}</h3>
+              <div className={`mt-3 ${SETTINGS_CARD}`}>
+                <select
+                  className={MOTIVATOR_INPUT}
+                  value={i18n.language === 'en' ? 'en' : 'ru'}
+                  onChange={(e) => void i18n.changeLanguage(e.target.value)}
+                >
+                  <option value="ru">{t('common.langRuFlag')}</option>
+                  <option value="en">{t('common.langEnFlag')}</option>
+                </select>
+              </div>
+            </div>
 
-      <SettingsSection title={t('settings.sectionPlanning')} description={t('settings.sectionPlanningHelp')}>
+            <div>
+              <h3 className={SETTINGS_SUBHEAD}>{t('settings.accountPasswordTitle')}</h3>
+              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.accountPasswordHelp')}</p>
+              <form
+                className={`mt-3 flex flex-col gap-3 ${SETTINGS_CARD}`}
+                onSubmit={(e) => void handlePasswordSubmit(e)}
+              >
+                <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
+                  <span>{t('settings.currentPassword')}</span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    className={MOTIVATOR_INPUT}
+                    value={pwCurrent}
+                    disabled={!canEdit || !hasEmailLogin || pwBusy}
+                    onChange={(e) => setPwCurrent(e.target.value)}
+                  />
+                </label>
+                <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
+                  <span>{t('settings.newPasswordField')}</span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    className={MOTIVATOR_INPUT}
+                    value={pwNew}
+                    disabled={!canEdit || !hasEmailLogin || pwBusy}
+                    onChange={(e) => setPwNew(e.target.value)}
+                  />
+                </label>
+                <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
+                  <span>{t('settings.confirmNewPassword')}</span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    className={MOTIVATOR_INPUT}
+                    value={pwConfirm}
+                    disabled={!canEdit || !hasEmailLogin || pwBusy}
+                    onChange={(e) => setPwConfirm(e.target.value)}
+                  />
+                </label>
+                {pwError ? (
+                  <p className="text-label-sm text-red-400" role="alert">
+                    {pwError}
+                  </p>
+                ) : null}
+                {pwSuccess ? (
+                  <p className="text-label-sm text-primary" role="status">
+                    {t('settings.passwordChanged')}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={!canEdit || !hasEmailLogin || pwBusy}
+                  className={SETTINGS_BTN_SECONDARY}
+                >
+                  {pwBusy ? t('common.loading') : t('settings.changePasswordSubmit')}
+                </button>
+              </form>
+            </div>
+
+            <div>
+              <h3 className={SETTINGS_SUBHEAD}>{t('settings.sectionLegal')}</h3>
+              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.sectionLegalHelp')}</p>
+              <div className={`mt-3 ${SETTINGS_CARD}`}>
+                <SettingsLegalSection />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {activeTab === 'privacy' ? (
+          <div id="seed-backup" className="scroll-mt-6">
+            <div className={SETTINGS_CARD}>
+              <SeedExportPanel />
+            </div>
+          </div>
+        ) : null}
+
+        {activeTab === 'planning' ? (
+          <div className="space-y-md">
         <h3 className={SETTINGS_SUBHEAD}>{t('settings.priorityLabelsTitle')}</h3>
         <p className="mt-2 text-xs text-on-surface-variant">{t('settings.priorityLabelsHelp')}</p>
         <div className={`mt-4 flex flex-col gap-3 ${SETTINGS_CARD}`}>
@@ -413,13 +484,12 @@ function SettingsPageInner() {
             })}
           </button>
         </div>
-      </SettingsSection>
+          </div>
+        ) : null}
 
-      <SettingsSection
-        title={t('settings.notificationsTitle')}
-        description={t('settings.notificationsHelp')}
-      >
-        <div className={`${SETTINGS_CARD} mt-4 flex flex-col gap-3`}>
+        {activeTab === 'notifications' ? (
+          <div>
+        <div className={`${SETTINGS_CARD} flex flex-col gap-3`}>
           {(
             [
               ['off', t('settings.notificationsModeOff')],
@@ -496,93 +566,15 @@ function SettingsPageInner() {
             ) : null}
           </div>
         ) : null}
-      </SettingsSection>
+          </div>
+        ) : null}
 
-      <SettingsSection title={t('settings.sectionAccount')} description={t('settings.sectionAccountHelp')}>
-        <h3 className={SETTINGS_SUBHEAD}>{t('common.language')}</h3>
-        <div className={`mt-4 ${SETTINGS_CARD}`}>
-          <select
-            className={MOTIVATOR_INPUT}
-            value={i18n.language === 'en' ? 'en' : 'ru'}
-            onChange={(e) => void i18n.changeLanguage(e.target.value)}
-          >
-            <option value="ru">{t('common.langRuFlag')}</option>
-            <option value="en">{t('common.langEnFlag')}</option>
-          </select>
-        </div>
+        {activeTab === 'admin' && showAdminTab && supabase ? (
+          <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
+        ) : null}
+      </SettingsTabLayout>
 
-        <h3 className={`${SETTINGS_SUBHEAD} mt-8`}>{t('settings.accountPasswordTitle')}</h3>
-        <p className="mt-2 text-xs text-on-surface-variant">{t('settings.accountPasswordHelp')}</p>
-        <form
-          className={`mt-4 flex flex-col gap-3 ${SETTINGS_CARD}`}
-          onSubmit={(e) => void handlePasswordSubmit(e)}
-        >
-          <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
-            <span>{t('settings.currentPassword')}</span>
-            <input
-              type="password"
-              autoComplete="current-password"
-              className={MOTIVATOR_INPUT}
-              value={pwCurrent}
-              disabled={!canEdit || !hasEmailLogin || pwBusy}
-              onChange={(e) => setPwCurrent(e.target.value)}
-            />
-          </label>
-          <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
-            <span>{t('settings.newPasswordField')}</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              className={MOTIVATOR_INPUT}
-              value={pwNew}
-              disabled={!canEdit || !hasEmailLogin || pwBusy}
-              onChange={(e) => setPwNew(e.target.value)}
-            />
-          </label>
-          <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
-            <span>{t('settings.confirmNewPassword')}</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              className={MOTIVATOR_INPUT}
-              value={pwConfirm}
-              disabled={!canEdit || !hasEmailLogin || pwBusy}
-              onChange={(e) => setPwConfirm(e.target.value)}
-            />
-          </label>
-          {pwError ? (
-            <p className="text-xs text-red-400" role="alert">
-              {pwError}
-            </p>
-          ) : null}
-          {pwSuccess ? (
-            <p className="text-xs text-primary" role="status">
-              {t('settings.passwordChanged')}
-            </p>
-          ) : null}
-          <button
-            type="submit"
-            disabled={!canEdit || !hasEmailLogin || pwBusy}
-            className={SETTINGS_BTN_SECONDARY}
-          >
-            {pwBusy ? t('common.loading') : t('settings.changePasswordSubmit')}
-          </button>
-        </form>
-      </SettingsSection>
-
-      <SettingsSection title={t('settings.sectionLegal')} description={t('settings.sectionLegalHelp')}>
-        <div className={`mt-4 ${SETTINGS_CARD}`}>
-          <SettingsLegalSection />
-        </div>
-      </SettingsSection>
-
-      {supabase && isAdmin ? (
-        <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
-      ) : null}
-
-      <DesignPrototypesSection />
-
-      <p className="mt-10 text-center font-mono text-xs text-on-surface-variant">
+      <p className="mt-10 text-center text-mono-data text-label-sm text-on-surface-variant">
         {t('settings.appVersion', { version: APP_VERSION })}
       </p>
 

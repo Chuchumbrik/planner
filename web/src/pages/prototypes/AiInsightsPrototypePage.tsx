@@ -11,7 +11,7 @@ export function AiInsightsPrototypePage() {
   const { t } = useTranslation()
 
   return (
-    <PrototypePageLayout titleKey="prototype.aiInsights.title">
+    <PrototypePageLayout activeNav="prototype-ai-insights" titleKey="prototype.aiInsights.title">
       <p className="mb-6 text-sm text-on-surface-variant">{t('prototype.aiInsights.intro')}</p>
       <div className="grid gap-4 md:grid-cols-2">
         {MOCK_INSIGHTS.map((row) => (

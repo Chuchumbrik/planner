@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { motivatorAppRole } from '@/lib/motivatorRole'
-import { AiCommandStub } from '@/components/planner/AiCommandStub'
 import { DayPlannerStatsRow } from '@/components/planner/DayPlannerStatsRow'
 import { PeriodPlannerStatsRow } from '@/components/planner/PeriodPlannerStatsRow'
 import { PlannerCreateFab } from '@/components/planner/PlannerCreateFab'
@@ -326,7 +325,8 @@ function AppPageInner() {
   const {
     vault,
     remoteError,
-    retryRemoteHydrate,
+    retrySync,
+    awaitVaultSync,
     remoteHydrated,
     decryptFailed,
     savePending,
@@ -351,10 +351,43 @@ function AppPageInner() {
     completeEodForLocalDate,
   } = useVault()
 
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [highlightTaskId, setHighlightTaskId] = useState<string | null>(
+    () => searchParams.get('highlightTask'),
+  )
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('highlightTask')
+    if (!fromUrl) return
+    setHighlightTaskId(fromUrl)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('highlightTask')
+        return next
+      },
+      { replace: true },
+    )
+  }, [searchParams, setSearchParams])
+
   const [view, setView] = useState<'day' | 'week' | 'month'>('day')
   const [createOpen, setCreateOpen] = useState(false)
   const [resumeDraft, setResumeDraft] = useState<TaskDraft | null>(null)
   const [selectedDay, setSelectedDay] = useState(() => localDateKey())
+
+  useEffect(() => {
+    if (!highlightTaskId || !remoteHydrated) return
+    const scrollTimer = window.setTimeout(() => {
+      const el = document.querySelector(`[data-task-id="${CSS.escape(highlightTaskId)}"]`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+    const clearTimer = window.setTimeout(() => setHighlightTaskId(null), 4000)
+    return () => {
+      window.clearTimeout(scrollTimer)
+      window.clearTimeout(clearTimer)
+    }
+  }, [highlightTaskId, remoteHydrated, view, selectedDay, vault.tasks.length])
+
   const [weekStartMonday, setWeekStartMonday] = useState(() =>
     startOfWeekMonday(localDateKey()),
   )
@@ -1043,7 +1076,7 @@ function AppPageInner() {
             <button
               type="button"
               className={SETTINGS_BTN_SECONDARY}
-              onClick={() => retryRemoteHydrate()}
+              onClick={() => void retrySync()}
             >
               {t('app.syncRetry')}
             </button>
@@ -1090,8 +1123,6 @@ function AppPageInner() {
         <PlannerChartsIcon chartsHidden={chartsHidden} />
       </button>
       </div>
-      {view === 'day' ? <AiCommandStub /> : null}
-
       {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
 
       {remoteHydrated && remoteError && !decryptFailed ? (
@@ -1105,7 +1136,7 @@ function AppPageInner() {
           <button
             type="button"
             className={cn(SETTINGS_BTN_SECONDARY, 'shrink-0 px-3 py-1.5 text-label-sm')}
-            onClick={() => retryRemoteHydrate()}
+            onClick={() => void retrySync()}
           >
             {t('app.syncRetry')}
           </button>
@@ -1428,8 +1459,7 @@ function AppPageInner() {
           setResumeDraft(null)
         }}
         onSave={async (input, opts) => {
-          await createTask(input)
-          if (opts.removeDraftId) await deleteDraft(opts.removeDraftId)
+          await createTask(input, { removeDraftId: opts.removeDraftId })
         }}
         onPersistDraft={(d) => upsertDraft(d)}
       />
@@ -1478,6 +1508,7 @@ function AppPageInner() {
                       <li key={task.id} className="list-none">
                         <TaskMiniCard
                           task={task}
+                          highlighted={highlightTaskId === task.id}
                           priorityLabels={vault.priorityLabels}
                           canEdit={canEdit}
                           occurrenceDayKey={selectedDay}
@@ -1522,6 +1553,7 @@ function AppPageInner() {
                   <li key={task.id} className="list-none">
                     <TaskMiniCard
                       task={task}
+                      highlighted={highlightTaskId === task.id}
                       priorityLabels={vault.priorityLabels}
                       canEdit={canEdit}
                       occurrenceDayKey={selectedDay}
@@ -1723,7 +1755,10 @@ function AppPageInner() {
             : eodDoneToday
         }
         canEdit={canEdit}
-        onCompleteRitual={() => completeEodForLocalDate(todayKeyApp)}
+        onCompleteRitual={async () => {
+          await completeEodForLocalDate(todayKeyApp)
+          await awaitVaultSync()
+        }}
       />
 
       <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />

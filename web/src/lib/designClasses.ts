@@ -39,9 +39,19 @@ export function chipActive(active: boolean): string {
   return cn('motivator-chip', active && 'motivator-chip-active')
 }
 
+/** Fixed anchor for mobile create FAB + optional draft badge (hidden md+). */
+export const FAB_SHELL = cn('motivator-fab-shell')
+
 export const FAB = cn(
   'motivator-fab',
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+)
+
+const DRAFT_COUNT_BADGE_BASE = cn(
+  'z-10 flex h-6 min-w-[1.35rem] items-center justify-center rounded-full px-1',
+  'border border-outline-variant bg-surface-container-highest text-label-sm font-bold tabular-nums text-primary',
+  'ring-2 ring-background shadow-md',
+  'transition-colors hover:bg-surface-container disabled:opacity-40',
 )
 
 export const TASK_META_CHIP = cn(
@@ -220,17 +230,31 @@ export const ROADMAP_DETAILS_SUMMARY = cn(
   'text-label-sm font-medium text-on-surface-variant hover:bg-surface-container-low/55',
 )
 
-export const DRAFT_COUNT_BADGE = cn(
-  'absolute -right-0.5 -top-1.5 z-10 flex h-6 min-w-[1.35rem] items-center justify-center',
-  'rounded-full border border-primary/50 bg-primary px-1 text-label-sm font-bold text-on-primary',
-  'shadow-md hover:brightness-110 disabled:opacity-40',
-)
+/** Overlay on «Создать задачу» (desktop / week-month toolbar). */
+export const DRAFT_COUNT_BADGE = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-1 -top-1')
+
+/** Overlay on mobile create FAB — ring-offset от primary-круга. */
+export const DRAFT_COUNT_BADGE_ON_FAB = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-1 -top-1')
 
 export const DC_PENDING_SHELL = cn(
   'animate-dc-pending border-primary/40 bg-surface-container ring-1 ring-primary/25',
 )
 
 export const DC_PENDING_CHIP = cn(TASK_META_CHIP, 'border-primary/40 text-primary')
+
+/** Settings — vertical tab (desktop) / horizontal chip row (mobile), Stitch settings_privacy_security */
+export function settingsTabButton(active: boolean): string {
+  return cn(
+    'flex min-h-[44px] shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors',
+    active
+      ? 'bg-primary/10 font-semibold text-primary ring-1 ring-primary/30 lg:border-l-2 lg:border-primary lg:ring-0'
+      : 'text-on-surface-variant hover:bg-surface-container',
+  )
+}
+
+export const SETTINGS_TAB_PANEL_TITLE = 'text-headline-md font-display font-semibold text-on-surface'
+
+export const SETTINGS_TAB_PANEL_INTRO = 'mt-1 text-body-sm text-on-surface-variant'
 
 /** Sticky app header title — DESIGN.md headline-md, primary accent */
 export const SHELL_PAGE_TITLE = cn(

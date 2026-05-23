@@ -36,7 +36,7 @@ function EodTaskLine({ task, done }: { task: Task; done: boolean }) {
   return (
     <li
       className={cn(
-        'flex items-center gap-2 rounded-lg border px-3 py-2',
+        'flex flex-nowrap items-center gap-2 rounded-lg border px-3 py-2',
         done
           ? 'border-primary/25 bg-primary/5'
           : 'border-surface-variant bg-surface-container-low/80',
@@ -48,7 +48,9 @@ function EodTaskLine({ task, done }: { task: Task; done: boolean }) {
         filled={done}
         className={done ? 'text-primary' : 'text-on-surface-variant'}
       />
-      <span className="shrink-0 font-mono text-xs text-on-surface-variant">{task.priorityRank}</span>
+      {!done ? (
+        <span className="shrink-0 font-mono text-xs text-on-surface-variant">{task.priorityRank}</span>
+      ) : null}
       <span
         className={cn(
           'min-w-0 flex-1 text-sm',

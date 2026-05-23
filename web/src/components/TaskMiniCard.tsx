@@ -49,6 +49,7 @@ type Props = {
   onToggleChecklistItem?: (itemId: string) => void
   onClearDoubleConfirm?: () => void
   planRowSurfaceClass?: string
+  highlighted?: boolean
 }
 
 export function TaskMiniCard({
@@ -64,6 +65,7 @@ export function TaskMiniCard({
   onToggleChecklistItem,
   onClearDoubleConfirm,
   planRowSurfaceClass,
+  highlighted = false,
 }: Props) {
   const { t } = useTranslation()
   const checklistFieldId = useId()
@@ -139,10 +141,15 @@ export function TaskMiniCard({
           'border-surface-variant bg-surface-container-low hover:bg-surface-container'),
     flash === 'success' && 'animate-task-done-success',
     flash === 'soft' && 'animate-task-soft-miss',
+    highlighted && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
   )
 
   return (
-    <div className={shellClass} style={{ borderLeftColor: leftAccent }}>
+    <div
+      className={shellClass}
+      data-task-id={task.id}
+      style={{ borderLeftColor: leftAccent }}
+    >
       <div className={TASK_CARD_BODY}>
         <label
           className={cn(

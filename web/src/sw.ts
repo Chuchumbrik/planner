@@ -52,9 +52,24 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   const url = typeof raw?.url === 'string' ? raw.url : '/app'
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clientList) => {
       for (const c of clientList) {
-        if ('focus' in c) return (c as WindowClient).focus()
+        if (!('focus' in c)) continue
+        const client = c as WindowClient
+        await client.focus()
+        const withNavigate = client as WindowClient & {
+          navigate?: (target: string) => Promise<WindowClient | null>
+        }
+        if (typeof withNavigate.navigate === 'function') {
+          try {
+            await withNavigate.navigate(url)
+            return
+          } catch {
+            /* postMessage fallback */
+          }
+        }
+        client.postMessage({ type: 'motivator:navigate', url })
+        return
       }
       if (self.clients.openWindow) return self.clients.openWindow(url)
     }),

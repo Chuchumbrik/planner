@@ -331,6 +331,36 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
         changes: [
           {
+            ru: '**QA MVP 1.0.0 — критичные фиксы:** восстановлена ширина **`max-w-sm/md/lg`** (login, модалки, onboarding); **«Продолжить черновик → Сохранить»** снова создаёт задачу; **неделя** — ось времени скроллится вместе с колонками; **«Повторить»** при ошибке sync повторяет **upload**, а не перезагрузку vault; push **`?highlightTask=`** — scroll и подсветка карточки; EOD ждёт отправку на сервер; битый seed в localStorage — экран восстановления вместо вечной «Инициализации…».',
+            en: '**MVP 1.0.0 QA — critical fixes:** restored **`max-w-sm/md/lg`** widths (login, modals, onboarding); **resume draft → Save** creates the task again; **week** time axis scrolls with day columns; **Retry** after sync failure re-**uploads** local vault instead of re-fetch; push **`?highlightTask=`** scrolls and highlights the card; EOD waits for server sync; malformed localStorage seed shows recovery instead of endless “Initializing encryption…”.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Формы и модалки снова нормальной ширины на компьютере; черновик после «Продолжить» не пропадает впустую; клик по push открывает нужную задачу в списке.',
+            en: 'Forms and modals are readable width on desktop again; resuming a draft no longer deletes your work; tapping a push notification jumps to the task in the list.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Design 2.0 — навигация и настройки:** вкладки Stitch на **`/settings`** (`SettingsTabLayout`); прототипы **`/prototype/*`** и **AI-ассистент** (stub) — в sidebar / bottom nav для **admin** / **beta_tester**; глобальная кнопка AI → правая панель; **Настройки** внизу sidebar; hash **`#privacy`** для seed; **`RequireTesterPreview`**.',
+            en: '**Design 2.0 — navigation & settings:** Stitch tabs on **`/settings`** (`SettingsTabLayout`); **`/prototype/*`** and **AI assistant** (stub) in sidebar / bottom nav for **admin** / **beta_tester**; global AI button → right panel; **Settings** pinned at sidebar bottom; **`#privacy`** hash for seed; **`RequireTesterPreview`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Прототипы больше не спрятаны в настройках — они в боковом меню (если у вас роль тестера или админа). AI пока заглушка в выдвижной панели справа.',
+            en: 'Prototypes moved out of Settings into the sidebar (tester/admin roles). AI is still a stub in the slide-in panel on the right.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
             ru: '**Design 2.0 — дизайн-система и планировщик:** подключён **Geist**, шкала типографики и **`designClasses`**; **MotivatorShell** — safe-area, крупные зоны нажатия, версия внизу sidebar; **День** — stat-карточки, mobile **FAB «+»**, chips групп на карточках, подсветка **просрочки**; **Неделя** и **Месяц** — stat-ряд, колонка «сегодня», просрочка в сетке/ячейках, подсказка **«скрыто фильтром»**, ширина контента до **1200px**.',
             en: '**Design 2.0 — design system & planner:** **Geist** font, typography scale and **`designClasses`**; **MotivatorShell** — safe-area, larger tap targets, version in sidebar footer; **Day** — stat cards, mobile **FAB “+”**, group chips on cards, **overdue** styling; **Week** and **Month** — stat row, “today” column, overdue in grid/cells, **“hidden by filter”** hint, content width up to **1200px**.',
           },

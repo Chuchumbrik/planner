@@ -240,6 +240,24 @@
     "title": "Settings",
     "back": "← Back to day",
     "intro": "Seed backup, planning, notifications, account, and legal links. Account deletion with recovery window ships in the next phase 7 update.",
+    "tabs": {
+      "navAria": "Settings sections",
+      "general": "General",
+      "generalTitle": "General",
+      "generalIntro": "Interface language, sign-in password, and legal documents.",
+      "privacy": "Privacy",
+      "privacyTitle": "Privacy & security",
+      "privacyIntro": "Seed backup and restoring access to encrypted data.",
+      "planning": "Planning",
+      "planningTitle": "Planning",
+      "planningIntro": "Priorities, groups, and the End-of-Day ritual.",
+      "notifications": "Notifications",
+      "notificationsTitle": "Notifications",
+      "notificationsIntro": "Web Push delivery mode and test messages.",
+      "admin": "Administration",
+      "adminTitle": "Users & roles",
+      "adminIntro": "Assign motivator_role values (admin only)."
+    },
     "seedHint": "Seed is stored locally. Copy it on onboarding or add export later.",
     "seedBackupTitle": "Seed backup (DR-006)",
     "seedBackupHelp": "Your seed and KDF password are the only way to recover encrypted data. Keep a copy outside this browser.",
@@ -617,6 +635,10 @@
     "navPlanner": "Planner",
     "navReports": "Reports",
     "navSettings": "Settings",
+    "navAi": "AI",
+    "navPreviews": "Design previews",
+    "menuOpen": "Open menu",
+    "menuClose": "Close menu",
     "sideNavAria": "Main navigation",
     "bottomNavAria": "App navigation",
     "vaultLocked": "Vault secured",
@@ -630,6 +652,19 @@
       "reports": "Reports",
       "settings": "Settings"
     }
+  },
+  "aiAssistant": {
+    "title": "AI assistant",
+    "subtitle": "Prototype",
+    "prototypeNote": "The AI chat is not connected to your vault yet — UI preview only.",
+    "welcome": "Hi! I will help plan your day once this ships. For now, this shows how the conversation will look.",
+    "example1": "Schedule a focus block at 2pm",
+    "example2": "What is left on today’s plan?",
+    "example3": "Move overdue tasks to tomorrow",
+    "inputLabel": "Message to AI",
+    "inputPlaceholder": "Type a command or question…",
+    "inputHint": "Sending is disabled until the model is connected.",
+    "sendDisabled": "Send (coming soon)"
   },
   "vault": {
     "decryptError": "Could not decrypt vault. Check seed and password.",
@@ -677,6 +712,7 @@
     "bannerTitle": "Static prototype",
     "bannerBody": "Design 2.0 (Stitch) mock. Fictional data; controls do not affect the live product.",
     "backToSettings": "← Settings",
+    "backToPlanner": "← Back to planner",
     "settingsSectionTitle": "UI prototypes",
     "settingsSectionHelp": "Previews of screens outside current MVP — for design alignment.",
     "nav": {

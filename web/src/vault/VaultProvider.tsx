@@ -86,9 +86,13 @@ type VaultContextValue = {
   remoteError: string | null
   /** Повторная загрузка vault с сервера (например после сетевой ошибки). */
   retryRemoteHydrate: () => void
+  /** Повтор sync: re-upload локального vault если гидрация OK, иначе re-fetch. */
+  retrySync: () => Promise<void>
+  /** Дождаться отправки pending-изменений на сервер (EOD и критичные save). */
+  awaitVaultSync: () => Promise<void>
   saveSeed: (seedB64: string, password: string) => Promise<void>
   lock: () => Promise<void>
-  createTask: (input: CreateTaskInput) => Promise<void>
+  createTask: (input: CreateTaskInput, opts?: { removeDraftId?: string }) => Promise<boolean>
   /** @deprecated используйте createTask */
   addTask: (
     title: string,
@@ -170,13 +174,24 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       return
     }
     let cancelled = false
-    void deriveAesKey(seed, password).then((k) => {
-      if (cancelled) return
-      startTransition(() => {
-        setCryptoKey(k)
-        setReady(true)
+    void deriveAesKey(seed, password)
+      .then((k) => {
+        if (cancelled) return
+        startTransition(() => {
+          setCryptoKey(k)
+          setDecryptFailed(false)
+          setReady(true)
+        })
       })
-    })
+      .catch(() => {
+        if (cancelled) return
+        startTransition(() => {
+          setCryptoKey(null)
+          setDecryptFailed(true)
+          setRemoteError(i18n.t('vault.decryptError'))
+          setReady(true)
+        })
+      })
     return () => {
       cancelled = true
     }
@@ -359,10 +374,23 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setHydrateNonce((n) => n + 1)
   }, [])
 
+  const awaitVaultSync = useCallback(async () => {
+    await flushPendingUpload()
+  }, [flushPendingUpload])
+
+  const retrySync = useCallback(async () => {
+    if (remoteHydrated && latestPayloadRef.current) {
+      await flushPendingUpload()
+      return
+    }
+    retryRemoteHydrate()
+  }, [flushPendingUpload, remoteHydrated, retryRemoteHydrate])
+
   const mutate = useCallback(
     async (fn: (v: VaultPayload) => VaultPayload) => {
       if (!remoteHydrated) return
-      await pushVault(fn(vault))
+      const base = latestPayloadRef.current ?? vault
+      await pushVault(fn(base))
     },
     [pushVault, remoteHydrated, vault],
   )
@@ -416,12 +444,17 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, [remoteHydrated, decryptFailed, session, supabase, vault, i18n.language])
 
   const createTask = useCallback(
-    async (input: CreateTaskInput) => {
-      if (!remoteHydrated) return
-      if (!input.title.trim()) return
-      await pushVault(applyCreateTask(vault, input, vaultDepsDefault))
+    async (input: CreateTaskInput, opts?: { removeDraftId?: string }) => {
+      if (!remoteHydrated) return false
+      if (!input.title.trim()) return false
+      await mutate((v) => {
+        let next = applyCreateTask(v, input, vaultDepsDefault)
+        if (opts?.removeDraftId) next = applyDeleteDraft(next, opts.removeDraftId)
+        return next
+      })
+      return true
     },
-    [pushVault, remoteHydrated, vault],
+    [mutate, remoteHydrated],
   )
 
   const addTask = useCallback(
@@ -695,6 +728,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       vault,
       remoteError,
       retryRemoteHydrate,
+      retrySync,
+      awaitVaultSync,
       saveSeed,
       lock,
       createTask,
@@ -736,6 +771,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       vault,
       remoteError,
       retryRemoteHydrate,
+      retrySync,
+      awaitVaultSync,
       saveSeed,
       lock,
       createTask,

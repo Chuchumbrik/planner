@@ -1,0 +1,75 @@
+/** Sidebar / shell navigation — primary MVP routes + Design 2.0 preview screens. */
+
+export type MotivatorNavId =
+  | 'planner'
+  | 'reports'
+  | 'settings'
+  | 'prototype-deep-focus'
+  | 'prototype-ai-insights'
+  | 'prototype-security-log'
+  | 'prototype-admin'
+
+export type ShellNavItem = {
+  id: MotivatorNavId
+  to: string
+  icon: string
+  labelKey: string
+  /** React Router `end` on NavLink (planner only). */
+  end?: boolean
+}
+
+/** Top of sidebar / mobile bottom bar — core product areas (settings is separate, bottom of sidebar). */
+export const SHELL_MAIN_NAV: ShellNavItem[] = [
+  { id: 'planner', to: '/app', icon: 'event_note', labelKey: 'shell.navPlanner', end: true },
+  { id: 'reports', to: '/app/reports', icon: 'analytics', labelKey: 'shell.navReports' },
+]
+
+export const SHELL_SETTINGS_NAV: ShellNavItem = {
+  id: 'settings',
+  to: '/settings',
+  icon: 'settings',
+  labelKey: 'shell.navSettings',
+}
+
+/** @deprecated Use SHELL_MAIN_NAV + SHELL_SETTINGS_NAV; kept for mobile bottom bar composition. */
+export const SHELL_PRIMARY_NAV: ShellNavItem[] = [...SHELL_MAIN_NAV, SHELL_SETTINGS_NAV]
+
+export const SHELL_PREVIEW_NAV: ShellNavItem[] = [
+  {
+    id: 'prototype-deep-focus',
+    to: '/prototype/deep-focus',
+    icon: 'timer',
+    labelKey: 'prototype.nav.deepFocus',
+  },
+  {
+    id: 'prototype-ai-insights',
+    to: '/prototype/ai-insights',
+    icon: 'auto_awesome',
+    labelKey: 'prototype.nav.aiInsights',
+  },
+  {
+    id: 'prototype-security-log',
+    to: '/prototype/security-log',
+    icon: 'shield',
+    labelKey: 'prototype.nav.securityLog',
+  },
+  {
+    id: 'prototype-admin',
+    to: '/prototype/admin-dashboard',
+    icon: 'dashboard',
+    labelKey: 'prototype.nav.admin',
+  },
+]
+
+export function shellTitleKey(navId: MotivatorNavId): string {
+  if (navId.startsWith('prototype-')) {
+    const map: Record<string, string> = {
+      'prototype-deep-focus': 'prototype.deepFocus.title',
+      'prototype-ai-insights': 'prototype.aiInsights.title',
+      'prototype-security-log': 'prototype.securityLog.title',
+      'prototype-admin': 'prototype.admin.title',
+    }
+    return map[navId] ?? 'shell.title.settings'
+  }
+  return `shell.title.${navId}`
+}

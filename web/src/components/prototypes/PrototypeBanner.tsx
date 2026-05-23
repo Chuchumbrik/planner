@@ -17,10 +17,10 @@ export function PrototypeBanner() {
         </p>
         <p className="mt-1 text-sm text-on-surface-variant">{t('prototype.bannerBody')}</p>
         <Link
-          to="/settings"
-          className="mt-2 inline-block text-sm text-primary hover:brightness-110"
+          to="/app"
+          className="mt-2 inline-block text-body-sm text-primary hover:brightness-110"
         >
-          {t('prototype.backToSettings')}
+          {t('prototype.backToPlanner')}
         </Link>
       </div>
     </div>

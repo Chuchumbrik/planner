@@ -2,17 +2,19 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
 import { PrototypeBanner } from '@/components/prototypes/PrototypeBanner'
+import type { MotivatorNavId } from '@/lib/shellNavigation'
 
 type PrototypePageLayoutProps = {
-  titleKey: string
+  activeNav: MotivatorNavId
+  titleKey?: string
   children: ReactNode
 }
 
-export function PrototypePageLayout({ titleKey, children }: PrototypePageLayoutProps) {
+export function PrototypePageLayout({ activeNav, titleKey, children }: PrototypePageLayoutProps) {
   const { t } = useTranslation()
 
   return (
-    <MotivatorShell activeNav="settings" wide title={t(titleKey)}>
+    <MotivatorShell activeNav={activeNav} wide title={titleKey ? t(titleKey) : undefined}>
       <PrototypeBanner />
       {children}
     </MotivatorShell>
