@@ -9,7 +9,7 @@ export function DeepFocusPrototypePage() {
     <PrototypePageLayout titleKey="prototype.deepFocus.title">
       <p className="mb-6 text-sm text-on-surface-variant">{t('prototype.deepFocus.intro')}</p>
       <div className="grid gap-4 lg:grid-cols-12">
-        <section className="glass-panel space-y-4 rounded-xl p-5 lg:col-span-3">
+        <section className="glass-panel space-y-4 rounded-card p-sm lg:col-span-3">
           <h3 className="font-display text-xs uppercase tracking-widest text-on-surface-variant">
             {t('prototype.deepFocus.bioTitle')}
           </h3>
@@ -38,7 +38,7 @@ export function DeepFocusPrototypePage() {
             </button>
           </div>
         </section>
-        <section className="glass-panel space-y-3 rounded-xl p-5 lg:col-span-3">
+        <section className="glass-panel space-y-3 rounded-card p-sm lg:col-span-3">
           <h3 className="font-display text-xs uppercase tracking-widest text-on-surface-variant">
             {t('prototype.deepFocus.aiTitle')}
           </h3>

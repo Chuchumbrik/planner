@@ -192,6 +192,46 @@ export const ALERT_WARNING_TITLE = 'text-body-sm font-semibold motivator-alert-w
 
 export const ALERT_WARNING_BODY = 'text-body-sm motivator-alert-warning-body'
 
+/** Small inline hint (estimate warnings, settings hints) */
+export const TEXT_HINT_WARNING = 'text-label-sm text-tertiary'
+
+export const TEXT_LINK_IN_HINT = 'text-primary underline hover:text-primary-fixed-dim'
+
+export const AUTH_GLASS_CARD = cn(
+  'glass-panel relative z-10 w-full rounded-card shadow-2xl',
+)
+
+export const MODAL_SHELL_WIDE = cn(
+  MODAL_SHELL,
+  'max-w-[800px] md:max-h-[min(88vh,900px)] md:flex-row',
+)
+
+export const ROADMAP_ACCENT_SHIPPED = 'text-primary/90'
+
+export const ROADMAP_ACCENT_NEUTRAL = 'text-on-surface-variant'
+
+export const ROADMAP_SECTION_SUMMARY = cn(
+  'flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3',
+  'text-label-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80',
+)
+
+export const ROADMAP_DETAILS_SUMMARY = cn(
+  'flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5',
+  'text-label-sm font-medium text-on-surface-variant hover:bg-surface-container-low/55',
+)
+
+export const DRAFT_COUNT_BADGE = cn(
+  'absolute -right-0.5 -top-1.5 z-10 flex h-6 min-w-[1.35rem] items-center justify-center',
+  'rounded-full border border-primary/50 bg-primary px-1 text-label-sm font-bold text-on-primary',
+  'shadow-md hover:brightness-110 disabled:opacity-40',
+)
+
+export const DC_PENDING_SHELL = cn(
+  'animate-dc-pending border-primary/40 bg-surface-container ring-1 ring-primary/25',
+)
+
+export const DC_PENDING_CHIP = cn(TASK_META_CHIP, 'border-primary/40 text-primary')
+
 /** Sticky app header title — DESIGN.md headline-md, primary accent */
 export const SHELL_PAGE_TITLE = cn(
   'min-w-0 truncate text-headline-md font-semibold text-primary',

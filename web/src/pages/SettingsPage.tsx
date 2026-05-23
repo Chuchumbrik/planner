@@ -19,7 +19,9 @@ import {
   SETTINGS_CHECKBOX_ROW,
   SETTINGS_LABEL,
   SETTINGS_SUBHEAD,
+  TEXT_HINT_WARNING,
 } from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 import { useVault } from '@/vault/VaultProvider'
 
 function formatMinutesAsTimeValue(mins: number): string {
@@ -55,7 +57,7 @@ function GroupRow({
   const [name, setName] = useState(initialName)
 
   return (
-    <div className="flex flex-wrap items-start gap-2 rounded-xl border border-surface-variant bg-surface-container-low px-3 py-2">
+    <div className="flex flex-wrap items-start gap-2 rounded-card border border-surface-variant bg-surface-container-low px-3 py-2">
       <label className={`flex min-w-0 flex-1 flex-col gap-1 ${SETTINGS_LABEL}`}>
         <span>{t('settings.rename')}</span>
         <input
@@ -348,7 +350,7 @@ function SettingsPageInner() {
         <h3 className={`${SETTINGS_SUBHEAD} mt-6`}>{t('settings.eodPushReminderTitle')}</h3>
         <p className="mt-2 text-xs text-on-surface-variant">{t('settings.eodPushReminderHelp')}</p>
         {deliveryMode === 'off' ? (
-          <p className="mt-2 text-xs text-amber-500/90">{t('settings.eodPushReminderNeedNotifications')}</p>
+          <p className={cn('mt-2', TEXT_HINT_WARNING)}>{t('settings.eodPushReminderNeedNotifications')}</p>
         ) : null}
         <label
           className={`${SETTINGS_CHECKBOX_ROW} mt-3 ${
@@ -438,7 +440,7 @@ function SettingsPageInner() {
             </label>
           ))}
           <p className="text-xs text-on-surface-variant">{t('settings.notificationsModeHybridHint')}</p>
-          <p className="text-xs text-amber-600/90">{t('settings.notificationsModeFullHint')}</p>
+          <p className={TEXT_HINT_WARNING}>{t('settings.notificationsModeFullHint')}</p>
           <button
             type="button"
             disabled={!canEdit || !notifModeDirty || notifModeSaving}

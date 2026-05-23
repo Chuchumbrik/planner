@@ -28,6 +28,9 @@ import {
   isLikelyNetworkFetchFailure,
 } from '@/lib/connectivityHints'
 import {
+  ALERT_WARNING,
+  ALERT_WARNING_BODY,
+  DRAFT_COUNT_BADGE,
   DRAFT_LIST_ITEM,
   EMPTY_STATE_BOX,
   FILTER_CHIP,
@@ -37,6 +40,7 @@ import {
   MODAL_CLOSE_BTN,
   MODAL_HEADER,
   MODAL_SHELL,
+  MODAL_TITLE,
   MOTIVATOR_INPUT,
   PLANNER_NAV_BTN,
   PLANNER_SECTION_HEAD,
@@ -1038,7 +1042,7 @@ function AppPageInner() {
           {remoteError ? (
             <button
               type="button"
-              className="rounded-lg border border-amber-600/70 bg-amber-950/50 px-4 py-2 text-sm font-medium text-amber-100 hover:bg-amber-900/40"
+              className={SETTINGS_BTN_SECONDARY}
               onClick={() => retryRemoteHydrate()}
             >
               {t('app.syncRetry')}
@@ -1091,16 +1095,16 @@ function AppPageInner() {
       {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
 
       {remoteHydrated && remoteError && !decryptFailed ? (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
-          <div className="min-w-0 flex-1 leading-snug">
+        <div className={cn(ALERT_WARNING, 'mb-4 flex flex-wrap items-center justify-between gap-3')}>
+          <div className={cn('min-w-0 flex-1 leading-snug', ALERT_WARNING_BODY)}>
             <p>{humanizeConnectivityError(remoteError, t)}</p>
             {isLikelyNetworkFetchFailure(remoteError) ? (
-              <p className="mt-1 text-xs text-amber-200/85">{t('app.syncErrorRegionalHint')}</p>
+              <p className="mt-1 text-label-sm opacity-90">{t('app.syncErrorRegionalHint')}</p>
             ) : null}
           </div>
           <button
             type="button"
-            className="shrink-0 rounded-lg border border-amber-600/60 bg-amber-950/50 px-3 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-900/40"
+            className={cn(SETTINGS_BTN_SECONDARY, 'shrink-0 px-3 py-1.5 text-label-sm')}
             onClick={() => retryRemoteHydrate()}
           >
             {t('app.syncRetry')}
@@ -1173,7 +1177,7 @@ function AppPageInner() {
                 aria-expanded={draftsModalOpen}
                 aria-label={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
                 title={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-                className="absolute -right-0.5 -top-1.5 z-10 flex h-6 min-w-[1.35rem] items-center justify-center rounded-full border border-amber-700/80 bg-amber-500 px-1 text-[11px] font-bold text-amber-950 shadow-md hover:bg-amber-400 disabled:opacity-40"
+                className={DRAFT_COUNT_BADGE}
                 onClick={(e) => {
                   e.stopPropagation()
                   setDraftsModalOpen(true)
@@ -1391,7 +1395,7 @@ function AppPageInner() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className={MODAL_HEADER}>
-                <h2 id="drafts-modal-title" className="font-display text-sm font-semibold text-amber-300">
+                <h2 id="drafts-modal-title" className={MODAL_TITLE}>
                   {t('app.draftsTitle')}
                 </h2>
                 <button

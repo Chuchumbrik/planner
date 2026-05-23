@@ -12,6 +12,14 @@ import {
   type RoadmapReleaseNoteBlock,
   type RoadmapReleaseNoteItem,
 } from '@/data/productRoadmap'
+import {
+  MODAL_OVERLAY,
+  MODAL_TITLE,
+  ROADMAP_ACCENT_NEUTRAL,
+  ROADMAP_ACCENT_SHIPPED,
+  ROADMAP_DETAILS_SUMMARY,
+} from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 
 function pickLocale(s: LocalizedString, lang: string): string {
   return lang === 'en' ? s.en : s.ru
@@ -146,14 +154,8 @@ function PhaseRow({
 }) {
   const { t } = useTranslation()
   const hasDetails = phase.detailBullets.length > 0
-  const badgeClass =
-    variant === 'shipped'
-      ? 'text-primary/90'
-      : 'text-amber-500/85'
-  const detailsAccent =
-    variant === 'shipped'
-      ? 'text-primary/85'
-      : 'text-amber-400/85'
+  const badgeClass = variant === 'shipped' ? ROADMAP_ACCENT_SHIPPED : ROADMAP_ACCENT_NEUTRAL
+  const detailsAccent = variant === 'shipped' ? 'text-primary/85' : ROADMAP_ACCENT_NEUTRAL
   return (
     <li className="rounded-lg border border-surface-variant/90 bg-surface-container-lowest/50">
       <div className="px-3 py-2.5">
@@ -201,7 +203,7 @@ function IdeaRow({ idea, lang }: { idea: RoadmapIdeaEntry; lang: string }) {
         <p className="mt-1.5 text-xs leading-relaxed text-on-surface-variant">{pickLocale(idea.summary, lang)}</p>
         {hasDetails ? (
           <details className="group/details mt-2 rounded-md border border-surface-variant/80 bg-surface-container-low/35 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-xs font-medium text-violet-400/85 hover:bg-surface-container-low/55">
+            <summary className={ROADMAP_DETAILS_SUMMARY}>
               <span>{t('settings.roadmapExpandDetails')}</span>
               <Chevron nested />
             </summary>
@@ -248,7 +250,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-4 sm:items-center"
+      className={cn(MODAL_OVERLAY, 'z-[70]')}
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -258,12 +260,12 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
         role="dialog"
         aria-modal
         aria-labelledby="roadmap-modal-title"
-        className="scrollbar-site max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-surface-variant bg-surface-container-lowest p-4 shadow-2xl"
+        className="scrollbar-site max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-card border border-surface-variant bg-surface-container-lowest p-sm shadow-2xl md:p-md"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 id="roadmap-modal-title" className="text-base font-semibold text-on-surface">
+            <h2 id="roadmap-modal-title" className={MODAL_TITLE}>
               {t('settings.roadmapTitle')}
             </h2>
             <p className="mt-2 text-xs leading-relaxed text-on-surface-variant">{t('settings.roadmapIntro')}</p>
@@ -319,7 +321,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
           </details>
 
           <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-amber-400/95 hover:bg-surface-container-low/80">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80">
               <span>{t('settings.roadmapMvp')}</span>
               <Chevron />
             </summary>
@@ -334,7 +336,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
           </details>
 
           <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-sky-400/95 hover:bg-surface-container-low/80">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-primary/95 hover:bg-surface-container-low/80">
               <span>{t('settings.roadmapReleaseNotes')}</span>
               <Chevron />
             </summary>
@@ -346,7 +348,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                     key={day.dateKey}
                     className="group/details rounded-lg border border-surface-variant/90 bg-surface-container-lowest/40 [&_summary::-webkit-details-marker]:hidden"
                   >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-sky-400/90 hover:bg-surface-container-low/55">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary/90 hover:bg-surface-container-low/55">
                       <span>{pickLocale(day.dateLabel, lang)}</span>
                       <Chevron nested />
                     </summary>
@@ -381,7 +383,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                                   </ul>
                                   {item.plainBullets?.length ? (
                                     <details className="group/details mt-3 rounded-md border border-surface-variant/80 bg-surface-container-low/35 [&_summary::-webkit-details-marker]:hidden">
-                                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-2 text-xs font-medium text-sky-400/85 hover:bg-surface-container-low/55">
+                                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-2 text-xs font-medium text-primary/85 hover:bg-surface-container-low/55">
                                         <span>{t('settings.roadmapReleaseNotePlainDetails')}</span>
                                         <Chevron nested />
                                       </summary>
@@ -413,10 +415,10 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
           </details>
 
           <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-violet-400/95 hover:bg-surface-container-low/80">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80">
               <span>
                 {t('settings.roadmapIdeas')}{' '}
-                <span className="font-normal tabular-nums text-violet-400/70">
+                <span className="font-normal tabular-nums text-on-surface-variant/70">
                   ({t('settings.roadmapIdeasCount', { count: ideasLaterTotal })})
                 </span>
               </span>
@@ -430,7 +432,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                     key={g.groupId}
                     className="group/details rounded-lg border border-surface-variant/90 bg-surface-container-lowest/40 [&_summary::-webkit-details-marker]:hidden"
                   >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold text-violet-400/90 hover:bg-surface-container-low/55">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container-low/55">
                       <span className="min-w-0 text-left">
                         {t(`settings.roadmapIdeaGroup_${g.groupId}` as const)}{' '}
                         <span className="font-normal tabular-nums text-on-surface-variant">

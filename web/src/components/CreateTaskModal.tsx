@@ -6,6 +6,9 @@ import {
   FIELD_LABEL,
   FIELDSET,
   FIELDSET_LEGEND,
+  ALERT_WARNING_BODY,
+  ALERT_WARNING_MUTED,
+  ALERT_WARNING_TITLE,
   MODAL_CLOSE_BTN,
   MODAL_FOOTER,
   MODAL_HEADER,
@@ -13,8 +16,10 @@ import {
   MODAL_TITLE,
   MOTIVATOR_INPUT,
   SETTINGS_BTN_SECONDARY,
+  TEXT_HINT_WARNING,
   weekdayToggle,
 } from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
 import {
@@ -573,7 +578,7 @@ export function CreateTaskModal({
           <span className="flex flex-wrap items-center justify-between gap-2">
             <span>
               {t('app.taskTitle')}
-              <span className="text-amber-400/90" aria-hidden>
+              <span className="text-tertiary" aria-hidden>
                 {' '}
                 *
               </span>
@@ -698,7 +703,7 @@ export function CreateTaskModal({
           <span className={FIELD_LABEL}>
             {t('app.estimatedTimeSection')}
             {plannedWithEstimateRequired ? (
-              <span className="text-amber-400/90" aria-hidden>
+              <span className="text-tertiary" aria-hidden>
                 {' '}
                 *
               </span>
@@ -754,7 +759,7 @@ export function CreateTaskModal({
           </div>
           <p className="text-[10px] leading-snug text-on-surface-variant">{t('app.estimateHint')}</p>
           {floatingEstimateWarning ? (
-            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
+            <p className={TEXT_HINT_WARNING}>{floatingEstimateWarning}</p>
           ) : null}
         </div>
 
@@ -922,9 +927,9 @@ export function CreateTaskModal({
 
         <div className={MODAL_FOOTER}>
           {saveAttempted && blockingLinesForSave.length > 0 ? (
-            <div className="mb-3 rounded-lg border border-amber-900/35 bg-amber-950/20 px-3 py-2">
-              <p className="text-[11px] font-medium text-amber-200/95">{t('app.createTaskFooterHint')}</p>
-              <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-amber-100/90">
+            <div className={cn(ALERT_WARNING_MUTED, 'mb-3')}>
+              <p className={ALERT_WARNING_TITLE}>{t('app.createTaskFooterHint')}</p>
+              <ul className={cn('mt-1 list-disc space-y-0.5 pl-4', ALERT_WARNING_BODY)}>
                 {blockingLinesForSave.map((line, i) => (
                   <li key={`${i}-${line.slice(0, 24)}`}>{line}</li>
                 ))}

@@ -1,9 +1,13 @@
 import { useCallback, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  ALERT_WARNING_BODY,
+  ALERT_WARNING_MUTED,
+  ALERT_WARNING_TITLE,
   CHECKBOX_INPUT,
   SETTINGS_BTN_SECONDARY,
 } from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 import {
   getStoredSeedB64,
   hasAcknowledgedSeedWarning,
@@ -86,13 +90,10 @@ export function SeedExportPanel({ className = '' }: Props) {
 
   return (
     <div className={className}>
-      <div
-        className="rounded-lg border border-amber-900/50 bg-amber-950/25 px-3 py-3 text-xs leading-relaxed text-amber-100/90"
-        id={warnId}
-      >
-        <p className="font-medium text-amber-100">{t('settings.seedWarningTitle')}</p>
-        <p className="mt-2">{t('settings.seedWarningBody')}</p>
-        <ul className="mt-2 list-inside list-disc space-y-1 text-amber-200/80">
+      <div className={ALERT_WARNING_MUTED} id={warnId}>
+        <p className={ALERT_WARNING_TITLE}>{t('settings.seedWarningTitle')}</p>
+        <p className={cn('mt-2', ALERT_WARNING_BODY)}>{t('settings.seedWarningBody')}</p>
+        <ul className={cn('mt-2 list-inside list-disc space-y-1', ALERT_WARNING_BODY)}>
           <li>{t('settings.seedWarningBullet1')}</li>
           <li>{t('settings.seedWarningBullet2')}</li>
           <li>{t('settings.seedWarningBullet3')}</li>

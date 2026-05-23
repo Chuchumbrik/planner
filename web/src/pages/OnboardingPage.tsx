@@ -19,7 +19,7 @@ function OnboardingLayout({ children }: { children: React.ReactNode }) {
       </header>
       <main className="relative flex flex-1 flex-col items-center px-4 py-10 md:px-10">
         <div className="pointer-events-none absolute inset-0 grid-pattern opacity-15" aria-hidden />
-        <div className="glass-panel relative z-10 w-full max-w-lg rounded-xl p-6 shadow-2xl md:p-8">
+        <div className="glass-panel relative z-10 w-full max-w-lg rounded-card p-sm shadow-2xl md:p-md">
           {children}
         </div>
       </main>

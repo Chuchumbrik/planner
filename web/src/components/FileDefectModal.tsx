@@ -9,7 +9,15 @@ import { collectDefectDeviceMeta } from '@/lib/defectDeviceMeta'
 import { DEFECT_TEMPLATE_IDS, type DefectTemplateId } from '@/lib/defectTemplates'
 import { APP_VERSION } from '@/version'
 import { useFileDefect } from '@/hooks/useFileDefect'
-import { MOTIVATOR_INPUT } from '@/lib/designClasses'
+import {
+  MODAL_HEADER,
+  MODAL_OVERLAY,
+  MODAL_SHELL,
+  MODAL_TITLE,
+  MOTIVATOR_INPUT,
+  TEXT_HINT_WARNING,
+} from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 
 const TITLE_MAX = 120
 const DESC_MAX = 8000
@@ -274,21 +282,21 @@ export function FileDefectModal({
 
   const modal = (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4 sm:items-center"
+      className={cn(MODAL_OVERLAY, 'z-[100]')}
       role="presentation"
       onMouseDown={(ev) => {
         if (ev.target === ev.currentTarget) onClose()
       }}
     >
       <div
-        className="flex max-h-[min(92dvh,780px)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest shadow-xl"
+        className={cn(MODAL_SHELL, 'max-h-[min(92dvh,780px)]')}
         role="dialog"
         aria-modal="true"
         aria-labelledby={issueUrl ? `${formId}-success-title` : `${formId}-title`}
       >
         {issueUrl ? null : (
-          <div className="border-b border-surface-variant px-4 py-3">
-            <h2 id={`${formId}-title`} className="text-base font-semibold text-on-surface">
+          <div className={MODAL_HEADER}>
+            <h2 id={`${formId}-title`} className={MODAL_TITLE}>
               {t('settings.fileDefectModalTitle')}
             </h2>
             <p className="mt-1 text-xs text-on-surface-variant">{t('settings.fileDefectModalHelp')}</p>
@@ -426,7 +434,7 @@ export function FileDefectModal({
                 />
               </label>
               {recommendSteps ? (
-                <p className="text-[11px] text-amber-400/90">{t('settings.fileDefectRecommendSteps')}</p>
+                <p className={TEXT_HINT_WARNING}>{t('settings.fileDefectRecommendSteps')}</p>
               ) : null}
 
               <div

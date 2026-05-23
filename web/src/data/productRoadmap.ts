@@ -342,6 +342,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
       },
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Design 2.0 — модалки и вторичные экраны:** единые **`MODAL_*`** и **`ALERT_WARNING_*`** вместо янтарных плашек; обновлены создание/редактирование задачи, EOD, «Краткая сводка», дефект, cookie; вход, онбординг, настройки (seed/vault), баннеры синхронизации; прототипы **`/prototype/*`** на **`rounded-card`**.',
+            en: '**Design 2.0 — modals & secondary screens:** shared **`MODAL_*`** and **`ALERT_WARNING_*`** instead of amber callouts; refreshed create/edit task, EOD, Brief summary, defect report, cookie banner; login, onboarding, settings (seed/vault), sync banners; **`/prototype/*`** on **`rounded-card`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Предупреждения (сеть, seed, подсказки в формах) выглядят одинаково и читаются на тёмном фоне; длинные модалки не упираются в край экрана на телефоне.',
+            en: 'Warnings (network, seed backup, form hints) look consistent on the dark theme; tall modals respect the phone safe area.',
+          },
+        ],
+      },
     ],
   },
   {

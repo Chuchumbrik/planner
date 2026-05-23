@@ -3,11 +3,15 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 import {
+  DC_PENDING_CHIP,
+  DC_PENDING_SHELL,
   TASK_CARD_BODY,
   TASK_CARD_SHELL,
   TASK_GROUP_CHIP,
   TASK_META_CHIP,
   TASK_OVERDUE_CHIP,
+  TEXT_HINT_WARNING,
+  TEXT_LINK_IN_HINT,
 } from '@/lib/designClasses'
 import {
   isMainTaskDoneForDay,
@@ -130,8 +134,7 @@ export function TaskMiniCard({
 
   const shellClass = cn(
     TASK_CARD_SHELL,
-    pendingHere
-      ? 'animate-dc-pending border-amber-700/50 bg-surface-container ring-1 ring-amber-600/25'
+    pendingHere ? DC_PENDING_SHELL
       : (planRowSurfaceClass ??
           'border-surface-variant bg-surface-container-low hover:bg-surface-container'),
     flash === 'success' && 'animate-task-done-success',
@@ -189,7 +192,7 @@ export function TaskMiniCard({
               <span className={TASK_OVERDUE_CHIP}>{t('app.taskOverdueBadge')}</span>
             ) : null}
             {pendingHere ? (
-              <span className={cn(TASK_META_CHIP, 'border-amber-800/60 text-amber-200/95')}>
+              <span className={DC_PENDING_CHIP}>
                 {t('app.doubleConfirmBadge')}
               </span>
             ) : null}
@@ -209,7 +212,7 @@ export function TaskMiniCard({
             ) : null}
           </div>
           {pendingHere && minutesLeft != null ? (
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-amber-200/90">
+            <div className={cn('mt-2 flex flex-wrap items-center gap-x-2 gap-y-1', TEXT_HINT_WARNING)}>
               <span>
                 {t('app.doubleConfirmTimeLeft', {
                   minutes: minutesLeft,
@@ -218,7 +221,7 @@ export function TaskMiniCard({
               {canEdit && onClearDoubleConfirm ? (
                 <button
                   type="button"
-                  className="text-amber-300 underline hover:text-amber-200"
+                  className={TEXT_LINK_IN_HINT}
                   onClick={(e) => {
                     e.stopPropagation()
                     onClearDoubleConfirm()

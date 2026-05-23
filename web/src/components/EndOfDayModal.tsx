@@ -9,6 +9,14 @@ import {
 import { getPlanProgressLabels } from '@/components/PlanDayProgressCaption'
 import { PlanProgressRing } from '@/components/PlanProgressRing'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
+import {
+  MODAL_CLOSE_BTN,
+  MODAL_OVERLAY,
+  MODAL_SHELL_WIDE,
+  MODAL_TITLE,
+  STAT_CARD,
+  STAT_CARD_LABEL,
+} from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 
 const BACKLOG_PREVIEW = 6
@@ -131,7 +139,7 @@ export function EndOfDayModal({
 
   return (
     <div
-      className="glass-overlay fixed inset-0 z-[75] flex items-end justify-center p-3 sm:items-center sm:p-6"
+      className={cn(MODAL_OVERLAY, 'z-[75] items-end p-3 sm:items-center sm:p-6')}
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -141,7 +149,7 @@ export function EndOfDayModal({
         role="dialog"
         aria-modal
         aria-labelledby="eod-modal-title"
-        className="flex max-h-[92vh] w-full max-w-[800px] flex-col overflow-hidden rounded-xl border border-surface-variant bg-surface-container-lowest shadow-2xl md:max-h-[88vh] md:flex-row"
+        className={cn(MODAL_SHELL_WIDE, 'max-h-[92vh]')}
         onClick={(e) => e.stopPropagation()}
       >
         <aside
@@ -166,7 +174,7 @@ export function EndOfDayModal({
             <div>
               <h2
                 id="eod-modal-title"
-                className="font-display text-xl font-bold text-on-surface md:text-2xl"
+                className={cn(MODAL_TITLE, 'text-headline-md md:text-headline-lg')}
               >
                 {isReport ? t('eod.reportTitle') : t('eod.title')}
               </h2>
@@ -179,7 +187,7 @@ export function EndOfDayModal({
             </div>
             <button
               type="button"
-              className="shrink-0 rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container active:scale-95"
+              className={cn('shrink-0 rounded-lg p-2 active:scale-95', MODAL_CLOSE_BTN)}
               onClick={onClose}
               aria-label={t('common.close')}
             >
@@ -216,25 +224,21 @@ export function EndOfDayModal({
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="rounded-lg border border-surface-variant bg-surface-container-low p-3">
-              <p className="font-display text-[10px] uppercase tracking-wide text-on-surface-variant">
-                {t('eod.statCompleted')}
-              </p>
-              <p className="mt-1 font-display text-lg font-bold text-on-surface">
+            <div className={STAT_CARD}>
+              <p className={STAT_CARD_LABEL}>{t('eod.statCompleted')}</p>
+              <p className="mt-1 text-headline-md font-display font-bold text-on-surface tabular-nums">
                 {completed.length} / {completed.length + remaining.length}
               </p>
             </div>
-            <div className="rounded-lg border border-surface-variant bg-surface-container-low p-3">
-              <p className="font-display text-[10px] uppercase tracking-wide text-on-surface-variant">
-                {t('eod.statRemaining')}
-              </p>
-              <p className="mt-1 font-display text-lg font-bold text-on-surface">
+            <div className={STAT_CARD}>
+              <p className={STAT_CARD_LABEL}>{t('eod.statRemaining')}</p>
+              <p className="mt-1 text-headline-md font-display font-bold text-on-surface tabular-nums">
                 {remaining.length}
               </p>
             </div>
           </div>
 
-          <section className="animate-eod-pop mt-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <section className="animate-eod-pop mt-5 rounded-card border border-primary/30 bg-primary/5 p-sm">
             <h3 className="font-display text-xs font-semibold uppercase tracking-wider text-primary">
               {t('eod.sectionPlanDone', { count: completed.length })}
             </h3>
@@ -251,7 +255,7 @@ export function EndOfDayModal({
 
           <section
             className={cn(
-              'mt-4 rounded-xl border p-4',
+              'mt-4 rounded-card border p-sm',
               remainingClear
                 ? 'animate-eod-pop border-primary/30 bg-primary/5'
                 : 'animate-eod-soft border-tertiary-container/35 bg-tertiary-container/5',
@@ -284,7 +288,7 @@ export function EndOfDayModal({
           </section>
 
           {backlogReminder.length > 0 ? (
-            <section className="mt-4 rounded-xl border border-surface-variant bg-surface-container-low/80 p-4">
+            <section className="mt-4 rounded-card border border-surface-variant bg-surface-container-low/80 p-sm">
               <h3 className="font-display text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                 {t('eod.sectionBacklog')} ({backlogReminder.length})
               </h3>

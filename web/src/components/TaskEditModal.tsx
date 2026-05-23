@@ -40,6 +40,7 @@ import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
 import {
+  ALERT_WARNING_MUTED,
   CHECKBOX_INPUT,
   FIELD_LABEL,
   FIELDSET,
@@ -51,8 +52,11 @@ import {
   MODAL_TITLE,
   MOTIVATOR_INPUT,
   SETTINGS_BTN_SECONDARY,
+  TEXT_HINT_WARNING,
+  TEXT_LINK_IN_HINT,
   weekdayToggle,
 } from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
@@ -653,7 +657,7 @@ export function TaskEditModal({
           {estFieldError ? <p className="text-xs text-red-400">{estFieldError}</p> : null}
           <p className="text-[10px] leading-snug text-on-surface-variant">{t('app.estimateHint')}</p>
           {floatingEstimateWarning ? (
-            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
+            <p className={TEXT_HINT_WARNING}>{floatingEstimateWarning}</p>
           ) : null}
         </div>
 
@@ -974,12 +978,12 @@ export function TaskEditModal({
               {task.doubleConfirmEnabled &&
               task.doubleConfirmPending &&
               task.doubleConfirmPending.localDate === occurrenceDayKey ? (
-                <div className="mt-3 rounded-md border border-amber-800/60 bg-amber-950/25 px-3 py-2 text-xs text-amber-100/90">
+                <div className={cn(ALERT_WARNING_MUTED, 'mt-3')}>
                   <p className="leading-snug">{t('app.doubleConfirmPendingInEditor')}</p>
                   <button
                     type="button"
                     disabled={!canEdit}
-                    className="mt-2 text-[11px] text-amber-300 underline hover:text-amber-200 disabled:opacity-40"
+                    className={cn('mt-2', TEXT_LINK_IN_HINT, 'disabled:opacity-40')}
                     onClick={() => onApplyTaskPatch({ doubleConfirmPending: undefined })}
                   >
                     {t('app.doubleConfirmCancelPending')}
@@ -1011,7 +1015,7 @@ export function TaskEditModal({
             <button
               type="button"
               disabled={!canEdit}
-              className="rounded-lg border border-amber-900/50 px-3 py-2 text-sm text-amber-200 hover:bg-amber-950/40 disabled:opacity-40"
+              className={cn(SETTINGS_BTN_SECONDARY, 'border-tertiary/40 text-tertiary hover:bg-tertiary-container/10 disabled:opacity-40')}
               onClick={() => requestSkipOccurrence()}
             >
               {t('app.removeFromPlanThisDay')}

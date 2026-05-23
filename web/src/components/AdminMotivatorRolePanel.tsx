@@ -180,7 +180,7 @@ export function AdminMotivatorRolePanel({
         </p>
       ) : null}
 
-      <p className="mt-3 text-xs text-amber-600/85">{t('settings.adminRolesSelfHint')}</p>
+      <p className="mt-3 text-label-sm text-on-surface-variant">{t('settings.adminRolesSelfHint')}</p>
 
       <div className="mt-4 flex flex-col gap-2 md:hidden">
         {filtered.length === 0 && !loadBusy ? (

@@ -10,6 +10,12 @@ import {
 } from '@/lib/connectivityHints'
 import { legalDocHref } from '@/lib/legalLinks'
 import { isSupabaseConfigured } from '@/lib/supabase'
+import {
+  ALERT_WARNING,
+  ALERT_WARNING_BODY,
+  AUTH_GLASS_CARD,
+} from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -93,7 +99,7 @@ export function LoginPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
       <div className="pointer-events-none absolute inset-0 grid-pattern opacity-20" aria-hidden />
-      <div className="glass-panel relative z-10 w-full max-w-md rounded-xl p-8 shadow-2xl">
+      <div className={cn(AUTH_GLASS_CARD, 'max-w-md p-md md:p-lg')}>
         <div className="mb-6">
           <BrandMark size="sm" showSubtitle />
         </div>
@@ -102,20 +108,22 @@ export function LoginPage() {
             <MaterialIcon name="lock" className="text-primary" size={22} />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-semibold text-on-surface">{t(titleKey)}</h1>
-            <p className="mt-1 text-sm text-on-surface-variant">
+            <h1 className="text-headline-md font-display font-semibold text-on-surface">{t(titleKey)}</h1>
+            <p className="mt-1 text-body-sm text-on-surface-variant">
               {mode === 'forgot' ? t('login.forgotPasswordIntro') : t('login.subtitle')}
             </p>
           </div>
         </div>
 
       {!isSupabaseConfigured && (
-        <div className="mb-4 rounded-lg border border-amber-700/60 bg-amber-950/40 px-3 py-2 text-sm text-amber-100">
+        <div className={cn(ALERT_WARNING, 'mb-4')}>
+          <p className={ALERT_WARNING_BODY}>
           {t('login.envHint', {
             url: t('login.envUrl'),
             key: t('login.envKey'),
             env: t('login.envFile'),
           })}
+          </p>
         </div>
       )}
 

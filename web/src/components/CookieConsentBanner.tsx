@@ -14,12 +14,12 @@ export function CookieConsentBanner({ onResolved }: Props) {
     <div
       role="dialog"
       aria-labelledby="cookie-consent-title"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-surface-variant bg-surface-container-lowest/95 px-4 py-4 shadow-lg backdrop-blur-sm sm:px-6"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-surface-variant bg-surface-container-lowest/95 px-4 py-4 shadow-lg backdrop-blur-sm sm:px-6 pb-[max(1rem,env(safe-area-inset-bottom))]"
     >
-      <p id="cookie-consent-title" className="font-display text-sm font-medium text-on-surface">
+      <p id="cookie-consent-title" className="text-label-md font-semibold text-on-surface">
         {t('legal.cookieTitle')}
       </p>
-      <p className="mt-2 text-xs leading-relaxed text-on-surface-variant">{t('legal.cookieBody')}</p>
+      <p className="mt-2 text-body-sm leading-relaxed text-on-surface-variant">{t('legal.cookieBody')}</p>
       <p className="mt-2 text-xs">
         <Link className="text-primary hover:text-primary-fixed" to={legalDocHref('privacy')}>
           {t('legal.privacyLink')}
