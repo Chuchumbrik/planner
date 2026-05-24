@@ -1,19 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router-dom'
-import { useAuth } from '@/auth/AuthProvider'
-import { motivatorAppRole } from '@/lib/motivatorRole'
+import { useSearchParams } from 'react-router-dom'
 import { DayPlannerStatsRow } from '@/components/planner/DayPlannerStatsRow'
 import { PeriodPlannerStatsRow } from '@/components/planner/PeriodPlannerStatsRow'
 import { PlannerCreateFab } from '@/components/planner/PlannerCreateFab'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
-import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { PeriodPlanBreakdownChart } from '@/components/PeriodPlanBreakdownChart'
 import { PeriodPlanDonut } from '@/components/PeriodPlanDonut'
 import { EndOfDayModal } from '@/components/EndOfDayModal'
-import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
 import { TaskEditModal } from '@/components/TaskEditModal'
@@ -109,22 +105,6 @@ function dayPlanRowSurfaceClass(opts: {
   }
   return undefined
 }
-
-function formatSynced(ts: number | null, locale: string): string | null {
-  if (ts == null) return null
-  try {
-    return new Date(ts).toLocaleString(locale, {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-    })
-  } catch {
-    return null
-  }
-}
-
 
 function formatDayHeading(dateKey: string, locale: string): string {
   const [y, m, d] = dateKey.split('-').map(Number)
@@ -321,7 +301,6 @@ type EodModalContext = { dateKey: string; mode: 'ritual' | 'report' }
 
 function AppPageInner() {
   const { t, i18n } = useTranslation()
-  const { signOut, session } = useAuth()
   const {
     vault,
     remoteError,
@@ -329,9 +308,6 @@ function AppPageInner() {
     awaitVaultSync,
     remoteHydrated,
     decryptFailed,
-    savePending,
-    lastSyncedAt,
-    lock,
     createTask,
     upsertDraft,
     deleteDraft,
@@ -419,21 +395,12 @@ function AppPageInner() {
   const [eodModalContext, setEodModalContext] = useState<EodModalContext | null>(null)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
-  const accountMenuRef = useRef<HTMLDivElement>(null)
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false)
-  const [roadmapModalOpen, setRoadmapModalOpen] = useState(false)
   const [chartsHidden, setChartsHidden] = useState(() =>
     typeof window !== 'undefined' ? readPlannerChartsHidden() : false,
   )
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
-  const accountRoleLabel = useMemo(() => {
-    const r = motivatorAppRole(session)
-    if (r === 'admin') return t('shell.roleLabelAdmin')
-    if (r === 'beta_tester') return t('shell.roleLabelBetaTester')
-    return t('shell.roleLabelUser')
-  }, [session, t])
 
   const occurrenceDayForEdit = editOccurrenceDayKey ?? selectedDay
 
@@ -463,17 +430,6 @@ function AppPageInner() {
     return () => document.removeEventListener('mousedown', handlePointerDown)
   }, [openFilterMenu])
 
-  useEffect(() => {
-    if (!accountMenuOpen) return
-    function handlePointerDown(e: MouseEvent) {
-      const node = accountMenuRef.current
-      if (node && !node.contains(e.target as Node)) {
-        setAccountMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handlePointerDown)
-    return () => document.removeEventListener('mousedown', handlePointerDown)
-  }, [accountMenuOpen])
 
   useEffect(() => {
     if (vault.drafts.length === 0) setDraftsModalOpen(false)
@@ -497,13 +453,6 @@ function AppPageInner() {
     return () => document.removeEventListener('keydown', onKey)
   }, [draftsModalOpen])
 
-  const syncHint = !remoteHydrated
-    ? t('app.syncLoadingVault')
-    : savePending
-      ? t('app.syncSaving')
-      : lastSyncedAt
-        ? t('app.syncDone', { time: formatSynced(lastSyncedAt, locale) ?? '' })
-        : t('app.syncReady')
 
   const canEdit = remoteHydrated && !decryptFailed
 
@@ -824,12 +773,6 @@ function AppPageInner() {
     setFilterRepeats('all')
   }
 
-  async function handleSignOut() {
-    if (!window.confirm(t('settings.signOutConfirm'))) return
-    setAccountMenuOpen(false)
-    await lock()
-    await signOut()
-  }
 
   const priorityFilterSummary = useMemo(() => {
     if (priorityEnabled.size === PRIORITY_RANKS.length) {
@@ -915,6 +858,15 @@ function AppPageInner() {
     }
   }
 
+
+  function toggleChartsHidden() {
+    setChartsHidden((prev) => {
+      const next = !prev
+      writePlannerChartsHidden(next)
+      return next
+    })
+  }
+
   const draftListItems = vault.drafts.map((d) => (
     <li
       key={d.id}
@@ -948,110 +900,12 @@ function AppPageInner() {
     </li>
   ))
 
-  const plannerHeaderActions = (
-    <>
-      <button
-        type="button"
-        className={`rounded p-2 transition-colors active:scale-95 ${
-          remoteError
-            ? 'text-error hover:bg-error-container/30'
-            : savePending
-              ? 'text-on-surface-variant hover:bg-surface-container'
-              : 'text-on-surface-variant hover:bg-surface-container hover:text-primary'
-        }`}
-        title={syncHint}
-        aria-label={t('app.syncIconAria')}
-      >
-        <span className="sr-only">{syncHint}</span>
-        <MaterialIcon
-          name={savePending ? 'progress_activity' : remoteError ? 'cloud_off' : 'cloud_done'}
-          size={22}
-          className={savePending ? 'animate-spin' : undefined}
-        />
-      </button>
-      <div className="relative" ref={accountMenuRef}>
-        <button
-          type="button"
-          className="rounded p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface active:scale-95"
-          aria-expanded={accountMenuOpen}
-          aria-haspopup="menu"
-          onClick={() => setAccountMenuOpen((v) => !v)}
-        >
-          <span className="sr-only">{t('app.accountMenuAria')}</span>
-          <MaterialIcon name="account_circle" size={24} />
-        </button>
-        {accountMenuOpen ? (
-          <div
-            className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-surface-variant bg-surface-container-low py-1 shadow-xl"
-            role="menu"
-          >
-            <div
-              className="border-b border-surface-variant px-3 py-2 text-xs text-on-surface-variant"
-              role="presentation"
-            >
-              {t('app.accountMenuRoleLine', { role: accountRoleLabel })}
-            </div>
-            <Link
-              to="/app/reports"
-              role="menuitem"
-              className="block px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high"
-              onClick={() => setAccountMenuOpen(false)}
-            >
-              {t('app.reportsNav')}
-            </Link>
-            {eodEnabled ? (
-              <button
-                type="button"
-                role="menuitem"
-                disabled={!canEdit}
-                className="block w-full px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container-high disabled:opacity-40"
-                onClick={() => {
-                  setAccountMenuOpen(false)
-                  setEodModalContext({ dateKey: todayKeyApp, mode: 'ritual' })
-                }}
-              >
-                {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
-              </button>
-            ) : null}
-            <button
-              type="button"
-              role="menuitem"
-              className="block w-full px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container-high"
-              onClick={() => {
-                setAccountMenuOpen(false)
-                setRoadmapModalOpen(true)
-              }}
-            >
-              {t('settings.roadmapTempButton')}
-            </button>
-            <Link
-              to="/settings"
-              role="menuitem"
-              className="block px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high"
-              onClick={() => setAccountMenuOpen(false)}
-            >
-              {t('app.settings')}
-            </Link>
-            <button
-              type="button"
-              role="menuitem"
-              className="block w-full px-3 py-2 text-left text-sm text-on-surface-variant hover:bg-surface-container-high"
-              onClick={() => void handleSignOut()}
-            >
-              {t('settings.signOut')}
-            </button>
-          </div>
-        ) : null}
-      </div>
-    </>
-  )
 
   return (
     <MotivatorShell
       activeNav="planner"
       wide
       title={t('app.plannerTitle')}
-      headerActions={plannerHeaderActions}
     >
       <div className="relative flex min-h-0 flex-col">
       {!remoteHydrated && !decryptFailed ? (
@@ -1108,17 +962,11 @@ function AppPageInner() {
       </nav>
       <button
         type="button"
-        className={`${PLANNER_NAV_BTN} inline-flex shrink-0 items-center justify-center`}
+        className={`${PLANNER_NAV_BTN} hidden shrink-0 items-center justify-center md:inline-flex`}
         aria-pressed={!chartsHidden}
         aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
         title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
-        onClick={() => {
-          setChartsHidden((prev) => {
-            const next = !prev
-            writePlannerChartsHidden(next)
-            return next
-          })
-        }}
+        onClick={toggleChartsHidden}
       >
         <PlannerChartsIcon chartsHidden={chartsHidden} />
       </button>
@@ -1188,6 +1036,16 @@ function AppPageInner() {
               </button>
             )
           ) : null}
+          <button
+            type="button"
+            className={`${PLANNER_NAV_BTN} inline-flex shrink-0 items-center justify-center md:hidden`}
+            aria-pressed={!chartsHidden}
+            aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+            title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+            onClick={toggleChartsHidden}
+          >
+            <PlannerChartsIcon chartsHidden={chartsHidden} />
+          </button>
           <div className={cn('relative shrink-0', view === 'day' && 'max-md:hidden')}>
             <button
               type="button"
@@ -1761,7 +1619,6 @@ function AppPageInner() {
         }}
       />
 
-      <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />
 
       {editingTask ? (
         <TaskEditModal

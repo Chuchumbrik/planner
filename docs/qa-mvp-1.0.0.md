@@ -1,10 +1,10 @@
 # QA-отчёт Motivator (MVP 1.0.0)
 
 **Среда:** production `https://planner-tawny-omega.vercel.app`  
-**Версия:** `0.7.3+1256c6d` (на момент начала прогона)  
-**Дата прогона:** 2026-05-23  
+**Версия:** `0.7.3+850815d` (прогон 18, re-QA после design-2.0)  
+**Дата прогона:** 2026-05-24  
 **Исполнитель:** QA Automation (Chrome DevTools MCP)  
-**Учётная запись:** залогиненный пользователь (admin: блок «Пользователи и роли» в настройках)
+**Учётная запись:** `mussha2010@yandex.ru` (**admin**)
 
 **Инструменты:** Chrome DevTools MCP — desktop 1440×900; mobile iPhone 14 Pro 393×852 (touch); Pixel 7 412×915; Slow 3G для сетевых сценариев.
 
@@ -12,26 +12,39 @@
 
 ## Summary
 
-**Общее состояние:** ядро MVP (планировщик День/Неделя/Месяц, vault + синхронизация, создание/выполнение задач, EOD, отчёты, настройки, PWA-оболочка) **работоспособно** на production. Критичных блокеров релиза на момент первого прогона не выявлено; есть **риски надёжности** (EOD при медленной сети), **полировки UX** и **незакрытые продуктовые хвосты** (обратная связь, Premium-заглушка, AI-поле).
+**Общее состояние (прогон 18 + UX):** ядро MVP **работоспособно** на production **`0.7.3+850815d`**. **Кодовые блокеры QA закрыты.** **UX-001…004 исправлены в коде** (ветка `design-2.0`, не на production) — нужен re-QA. Остаются **инфра push-cron**, **BUG-001** (не перепроверен), manual OS push click.
 
 **UX-впечатление:** спокойный визуал Design 2.0, понятная навигация, хорошие пустые состояния и кольца прогресса. Mobile: bottom nav + FAB. Трение: плотность Неделя/Месяц при росте данных, DR-004 без явной подсказки, диалог черновика при создании задачи.
 
-**Вердикт (после прогона 10, production `0.7.3+1256c6d`):** **не готов** к 1.0.0 — **BUG-006** (layout), **BUG-008** (скролл «Неделя»), **BUG-009** (сохранение задачи из черновика «Продолжить»). См. [Прогон 6](#прогон-6--валидация-полей--фильтры), [Прогон 9](#прогон-9--скролл-недели--аналитика), [Прогон 10](#прогон-10--черновики).
+**Вердикт (прогон 18, production `0.7.3+850815d`):** **условно готов** к 1.0.0 — **все QA-блокеры из прогонов 1–17 Verified** на новом деплое (layout, черновики, неделя, warm retry, highlightTask, malformed seed). **Остаётся:** UX-001…004 (полировка), **`send-due` positive E2E** (инфра), **BUG-001** (EOD + Slow 3G — не перепроверен), **OS notificationclick** (manual), **TC-SEC-15** (non-admin УЗ). См. [Прогон 18](#прогон-18--полный-re-qa-design-20).
 
-**Вердикт после фикса в коде (2026-05-23, ветка `design-2.0`, ещё не на production):** блокеры **закрыты в репозитории** — нужен **полный повторный прогон** на новом деплое. Сводка исправлений: [«Статус исправлений после QA»](#статус-исправлений-после-qa-ветка-design-20).
+**Вердикт (исторический, прогон 10, `0.7.3+1256c6d`):** **не готов** — BUG-006, BUG-008, BUG-009 (закрыты в `0.7.3+850815d`).
 
-> **Прогоны 2–17:** см. [«Прогон 2»](#прогон-2) … [«Прогон 17»](#прогон-17--send-due-security--notificationclick--highlighttask). Тестовая УЗ для агента: `.cursor/test-account.local.md` (в `.gitignore`, **не коммитить**).
+> **Прогоны 2–18:** см. [«Прогон 2»](#прогон-2) … [«Прогон 18»](#прогон-18--полный-re-qa-design-20). Тестовая УЗ для агента: `.cursor/test-account.local.md` (в `.gitignore`, **не коммитить**).
 
 ---
 
 ## Статус исправлений после QA (ветка `design-2.0`)
 
 **Дата правок в коде:** 2026-05-23  
-**Исходный прогон:** production `0.7.3+1256c6d` (прогоны 1–17 ниже)  
-**Целевая ветка:** `design-2.0` — QA-фиксы + Design 2.0 (навигация, настройки, AI-stub, role gate) **в одном коммите**  
-**Следующий шаг:** деплой → **полный re-QA** по этому документу (изменений много; часть UX из прогона 5 **ещё предстоит добить**).
+**Деплой на production:** `0.7.3+850815d` (прогон 18, 2026-05-24)  
+**Исходный прогон:** production `0.7.3+1256c6d` (прогоны 1–17)
 
-### Исправлено в коде (требует верификации на новом деплое)
+### Verified на production (прогон 18)
+
+| ID | Было | Результат re-QA | Доказательство |
+|----|------|-----------------|----------------|
+| **BUG-006** | `max-w-sm/md/lg` = 16–40 px | **Verified Fixed** | Login card **448 px** (`max-w-md`); модалка задачи **~1169 px** / `max-w` 1200px. `regr18-login-layout-1440.png` |
+| **BUG-009** | «Продолжить → Сохранить» терял задачу | **Verified Fixed** | `upsertDraft` → `createTask({ removeDraftId })` — задача в vault, черновик удалён |
+| **BUG-008** | Ось времени не скроллится | **Verified Fixed** | `.week-grid-v-scroll`: ось двигается при `scrollTop=400` |
+| **BUG-011** | «Повторить» = re-fetch | **Verified Fixed** | Warm offline create → баннер «Повторить» → задача **сохранена**, `remoteError` cleared |
+| **BUG-012** | `?highlightTask=` игнорировался | **Verified Fixed** | Ring `ring-2 ring-primary`, scroll in viewport, URL очищается. `regr18-highlightTask-ring-1440.png` |
+| **BUG-013** | SW: только `focus()` | **Verified (code)** | Фикс в `sw.ts` + роутер; **OS-клик** — manual (не в MCP) |
+| **BUG-010** | Битый seed → вечная «Инициализация…» | **Verified Fixed** | `motivator_seed_b64=not-valid!!!` → `/onboarding` «Восстановление ключа», **не** бесконечный spinner |
+| **BUG-004** | «3» отдельной строкой в EOD DONE | **Partial Verified** | В блоке **СДЕЛАНО** приоритет скрыт; в **НЕ ЗАКРЫТО** rank **3** по-прежнему виден (by design в `EndOfDayModal.tsx`) |
+| **BUG-001** | EOD терялся при reload до sync | **Not re-tested** | `awaitVaultSync` в коде; Slow 3G + reload **не** прогонялся в 18 |
+
+### Исправлено в коде (историческая таблица)
 
 | ID | Было | Фикс | Ключевые файлы |
 |----|------|------|----------------|
@@ -47,14 +60,23 @@
 
 **TC для повтора после деплоя (минимум по блокерам):** TC-C08, TC-DRAFT-06/07, таб «Неделя» + scroll, TC-PWA warm offline + «Повторить», `?highlightTask=`, EOD + Slow 3G reload, TC-A11-5 malformed seed, EOD DONE без строки «3».
 
-### Не исправлено / вне scope этого коммита
+### Design 2.0 — Verified (прогон 18)
+
+| Область | Ожидание | Результат |
+|---------|----------|-----------|
+| **Настройки** | Вкладки Stitch, прототипы **убраны** | **Passed** — «Общие / Приватность / Планирование / Уведомления / Администрирование»; `regr18-settings-tabs-1440.png` |
+| **Sidebar** | Прототипы + AI в навигации | **Passed** — Deep Focus, AI Insights, Журнал безопасности, Админ-панель; `regr18-sidebar-design20-1440.png` |
+| **Mobile 393×852** | Bottom nav + FAB | **Passed** — vw=393, навигация День/Отчёты, FAB, 121+ карточек |
+| **Route guards** | `/app`, `/settings` без сессии | **Passed** — isolated → `/login` (регрессия security) |
+
+### Не исправлено / вне scope
 
 | ID / область | Статус | Комментарий |
 |--------------|--------|-------------|
 | **BUG-002** | **Открыт** | «Сохранить» → диалог черновика (MCP desktop); повторить после BUG-006 |
 | **BUG-005** | **Открыт** | Нет `VITE_FEEDBACK_URL` — конфиг деплоя |
 | **BUG-007** | **Открыт** | Defect title >120 символов — edge, низкий приоритет |
-| **UX-001…004** (прогон 5) | **Открыт** | Две иконки person, дубли навигации, sync без onClick, Premium stub — **добить до 1.0.0** |
+| **UX-001…004** (прогон 5) | **Fixed (unverified)** | ShellHeaderActions, shield footer, sync popover, Premium «Скоро», mobile charts toggle в ряду фильтров — re-QA после деплоя |
 | **send-due positive E2E** | **Blocked** | Нет `CRON_SECRET` у QA; drift прокси/Edge (прогон 17) |
 | **TC-SEC-15** non-admin | **Not run** | Нужна отдельная УЗ без admin |
 | **OS notificationclick** | **Manual** | После BUG-012/013 — чеклист в [прогоне 17](#прогон-17--send-due-security--notificationclick--highlighttask) |
@@ -70,19 +92,25 @@
 | **Role gate** | `RequireTesterPreview`, `canAccessPreviewFeatures` |
 | **VaultDecryptHelp** | Ссылка на `/settings#privacy` |
 
-### Чеклист полного re-QA (после деплоя)
+| **send-due positive E2E** | **Blocked** | Нет `CRON_SECRET` у QA; drift прокси/Edge (прогон 17, без регрессии в 18) |
+| **TC-SEC-15** non-admin | **Not run** | Тестовая УЗ **admin** |
+| **OS notificationclick** | **Manual** | BUG-012/013 fixed in code; нужен реальный OS-клик |
 
-1. **Прогон 4** — layout: login, onboarding, legal, modals (`max-w-*`).
-2. **Прогон 5** — UX-аудит (часть пунктов ещё **ожидает продуктовых правок**).
-3. **Прогон 6** — валидация полей и фильтры на desktop.
-4. **Прогон 8–10** — login/setup, неделя+аналитика, черновики (TC-DRAFT-06 обязателен).
-5. **Прогон 11** — неверный/malformed seed.
-6. **Прогон 13–15** — PWA offline / warm retry.
-7. **Прогон 16–17** — нагрузка, push, security, `highlightTask`.
-8. **RU/EN** — прогон 7 (регрессия i18n).
-9. **Mobile** — Pixel 7 / iPhone табы, FAB, bottom nav.
+### Чеклист полного re-QA — выполнен (прогон 18)
 
-**Критерий готовности к 1.0.0:** все блокеры **Verified** на production; UX-001…004 — по решению команды; negative security — без регрессии.
+1. ✅ Layout login/modals (BUG-006)
+2. ⚠️ UX-аудит (прогон 5) — **не перепроверялся полностью**; Design 2.0 sidebar/settings — OK
+3. ⚠️ Валидация полей desktop (прогон 6) — **не полный**; модалки снова кликабельны после BUG-006
+4. ✅ Неделя scroll (BUG-008), черновики (BUG-009)
+5. ✅ Malformed seed (BUG-010)
+6. ✅ PWA warm offline + «Повторить» (BUG-011)
+7. ✅ highlightTask (BUG-012), security negative (регрессия 401)
+8. ⚠️ RU/EN i18n — **не перепроверялся**
+9. ✅ Mobile 393×852
+
+**Критерий готовности к 1.0.0:** блокеры **Verified** ✅; UX-001…004 — **Fixed (unverified)**; инфра push-cron — **на усмотрение команды**.
+
+### Чеклист полного re-QA (исторический, до деплоя)
 
 ---
 
@@ -326,19 +354,19 @@
 
 | ID | Platform | Priority | Severity | Status | Description | Steps |
 |----|----------|----------|----------|--------|-------------|-------|
-| BUG-001 | Both | Critical | Major | **Fixed (unverified)** | EOD не сохраняется при reload до sync (Slow 3G) | EOD → reload до «Синхронизировано» |
+| BUG-001 | Both | Critical | Major | **Fixed (unverified)** | EOD не сохраняется при reload до sync (Slow 3G) | EOD → reload до «Синхронизировано»; **не** re-tested прогон 18 |
 | BUG-002 | Desktop | High | Minor | **Open** | «Сохранить» открывает диалог черновика (MCP) | Создать задачу → Сохранить |
 | BUG-003 | — | — | — | **Closed** | **Закрыт (не баг):** DR-004 opt-in per task; без галочки в edit — один клик норма | — |
-| BUG-004 | Both | Medium | Trivial | **Fixed (unverified)** | Лишний «3» в EOD списке «СДЕЛАНО» | EOD modal |
+| BUG-004 | Both | Medium | Trivial | **Partial Verified** | Лишний «3» в EOD DONE скрыт; в NOT DONE rank виден | EOD modal; прогон 18 |
 | BUG-005 | Both | Low | Trivial | **Open** | Нет VITE_FEEDBACK_URL | Настройки |
-| BUG-006 | Both | **Critical** | **Blocker** | **Fixed (unverified)** | «Сжатые» карточки/модалки: `max-w-md` = **24px**, `max-w-lg` = **40px**, `max-w-sm` = **16px** (конфликт `@theme` spacing и шкалы max-width в Tailwind v4) | Любой экран с `max-w-sm/md/lg`; см. прогон 4 |
+| BUG-006 | Both | **Critical** | **Blocker** | **Verified Fixed** | ~~«Сжатые» карточки~~ → login **448px**, modal **~1169px** | Прогон 18 |
 | BUG-007 | Desktop | Low | Trivial | **Open** | Defect title: `maxLength=120`, но при программной подстановке >120 символов значение и счётчик `N/120` **расходятся** (низкий риск для ручного ввода) | Defect modal, DevTools fill >120 |
-| BUG-008 | Both | High | Major | **Fixed (unverified)** | **Неделя:** при вертикальном скролле сетки часов **ось времени (слева) не скроллится**, колонки задач — да → подписи «00:00…» не соответствуют строкам задач | Таб «Неделя», прокрутить `.week-grid-v-scroll`; см. [прогон 9](#прогон-9--скролл-недели--аналитика) |
-| BUG-009 | Both | **Critical** | **Major** | **Fixed (unverified)** | **Черновики:** «Продолжить» → «Сохранить» — **черновик удаляется, задача не появляется** (план/бэклог). Прямое создание без resume — OK | Создать черновик → список → Продолжить → Сохранить; см. [прогон 10](#прогон-10--черновики) |
-| BUG-010 | Both | Low | Minor | **Fixed (unverified)** | **Malformed seed в localStorage:** `deriveAesKey` падает без `.catch` → экран **«Инициализация шифрования…»** бесконечно (нет recovery UI) | `localStorage.motivator_seed_b64 = 'not-valid!!!'` → reload; см. [прогон 11](#прогон-11--неверный-seed-restore) |
-| BUG-011 | Both | Medium | Major | **Fixed (unverified)** | **Warm offline + «Повторить»:** после failed save offline кнопка sync вызывает **`retryRemoteHydrate`** (re-fetch), **не** повтор upload → **потеря** несинхронизированных локальных правок | Hydrate → offline без reload → create → online → «Повторить»; см. [прогон 15](#прогон-15--pwa-хвост-install--warm-offline) |
-| BUG-012 | Both | Medium | Major | **Fixed (unverified)** | **Push deep-link:** URL `/app?highlightTask=<id>` из push payload **не обрабатывается** SPA — параметр остаётся в адресной строке, **нет** scroll/highlight/открытия задачи; задача в бэклоге видна в списке, но без визуального акцента | Клик push / ручной переход `?highlightTask=…`; см. [прогон 17](#прогон-17--send-due-security--notificationclick--highlighttask) |
-| BUG-013 | Both | Low | Minor | **Fixed (unverified)** | **`notificationclick` в SW:** при уже открытом окне — только **`focus()`**, **без** навигации на `data.url` (`highlightTask`); deep-link срабатывает лишь если приложение **закрыто** (`openWindow`) | Код `web/src/sw.ts`; см. [прогон 17](#прогон-17--send-due-security--notificationclick--highlighttask) |
+| BUG-008 | Both | High | Major | **Verified Fixed** | ~~Ось «Неделя» не скроллится~~ | Прогон 18 |
+| BUG-009 | Both | **Critical** | **Major** | **Verified Fixed** | ~~Черновик «Продолжить → Сохранить»~~ | Прогон 18 |
+| BUG-010 | Both | Low | Minor | **Verified Fixed** | ~~Malformed seed → вечная инициализация~~ → onboarding recovery | Прогон 18 |
+| BUG-011 | Both | Medium | Major | **Verified Fixed** | ~~«Повторить» терял правки~~ | Прогон 18 |
+| BUG-012 | Both | Medium | Major | **Verified Fixed** | ~~highlightTask игнорировался~~ → ring + scroll | Прогон 18 |
+| BUG-013 | Both | Low | Minor | **Verified (code)** | SW navigate/postMessage; OS-клик — manual | Прогон 18 |
 
 ---
 
@@ -1296,13 +1324,112 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 
 ---
 
+## Прогон 18 — полный re-QA (design-2.0)
+
+**Дата:** 2026-05-24. Production **`0.7.3+850815d`** (было `0.7.3+1256c6d`). УЗ `mussha2010@yandex.ru` (admin). Desktop 1440×900 + mobile 393×852 + isolated contexts. Код **не** менялся — только QA и этот документ.
+
+### Сводка блокеров
+
+| ID | Прогон 17 / старый деплой | Прогон 18 |
+|----|---------------------------|-----------|
+| BUG-006 layout | **Failed** | **Verified Fixed** |
+| BUG-008 week scroll | **Failed** | **Verified Fixed** |
+| BUG-009 drafts | **Failed** | **Verified Fixed** |
+| BUG-011 warm retry | **Failed** | **Verified Fixed** |
+| BUG-012 highlightTask | **Failed** | **Verified Fixed** |
+| BUG-013 SW navigate | **Failed (code)** | **Verified (code)**; OS manual |
+| BUG-010 malformed seed | **Partial** | **Verified Fixed** |
+| BUG-004 EOD «3» | **Failed** | **Partial** — скрыт в DONE, виден в NOT DONE |
+| BUG-001 EOD Slow 3G | **Failed** | **Not re-tested** |
+
+### TC-C08 / BUG-006 — layout
+
+| Экран | Метрика | Результат |
+|-------|---------|-----------|
+| `/login` | `max-w-md` контейнер | **448 px** (inputs **366 px**) |
+| Create task modal | inner width | **~1169 px**, `max-width: 1200px` |
+| `/settings` | вкладки читаемы | **Passed** |
+
+Скриншоты: `regr18-login-layout-1440.png`, `regr18-settings-tabs-1440.png`.
+
+### TC-DRAFT-06 / BUG-009 — черновики
+
+| Шаг | Результат |
+|-----|-----------|
+| `upsertDraft` → `createTask(..., { removeDraftId })` | **Passed** — задача `QA-REGRESS-DRAFT2-*` в vault (**122→123** tasks), черновик удалён |
+
+### BUG-008 — скролл «Неделя»
+
+| Шаг | Результат |
+|-----|-----------|
+| Таб «Неделя», `scrollTop=400` на `.week-grid-v-scroll` | **Passed** — ось времени **двигается** вместе с сеткой |
+
+### BUG-011 — warm offline + «Повторить»
+
+| Шаг | Результат |
+|-----|-----------|
+| Online hydrate → **Offline** → `createTask` `QA-WARM-OFFLINE-*` | **Passed** — задача локально (+1) |
+| **Online** → баннер + «Повторить» | **Passed** — баннер виден |
+| Клик «Повторить» | **Passed** — задача **не потеряна**, `remoteError` → null |
+
+### BUG-012 / TC-PUSH-10 — `highlightTask`
+
+| Шаг | Результат |
+|-----|-----------|
+| `/app?highlightTask=f5568b34-…` | **Passed** — `data-task-id` в DOM, **`ring-2 ring-primary`**, scroll in viewport |
+| URL после обработки | Параметр **удалён** (`/app`) |
+
+Скриншот: `regr18-highlightTask-ring-1440.png`.
+
+### BUG-010 — malformed seed
+
+| Шаг | Результат |
+|-----|-----------|
+| `localStorage.motivator_seed_b64 = 'not-valid!!!'` → `/app` | **Passed** — `/onboarding` «Восстановление ключа», **не** «Инициализация шифрования…» |
+| Восстановление seed тестовой УЗ | **Passed** — vault **123** tasks |
+
+### Design 2.0
+
+| Область | Результат |
+|---------|-----------|
+| Settings: вкладки, без прототипов | **Passed** |
+| Sidebar: AI, Deep Focus, Insights, admin | **Passed** — `regr18-sidebar-design20-1440.png` |
+| Mobile 393×852 | **Passed** — bottom nav, FAB, backlog scroll |
+
+### Security — регрессия (negative)
+
+| Проверка | Результат |
+|----------|-----------|
+| `send-due` без auth | **401** (без регрессии) |
+| `/api/send-due-cron` без secret | **401** |
+| `/app`, `/settings` без сессии | → `/login` |
+
+### Не вошло / partial в прогоне 18
+
+- **BUG-001** EOD + Slow 3G + reload до sync
+- **Полный прогон 6** (все TC-VAL-* на desktop)
+- **Прогон 7** RU/EN i18n
+- **Прогон 5** UX-001…004
+- **`send-due` positive E2E** (CRON_SECRET)
+- **OS notificationclick** (manual)
+- **TC-SEC-15** non-admin
+- **2+ ч** сессия, PWA install UI
+
+### Вердикт прогона 18
+
+**Passed (re-QA блокеров)** — деплой **`0.7.3+850815d`** закрывает **все кодовые блокеры MVP**, проверенные в прогонах 1–17. **Условно готов** к 1.0.0: остаются **инфра push-cron**, **UX-полировка**, **manual push click**, **BUG-001** (не перепроверен).
+
+---
+
 ## Не вошло в прогон
 
-- **2+ ч** непрерывная сессия (прогон 14 — сокращённый stress ~8 min)
-- **`send-due` positive E2E** с валидным `CRON_SECRET` / проверка доставки push по cron (прогон 17 — negative auth OK, positive **blocked**)
-- **OS `notificationclick`** (реальный клик по OS-уведомлению; прогон 17 — code review + manual checklist)
-- **TC-SEC-15** role-gated Edge для **non-admin** JWT (нужна отдельная УЗ)
-- PWA: фактическая **установка** на home screen / `beforeinstallprompt` UI
+- **2+ ч** непрерывная сессия
+- **`send-due` positive E2E** с `CRON_SECRET` (negative OK в прогонах 17–18)
+- **OS `notificationclick`** — manual после фикса BUG-012/013
+- **TC-SEC-15** non-admin JWT
+- **BUG-001** EOD + Slow 3G (код исправлен, QA не перепроверен)
+- **Полный прогон 6/7/5** (валидация, i18n, UX-аудит) — выборочно в 18
+- PWA: установка на home screen / `beforeinstallprompt` UI
 
 ---
 

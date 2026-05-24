@@ -644,9 +644,10 @@
     "bottomNavAria": "Навигация приложения",
     "vaultLocked": "Vault защищён",
     "clientEncrypted": "Данные на устройстве",
-    "planFree": "Free",
+    "planFree": "Бесплатно",
     "planPremium": "Premium",
     "planUpgrade": "Перейти на Premium",
+    "planComingSoon": "Скоро",
     "planUpgradeHint": "Монетизация (фаза 8) — заглушка интерфейса",
     "title": {
       "planner": "Планировщик",

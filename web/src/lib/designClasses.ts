@@ -308,8 +308,8 @@ export const SHELL_PLAN_BADGE = cn(
   'inline-flex rounded border px-1.5 py-0.5 text-label-sm uppercase tracking-wide',
 )
 
-export const SHELL_UPGRADE_BTN = cn(
-  'btn-secondary mt-sm w-full cursor-not-allowed py-2.5 text-label-sm opacity-50',
+export const SHELL_UPGRADE_STUB = cn(
+  'mt-sm rounded-lg border border-outline-variant bg-surface-container-high px-3 py-2.5 text-center',
 )
 
 export const SHELL_VERSION_FOOTER = 'mt-md text-mono-data text-on-surface-variant/60'

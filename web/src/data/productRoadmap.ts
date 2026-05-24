@@ -325,6 +325,26 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-24', en: '2026-05-24' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**UX QA (прогон 5):** единая шапка на всех страницах shell — sync с popover и «Повторить», меню аккаунта без дублей навигации; в sidebar — **shield** вместо второго «профиля», Premium с подписью **«Скоро»**; на мобилке кнопка скрытия диаграмм — в ряду с фильтрами и «Завершить день».',
+            en: '**UX QA (run 5):** shared shell header on all pages — sync popover with **Retry**, account menu without duplicate nav; sidebar **shield** instead of a second profile icon, Premium labeled **Coming soon**; on mobile, hide-charts control sits in the filters / End day row.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Sync и профиль теперь в шапке на Отчётах и Настройках; из меню убраны лишние пункты «Отчёты / Настройки / Завершить день». На телефоне иконка диаграмм больше не растягивается на всю ширину.',
+            en: 'Sync and account menu appear in the header on Reports and Settings; duplicate Reports/Settings/End day entries removed. On phone, the charts toggle is a compact icon next to filters.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-23', en: '2026-05-23' },
     items: [
       {

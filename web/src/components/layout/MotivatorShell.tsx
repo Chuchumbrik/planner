@@ -6,6 +6,7 @@ import { AiAssistantPanel } from '@/components/ai/AiAssistantPanel'
 import { AiAssistantProvider, useAiAssistant } from '@/components/ai/AiAssistantContext'
 import { AiAssistantTrigger } from '@/components/ai/AiAssistantTrigger'
 import { BrandMark } from '@/components/brand/BrandMark'
+import { ShellHeaderActions } from '@/components/layout/ShellHeaderActions'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
 import {
@@ -15,7 +16,7 @@ import {
   SHELL_PAGE_TITLE,
   SHELL_PLAN_BADGE,
   SHELL_SIDEBAR,
-  SHELL_UPGRADE_BTN,
+  SHELL_UPGRADE_STUB,
   SHELL_VERSION_FOOTER,
   shellMainContent,
   shellMobileNavLink,
@@ -35,7 +36,6 @@ import { APP_VERSION } from '@/version'
 type MotivatorShellProps = {
   activeNav: MotivatorNavId
   title?: string
-  headerActions?: ReactNode
   children: ReactNode
   /** Full 1200px content width (planner, reports, settings). */
   wide?: boolean
@@ -46,7 +46,6 @@ type MotivatorShellProps = {
 function PlanSidebarFooter({ tier }: { tier: PlanTier }) {
   const { t } = useTranslation()
   const isPremium = tier === 'premium'
-  const upgradeHintId = 'shell-plan-upgrade-hint'
 
   return (
     <div className="border-t border-surface-variant/80 px-md pt-md">
@@ -59,7 +58,7 @@ function PlanSidebarFooter({ tier }: { tier: PlanTier }) {
           aria-hidden
         >
           <MaterialIcon
-            name={isPremium ? 'workspace_premium' : 'person'}
+            name={isPremium ? 'workspace_premium' : 'shield'}
             className={isPremium ? 'text-primary' : 'text-on-surface-variant'}
             size={20}
           />
@@ -81,20 +80,10 @@ function PlanSidebarFooter({ tier }: { tier: PlanTier }) {
         </div>
       </div>
       {!isPremium ? (
-        <>
-          <p id={upgradeHintId} className="sr-only">
-            {t('shell.planUpgradeHint')}
-          </p>
-          <button
-            type="button"
-            disabled
-            title={t('shell.planUpgradeHint')}
-            aria-describedby={upgradeHintId}
-            className={SHELL_UPGRADE_BTN}
-          >
-            {t('shell.planUpgrade')}
-          </button>
-        </>
+        <div className={SHELL_UPGRADE_STUB} aria-label={t('shell.planUpgradeHint')}>
+          <p className="text-label-sm text-on-surface-variant">{t('shell.planUpgrade')}</p>
+          <p className="mt-0.5 text-label-sm font-medium text-primary">{t('shell.planComingSoon')}</p>
+        </div>
       ) : null}
       <p className={SHELL_VERSION_FOOTER}>{t('home.badge', { version: APP_VERSION })}</p>
     </div>
@@ -186,7 +175,6 @@ function ShellSidebar({
 function MotivatorShellInner({
   activeNav,
   title,
-  headerActions,
   children,
   wide = false,
   planTier: planTierProp,
@@ -259,7 +247,7 @@ function MotivatorShellInner({
           </div>
           <div className={SHELL_HEADER_ACTIONS}>
             {canAccessPreviewFeatures ? <AiAssistantTrigger variant="header" /> : null}
-            {headerActions}
+            <ShellHeaderActions />
           </div>
         </header>
 
