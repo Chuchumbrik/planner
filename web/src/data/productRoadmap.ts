@@ -331,11 +331,19 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
         changes: [
           {
+            ru: '**Design 2.0 — этап 7 (адаптив/PWA):** tap targets ≥44px в shell и toolbar планировщика; safe-area в шапках и filter sheet; manifest **`theme_color` #131315**; `:focus-visible` на кнопках; `prefers-reduced-motion` для pulse/spin.',
+            en: '**Design 2.0 — stage 7 (adaptive/PWA):** ≥44px tap targets in shell and planner toolbar; safe-area on headers and filter sheet; manifest **`theme_color` #131315**; `:focus-visible` on buttons; `prefers-reduced-motion` for pulse/spin.',
+          },
+          {
             ru: '**UX QA (прогон 5):** единая шапка на всех страницах shell — sync с popover и «Повторить», меню аккаунта без дублей навигации; в sidebar — **shield** вместо второго «профиля», Premium с подписью **«Скоро»**; на мобилке кнопка скрытия диаграмм — в ряду с фильтрами и «Завершить день».',
             en: '**UX QA (run 5):** shared shell header on all pages — sync popover with **Retry**, account menu without duplicate nav; sidebar **shield** instead of a second profile icon, Premium labeled **Coming soon**; on mobile, hide-charts control sits in the filters / End day row.',
           },
         ],
         plainBullets: [
+          {
+            ru: 'На телефоне кнопки в шапке и панели фильтров стали удобнее для нажатия; notch и «челка» учитываются в отступах.',
+            en: 'Phone header and filter bar controls are easier to tap; notch safe areas respected in padding.',
+          },
           {
             ru: 'Sync и профиль теперь в шапке на Отчётах и Настройках; из меню убраны лишние пункты «Отчёты / Настройки / Завершить день». На телефоне иконка диаграмм больше не растягивается на всю ширину.',
             en: 'Sync and account menu appear in the header on Reports and Settings; duplicate Reports/Settings/End day entries removed. On phone, the charts toggle is a compact icon next to filters.',

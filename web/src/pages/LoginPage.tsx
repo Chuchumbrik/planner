@@ -97,7 +97,7 @@ export function LoginPage() {
         : 'login.forgotPasswordTitle'
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-x-hidden bg-background px-4 py-12">
       <div className="pointer-events-none absolute inset-0 grid-pattern opacity-20" aria-hidden />
       <div className={cn(AUTH_GLASS_CARD, 'max-w-md p-md md:p-lg')}>
         <div className="mb-6">

@@ -94,7 +94,7 @@ export function weekdayToggle(active: boolean): string {
 }
 
 export const PLANNER_NAV_BTN = cn(
-  'shrink-0 rounded-lg border border-surface-variant p-2 text-on-surface',
+  'inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-surface-variant p-2 text-on-surface',
   'transition-colors hover:bg-surface-container active:scale-95 disabled:opacity-40',
 )
 
@@ -103,6 +103,12 @@ export const MOTIVATOR_INPUT = 'motivator-input w-full text-body-sm disabled:opa
 export const SETTINGS_BTN_SECONDARY = cn(
   'rounded-lg border border-surface-variant bg-surface-container-high px-3 py-2',
   'text-body-sm text-on-surface transition-colors hover:bg-surface-container-highest disabled:opacity-40',
+)
+
+/** Compact toolbar control on planner (filters, EOD) — 44px height on mobile. */
+export const PLANNER_TOOLBAR_BTN = cn(
+  SETTINGS_BTN_SECONDARY,
+  'max-md:min-h-11 max-md:items-center max-md:px-3 max-md:py-2',
 )
 
 export const CHART_CARD_SHELL = cn(
@@ -128,7 +134,7 @@ export const VIEW_TABLIST = cn(
 
 export function viewTab(active: boolean): string {
   return cn(
-    'min-w-0 flex-1 rounded-md px-1.5 py-2 text-center text-label-sm leading-tight transition-colors sm:px-3',
+    'min-w-0 flex-1 rounded-md px-1.5 py-2 text-center text-label-sm leading-tight transition-colors max-md:min-h-11 max-md:flex max-md:items-center max-md:justify-center sm:px-3',
     active
       ? 'bg-surface-container-highest text-primary shadow-sm ring-1 ring-primary/30'
       : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface',
@@ -140,8 +146,10 @@ export const MODAL_SHELL = cn(
   'border border-surface-variant bg-surface-container-lowest shadow-2xl sm:max-h-[min(90vh,800px)]',
 )
 
-export const MODAL_HEADER =
-  'flex shrink-0 items-start justify-between gap-2 border-b border-surface-variant p-sm pb-3 pt-4 md:px-md'
+export const MODAL_HEADER = cn(
+  'flex shrink-0 items-start justify-between gap-2 border-b border-surface-variant p-sm pb-3 pt-4 md:px-md',
+  'max-md:pt-[max(1rem,env(safe-area-inset-top))]',
+)
 
 export const MODAL_FOOTER = cn(
   'shrink-0 border-t border-surface-variant bg-surface-container-lowest px-sm pt-3 md:px-md',
@@ -150,7 +158,14 @@ export const MODAL_FOOTER = cn(
 
 export const MODAL_TITLE = 'text-label-md font-semibold text-on-surface'
 
-export const MODAL_CLOSE_BTN = 'text-on-surface-variant transition-colors hover:text-on-surface'
+export const MODAL_CLOSE_BTN = cn(
+  'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface',
+)
+
+/** Icon-only control in shell header — 44×44px touch target (Design 2.0 / stage 7). */
+export const SHELL_ICON_BTN = cn(
+  'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors active:scale-95',
+)
 
 export const FIELD_LABEL = SETTINGS_LABEL
 
@@ -207,6 +222,11 @@ export const TEXT_HINT_WARNING = 'text-label-sm text-tertiary'
 
 export const TEXT_LINK_IN_HINT = 'text-primary underline hover:text-primary-fixed-dim'
 
+export const AUTH_PAGE_HEADER = cn(
+  'sticky top-0 z-50 flex min-h-16 items-center justify-between border-b border-surface-variant bg-background/90 px-4 backdrop-blur-sm md:px-10',
+  'pt-[env(safe-area-inset-top,0px)]',
+)
+
 export const AUTH_GLASS_CARD = cn(
   'glass-panel relative z-10 w-full rounded-card shadow-2xl',
 )
@@ -262,8 +282,9 @@ export const SHELL_PAGE_TITLE = cn(
 )
 
 export const SHELL_HEADER = cn(
-  'sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-sm',
+  'sticky top-0 z-40 flex min-h-16 shrink-0 items-center justify-between gap-sm',
   'border-b border-surface-variant bg-background/95 px-margin-mobile backdrop-blur-sm md:px-xl',
+  'pt-[env(safe-area-inset-top,0px)]',
 )
 
 export const SHELL_HEADER_ACTIONS = 'flex min-w-0 shrink-0 items-center gap-xs sm:gap-sm'

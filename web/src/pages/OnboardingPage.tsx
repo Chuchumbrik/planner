@@ -6,6 +6,7 @@ import { BrandMark } from '@/components/brand/BrandMark'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { generateSeedB64 } from '@motivator/core'
 import { SeedKeyImportForm } from '@/components/SeedKeyImportForm'
+import { AUTH_PAGE_HEADER } from '@/lib/designClasses'
 import { hasRemoteVault } from '@/lib/hasRemoteVault'
 import { useVault } from '@/vault/VaultProvider'
 
@@ -13,8 +14,8 @@ type OnboardingMode = 'loading' | 'restore' | 'setup'
 
 function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col bg-background">
-      <header className="flex h-16 items-center justify-between border-b border-surface-variant px-4 md:px-10">
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-background">
+      <header className={AUTH_PAGE_HEADER}>
         <BrandMark size="sm" showSubtitle />
       </header>
       <main className="relative flex flex-1 flex-col items-center px-4 py-10 md:px-10">

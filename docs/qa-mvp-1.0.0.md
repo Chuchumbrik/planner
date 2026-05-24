@@ -1,7 +1,7 @@
 # QA-отчёт Motivator (MVP 1.0.0)
 
 **Среда:** production `https://planner-tawny-omega.vercel.app`  
-**Версия:** `0.7.3+850815d` (прогон 18, re-QA после design-2.0)  
+**Версия:** `0.7.3+5ee2982` (прогон 19, UX-001…004)  
 **Дата прогона:** 2026-05-24  
 **Исполнитель:** QA Automation (Chrome DevTools MCP)  
 **Учётная запись:** `mussha2010@yandex.ru` (**admin**)
@@ -12,15 +12,15 @@
 
 ## Summary
 
-**Общее состояние (прогон 18 + UX):** ядро MVP **работоспособно** на production **`0.7.3+850815d`**. **Кодовые блокеры QA закрыты.** **UX-001…004 исправлены в коде** (ветка `design-2.0`, не на production) — нужен re-QA. Остаются **инфра push-cron**, **BUG-001** (не перепроверен), manual OS push click.
+**Общее состояние (прогон 19):** production **`0.7.3+5ee2982`** — **блокеры Verified**, **UX-001…004 Verified**. Остаются **инфра push-cron**, **BUG-001** (Slow 3G), **OS notificationclick** (manual), **TC-SEC-15**.
 
-**UX-впечатление:** спокойный визуал Design 2.0, понятная навигация, хорошие пустые состояния и кольца прогресса. Mobile: bottom nav + FAB. Трение: плотность Неделя/Месяц при росте данных, DR-004 без явной подсказки, диалог черновика при создании задачи.
+**UX-впечатление:** единая шапка (sync + аккаунт) на всех shell-страницах; sidebar footer — **shield** + Premium «Скоро»; sync с popover; mobile — toggle диаграмм в ряду фильтров. Мелочи: «Бесплатно» vs «Free» (UX-02), EOD всё ещё в toolbar + shortcut в меню (не блокер).
 
-**Вердикт (прогон 18, production `0.7.3+850815d`):** **условно готов** к 1.0.0 — **все QA-блокеры из прогонов 1–17 Verified** на новом деплое (layout, черновики, неделя, warm retry, highlightTask, malformed seed). **Остаётся:** UX-001…004 (полировка), **`send-due` positive E2E** (инфра), **BUG-001** (EOD + Slow 3G — не перепроверен), **OS notificationclick** (manual), **TC-SEC-15** (non-admin УЗ). См. [Прогон 18](#прогон-18--полный-re-qa-design-20).
+**Вердикт (прогон 19, `0.7.3+5ee2982`):** **готов к 1.0.0** с оговорками — **блокеры + UX-001…004 OK**; **`send-due` positive E2E**, **BUG-001**, manual push — **не блокируют релиз** по решению команды. См. [Прогон 19](#прогон-19--ux-001004-ui-re-qa).
 
-**Вердикт (исторический, прогон 10, `0.7.3+1256c6d`):** **не готов** — BUG-006, BUG-008, BUG-009 (закрыты в `0.7.3+850815d`).
+**Вердикт (прогон 18, `0.7.3+850815d`):** **условно готов** — блокеры Verified; UX-001…004 ещё не на production.
 
-> **Прогоны 2–18:** см. [«Прогон 2»](#прогон-2) … [«Прогон 18»](#прогон-18--полный-re-qa-design-20). Тестовая УЗ для агента: `.cursor/test-account.local.md` (в `.gitignore`, **не коммитить**).
+> **Прогоны 2–19:** см. [«Прогон 2»](#прогон-2) … [«Прогон 19»](#прогон-19--ux-001004-ui-re-qa). Тестовая УЗ: `.cursor/test-account.local.md`.
 
 ---
 
@@ -76,7 +76,7 @@
 | **BUG-002** | **Открыт** | «Сохранить» → диалог черновика (MCP desktop); повторить после BUG-006 |
 | **BUG-005** | **Открыт** | Нет `VITE_FEEDBACK_URL` — конфиг деплоя |
 | **BUG-007** | **Открыт** | Defect title >120 символов — edge, низкий приоритет |
-| **UX-001…004** (прогон 5) | **Fixed (unverified)** | ShellHeaderActions, shield footer, sync popover, Premium «Скоро», mobile charts toggle в ряду фильтров — re-QA после деплоя |
+| **UX-001…004** (прогон 5) | **Verified Fixed** | Прогон 19 на `0.7.3+5ee2982` — см. ниже |
 | **send-due positive E2E** | **Blocked** | Нет `CRON_SECRET` у QA; drift прокси/Edge (прогон 17) |
 | **TC-SEC-15** non-admin | **Not run** | Нужна отдельная УЗ без admin |
 | **OS notificationclick** | **Manual** | После BUG-012/013 — чеклист в [прогоне 17](#прогон-17--send-due-security--notificationclick--highlighttask) |
@@ -108,7 +108,7 @@
 8. ⚠️ RU/EN i18n — **не перепроверялся**
 9. ✅ Mobile 393×852
 
-**Критерий готовности к 1.0.0:** блокеры **Verified** ✅; UX-001…004 — **Fixed (unverified)**; инфра push-cron — **на усмотрение команды**.
+**Критерий готовности к 1.0.0:** блокеры **Verified** ✅; UX-001…004 — **Verified** (прогон 19); инфра push-cron — **на усмотрение команды**.
 
 ### Чеклист полного re-QA (исторический, до деплоя)
 
@@ -205,7 +205,7 @@
 
 | ID | Название | Ожидаемый результат | Статус |
 |----|----------|---------------------|--------|
-| TC-UX01 | Две person-иконки (desktop) | Один смысл «аккаунт» | **Failed** — см. прогон 5b |
+| TC-UX01 | Две person-иконки (desktop) | Один смысл «аккаунт» | **Passed** — прогон 19 (`shield` footer + `account_circle` header) |
 | TC-UX02 | Account menu только на `/app` | Единая шапка на всех страницах | **Failed** |
 | TC-UX03 | Дубли Reports/Settings/EOD | Один primary path | **Failed** |
 | TC-UX04 | Sync icon affordance | Статус или popover, не пустая кнопка | **Failed** |
@@ -1409,7 +1409,7 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 - **BUG-001** EOD + Slow 3G + reload до sync
 - **Полный прогон 6** (все TC-VAL-* на desktop)
 - **Прогон 7** RU/EN i18n
-- **Прогон 5** UX-001…004
+- **Прогон 5** UX-001…004 — **закрыто в [прогоне 19](#прогон-19--ux-001004-ui-re-qa)**
 - **`send-due` positive E2E** (CRON_SECRET)
 - **OS notificationclick** (manual)
 - **TC-SEC-15** non-admin
@@ -1418,6 +1418,70 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 ### Вердикт прогона 18
 
 **Passed (re-QA блокеров)** — деплой **`0.7.3+850815d`** закрывает **все кодовые блокеры MVP**, проверенные в прогонах 1–17. **Условно готов** к 1.0.0: остаются **инфра push-cron**, **UX-полировка**, **manual push click**, **BUG-001** (не перепроверен).
+
+---
+
+## Прогон 19 — UX-001…004 UI re-QA
+
+**Дата:** 2026-05-24. Production **`0.7.3+5ee2982`** (коммит `5ee2982` — ShellHeaderActions, UX shell). Desktop 1440×900 + mobile 393×852. УЗ admin.
+
+### TC-UX01 / UX-001 — две «иконки пользователя»
+
+| Шаг | Было (прогон 5) | Результат |
+|-----|-----------------|-----------|
+| Sidebar footer | `person` + «Vault» — не кликабельно, путаница с аккаунтом | **Passed** — **`shield`**, «Vault защищён», бейдж **Бесплатно**, блок Premium + **«Скоро»** |
+| Header | `account_circle` — меню аккаунта | **Passed** — **одна** иконка аккаунта в шапке |
+| Дубли `person` | 2 person-like | **Passed** — `sidebarPerson: 0`, `headerAccountBtns: 1` |
+
+Скриншот: `ux19-sidebar-shield-footer-1440.png`.
+
+### TC-UX02 / UX-002 — единая шапка на shell-страницах
+
+| Маршрут | Sync + account в header | Результат |
+|---------|-------------------------|-----------|
+| `/app` | `ShellHeaderActions` | **Passed** |
+| `/app/reports` | sync popover + `account_circle` | **Passed** |
+| `/settings` | sync + account | **Passed** |
+
+Меню аккаунта **без** дубликатов Отчёты/Настройки — только **«Краткая сводка»** и **«Выйти»** (**Passed**).
+
+### TC-UX03 / UX-003 — sync-иконка с affordance
+
+| Шаг | Результат |
+|-----|-----------|
+| Клик по cloud-иконке | **Passed** — popover `role="dialog"`, текст «Синхронизировано …» |
+| При `remoteError` | Кнопка «Повторить» в popover (код; на прогоне sync OK) |
+
+Скриншот: `ux19-sync-popover-1440.png`.
+
+### TC-UX04 / UX-004 — Premium stub + mobile charts
+
+| Шаг | Результат |
+|-----|-----------|
+| Premium в sidebar | **Passed** — «Перейти на Premium» + видимое **«Скоро»** (не только title) |
+| Mobile 393×852: charts toggle | **Passed** — кнопка «Показать/Скрыть диаграммы» в **ряду фильтров** (`top≈147`, рядом с «Фильтры▾») |
+| Toggle charts | **Passed** — `aria-pressed` false→true, label «Скрыть диаграммы» |
+
+Скриншот: `ux19-mobile-filters-charts-393.png`.
+
+### Регрессия прогона 18 (выборочно)
+
+| Проверка | Результат |
+|----------|-----------|
+| Vault hydrate, 123+ tasks | **Passed** |
+| Layout / sidebar Design 2.0 | **Passed** — без регрессии |
+
+### Открытые UX (не блокер 1.0.0)
+
+| ID | Наблюдение |
+|----|------------|
+| UX-02 | «Бесплатно» в RU (не «Free») — **OK**; отдельные EN-строки в sidebar — minor |
+| UX-05 | EOD в toolbar **и** shortcut — дублирование пути (не в scope коммита) |
+| UX-06 | «Краткая сводка» только в меню аккаунта — discoverability |
+
+### Вердикт прогона 19
+
+**Passed** — **UX-001…004 Verified** на **`0.7.3+5ee2982`**. Продукт **готов к 1.0.0** с оговорками по инфра push-cron и manual OS push.
 
 ---
 

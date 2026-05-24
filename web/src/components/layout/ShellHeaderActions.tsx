@@ -5,7 +5,7 @@ import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { humanizeConnectivityError } from '@/lib/connectivityHints'
 import { cn } from '@/lib/cn'
-import { SETTINGS_BTN_SECONDARY } from '@/lib/designClasses'
+import { SETTINGS_BTN_SECONDARY, SHELL_ICON_BTN } from '@/lib/designClasses'
 import { motivatorAppRole } from '@/lib/motivatorRole'
 import { formatSynced } from '@/lib/syncStatus'
 import { useVault } from '@/vault/VaultProvider'
@@ -83,7 +83,7 @@ export function ShellHeaderActions() {
           <button
             type="button"
             className={cn(
-              'rounded p-2 transition-colors active:scale-95',
+              SHELL_ICON_BTN,
               remoteError
                 ? 'text-error hover:bg-error-container/30'
                 : savePending
@@ -133,7 +133,10 @@ export function ShellHeaderActions() {
         <div ref={accountMenuRef} className="relative">
           <button
             type="button"
-            className="rounded p-2 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface active:scale-95"
+            className={cn(
+              SHELL_ICON_BTN,
+              'text-on-surface-variant hover:bg-surface-container hover:text-on-surface',
+            )}
             aria-expanded={accountMenuOpen}
             aria-haspopup="menu"
             onClick={() => {

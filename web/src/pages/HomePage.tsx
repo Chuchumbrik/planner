@@ -3,7 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
-import { PAGE_CONTAINER } from '@/lib/designClasses'
+import { PAGE_CONTAINER, AUTH_PAGE_HEADER } from '@/lib/designClasses'
 import { APP_VERSION } from '@/version'
 import { useVault } from '@/vault/VaultProvider'
 
@@ -30,8 +30,8 @@ export function HomePage() {
   ] as const
 
   return (
-    <div className="min-h-screen bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container">
-      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-surface-variant bg-background/90 px-4 backdrop-blur-sm md:px-10">
+    <div className="min-h-screen overflow-x-hidden bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+      <header className={AUTH_PAGE_HEADER}>
         <BrandMark size="sm" />
         <Link
           className="btn-primary px-5 py-2.5 active:scale-[0.98] transition-transform"

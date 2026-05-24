@@ -38,6 +38,7 @@ import {
   MODAL_TITLE,
   MOTIVATOR_INPUT,
   PLANNER_NAV_BTN,
+  PLANNER_TOOLBAR_BTN,
   PLANNER_SECTION_HEAD,
   SETTINGS_BTN_SECONDARY,
   SETTINGS_LABEL,
@@ -268,7 +269,7 @@ function PlannerPeriodNav({
       <button
         type="button"
         disabled={!canEdit}
-        className="btn-secondary ml-auto shrink-0 px-2 py-1.5 text-xs disabled:opacity-40 sm:px-3 sm:text-sm"
+        className="btn-secondary ml-auto shrink-0 px-2 py-1.5 text-xs max-md:min-h-11 max-md:px-3 max-md:py-2 disabled:opacity-40 sm:px-3 sm:text-sm"
         onClick={onJumpToCurrent}
       >
         {jumpLabel}
@@ -998,7 +999,7 @@ function AppPageInner() {
               type="button"
               disabled={!canEdit}
               aria-expanded={filtersPanelOpen}
-              className={`${SETTINGS_BTN_SECONDARY} inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 pr-4 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5`}
+              className={`${PLANNER_TOOLBAR_BTN} inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap pr-4 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5`}
               onClick={() => setFiltersPanelOpen((v) => !v)}
             >
               {t('app.filterToggle')}
@@ -1012,7 +1013,7 @@ function AppPageInner() {
               <button
                 type="button"
                 disabled={!canEdit}
-                className="btn-secondary shrink-0 whitespace-nowrap px-2.5 py-1.5 text-xs disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm"
+                className="btn-secondary shrink-0 whitespace-nowrap px-2.5 py-1.5 text-xs max-md:min-h-11 max-md:px-3 max-md:py-2 disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm"
                 onClick={() =>
                   setEodModalContext({ dateKey: selectedDay, mode: 'report' })
                 }
@@ -1023,7 +1024,7 @@ function AppPageInner() {
               <button
                 type="button"
                 disabled={!canEdit}
-                className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm ${
+                className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs max-md:min-h-11 max-md:px-3 max-md:py-2 disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm ${
                   eodDoneToday
                     ? 'border-primary/50 text-primary hover:bg-primary/10'
                     : 'border-secondary/50 text-secondary hover:bg-secondary/10'
@@ -1087,11 +1088,11 @@ function AppPageInner() {
             />
             <div className="relative z-[45] md:z-auto">
               <div className={FILTER_PANEL}>
-                <div className="flex shrink-0 items-center justify-between border-b border-surface-variant px-4 py-3 md:hidden">
+                <div className="flex shrink-0 items-center justify-between border-b border-surface-variant px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:hidden">
                   <span className="font-display text-sm font-medium text-on-surface">{t('app.filtersTitle')}</span>
                   <button
                     type="button"
-                    className={SETTINGS_BTN_SECONDARY}
+                    className={PLANNER_TOOLBAR_BTN}
                     onClick={() => setFiltersPanelOpen(false)}
                   >
                     {t('app.filtersSheetDone')}

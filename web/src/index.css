@@ -231,4 +231,24 @@ body {
   .animate-task-soft-miss {
     animation: none;
   }
+
+  .animate-pulse,
+  .animate-spin {
+    animation: none;
+  }
+}
+
+@layer base {
+  button:focus-visible,
+  a:focus-visible,
+  [role='tab']:focus-visible,
+  [role='button']:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .motivator-input:focus-visible {
+    outline: none;
+  }
 }
