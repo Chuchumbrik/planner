@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { getPlanProgressLabels } from '@/components/PlanDayProgressCaption'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
 import { STAT_CARD, STAT_CARD_LABEL, STAT_CARD_VALUE } from '@/lib/designClasses'
@@ -40,12 +41,19 @@ export function PeriodPlannerStatsRow({
   periodLabel,
   overdueCount,
 }: PeriodPlannerStatsRowProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
   const pct = useMemo(() => {
     if (progress.plannedTaskCount === 0) return 0
     return Math.round((100 * progress.doneFraction) / progress.plannedTaskCount)
   }, [progress])
+
+  const closedValue = useMemo(() => {
+    if (progress.plannedTaskCount === 0) return '—'
+    const { doneSumStr, taskCountStr } = getPlanProgressLabels(progress, locale)
+    return t('app.dayStatsTasksValue', { done: doneSumStr, total: taskCountStr })
+  }, [progress, locale, t])
 
   const ariaKey = mode === 'week' ? 'app.weekStatsAria' : 'app.monthStatsAria'
 
@@ -90,7 +98,7 @@ export function PeriodPlannerStatsRow({
         <StatTile
           icon="task_alt"
           label={t('app.periodStatsCompletion')}
-          value={progress.plannedTaskCount === 0 ? '—' : t('app.dayStatsPercent', { pct })}
+          value={closedValue}
         />
         <StatTile
           icon="schedule"

@@ -16,6 +16,7 @@ import {
   ALERT_WARNING_TITLE,
   SETTINGS_CARD,
   SETTINGS_SUBHEAD,
+  SCROLLBAR_SLIDER_H,
   STAT_KPI_VALUE,
   VIEW_TABLIST,
   viewTab,
@@ -149,7 +150,7 @@ function ReportsPageInner() {
         {analytics.buckets.every((b) => b.count === 0) ? (
           <p className="mt-4 text-sm text-on-surface-variant">{t('reports.chartEmpty')}</p>
         ) : (
-          <div className="mt-4 flex h-40 items-end gap-1 overflow-x-auto pb-2 pt-2">
+          <div className={`mt-4 flex h-40 items-end gap-1 overflow-x-auto pb-3 pt-2 ${SCROLLBAR_SLIDER_H}`}>
             {analytics.buckets.map((b) => (
               <div
                 key={b.dateKey}
@@ -187,7 +188,7 @@ function ReportsPageInner() {
         {analytics.recurringFails.length === 0 ? (
           <p className="text-sm text-on-surface-variant">{t('reports.emptyFailed')}</p>
         ) : (
-          <div className="motivator-card overflow-x-auto p-0">
+          <div className={`motivator-card overflow-x-auto p-0 ${SCROLLBAR_SLIDER_H}`}>
             <table className="w-full min-w-[28rem] text-left text-sm">
               <thead className="border-b border-surface-variant bg-surface-container-low font-display text-xs uppercase tracking-wide text-on-surface-variant">
                 <tr>
@@ -220,7 +221,7 @@ function ReportsPageInner() {
         {analytics.oneOffFails.length === 0 ? (
           <p className="text-sm text-on-surface-variant">{t('reports.emptyFailed')}</p>
         ) : (
-          <div className="motivator-card overflow-x-auto p-0">
+          <div className={`motivator-card overflow-x-auto p-0 ${SCROLLBAR_SLIDER_H}`}>
             <table className="w-full min-w-[28rem] text-left text-sm">
               <thead className="border-b border-surface-variant bg-surface-container-low font-display text-xs uppercase tracking-wide text-on-surface-variant">
                 <tr>

@@ -1,11 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { AiAssistantPanel } from '@/components/ai/AiAssistantPanel'
 import { AiAssistantProvider, useAiAssistant } from '@/components/ai/AiAssistantContext'
 import { AiAssistantTrigger } from '@/components/ai/AiAssistantTrigger'
 import { BrandMark } from '@/components/brand/BrandMark'
+import { ShellAccountFooter } from '@/components/layout/ShellAccountFooter'
+import { ShellAdminNav } from '@/components/layout/ShellAdminNav'
 import { ShellHeaderActions } from '@/components/layout/ShellHeaderActions'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
@@ -14,14 +16,12 @@ import {
   SHELL_HEADER,
   SHELL_HEADER_ACTIONS,
   SHELL_PAGE_TITLE,
-  SHELL_PLAN_BADGE,
   SHELL_SIDEBAR,
-  SHELL_UPGRADE_STUB,
-  SHELL_VERSION_FOOTER,
   shellMainContent,
   shellMobileNavLink,
   shellSideNavLink,
 } from '@/lib/designClasses'
+import { isShellAdminMode } from '@/lib/shellAdminMode'
 import { getPlanTier, type PlanTier } from '@/lib/planTier'
 import {
   SHELL_MAIN_NAV,
@@ -31,63 +31,14 @@ import {
   type MotivatorNavId,
   type ShellNavItem,
 } from '@/lib/shellNavigation'
-import { APP_VERSION } from '@/version'
+import { useIsDesktopShell } from '@/lib/useMediaQuery'
 
 type MotivatorShellProps = {
   activeNav: MotivatorNavId
   title?: string
   children: ReactNode
-  /** Full 1200px content width (planner, reports, settings). */
   wide?: boolean
-  /** Override plan badge (default from getPlanTier). */
   planTier?: PlanTier
-}
-
-function PlanSidebarFooter({ tier }: { tier: PlanTier }) {
-  const { t } = useTranslation()
-  const isPremium = tier === 'premium'
-
-  return (
-    <div className="border-t border-surface-variant/80 px-md pt-md">
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-surface-container-high',
-            isPremium ? 'border-primary/50' : 'border-outline-variant',
-          )}
-          aria-hidden
-        >
-          <MaterialIcon
-            name={isPremium ? 'workspace_premium' : 'shield'}
-            className={isPremium ? 'text-primary' : 'text-on-surface-variant'}
-            size={20}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-label-md text-on-surface">{t('shell.vaultLocked')}</p>
-          <p className="mt-0.5">
-            <span
-              className={cn(
-                SHELL_PLAN_BADGE,
-                isPremium
-                  ? 'border-primary/40 bg-primary/10 text-primary'
-                  : 'border-outline-variant text-on-surface-variant',
-              )}
-            >
-              {isPremium ? t('shell.planPremium') : t('shell.planFree')}
-            </span>
-          </p>
-        </div>
-      </div>
-      {!isPremium ? (
-        <div className={SHELL_UPGRADE_STUB} aria-label={t('shell.planUpgradeHint')}>
-          <p className="text-label-sm text-on-surface-variant">{t('shell.planUpgrade')}</p>
-          <p className="mt-0.5 text-label-sm font-medium text-primary">{t('shell.planComingSoon')}</p>
-        </div>
-      ) : null}
-      <p className={SHELL_VERSION_FOOTER}>{t('home.badge', { version: APP_VERSION })}</p>
-    </div>
-  )
 }
 
 function ShellNavLinks({
@@ -121,16 +72,18 @@ function ShellNavLinks({
 
 function ShellSidebar({
   activeNav,
-  planTier,
   onNavigate,
   className,
   showPreviewNav,
+  adminMode,
+  hideRoadmapInFooter,
 }: {
   activeNav: MotivatorNavId
-  planTier: PlanTier
   onNavigate?: () => void
   className?: string
   showPreviewNav: boolean
+  adminMode: boolean
+  hideRoadmapInFooter: boolean
 }) {
   const { t } = useTranslation()
   const settingsActive = activeNav === 'settings'
@@ -142,32 +95,38 @@ function ShellSidebar({
       </div>
       <nav
         className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-sm"
-        aria-label={t('shell.sideNavAria')}
+        aria-label={adminMode ? t('shell.adminNavAria') : t('shell.sideNavAria')}
       >
-        <ShellNavLinks activeNav={activeNav} items={SHELL_MAIN_NAV} onNavigate={onNavigate} />
-        {showPreviewNav ? (
+        {adminMode ? (
+          <ShellAdminNav onNavigate={onNavigate} />
+        ) : (
           <>
-            <AiAssistantTrigger variant="sidebar" className="mt-1" />
-            <p className="mt-4 px-4 pb-1 text-label-sm uppercase tracking-wide text-on-surface-variant/80">
-              {t('shell.navPreviews')}
-            </p>
-            <ShellNavLinks activeNav={activeNav} items={SHELL_PREVIEW_NAV} onNavigate={onNavigate} />
+            <ShellNavLinks activeNav={activeNav} items={SHELL_MAIN_NAV} onNavigate={onNavigate} />
+            {showPreviewNav ? (
+              <>
+                <AiAssistantTrigger variant="sidebar" className="mt-1" />
+                <p className="mt-4 px-4 pb-1 text-label-sm uppercase tracking-wide text-on-surface-variant/80">
+                  {t('shell.navPreviews')}
+                </p>
+                <ShellNavLinks activeNav={activeNav} items={SHELL_PREVIEW_NAV} onNavigate={onNavigate} />
+              </>
+            ) : null}
           </>
+        )}
+        {!adminMode ? (
+          <div className="mt-auto border-t border-surface-variant/60 py-3">
+            <NavLink
+              to={SHELL_SETTINGS_NAV.to}
+              className={({ isActive }) => shellSideNavLink(isActive || settingsActive)}
+              onClick={onNavigate}
+            >
+              <MaterialIcon name={SHELL_SETTINGS_NAV.icon} size={22} />
+              <span>{t(SHELL_SETTINGS_NAV.labelKey)}</span>
+            </NavLink>
+          </div>
         ) : null}
-        <div className="mt-auto border-t border-surface-variant/60 pt-3">
-          <NavLink
-            to={SHELL_SETTINGS_NAV.to}
-            className={({ isActive }) =>
-              shellSideNavLink(isActive || settingsActive)
-            }
-            onClick={onNavigate}
-          >
-            <MaterialIcon name={SHELL_SETTINGS_NAV.icon} size={22} />
-            <span>{t(SHELL_SETTINGS_NAV.labelKey)}</span>
-          </NavLink>
-        </div>
       </nav>
-      <PlanSidebarFooter tier={planTier} />
+      <ShellAccountFooter hideRoadmap={hideRoadmapInFooter} />
     </aside>
   )
 }
@@ -180,12 +139,17 @@ function MotivatorShellInner({
   planTier: planTierProp,
 }: MotivatorShellProps) {
   const { t } = useTranslation()
+  const location = useLocation()
   const planTier = planTierProp ?? getPlanTier()
   const pageTitle = title ?? t(shellTitleKey(activeNav))
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const settingsActive = activeNav === 'settings'
-  const { canAccessPreviewFeatures } = useAuth()
-  const { closeAssistant } = useAiAssistant()
+  const { canAccessPreviewFeatures, isAdmin } = useAuth()
+  const { open: aiOpen, closeAssistant } = useAiAssistant()
+  const isDesktop = useIsDesktopShell()
+  const adminMode = isShellAdminMode(location.pathname, location.hash, isAdmin)
+  const aiDocked = aiOpen && isDesktop && canAccessPreviewFeatures
+  const hideRoadmapInFooter = adminMode && isDesktop
 
   useEffect(() => {
     if (!canAccessPreviewFeatures) closeAssistant()
@@ -193,7 +157,7 @@ function MotivatorShellInner({
 
   useEffect(() => {
     setMobileNavOpen(false)
-  }, [activeNav])
+  }, [activeNav, location.pathname, location.hash])
 
   useEffect(() => {
     if (!mobileNavOpen) return
@@ -204,14 +168,16 @@ function MotivatorShellInner({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [mobileNavOpen])
 
+  const sidebarProps = {
+    activeNav,
+    showPreviewNav: canAccessPreviewFeatures,
+    adminMode,
+    hideRoadmapInFooter,
+  }
+
   return (
     <div className="min-h-dvh overflow-x-hidden bg-background text-on-surface">
-      <ShellSidebar
-        activeNav={activeNav}
-        planTier={planTier}
-        className="max-md:hidden"
-        showPreviewNav={canAccessPreviewFeatures}
-      />
+      <ShellSidebar {...sidebarProps} className="max-md:hidden" />
 
       {mobileNavOpen ? (
         <>
@@ -222,64 +188,67 @@ function MotivatorShellInner({
             onClick={() => setMobileNavOpen(false)}
           />
           <ShellSidebar
-            activeNav={activeNav}
-            planTier={planTier}
+            {...sidebarProps}
             className="z-[56] flex md:hidden"
             onNavigate={() => setMobileNavOpen(false)}
-            showPreviewNav={canAccessPreviewFeatures}
           />
         </>
       ) : null}
 
-      <div className="flex min-h-dvh min-w-0 flex-col md:ml-64">
-        <header className={SHELL_HEADER}>
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <button
-              type="button"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-surface-container md:hidden"
-              aria-expanded={mobileNavOpen}
-              aria-label={mobileNavOpen ? t('shell.menuClose') : t('shell.menuOpen')}
-              onClick={() => setMobileNavOpen((v) => !v)}
-            >
-              <MaterialIcon name={mobileNavOpen ? 'close' : 'menu'} size={24} />
-            </button>
-            <h1 className={SHELL_PAGE_TITLE}>{pageTitle}</h1>
-          </div>
-          <div className={SHELL_HEADER_ACTIONS}>
-            {canAccessPreviewFeatures ? <AiAssistantTrigger variant="header" /> : null}
-            <ShellHeaderActions />
-          </div>
-        </header>
+      <div className={cn('flex min-h-dvh min-w-0 md:ml-64', aiDocked && 'md:flex-row')}>
+        <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
+          <header className={SHELL_HEADER}>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <button
+                type="button"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-surface-container md:hidden"
+                aria-expanded={mobileNavOpen}
+                aria-label={mobileNavOpen ? t('shell.menuClose') : t('shell.menuOpen')}
+                onClick={() => setMobileNavOpen((v) => !v)}
+              >
+                <MaterialIcon name={mobileNavOpen ? 'close' : 'menu'} size={24} />
+              </button>
+              <h1 className={SHELL_PAGE_TITLE}>{pageTitle}</h1>
+            </div>
+            <div className={SHELL_HEADER_ACTIONS}>
+              <ShellHeaderActions planTier={planTier} />
+            </div>
+          </header>
 
-        <main className={shellMainContent(wide)}>{children}</main>
+          <main className={shellMainContent(wide)}>{children}</main>
+
+          <nav className={SHELL_BOTTOM_NAV} aria-label={t('shell.bottomNavAria')}>
+            {SHELL_MAIN_NAV.map((item) => {
+              const isActive = activeNav === item.id
+              return (
+                <NavLink
+                  key={item.id}
+                  to={item.to}
+                  className={({ isActive: navActive }) => shellMobileNavLink(navActive || isActive)}
+                  end={item.end}
+                >
+                  <MaterialIcon name={item.icon} size={24} filled={isActive} />
+                  <span className="max-w-full truncate">{t(item.labelKey)}</span>
+                </NavLink>
+              )
+            })}
+            {canAccessPreviewFeatures ? <AiAssistantTrigger variant="bottomNav" /> : null}
+            <NavLink
+              to={SHELL_SETTINGS_NAV.to}
+              className={({ isActive }) => shellMobileNavLink(isActive || settingsActive)}
+            >
+              <MaterialIcon name={SHELL_SETTINGS_NAV.icon} size={24} filled={settingsActive} />
+              <span className="max-w-full truncate">{t(SHELL_SETTINGS_NAV.labelKey)}</span>
+            </NavLink>
+          </nav>
+        </div>
+
+        {aiDocked ? <AiAssistantPanel mode="docked" /> : null}
       </div>
 
-      <nav className={SHELL_BOTTOM_NAV} aria-label={t('shell.bottomNavAria')}>
-        {SHELL_MAIN_NAV.map((item) => {
-          const isActive = activeNav === item.id
-          return (
-            <NavLink
-              key={item.id}
-              to={item.to}
-              className={({ isActive: navActive }) => shellMobileNavLink(navActive || isActive)}
-              end={item.end}
-            >
-              <MaterialIcon name={item.icon} size={24} filled={isActive} />
-              <span className="max-w-full truncate">{t(item.labelKey)}</span>
-            </NavLink>
-          )
-        })}
-        {canAccessPreviewFeatures ? <AiAssistantTrigger variant="bottomNav" /> : null}
-        <NavLink
-          to={SHELL_SETTINGS_NAV.to}
-          className={({ isActive }) => shellMobileNavLink(isActive || settingsActive)}
-        >
-          <MaterialIcon name={SHELL_SETTINGS_NAV.icon} size={24} filled={settingsActive} />
-          <span className="max-w-full truncate">{t(SHELL_SETTINGS_NAV.labelKey)}</span>
-        </NavLink>
-      </nav>
-
-      {canAccessPreviewFeatures ? <AiAssistantPanel /> : null}
+      {canAccessPreviewFeatures && aiOpen && !isDesktop ? (
+        <AiAssistantPanel mode="overlay" />
+      ) : null}
     </div>
   )
 }

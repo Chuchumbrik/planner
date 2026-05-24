@@ -331,6 +331,26 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
         changes: [
           {
+            ru: '**Планировщик — полировка UX:** виджет **End of Day** открывает ритуал/отчёт (кнопки EOD убраны из toolbar); **FAB «+»** на всех вкладках — на desktop компактный у правого края, черновики на бейдже; чекбоксы задач — **`motivator-checkbox`**; фильтры — отступы и сетка; неделя/месяц — «Закрыто по плану» вместо дубля %; отчёты — тонкий горизонтальный скролл графика.',
+            en: '**Planner UX polish:** **End of Day** stat tile opens ritual/report (EOD toolbar buttons removed); **“+” FAB** on all tabs — compact on desktop at the right edge, drafts on badge; task checkboxes — **`motivator-checkbox`**; filters — padding and grid; week/month — “Plan completed” instead of duplicate %; reports — slim horizontal chart scrollbar.',
+          },
+          {
+            ru: '**Shell Design 2.0:** vault/plan в шапке (**`ShellVaultPlanButton`**), аккаунт в footer sidebar (**`ShellAccountFooter`**); admin sub-menu на dashboard/settings; AI-панель docked на desktop (resizable), overlay на mobile.',
+            en: '**Shell Design 2.0:** vault/plan in header (**`ShellVaultPlanButton`**), account in sidebar footer (**`ShellAccountFooter`**); admin sub-menu on dashboard/settings; AI panel docked on desktop (resizable), overlay on mobile.',
+          },
+          {
+            ru: '**QA прогон 20 — low fixes:** обратная связь по умолчанию (GitHub Issues); clamp title в «Завести дефект»; EOD без rank-шума; закрытие create task без лишнего диалога; «Краткая сводка» в Настройках → Общие.',
+            en: '**QA run 20 — low fixes:** default feedback (GitHub Issues); defect title clamp; cleaner EOD lists; create-task close without spurious confirm; Brief summary in Settings → General.',
+          },
+          {
+            ru: '**Design 2.0 — этап 8 (a11y):** focus trap и возврат фокуса в модалках; `aria-label` на close create/edit; `aria-live` sync и фильтры; spot-check контраста токенов.',
+            en: '**Design 2.0 — stage 8 (a11y):** focus trap and focus restore in modals; `aria-label` on create/edit close; `aria-live` for sync and filters; token contrast spot-check.',
+          },
+          {
+            ru: '**Настройки — «Безопасность»:** журнал безопасности перенесён из sidebar-прототипа во вкладку **`/settings#privacy`** (seed + журнал); **`/prototype/security-log`** → **`/settings#security-log`**.',
+            en: '**Settings — Security tab:** security log moved from sidebar prototype to **`/settings#privacy`** (seed + log); **`/prototype/security-log`** → **`/settings#security-log`**.',
+          },
+          {
             ru: '**Design 2.0 — этап 7 (адаптив/PWA):** tap targets ≥44px в shell и toolbar планировщика; safe-area в шапках и filter sheet; manifest **`theme_color` #131315**; `:focus-visible` на кнопках; `prefers-reduced-motion` для pulse/spin.',
             en: '**Design 2.0 — stage 7 (adaptive/PWA):** ≥44px tap targets in shell and planner toolbar; safe-area on headers and filter sheet; manifest **`theme_color` #131315**; `:focus-visible` on buttons; `prefers-reduced-motion` for pulse/spin.',
           },
@@ -340,6 +360,26 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           },
         ],
         plainBullets: [
+          {
+            ru: 'Завершить день или открыть отчёт — нажмите на карточку **End of Day** в сводке дня; создать задачу — круглая **«+»** справа (на компьютере меньше, у края экрана).',
+            en: 'End the day or open the report from the **End of Day** stat card; create a task with the round **“+”** on the right (smaller on desktop, at the screen edge).',
+          },
+          {
+            ru: 'Галочки у задач выглядят как остальной интерфейс — тёмная рамка, зелёная отметка при выполнении.',
+            en: 'Task checkboxes match the dark theme — bordered box, green fill when done.',
+          },
+          {
+            ru: 'Обратная связь в настройках работает без отдельной переменной окружения — по умолчанию открывается форма issue на GitHub.',
+            en: 'Feedback in Settings works without a custom env var — by default it opens the GitHub issue form.',
+          },
+          {
+            ru: '«Краткая сводка» (дорожная карта и релиз-ноты) доступна в Настройках → Общие, не только из меню аккаунта на планировщике.',
+            en: 'Brief summary (roadmap and release notes) is in Settings → General, not only from the planner account menu.',
+          },
+          {
+            ru: 'Модалки (создание/редактирование задачи, EOD, сводка и др.) удерживают клавиатурный фокус внутри и возвращают его после закрытия.',
+            en: 'Modals (create/edit task, EOD, roadmap, etc.) keep keyboard focus inside and restore it when closed.',
+          },
           {
             ru: 'На телефоне кнопки в шапке и панели фильтров стали удобнее для нажатия; notch и «челка» учитываются в отступах.',
             en: 'Phone header and filter bar controls are easier to tap; notch safe areas respected in padding.',

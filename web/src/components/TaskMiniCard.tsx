@@ -7,6 +7,8 @@ import {
   DC_PENDING_SHELL,
   TASK_CARD_BODY,
   TASK_CARD_SHELL,
+  TASK_CHECKBOX_CHECKLIST,
+  TASK_CHECKBOX_MAIN,
   TASK_GROUP_CHIP,
   TASK_META_CHIP,
   TASK_OVERDUE_CHIP,
@@ -132,7 +134,9 @@ export function TaskMiniCard({
     ? t('app.completeParentAfterChecklist')
     : !completionToggleAllowed
       ? t('app.completionOnlyToday')
-      : undefined
+      : task.doubleConfirmEnabled
+        ? t('app.doubleConfirmHintShort')
+        : undefined
 
   const shellClass = cn(
     TASK_CARD_SHELL,
@@ -164,8 +168,12 @@ export function TaskMiniCard({
             checked={mainDone}
             disabled={toggleDoneDisabled}
             onChange={() => onToggle()}
-            aria-label={t('app.toggleTaskDone')}
-            className="h-6 w-6 rounded border-outline-variant bg-surface-container-low text-primary focus:ring-primary/40 disabled:opacity-40 md:h-5 md:w-5"
+            aria-label={
+              task.doubleConfirmEnabled && !mainDone
+                ? t('app.doubleConfirmEnable')
+                : t('app.toggleTaskDone')
+            }
+            className={TASK_CHECKBOX_MAIN}
           />
         </label>
         <button
@@ -267,7 +275,7 @@ export function TaskMiniCard({
                     onChange={() => onToggleChecklistItem(item.id)}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={item.title}
-                    className="h-4 w-4 shrink-0 rounded border-outline-variant bg-surface-container-low text-primary disabled:opacity-40"
+                    className={TASK_CHECKBOX_CHECKLIST}
                   />
                   <span
                     className={cn(

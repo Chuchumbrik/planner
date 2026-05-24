@@ -18,6 +18,7 @@ import {
   TEXT_HINT_WARNING,
 } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 
 const TITLE_MAX = 120
 const DESC_MAX = 8000
@@ -28,6 +29,10 @@ const UA_MAX = 400
 const MAX_FILES = 2
 const MAX_BYTES = 3 * 1024 * 1024
 const ACCEPT_MIME = new Set(['image/png', 'image/jpeg', 'image/webp'])
+
+function clampField(value: string, max: number): string {
+  return value.length > max ? value.slice(0, max) : value
+}
 
 export type DefectTypeId = 'bug' | 'ui_ux' | 'performance' | 'enhancement' | 'other'
 
@@ -63,6 +68,8 @@ export function FileDefectModal({
   const { submit, mapFileDefectErrorMessage } = useFileDefect(supabase)
   const formId = useId()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useDialogFocusTrap(open, dialogRef)
 
   const [draftId, setDraftId] = useState(() => crypto.randomUUID())
   const [title, setTitle] = useState('')
@@ -222,8 +229,8 @@ export function FileDefectModal({
   ])
 
   const applyTemplate = (id: DefectTemplateId) => {
-    setTitle(t(`settings.defectTemplate.${id}.title`))
-    setDescription(t(`settings.defectTemplate.${id}.description`))
+    setTitle(clampField(t(`settings.defectTemplate.${id}.title`), TITLE_MAX))
+    setDescription(clampField(t(`settings.defectTemplate.${id}.description`), DESC_MAX))
     const st = t(`settings.defectTemplate.${id}.steps`)
     setSteps(st.startsWith('settings.') ? '' : st)
   }
@@ -289,6 +296,7 @@ export function FileDefectModal({
       }}
     >
       <div
+        ref={dialogRef}
         className={cn(MODAL_SHELL, 'max-h-[min(92dvh,780px)]')}
         role="dialog"
         aria-modal="true"
@@ -414,7 +422,7 @@ export function FileDefectModal({
                   value={title}
                   maxLength={TITLE_MAX}
                   placeholder={t('settings.fileDefectTitlePlaceholder')}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => setTitle(clampField(e.target.value, TITLE_MAX))}
                   autoFocus
                 />
               </label>

@@ -2,9 +2,11 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/auth/AuthProvider'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
+import { SecurityLogPanel } from '@/components/settings/SecurityLogPanel'
 import { SettingsTabLayout } from '@/components/settings/SettingsTabLayout'
 import { useSettingsTab } from '@/components/settings/useSettingsTab'
 import { AdminMotivatorRolePanel } from '@/components/AdminMotivatorRolePanel'
+import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { RequireVault } from '@/components/RequireVault'
 import { SeedExportPanel } from '@/components/SeedExportPanel'
 import { SettingsLegalSection } from '@/components/SettingsLegalSection'
@@ -156,6 +158,7 @@ function SettingsPageInner() {
   const [notifModeDraft, setNotifModeDraft] = useState<NotificationDeliveryMode>('off')
   const [notifModeSaving, setNotifModeSaving] = useState(false)
   const [savedFlash, setSavedFlash] = useState(false)
+  const [roadmapModalOpen, setRoadmapModalOpen] = useState(false)
   const savePendingWasRef = useRef(false)
 
   const deliveryMode: NotificationDeliveryMode =
@@ -185,6 +188,15 @@ function SettingsPageInner() {
   const notifModeDirty = notifModeDraft !== deliveryMode
   const showAdminTab = Boolean(supabase && isAdmin)
   const [activeTab, setActiveTab] = useSettingsTab(showAdminTab)
+
+  useEffect(() => {
+    if (activeTab !== 'privacy') return
+    const raw = window.location.hash.replace(/^#/, '').trim()
+    if (raw !== 'seed-backup' && raw !== 'security-log') return
+    requestAnimationFrame(() => {
+      document.getElementById(raw)?.scrollIntoView({ block: 'start' })
+    })
+  }, [activeTab])
 
   async function handleSignOut() {
     if (!window.confirm(t('settings.signOutConfirm'))) return
@@ -320,6 +332,20 @@ function SettingsPageInner() {
             </div>
 
             <div>
+              <h3 className={SETTINGS_SUBHEAD}>{t('settings.roadmapGeneralTitle')}</h3>
+              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.roadmapGeneralHelp')}</p>
+              <div className={`mt-3 ${SETTINGS_CARD}`}>
+                <button
+                  type="button"
+                  className={SETTINGS_BTN_SECONDARY}
+                  onClick={() => setRoadmapModalOpen(true)}
+                >
+                  {t('settings.roadmapTempButton')}
+                </button>
+              </div>
+            </div>
+
+            <div>
               <h3 className={SETTINGS_SUBHEAD}>{t('settings.sectionLegal')}</h3>
               <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.sectionLegalHelp')}</p>
               <div className={`mt-3 ${SETTINGS_CARD}`}>
@@ -330,10 +356,15 @@ function SettingsPageInner() {
         ) : null}
 
         {activeTab === 'privacy' ? (
-          <div id="seed-backup" className="scroll-mt-6">
-            <div className={SETTINGS_CARD}>
-              <SeedExportPanel />
-            </div>
+          <div className="space-y-md">
+            <section id="seed-backup" className="scroll-mt-6">
+              <h3 className={SETTINGS_SUBHEAD}>{t('settings.seedBackupTitle')}</h3>
+              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.seedBackupHelp')}</p>
+              <div className={`mt-3 ${SETTINGS_CARD}`}>
+                <SeedExportPanel />
+              </div>
+            </section>
+            <SecurityLogPanel />
           </div>
         ) : null}
 
@@ -573,6 +604,8 @@ function SettingsPageInner() {
           <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
         ) : null}
       </SettingsTabLayout>
+
+      <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />
 
       <p className="mt-10 text-center text-mono-data text-label-sm text-on-surface-variant">
         {t('settings.appVersion', { version: APP_VERSION })}

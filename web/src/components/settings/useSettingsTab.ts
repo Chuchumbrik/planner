@@ -6,6 +6,7 @@ const TAB_IDS: SettingsTabId[] = ['general', 'privacy', 'planning', 'notificatio
 
 const LEGACY_HASH: Record<string, SettingsTabId> = {
   'seed-backup': 'privacy',
+  'security-log': 'privacy',
 }
 
 function tabFromHash(hash: string, allowAdmin: boolean): SettingsTabId {

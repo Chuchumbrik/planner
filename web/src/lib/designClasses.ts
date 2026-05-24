@@ -16,6 +16,9 @@ export const SETTINGS_SUBHEAD = cn(
 
 export const SETTINGS_LABEL = 'text-label-sm text-on-surface-variant'
 
+/** Slim horizontal scrollbar rail — charts and wide tables (Design 2.0). */
+export const SCROLLBAR_SLIDER_H = 'scrollbar-slider-h'
+
 export const STAT_CARD = cn(
   'motivator-card shrink-0 snap-start p-sm min-w-[8.75rem]',
 )
@@ -39,7 +42,7 @@ export function chipActive(active: boolean): string {
   return cn('motivator-chip', active && 'motivator-chip-active')
 }
 
-/** Fixed anchor for mobile create FAB + optional draft badge (hidden md+). */
+/** Fixed anchor for create FAB + optional draft badge (mobile + desktop). */
 export const FAB_SHELL = cn('motivator-fab-shell')
 
 export const FAB = cn(
@@ -48,10 +51,10 @@ export const FAB = cn(
 )
 
 const DRAFT_COUNT_BADGE_BASE = cn(
-  'z-10 flex h-6 min-w-[1.35rem] items-center justify-center rounded-full px-1',
-  'border border-outline-variant bg-surface-container-highest text-label-sm font-bold tabular-nums text-primary',
+  'z-10 flex size-6 min-w-6 shrink-0 items-center justify-center rounded-full p-0',
+  'border border-tertiary/55 bg-tertiary-container/30 text-[11px] font-bold leading-none tabular-nums text-tertiary',
   'ring-2 ring-background shadow-md',
-  'transition-colors hover:bg-surface-container disabled:opacity-40',
+  'transition-colors hover:bg-tertiary-container/45 disabled:opacity-40',
 )
 
 export const TASK_META_CHIP = cn(
@@ -98,7 +101,9 @@ export const PLANNER_NAV_BTN = cn(
   'transition-colors hover:bg-surface-container active:scale-95 disabled:opacity-40',
 )
 
-export const MOTIVATOR_INPUT = 'motivator-input w-full text-body-sm disabled:opacity-40'
+export const MOTIVATOR_INPUT = cn(
+  'motivator-input w-full min-h-[2.5rem] px-3 py-2 text-body-sm disabled:opacity-40',
+)
 
 export const SETTINGS_BTN_SECONDARY = cn(
   'rounded-lg border border-surface-variant bg-surface-container-high px-3 py-2',
@@ -176,7 +181,7 @@ export const FIELDSET_LEGEND = 'px-1 text-label-sm text-on-surface-variant'
 export const FILTER_PANEL = cn(
   'rounded-card border border-surface-variant bg-surface-container-low shadow-inner',
   'max-md:fixed max-md:inset-0 max-md:z-[45] max-md:flex max-md:flex-col max-md:overflow-hidden',
-  'max-md:rounded-none max-md:border-0 max-md:bg-surface-container-lowest max-md:p-0 md:p-sm',
+  'max-md:rounded-none max-md:border-0 max-md:bg-surface-container-lowest max-md:p-0 md:p-md',
 )
 
 export const DRAFT_LIST_ITEM = cn(
@@ -184,9 +189,13 @@ export const DRAFT_LIST_ITEM = cn(
   'bg-surface-container-low px-3 py-2 text-body-sm',
 )
 
-export const CHECKBOX_INPUT = cn(
-  'h-3.5 w-3.5 shrink-0 rounded border-outline-variant bg-surface-container-low text-primary',
-)
+export const CHECKBOX_INPUT = cn('motivator-checkbox h-3.5 w-3.5 shrink-0')
+
+/** Main completion toggle on task cards — 44px touch target wraps the control. */
+export const TASK_CHECKBOX_MAIN = cn('motivator-checkbox h-6 w-6 shrink-0 md:h-5 md:w-5')
+
+/** Checklist row toggle on task cards. */
+export const TASK_CHECKBOX_CHECKLIST = cn('motivator-checkbox h-4 w-4 shrink-0')
 
 export const PLANNER_SECTION_HEAD = cn(
   'mb-3 text-label-sm font-semibold uppercase text-on-surface-variant',
@@ -233,7 +242,7 @@ export const AUTH_GLASS_CARD = cn(
 
 export const MODAL_SHELL_WIDE = cn(
   MODAL_SHELL,
-  'max-w-[800px] md:max-h-[min(88vh,900px)] md:flex-row',
+  'max-w-[min(100vw-1.5rem,800px)] md:max-w-4xl lg:max-w-5xl md:max-h-[min(88vh,900px)] md:flex-row',
 )
 
 export const ROADMAP_ACCENT_SHIPPED = 'text-primary/90'
@@ -251,10 +260,13 @@ export const ROADMAP_DETAILS_SUMMARY = cn(
 )
 
 /** Overlay on «Создать задачу» (desktop / week-month toolbar). */
-export const DRAFT_COUNT_BADGE = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-1 -top-1')
+export const DRAFT_COUNT_BADGE = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-2 -top-2')
 
 /** Overlay on mobile create FAB — ring-offset от primary-круга. */
-export const DRAFT_COUNT_BADGE_ON_FAB = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-1 -top-1')
+export const DRAFT_COUNT_BADGE_ON_FAB = cn(
+  DRAFT_COUNT_BADGE_BASE,
+  'absolute -right-1.5 -top-1.5 ring-2 ring-primary',
+)
 
 export const DC_PENDING_SHELL = cn(
   'animate-dc-pending border-primary/40 bg-surface-container ring-1 ring-primary/25',

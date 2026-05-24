@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   DOUBLE_CONFIRM_DEFAULT_GRACE_MIN,
@@ -57,6 +57,7 @@ import {
   weekdayToggle,
 } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
@@ -147,6 +148,8 @@ export function TaskEditModal({
   todayLocalDateKey,
 }: Props) {
   const { t } = useTranslation()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useDialogFocusTrap(true, dialogRef)
   /** Портал в body + lock scroll: без этого на iOS/WebKit касания часто уходят на скроллящийся «планировщик» под модалкой. */
   useEffect(() => {
     const prevOverflow = document.body.style.overflow
@@ -501,18 +504,24 @@ export function TaskEditModal({
   return createPortal(
     <div
       className="fixed inset-0 z-[80] flex min-h-dvh w-full items-end justify-center bg-black/60 p-4 sm:items-center"
-      role="dialog"
-      aria-modal
+      role="presentation"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className={MODAL_SHELL}>
+      <div
+        ref={dialogRef}
+        className={MODAL_SHELL}
+        role="dialog"
+        aria-modal
+        aria-labelledby="task-edit-modal-title"
+      >
         <div className={MODAL_HEADER}>
-          <h2 className={MODAL_TITLE}>{t('app.editTask')}</h2>
+          <h2 id="task-edit-modal-title" className={MODAL_TITLE}>{t('app.editTask')}</h2>
           <button
             type="button"
             className={MODAL_CLOSE_BTN}
+            aria-label={t('common.close')}
             onClick={onClose}
           >
             ✕

@@ -19,13 +19,9 @@ export function SettingsLegalSection() {
       <Link className={LINK_CLASS} to={legalDocHref('personalData')}>
         {t('legal.personalDataLink')}
       </Link>
-      {feedback ? (
-        <a className={LINK_CLASS} href={feedback} target="_blank" rel="noopener noreferrer">
-          {t('legal.feedbackLink')}
-        </a>
-      ) : (
-        <p className="text-xs text-on-surface-variant">{t('legal.feedbackUnavailable')}</p>
-      )}
+      <a className={LINK_CLASS} href={feedback} target="_blank" rel="noopener noreferrer">
+        {t('legal.feedbackLink')}
+      </a>
     </div>
   )
 }

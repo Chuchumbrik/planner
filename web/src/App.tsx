@@ -13,7 +13,6 @@ import { LegalDocumentPage } from '@/pages/LegalDocumentPage'
 import { AdminDashboardPrototypePage } from '@/pages/prototypes/AdminDashboardPrototypePage'
 import { AiInsightsPrototypePage } from '@/pages/prototypes/AiInsightsPrototypePage'
 import { DeepFocusPrototypePage } from '@/pages/prototypes/DeepFocusPrototypePage'
-import { SecurityLogPrototypePage } from '@/pages/prototypes/SecurityLogPrototypePage'
 import { RequireTesterPreview } from '@/components/auth/RequireTesterPreview'
 import { CookieConsentGate } from '@/components/CookieConsentGate'
 
@@ -103,15 +102,7 @@ export function App() {
         />
         <Route
           path="/prototype/security-log"
-          element={
-            session ? (
-              <RequireTesterPreview>
-                <SecurityLogPrototypePage />
-              </RequireTesterPreview>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
+          element={<Navigate to="/settings#security-log" replace />}
         />
         <Route
           path="/prototype/admin-dashboard"

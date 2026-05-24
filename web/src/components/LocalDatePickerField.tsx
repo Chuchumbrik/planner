@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MOTIVATOR_INPUT } from '@/lib/designClasses'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 import { localDateKey, monthLabel, monthWeekMatrix, parseLocalDateKey } from '@motivator/core'
 
 function formatDateShort(dateKey: string, locale: string): string {
@@ -44,7 +45,10 @@ export function LocalDatePickerField({
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const [panelPos, setPanelPos] = useState({ top: 0, left: 0, width: 280 })
+
+  useDialogFocusTrap(open, panelRef)
 
   const now = new Date()
   const [viewY, setViewY] = useState(now.getFullYear())
@@ -170,8 +174,10 @@ export function LocalDatePickerField({
 
       {open ? (
         <div
+          ref={panelRef}
           role="dialog"
           aria-modal="true"
+          aria-label={monthLabel(viewY, viewM, locale)}
           className="fixed z-[100] rounded-xl border border-surface-variant bg-surface-container-lowest p-3 shadow-2xl ring-1 ring-black/50"
           style={{
             top: panelPos.top,

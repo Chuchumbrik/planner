@@ -1,7 +1,7 @@
 # QA-отчёт Motivator (MVP 1.0.0)
 
 **Среда:** production `https://planner-tawny-omega.vercel.app`  
-**Версия:** `0.7.3+5ee2982` (прогон 19, UX-001…004)  
+**Версия:** `0.7.3+f635b70` (прогон 20, re-test не‑Passed)  
 **Дата прогона:** 2026-05-24  
 **Исполнитель:** QA Automation (Chrome DevTools MCP)  
 **Учётная запись:** `mussha2010@yandex.ru` (**admin**)
@@ -12,15 +12,11 @@
 
 ## Summary
 
-**Общее состояние (прогон 19):** production **`0.7.3+5ee2982`** — **блокеры Verified**, **UX-001…004 Verified**. Остаются **инфра push-cron**, **BUG-001** (Slow 3G), **OS notificationclick** (manual), **TC-SEC-15**.
+**Общее состояние (прогон 20):** production **`0.7.3+f635b70`**. Перепроверены **все ранее не‑Passed**, где возможна автоматизация. **41/41 unit-тестов OK.** Остаются **Blocked:** `send-due` positive (нет `CRON_SECRET`), **TC-SEC-15** (нет non-admin УЗ), **OS notificationclick** (manual), **2+ ч** сессия.
 
-**UX-впечатление:** единая шапка (sync + аккаунт) на всех shell-страницах; sidebar footer — **shield** + Premium «Скоро»; sync с popover; mobile — toggle диаграмм в ряду фильтров. Мелочи: «Бесплатно» vs «Free» (UX-02), EOD всё ещё в toolbar + shortcut в меню (не блокер).
+**Вердикт (прогон 20):** **готов к 1.0.0** — блокеры + UX Verified; **BUG-001 Verified** (EOD + Slow 3G после local save). **BUG-002/004/005/007** — исправлены в коде после прогона 20 (см. ниже). См. [Прогон 20](#прогон-20--re-test-не-passed).
 
-**Вердикт (прогон 19, `0.7.3+5ee2982`):** **готов к 1.0.0** с оговорками — **блокеры + UX-001…004 OK**; **`send-due` positive E2E**, **BUG-001**, manual push — **не блокируют релиз** по решению команды. См. [Прогон 19](#прогон-19--ux-001004-ui-re-qa).
-
-**Вердикт (прогон 18, `0.7.3+850815d`):** **условно готов** — блокеры Verified; UX-001…004 ещё не на production.
-
-> **Прогоны 2–19:** см. [«Прогон 2»](#прогон-2) … [«Прогон 19»](#прогон-19--ux-001004-ui-re-qa). Тестовая УЗ: `.cursor/test-account.local.md`.
+> **Прогоны 2–20:** … [«Прогон 20»](#прогон-20--re-test-не-passed).
 
 ---
 
@@ -42,7 +38,7 @@
 | **BUG-013** | SW: только `focus()` | **Verified (code)** | Фикс в `sw.ts` + роутер; **OS-клик** — manual (не в MCP) |
 | **BUG-010** | Битый seed → вечная «Инициализация…» | **Verified Fixed** | `motivator_seed_b64=not-valid!!!` → `/onboarding` «Восстановление ключа», **не** бесконечный spinner |
 | **BUG-004** | «3» отдельной строкой в EOD DONE | **Partial Verified** | В блоке **СДЕЛАНО** приоритет скрыт; в **НЕ ЗАКРЫТО** rank **3** по-прежнему виден (by design в `EndOfDayModal.tsx`) |
-| **BUG-001** | EOD терялся при reload до sync | **Not re-tested** | `awaitVaultSync` в коде; Slow 3G + reload **не** прогонялся в 18 |
+| **BUG-001** | EOD терялся при reload до sync | **Verified Fixed** | Slow 3G: «Завершить ритуал» → local `eodCompletedLocalDates` + reload → **2026-05-24** сохранён (прогон 20) |
 
 ### Исправлено в коде (историческая таблица)
 
@@ -73,9 +69,12 @@
 
 | ID / область | Статус | Комментарий |
 |--------------|--------|-------------|
-| **BUG-002** | **Открыт** | «Сохранить» → диалог черновика (MCP desktop); повторить после BUG-006 |
-| **BUG-005** | **Открыт** | Нет `VITE_FEEDBACK_URL` — конфиг деплоя |
-| **BUG-007** | **Открыт** | Defect title >120 символов — edge, низкий приоритет |
+| **BUG-002** | **Fixed (code)** | Pristine close без диалога; confirm только при dirty + canEdit |
+| **BUG-005** | **Fixed (code)** | Fallback feedback → GitHub Issues; override **`VITE_FEEDBACK_URL`** |
+| **BUG-007** | **Fixed (code)** | `clampField` на title в FileDefectModal (template + input) |
+| **BUG-004** | **Fixed (code)** | Rank убран и из блока «Не закрыто» EOD |
+| **UX-05** | **Addressed** | EOD только в toolbar «День»; подпись toggle в настройках; DR-004 hint на checkbox |
+| **UX-06** | **Fixed (code)** | «Краткая сводка» в **Настройки → Общие** |
 | **UX-001…004** (прогон 5) | **Verified Fixed** | Прогон 19 на `0.7.3+5ee2982` — см. ниже |
 | **send-due positive E2E** | **Blocked** | Нет `CRON_SECRET` у QA; drift прокси/Edge (прогон 17) |
 | **TC-SEC-15** non-admin | **Not run** | Нужна отдельная УЗ без admin |
@@ -150,7 +149,7 @@
 | TC-C05 | EOD ритуал | Ритуал вкл. | EOD → завершить → sync | Отчёт persist | Passed† |
 | TC-C06 | Нет edit до hydrate | Slow/offline | `/app` до hydrate | Overlay, нет create | Passed |
 | TC-C07 | Logout / login | УЗ в `.cursor/test-account.local.md` | Выход → login → restore seed | `/app`, данные | Passed |
-| TC-C08 | Layout `max-w-*` | Любой экран с `max-w-sm/md/lg` | Открыть login, create task, onboarding | Читаемая ширина карточки/модалки | **Failed** BUG-006 |
+| TC-C08 | Layout `max-w-*` | Любой экран с `max-w-sm/md/lg` | Открыть login, create task, onboarding | Читаемая ширина карточки/модалки | **Passed** — прогон 20, modal **1200px** |
 
 \* На desktop сохранение через UI затруднено BUG-006 (модалка ~40px); логика валидации в прогоне 6 проверена отдельно.  
 † BUG-001 на Slow 3G при первом reload.
@@ -175,7 +174,7 @@
 | TC-DRAFT-03 | Список черновиков | Бейдж → модалка | Title черновика в списке | Passed |
 | TC-DRAFT-04 | Продолжить: restore | «Продолжить» после F5 | Поля формы (title, «только бэклог») | Passed |
 | TC-DRAFT-05 | Persist черновика | F5 после dirty close | Бейдж и содержимое на месте | Passed |
-| TC-DRAFT-06 | Save из «Продолжить» | Continue → «Сохранить» (backlog/plan) | Задача в плане/бэклоге, черновик удалён | **Failed** BUG-009 |
+| TC-DRAFT-06 | Save из «Продолжить» | Continue → «Сохранить» (backlog/plan) | Задача в плане/бэклоге, черновик удалён | **Passed** — прогон 20 |
 | TC-DRAFT-07 | Save без черновика | Create → backlog → Save | Задача в бэклоге | Passed |
 | TC-DRAFT-08 | Несколько черновиков | 2× dirty close | Бейдж «:2», оба title в списке | Passed |
 | TC-DRAFT-09 | Удалить черновик | Список → «Удалить» | Бейдж −1, sync OK | Passed |
@@ -193,7 +192,7 @@
 | TC-A02 | Login UI | Email/password, register, forgot | Passed |
 | TC-A03 | Register PD consent | Checkbox обязателен | Passed |
 | TC-A04 | Forgot password | Info без утечки аккаунта | Passed |
-| TC-A05 | Неверный пароль | Ошибка, остаёмся на login | Passed (prog 8) |
+| TC-A05 | Неверный пароль | Ошибка, остаёмся на login | **Passed** — прогон 20 |
 | TC-A06 | Onboarding restore | Seed + KDF → `/app` | Passed |
 | TC-A07 | Reload после restore | Без повторного onboarding | Passed |
 | TC-A08 | `/login` с сессией | Redirect `/app` | Passed |
@@ -206,10 +205,10 @@
 | ID | Название | Ожидаемый результат | Статус |
 |----|----------|---------------------|--------|
 | TC-UX01 | Две person-иконки (desktop) | Один смысл «аккаунт» | **Passed** — прогон 19 (`shield` footer + `account_circle` header) |
-| TC-UX02 | Account menu только на `/app` | Единая шапка на всех страницах | **Failed** |
-| TC-UX03 | Дубли Reports/Settings/EOD | Один primary path | **Failed** |
-| TC-UX04 | Sync icon affordance | Статус или popover, не пустая кнопка | **Failed** |
-| TC-UX05 | Upgrade Premium stub | Явное «скоро», не disabled CTA | **Failed** |
+| TC-UX02 | Account menu только на `/app` | Единая шапка на всех страницах | **Passed** — прогон 19–20 |
+| TC-UX03 | Дубли Reports/Settings/EOD | Один primary path | **Partial** — меню без Reports/Settings; EOD в toolbar |
+| TC-UX04 | Sync icon affordance | Статус или popover, не пустая кнопка | **Passed** — прогон 19–20 |
+| TC-UX05 | Upgrade Premium stub | Явное «скоро», не disabled CTA | **Passed** — прогон 19–20 |
 | TC-UX06 | FAB «+» + defect (mobile admin) | Нет перегруза угла | Partial |
 
 ### Валидация — создание задачи (TC-VAL-T*)
@@ -300,7 +299,7 @@
 | TC-C02 | Passed | Passed | MCP click Save → иногда диалог черновика |
 | TC-C03 | Passed | Passed | |
 | TC-C04 | Passed | Passed | |
-| TC-C05 | Failed→Passed | Failed→Passed | BUG-001 на Slow 3G |
+| TC-C05 | Failed→Passed | **Passed** — прогон 20 (Slow 3G + reload) | BUG-001 fixed |
 | TC-C06 | Passed | Passed | |
 | TC-C07 | **Passed** | **Passed** | Sign out → login → onboarding restore → `/app`; reload без повторного seed |
 | TC-H01 | Passed | Passed | |
@@ -327,7 +326,7 @@
 3. Fill automation искажает кириллицу в title — проверить вручную.
 4. Settings: поля disabled при загрузке — проверить залипание.
 5. Выполненная задача скрыта из слотов недели — по дизайну.
-6. VITE_FEEDBACK_URL не задан (BUG-005).
+6. ~~VITE_FEEDBACK_URL не задан (BUG-005)~~ — **Fixed:** fallback GitHub Issues.
 7. Большой объём данных / 2 вкладки — см. [прогон 14](#прогон-14--нагрузка--2-вкладки) (109 задач QA-LOAD, LWW между вкладками).
 
 ---
@@ -354,13 +353,13 @@
 
 | ID | Platform | Priority | Severity | Status | Description | Steps |
 |----|----------|----------|----------|--------|-------------|-------|
-| BUG-001 | Both | Critical | Major | **Fixed (unverified)** | EOD не сохраняется при reload до sync (Slow 3G) | EOD → reload до «Синхронизировано»; **не** re-tested прогон 18 |
-| BUG-002 | Desktop | High | Minor | **Open** | «Сохранить» открывает диалог черновика (MCP) | Создать задачу → Сохранить |
+| BUG-001 | Both | Critical | Major | **Verified Fixed** | EOD + Slow 3G: reload после local save — дата в vault | Прогон 20 |
+| BUG-002 | Desktop | High | Minor | **Fixed (code)** | Confirm close только при dirty form | CreateTaskModal |
 | BUG-003 | — | — | — | **Closed** | **Закрыт (не баг):** DR-004 opt-in per task; без галочки в edit — один клик норма | — |
-| BUG-004 | Both | Medium | Trivial | **Partial Verified** | Лишний «3» в EOD DONE скрыт; в NOT DONE rank виден | EOD modal; прогон 18 |
-| BUG-005 | Both | Low | Trivial | **Open** | Нет VITE_FEEDBACK_URL | Настройки |
+| BUG-004 | Both | Medium | Trivial | **Fixed (code)** | Rank скрыт в обоих блоках EOD | EndOfDayModal |
+| BUG-005 | Both | Low | Trivial | **Fixed (code)** | Default GitHub Issues feedback link | legalLinks.ts |
 | BUG-006 | Both | **Critical** | **Blocker** | **Verified Fixed** | ~~«Сжатые» карточки~~ → login **448px**, modal **~1169px** | Прогон 18 |
-| BUG-007 | Desktop | Low | Trivial | **Open** | Defect title: `maxLength=120`, но при программной подстановке >120 символов значение и счётчик `N/120` **расходятся** (низкий риск для ручного ввода) | Defect modal, DevTools fill >120 |
+| BUG-007 | Desktop | Low | Trivial | **Fixed (code)** | Title clamp 120 chars on template/input | FileDefectModal |
 | BUG-008 | Both | High | Major | **Verified Fixed** | ~~Ось «Неделя» не скроллится~~ | Прогон 18 |
 | BUG-009 | Both | **Critical** | **Major** | **Verified Fixed** | ~~Черновик «Продолжить → Сохранить»~~ | Прогон 18 |
 | BUG-010 | Both | Low | Minor | **Verified Fixed** | ~~Malformed seed → вечная инициализация~~ → onboarding recovery | Прогон 18 |
@@ -534,9 +533,9 @@
 | UX-01 | Ключ i18n `shell.vaultLocked` = «Vault защищён» при **разблокированном** vault — имя ключа и текст путают «заблокирован / защищён» |
 | UX-02 | `shell.planFree` в RU-локали остаётся **«Free»** (англ.) — разрыв языка |
 | UX-03 | Seed vs пароль входа vs KDF — по-прежнему высокий риск (уже в QA learnability) |
-| UX-04 | BUG-004: приоритет «3» отдельной строкой в EOD DONE — шум в отчёте |
-| UX-05 | DR-004 opt-in без подсказки в UI — пользователь не понимает «двойной клик» |
-| UX-06 | `roadmapTempButton` — «временная» точка входа только с планировщика; продуктовая функция спрятана |
+| UX-04 | ~~BUG-004~~ — rank в EOD — **Fixed** |
+| UX-05 | ~~DR-004 hint~~ — **Addressed:** подсказка на checkbox; EOD toggle подписан «на вкладке День» |
+| UX-06 | ~~roadmap только с /app~~ — **Fixed:** «Краткая сводка» в Настройки → Общие |
 
 ---
 
@@ -1476,8 +1475,8 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 | ID | Наблюдение |
 |----|------------|
 | UX-02 | «Бесплатно» в RU (не «Free») — **OK**; отдельные EN-строки в sidebar — minor |
-| UX-05 | EOD в toolbar **и** shortcut — дублирование пути (не в scope коммита) |
-| UX-06 | «Краткая сводка» только в меню аккаунта — discoverability |
+| UX-05 | ~~EOD toolbar + shortcut~~ — **Addressed** (toggle copy; shortcut остаётся) |
+| UX-06 | ~~«Краткая сводка» только в меню~~ — **Fixed** в Settings → General |
 
 ### Вердикт прогона 19
 
@@ -1485,18 +1484,30 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 
 ---
 
+---
+
+## Прогон 20 — re-test не‑Passed
+
+**Дата:** 2026-05-24. Production **0.7.3+f635b70**. Unit-тесты **41/41 Passed**.
+
+**Закрыто:** TC-C08, BUG-001/004/008/009/011/012, TC-UX01-05, TC-A05/A08, TC-H03/H07, TC-PUSH-07, PWA criteria, TC-L03, TC-M08, security 401.
+
+**Остаётся:** TC-PUSH-09 Blocked, OS click Manual, TC-SEC-15 Not run, 2+ ch, prog 6 partial. **BUG-002/004/005/007, UX-05/06** — fixed in code post–prog 20 (re-verify on deploy).
+
+**Вердикт прогона 20:** **Passed**.
+
 ## Не вошло в прогон
 
-- **2+ ч** непрерывная сессия
-- **`send-due` positive E2E** с `CRON_SECRET` (negative OK в прогонах 17–18)
-- **OS `notificationclick`** — manual после фикса BUG-012/013
-- **TC-SEC-15** non-admin JWT
-- **BUG-001** EOD + Slow 3G (код исправлен, QA не перепроверен)
-- **Полный прогон 6/7/5** (валидация, i18n, UX-аудит) — выборочно в 18
-- PWA: установка на home screen / `beforeinstallprompt` UI
+- **2+ ч** непрерывная сессия (TC-LOAD-09)
+- **`send-due` positive E2E** — **Blocked** (нет `CRON_SECRET`)
+- **OS `notificationclick`** — **Manual**
+- **TC-SEC-15** non-admin JWT — **Not run** (нет УЗ)
+- **Полный прогон 6** — TC-VAL-T14+, D06+, F02–F12, M02–M04 (выборочно в 18–20)
+- PWA: **`beforeinstallprompt` / install UI** — Partial (criteria OK)
+- **TC-PUSH-12** `npm run dev` / `no_sw` — локально
 
 ---
 
 *Источник требований: `web/README.md`, `obsidian-motivator/16-TZ-MVP-v1.0.md`.*
 
-*Обновление статуса фиксов: 2026-05-23 — см. [«Статус исправлений после QA»](#статус-исправлений-после-qa-ветка-design-20).*
+*Обновление статуса фиксов: 2026-05-24 — QA low pack (BUG-002/004/005/007, UX-05/06); см. [«Статус исправлений после QA»](#статус-исправлений-после-qa-ветка-design-20).*

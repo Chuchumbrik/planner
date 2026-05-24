@@ -16,6 +16,9 @@ type DayPlannerStatsRowProps = {
   eodClosedForDay: boolean
   selectedDay: string
   todayKey: string
+  onEodClick?: () => void
+  eodClickDisabled?: boolean
+  eodActionLabel?: string
 }
 
 function StatTile({
@@ -24,15 +27,27 @@ function StatTile({
   label,
   value,
   sub,
+  onClick,
+  actionLabel,
+  disabled,
 }: {
   icon: string
   iconClass?: string
   label: string
   value: string
   sub?: string
+  onClick?: () => void
+  actionLabel?: string
+  disabled?: boolean
 }) {
-  return (
-    <article className={cn(STAT_CARD, 'flex min-h-[6.875rem] flex-col justify-between snap-start')}>
+  const className = cn(
+    STAT_CARD,
+    'flex min-h-[6.875rem] w-full flex-col justify-between snap-start text-left',
+    onClick &&
+      'cursor-pointer transition-colors hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-40',
+  )
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-2">
         <MaterialIcon name={icon} className={iconClass ?? 'text-primary'} size={22} />
         {sub ? <span className="text-mono-data text-primary">{sub}</span> : null}
@@ -41,8 +56,24 @@ function StatTile({
         <p className={STAT_CARD_LABEL}>{label}</p>
         <p className={cn(STAT_CARD_VALUE, 'mt-0.5 text-base')}>{value}</p>
       </div>
-    </article>
+    </>
   )
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={className}
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={actionLabel ?? label}
+      >
+        {body}
+      </button>
+    )
+  }
+
+  return <article className={className}>{body}</article>
 }
 
 export function DayPlannerStatsRow({
@@ -52,6 +83,9 @@ export function DayPlannerStatsRow({
   eodClosedForDay,
   selectedDay,
   todayKey,
+  onEodClick,
+  eodClickDisabled,
+  eodActionLabel,
 }: DayPlannerStatsRowProps) {
   const { t } = useTranslation()
 
@@ -69,6 +103,8 @@ export function DayPlannerStatsRow({
     if (selectedDay === todayKey) return t('app.dayStatsEodOpen')
     return t('app.dayStatsEodPastOpen')
   }, [eodEnabled, eodClosedForDay, selectedDay, todayKey, t])
+
+  const eodClickable = eodEnabled && selectedDay <= todayKey && Boolean(onEodClick)
 
   return (
     <section className="mb-md space-y-sm" aria-label={t('app.dayStatsAria')}>
@@ -120,6 +156,9 @@ export function DayPlannerStatsRow({
             iconClass={eodClosedForDay ? 'text-primary' : 'text-tertiary'}
             label={t('app.dayStatsEod')}
             value={eodLabel ?? '—'}
+            onClick={eodClickable ? onEodClick : undefined}
+            disabled={eodClickDisabled}
+            actionLabel={eodActionLabel}
           />
         ) : (
           <StatTile

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   groupIdeasLaterForDisplay,
@@ -20,6 +20,7 @@ import {
   ROADMAP_DETAILS_SUMMARY,
 } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 
 function pickLocale(s: LocalizedString, lang: string): string {
   return lang === 'en' ? s.en : s.ru
@@ -221,6 +222,8 @@ function IdeaRow({ idea, lang }: { idea: RoadmapIdeaEntry; lang: string }) {
 
 export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps) {
   const { t, i18n } = useTranslation()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useDialogFocusTrap(open, dialogRef)
   const lang = i18n.language === 'en' ? 'en' : 'ru'
 
   const { mvpPct, phasesShipped, phasesTotal } = useMemo(() => {
@@ -257,6 +260,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal
         aria-labelledby="roadmap-modal-title"
@@ -418,7 +422,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80">
               <span>
                 {t('settings.roadmapIdeas')}{' '}
-                <span className="font-normal tabular-nums text-on-surface-variant/70">
+                <span className="font-normal tabular-nums text-on-surface-variant">
                   ({t('settings.roadmapIdeasCount', { count: ideasLaterTotal })})
                 </span>
               </span>

@@ -13,6 +13,7 @@ export function CookieConsentBanner({ onResolved }: Props) {
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-labelledby="cookie-consent-title"
       className="fixed inset-x-0 bottom-0 z-50 border-t border-surface-variant bg-surface-container-lowest/95 px-4 py-4 shadow-lg backdrop-blur-sm sm:px-6 pb-[max(1rem,env(safe-area-inset-bottom))]"
     >

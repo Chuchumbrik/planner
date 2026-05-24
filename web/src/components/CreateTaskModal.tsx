@@ -20,6 +20,7 @@ import {
   weekdayToggle,
 } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
 import {
@@ -248,8 +249,13 @@ export function CreateTaskModal({
   const timeRef = useRef<HTMLDivElement>(null)
   const recurrenceRef = useRef<HTMLFieldSetElement>(null)
   const additionalSettingsRef = useRef<HTMLDetailsElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeConfirmRef = useRef<HTMLDivElement>(null)
 
   const sortedGroups = useMemo(() => [...groups].sort((a, b) => a.sortOrder - b.sortOrder), [groups])
+
+  useDialogFocusTrap(open && !closeConfirmOpen, dialogRef)
+  useDialogFocusTrap(closeConfirmOpen, closeConfirmRef)
 
   useEffect(() => {
     if (!open) {
@@ -471,8 +477,12 @@ export function CreateTaskModal({
       onClose()
       return
     }
+    if (!isDirty || !canEdit) {
+      onClose()
+      return
+    }
     setCloseConfirmOpen(true)
-  }, [onClose])
+  }, [onClose, isDirty, canEdit])
 
   const finalizeDismissWithoutSave = useCallback(async () => {
     setCloseConfirmOpen(false)
@@ -553,19 +563,25 @@ export function CreateTaskModal({
     <>
       <div
         className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 sm:items-center"
-        role="dialog"
-        aria-modal
+        role="presentation"
         aria-hidden={closeConfirmOpen}
         onClick={(e) => {
           if (e.target === e.currentTarget) handleAttemptClose()
         }}
       >
-      <div className={MODAL_SHELL}>
+      <div
+        ref={dialogRef}
+        className={MODAL_SHELL}
+        role="dialog"
+        aria-modal
+        aria-labelledby="create-task-modal-title"
+      >
         <div className={MODAL_HEADER}>
-          <h2 className={MODAL_TITLE}>{t('app.createTaskTitle')}</h2>
+          <h2 id="create-task-modal-title" className={MODAL_TITLE}>{t('app.createTaskTitle')}</h2>
           <button
             type="button"
             className={MODAL_CLOSE_BTN}
+            aria-label={t('common.close')}
             onClick={() => handleAttemptClose()}
           >
             ✕
@@ -966,6 +982,7 @@ export function CreateTaskModal({
           }}
         >
           <div
+            ref={closeConfirmRef}
             role="alertdialog"
             aria-modal
             aria-labelledby="create-task-close-title"

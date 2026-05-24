@@ -6,7 +6,6 @@ export type MotivatorNavId =
   | 'settings'
   | 'prototype-deep-focus'
   | 'prototype-ai-insights'
-  | 'prototype-security-log'
   | 'prototype-admin'
 
 export type ShellNavItem = {
@@ -48,16 +47,40 @@ export const SHELL_PREVIEW_NAV: ShellNavItem[] = [
     labelKey: 'prototype.nav.aiInsights',
   },
   {
-    id: 'prototype-security-log',
-    to: '/prototype/security-log',
-    icon: 'shield',
-    labelKey: 'prototype.nav.securityLog',
-  },
-  {
     id: 'prototype-admin',
     to: '/prototype/admin-dashboard',
     icon: 'dashboard',
     labelKey: 'prototype.nav.admin',
+  },
+]
+
+export type ShellAdminNavItem = {
+  id: 'admin-dashboard' | 'admin-users' | 'admin-roadmap'
+  to?: string
+  icon: string
+  labelKey: string
+  /** Opens ProductRoadmapModal instead of routing. */
+  action?: 'roadmap'
+}
+
+export const SHELL_ADMIN_NAV: ShellAdminNavItem[] = [
+  {
+    id: 'admin-dashboard',
+    to: '/prototype/admin-dashboard',
+    icon: 'dashboard',
+    labelKey: 'shell.adminNavDashboard',
+  },
+  {
+    id: 'admin-users',
+    to: '/settings#admin',
+    icon: 'group',
+    labelKey: 'shell.adminNavUsers',
+  },
+  {
+    id: 'admin-roadmap',
+    icon: 'map',
+    labelKey: 'settings.roadmapTempButton',
+    action: 'roadmap',
   },
 ]
 
@@ -66,7 +89,6 @@ export function shellTitleKey(navId: MotivatorNavId): string {
     const map: Record<string, string> = {
       'prototype-deep-focus': 'prototype.deepFocus.title',
       'prototype-ai-insights': 'prototype.aiInsights.title',
-      'prototype-security-log': 'prototype.securityLog.title',
       'prototype-admin': 'prototype.admin.title',
     }
     return map[navId] ?? 'shell.title.settings'
