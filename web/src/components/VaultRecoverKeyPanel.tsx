@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { SETTINGS_CARD } from '@/lib/designClasses'
 import { SeedKeyImportForm } from '@/components/SeedKeyImportForm'
 import { useVault } from '@/vault/VaultProvider'
 
@@ -21,15 +22,15 @@ export function VaultRecoverKeyPanel({ className = '', onSuccess }: Props) {
       {!open ? (
         <button
           type="button"
-          className="rounded-lg border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-sm font-medium text-emerald-200 hover:bg-emerald-900/50"
+          className="btn-secondary border-primary/40 text-primary hover:bg-primary/10"
           onClick={() => setOpen(true)}
         >
           {t('vault.recoverKeyCta')}
         </button>
       ) : (
-        <div className="rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-4">
-          <p className="text-sm font-medium text-zinc-200">{t('vault.recoverKeyTitle')}</p>
-          <p className="mt-2 text-xs text-zinc-400">{t('vault.recoverKeyHint')}</p>
+        <div className={SETTINGS_CARD}>
+          <p className="font-display text-sm font-medium text-on-surface">{t('vault.recoverKeyTitle')}</p>
+          <p className="mt-2 text-xs text-on-surface-variant">{t('vault.recoverKeyHint')}</p>
           <div className="mt-4">
             <SeedKeyImportForm
               submitLabel={t('vault.recoverKeySubmit')}
@@ -43,7 +44,7 @@ export function VaultRecoverKeyPanel({ className = '', onSuccess }: Props) {
           </div>
           <button
             type="button"
-            className="mt-3 text-xs text-zinc-500 hover:text-zinc-300"
+            className="mt-3 text-xs text-on-surface-variant hover:text-on-surface"
             onClick={() => setOpen(false)}
           >
             {t('common.cancel')}

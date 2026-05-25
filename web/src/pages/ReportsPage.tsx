@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   aggregateRecurringMisses,
@@ -10,6 +9,18 @@ import {
   topOneOffMissesInWindow,
   totalCompletionMarksInRange,
 } from '@motivator/core'
+import { MotivatorShell } from '@/components/layout/MotivatorShell'
+import {
+  ALERT_WARNING_MUTED,
+  ALERT_WARNING_BODY,
+  ALERT_WARNING_TITLE,
+  SETTINGS_CARD,
+  SETTINGS_SUBHEAD,
+  SCROLLBAR_SLIDER_H,
+  STAT_KPI_VALUE,
+  VIEW_TABLIST,
+  viewTab,
+} from '@/lib/designClasses'
 import { ReportHint } from '@/components/ReportHint'
 import { RequireVault } from '@/components/RequireVault'
 import { useVault } from '@/vault/VaultProvider'
@@ -63,37 +74,29 @@ function ReportsPageInner() {
   const pct = Math.round(analytics.rate.ratio * 100)
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 py-8">
-      <header className="mb-6">
-        <Link to="/app" className="text-sm text-emerald-400 hover:text-emerald-300">
-          {t('reports.backToPlanner')}
-        </Link>
-        <h1 className="mt-3 text-xl font-semibold text-white">{t('reports.title')}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">{t('reports.subtitle')}</p>
-      </header>
+    <MotivatorShell activeNav="reports" wide>
+      <p className="mb-6 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
+        {t('reports.subtitle')}
+      </p>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex rounded-lg border border-zinc-700 bg-zinc-900/50 p-0.5">
+        <div className={VIEW_TABLIST}>
           <button
             type="button"
-            className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-              periodDays === 7 ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-zinc-200'
-            }`}
+            className={viewTab(periodDays === 7)}
             onClick={() => setPeriodDays(7)}
           >
             {t('reports.period7')}
           </button>
           <button
             type="button"
-            className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-              periodDays === 30 ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-zinc-200'
-            }`}
+            className={viewTab(periodDays === 30)}
             onClick={() => setPeriodDays(30)}
           >
             {t('reports.period30')}
           </button>
         </div>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-on-surface-variant">
           {t('reports.windowHint', {
             from: formatDayLabel(analytics.fromKey, locale),
             to: formatDayLabel(analytics.toKey, locale),
@@ -102,64 +105,66 @@ function ReportsPageInner() {
       </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <div className={SETTINGS_CARD}>
           <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 flex-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            <p className={`min-w-0 flex-1 ${SETTINGS_SUBHEAD} mt-0`}>
               {t('reports.kpiStreak')}
             </p>
             <ReportHint label={t('reports.hintKpiStreak')} />
           </div>
-          <p className="mt-1 text-2xl font-semibold text-emerald-400">{analytics.streak}</p>
-          <p className="mt-2 text-[11px] leading-snug text-zinc-500">{t('reports.kpiStreakHint')}</p>
+          <p className={`mt-1 ${STAT_KPI_VALUE}`}>{analytics.streak}</p>
+          <p className="mt-2 text-[11px] leading-snug text-on-surface-variant">{t('reports.kpiStreakHint')}</p>
         </div>
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <div className={SETTINGS_CARD}>
           <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 flex-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            <p className={`min-w-0 flex-1 ${SETTINGS_SUBHEAD} mt-0`}>
               {t('reports.kpiCompletionRate')}
             </p>
             <ReportHint label={t('reports.hintKpiCompletionRate')} />
           </div>
-          <p className="mt-1 text-2xl font-semibold text-cyan-400/95">
+          <p className={`mt-1 ${STAT_KPI_VALUE}`}>
             {t('reports.kpiCompletionRateValue', { pct })}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-on-surface-variant">
             {analytics.rate.daysWithCompletion}/{analytics.rate.totalDays}
           </p>
         </div>
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <div className={SETTINGS_CARD}>
           <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 flex-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            <p className={`min-w-0 flex-1 ${SETTINGS_SUBHEAD} mt-0`}>
               {t('reports.kpiTotalMarks')}
             </p>
             <ReportHint label={t('reports.hintKpiTotalMarks')} />
           </div>
-          <p className="mt-1 text-2xl font-semibold text-zinc-100">{analytics.totalMarks}</p>
+          <p className="mt-1 font-display text-2xl font-semibold text-on-surface">{analytics.totalMarks}</p>
         </div>
       </div>
 
-      <section className="mb-8 rounded-lg border border-zinc-800 bg-zinc-950/60 p-4">
+      <section className={`${SETTINGS_CARD} mb-8`}>
         <div className="flex items-start gap-2">
-          <h2 className="min-w-0 flex-1 text-sm font-semibold text-zinc-200">{t('reports.chartTitle')}</h2>
+          <h2 className="min-w-0 flex-1 font-display text-sm font-semibold text-on-surface">
+            {t('reports.chartTitle')}
+          </h2>
           <ReportHint label={t('reports.hintChartDaily')} />
         </div>
         {analytics.buckets.every((b) => b.count === 0) ? (
-          <p className="mt-4 text-sm text-zinc-500">{t('reports.chartEmpty')}</p>
+          <p className="mt-4 text-sm text-on-surface-variant">{t('reports.chartEmpty')}</p>
         ) : (
-          <div className="mt-4 flex h-40 items-end gap-1 overflow-x-auto pb-2 pt-2">
+          <div className={`mt-4 flex h-40 items-end gap-1 overflow-x-auto pb-3 pt-2 ${SCROLLBAR_SLIDER_H}`}>
             {analytics.buckets.map((b) => (
               <div
                 key={b.dateKey}
                 className="flex min-w-[2rem] flex-1 flex-col items-center justify-end gap-1"
               >
                 <div
-                  className="w-full max-w-[3rem] rounded-t bg-emerald-600/85"
+                  className="w-full max-w-[3rem] rounded-t bg-primary/85"
                   style={{
                     height: `${Math.max(6, (b.count / analytics.maxBar) * 100)}%`,
                     minHeight: b.count > 0 ? '12px' : '4px',
                   }}
                   title={`${b.dateKey}: ${b.count}`}
                 />
-                <span className="max-w-full truncate text-[10px] text-zinc-500">
+                <span className="max-w-full truncate font-mono text-[10px] text-on-surface-variant">
                   {b.dateKey.slice(5)}
                 </span>
               </div>
@@ -168,24 +173,24 @@ function ReportsPageInner() {
         )}
       </section>
 
-      <section className="mb-8 rounded-lg border border-amber-900/35 bg-amber-950/15 p-4">
-        <h2 className="text-sm font-semibold text-amber-200/90">{t('reports.dr013Title')}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-amber-100/70">{t('reports.dr013Body')}</p>
+      <section className={`${ALERT_WARNING_MUTED} mb-8`}>
+        <h2 className={ALERT_WARNING_TITLE}>{t('reports.dr013Title')}</h2>
+        <p className={`mt-2 ${ALERT_WARNING_BODY}`}>{t('reports.dr013Body')}</p>
       </section>
 
       <section className="mb-6">
         <div className="mb-3 flex items-start gap-2">
-          <h2 className="min-w-0 flex-1 text-sm font-semibold text-zinc-200">
+          <h2 className="min-w-0 flex-1 font-display text-sm font-semibold text-on-surface">
             {t('reports.failedRecurringTitle')}
           </h2>
           <ReportHint label={t('reports.hintFailedRecurring')} />
         </div>
         {analytics.recurringFails.length === 0 ? (
-          <p className="text-sm text-zinc-500">{t('reports.emptyFailed')}</p>
+          <p className="text-sm text-on-surface-variant">{t('reports.emptyFailed')}</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-zinc-800">
+          <div className={`motivator-card overflow-x-auto p-0 ${SCROLLBAR_SLIDER_H}`}>
             <table className="w-full min-w-[28rem] text-left text-sm">
-              <thead className="border-b border-zinc-800 bg-zinc-900/60 text-xs uppercase tracking-wide text-zinc-500">
+              <thead className="border-b border-surface-variant bg-surface-container-low font-display text-xs uppercase tracking-wide text-on-surface-variant">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t('reports.colTask')}</th>
                   <th className="px-3 py-2 font-medium">{t('reports.colMisses')}</th>
@@ -193,11 +198,11 @@ function ReportsPageInner() {
               </thead>
               <tbody>
                 {analytics.recurringFails.map((row) => (
-                  <tr key={row.seriesId} className="border-b border-zinc-800/80 last:border-0">
-                    <td className="max-w-[18rem] truncate px-3 py-2 text-zinc-200">
+                  <tr key={row.seriesId} className="border-b border-surface-variant/80 last:border-0">
+                    <td className="max-w-[18rem] truncate px-3 py-2 text-on-surface">
                       {row.task.title.trim() || '—'}
                     </td>
-                    <td className="px-3 py-2 text-zinc-300">{row.missedCount}</td>
+                    <td className="px-3 py-2 text-on-surface-variant">{row.missedCount}</td>
                   </tr>
                 ))}
               </tbody>
@@ -208,17 +213,17 @@ function ReportsPageInner() {
 
       <section className="mb-8">
         <div className="mb-3 flex items-start gap-2">
-          <h2 className="min-w-0 flex-1 text-sm font-semibold text-zinc-200">
+          <h2 className="min-w-0 flex-1 font-display text-sm font-semibold text-on-surface">
             {t('reports.failedOneOffTitle')}
           </h2>
           <ReportHint label={t('reports.hintFailedOneOff')} />
         </div>
         {analytics.oneOffFails.length === 0 ? (
-          <p className="text-sm text-zinc-500">{t('reports.emptyFailed')}</p>
+          <p className="text-sm text-on-surface-variant">{t('reports.emptyFailed')}</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-zinc-800">
+          <div className={`motivator-card overflow-x-auto p-0 ${SCROLLBAR_SLIDER_H}`}>
             <table className="w-full min-w-[28rem] text-left text-sm">
-              <thead className="border-b border-zinc-800 bg-zinc-900/60 text-xs uppercase tracking-wide text-zinc-500">
+              <thead className="border-b border-surface-variant bg-surface-container-low font-display text-xs uppercase tracking-wide text-on-surface-variant">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t('reports.colTask')}</th>
                   <th className="px-3 py-2 font-medium">{t('reports.colPlannedDate')}</th>
@@ -226,11 +231,11 @@ function ReportsPageInner() {
               </thead>
               <tbody>
                 {analytics.oneOffFails.map(({ task, scheduledLocalDate }) => (
-                  <tr key={task.id} className="border-b border-zinc-800/80 last:border-0">
-                    <td className="max-w-[18rem] truncate px-3 py-2 text-zinc-200">
+                  <tr key={task.id} className="border-b border-surface-variant/80 last:border-0">
+                    <td className="max-w-[18rem] truncate px-3 py-2 text-on-surface">
                       {task.title.trim() || '—'}
                     </td>
-                    <td className="px-3 py-2 text-zinc-300">{scheduledLocalDate}</td>
+                    <td className="px-3 py-2 font-mono text-on-surface-variant">{scheduledLocalDate}</td>
                   </tr>
                 ))}
               </tbody>
@@ -238,7 +243,7 @@ function ReportsPageInner() {
           </div>
         )}
       </section>
-    </div>
+    </MotivatorShell>
   )
 }
 

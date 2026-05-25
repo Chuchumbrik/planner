@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { feedbackHref, legalDocHref } from '@/lib/legalLinks'
 
-const LINK_CLASS = 'text-emerald-400 hover:text-emerald-300'
+const LINK_CLASS = 'text-primary hover:text-primary-fixed'
 
 export function SettingsLegalSection() {
   const { t } = useTranslation()
@@ -19,13 +19,9 @@ export function SettingsLegalSection() {
       <Link className={LINK_CLASS} to={legalDocHref('personalData')}>
         {t('legal.personalDataLink')}
       </Link>
-      {feedback ? (
-        <a className={LINK_CLASS} href={feedback} target="_blank" rel="noopener noreferrer">
-          {t('legal.feedbackLink')}
-        </a>
-      ) : (
-        <p className="text-xs text-zinc-500">{t('legal.feedbackUnavailable')}</p>
-      )}
+      <a className={LINK_CLASS} href={feedback} target="_blank" rel="noopener noreferrer">
+        {t('legal.feedbackLink')}
+      </a>
     </div>
   )
 }

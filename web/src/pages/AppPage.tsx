@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
-import { useAuth } from '@/auth/AuthProvider'
-import { motivatorAppRole } from '@/lib/motivatorRole'
+import { useSearchParams } from 'react-router-dom'
+import { DayPlannerStatsRow } from '@/components/planner/DayPlannerStatsRow'
+import { PeriodPlannerStatsRow } from '@/components/planner/PeriodPlannerStatsRow'
+import { PlannerCreateFab } from '@/components/planner/PlannerCreateFab'
+import { MotivatorShell } from '@/components/layout/MotivatorShell'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { PeriodPlanBreakdownChart } from '@/components/PeriodPlanBreakdownChart'
 import { PeriodPlanDonut } from '@/components/PeriodPlanDonut'
 import { EndOfDayModal } from '@/components/EndOfDayModal'
-import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
 import { TaskEditModal } from '@/components/TaskEditModal'
@@ -16,11 +17,42 @@ import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
 import { VaultDecryptHelp } from '@/components/VaultDecryptHelp'
 import { tasksVisibleInPlannerView } from '@/lib/plannerFilterScope'
+import { cn } from '@/lib/cn'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 import {
   humanizeConnectivityError,
   isLikelyNetworkFetchFailure,
 } from '@/lib/connectivityHints'
+import {
+  ALERT_WARNING,
+  ALERT_WARNING_BODY,
+  DRAFT_LIST_ITEM,
+  EMPTY_STATE_BOX,
+  FILTER_CHIP,
+  FILTER_CHIP_DISMISS,
+  FILTER_CHIP_RESET,
+  FILTER_PANEL,
+  MODAL_CLOSE_BTN,
+  MODAL_HEADER,
+  MODAL_SHELL,
+  MODAL_TITLE,
+  MOTIVATOR_INPUT,
+  PLANNER_NAV_BTN,
+  PLANNER_TOOLBAR_BTN,
+  PLANNER_SECTION_HEAD,
+  SETTINGS_BTN_SECONDARY,
+  SETTINGS_LABEL,
+  VIEW_TABLIST,
+  periodBreakdownToggle,
+  viewTab,
+} from '@/lib/designClasses'
+import { isPlannerTaskOverdue } from '@/lib/plannerTaskDayStatus'
 import { readPlannerChartsHidden, writePlannerChartsHidden } from '@/lib/plannerChartsPref'
+import {
+  countHiddenByFilterInDays,
+  countOverdueInDays,
+  summarizePlannerDay,
+} from '@/lib/plannerPeriodStats'
 import {
   DEFAULT_GROUP_ID,
   PRIORITY_RANKS,
@@ -34,6 +66,7 @@ import {
   startOfWeekMonday,
   isMainTaskDoneForDay,
   isPlannedTaskFullyCompleteForDay,
+  plannedDayCompletionWeights,
   plannedPeriodProgress,
   plannedPeriodSlotsByColorKey,
   plannedPeriodSlotsByGroupId,
@@ -60,43 +93,40 @@ function dayPlanRowSurfaceClass(opts: {
   const past = selectedDay < todayKey
   if (isPlannedTaskFullyCompleteForDay(task, selectedDay)) {
     return past
-      ? 'border-emerald-900/45 bg-emerald-950/50'
-      : 'border-emerald-900/35 bg-emerald-950/32'
+      ? 'border-primary/35 bg-primary/15'
+      : 'border-primary/25 bg-primary/10'
   }
   if (eodClosedForDay) {
     return past
-      ? 'border-amber-900/45 bg-amber-950/48'
-      : 'border-amber-900/30 bg-amber-950/22'
+      ? 'border-tertiary-container/40 bg-tertiary-container/10'
+      : 'border-tertiary-container/30 bg-tertiary-container/5'
+  }
+  if (isPlannerTaskOverdue(task, selectedDay, todayKey)) {
+    return 'border-tertiary/45 bg-tertiary-container/10'
   }
   return undefined
 }
 
-function formatSynced(ts: number | null, locale: string): string | null {
-  if (ts == null) return null
-  try {
-    return new Date(ts).toLocaleString(locale, {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-    })
-  } catch {
-    return null
-  }
+function capitalizeFirstLetter(text: string, locale: string): string {
+  const match = text.match(/\p{L}/u)
+  if (!match || match.index === undefined) return text
+  const i = match.index
+  return text.slice(0, i) + text[i]!.toLocaleUpperCase(locale) + text.slice(i + 1)
 }
-
 
 function formatDayHeading(dateKey: string, locale: string): string {
   const [y, m, d] = dateKey.split('-').map(Number)
   const dt = new Date(y, m - 1, d)
   try {
-    return dt.toLocaleDateString(locale, {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
+    return capitalizeFirstLetter(
+      dt.toLocaleDateString(locale, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+      locale,
+    )
   } catch {
     return dateKey
   }
@@ -108,7 +138,10 @@ function formatWeekRangeCompact(firstKey: string, lastKey: string, locale: strin
     const [y, mo, d] = key.split('-').map(Number)
     const dt = new Date(y, mo - 1, d)
     try {
-      return dt.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
+      return capitalizeFirstLetter(
+        dt.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' }),
+        locale,
+      )
     } catch {
       return key
     }
@@ -221,37 +254,37 @@ function PlannerPeriodNav({
   jumpLabel: string
   className?: string
 }) {
-  const arrowBtn =
-    'shrink-0 rounded-lg border border-zinc-700 p-2 text-zinc-200 hover:bg-zinc-900 disabled:opacity-40'
   return (
     <div className={`flex flex-nowrap items-center gap-1.5 sm:gap-2 ${className}`}>
+      <div className="flex min-w-0 flex-nowrap items-center gap-1.5 sm:gap-2">
+        <button
+          type="button"
+          disabled={!canEdit}
+          className={PLANNER_NAV_BTN}
+          onClick={onPrev}
+          aria-label={prevAriaLabel}
+        >
+          <span className="sr-only">{prevAriaLabel}</span>
+          <PlannerChevronLeft />
+        </button>
+        <p className="min-w-0 truncate px-0.5 text-left font-display text-xs leading-tight text-on-surface sm:text-sm">
+          {dateLabel}
+        </p>
+        <button
+          type="button"
+          disabled={!canEdit}
+          className={PLANNER_NAV_BTN}
+          onClick={onNext}
+          aria-label={nextAriaLabel}
+        >
+          <span className="sr-only">{nextAriaLabel}</span>
+          <PlannerChevronRight />
+        </button>
+      </div>
       <button
         type="button"
         disabled={!canEdit}
-        className={arrowBtn}
-        onClick={onPrev}
-        aria-label={prevAriaLabel}
-      >
-        <span className="sr-only">{prevAriaLabel}</span>
-        <PlannerChevronLeft />
-      </button>
-      <p className="min-w-0 flex-1 truncate px-0.5 text-center text-xs leading-tight text-zinc-300 sm:text-sm">
-        {dateLabel}
-      </p>
-      <button
-        type="button"
-        disabled={!canEdit}
-        className={arrowBtn}
-        onClick={onNext}
-        aria-label={nextAriaLabel}
-      >
-        <span className="sr-only">{nextAriaLabel}</span>
-        <PlannerChevronRight />
-      </button>
-      <button
-        type="button"
-        disabled={!canEdit}
-        className="ml-auto shrink-0 rounded-lg border border-emerald-800/60 px-2 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40 sm:px-3 sm:text-sm"
+        className="btn-secondary ml-auto shrink-0 px-2 py-1.5 text-xs max-md:min-h-11 max-md:px-3 max-md:py-2 disabled:opacity-40 sm:px-3 sm:text-sm"
         onClick={onJumpToCurrent}
       >
         {jumpLabel}
@@ -284,16 +317,13 @@ type EodModalContext = { dateKey: string; mode: 'ritual' | 'report' }
 
 function AppPageInner() {
   const { t, i18n } = useTranslation()
-  const { signOut, session } = useAuth()
   const {
     vault,
     remoteError,
-    retryRemoteHydrate,
+    retrySync,
+    awaitVaultSync,
     remoteHydrated,
     decryptFailed,
-    savePending,
-    lastSyncedAt,
-    lock,
     createTask,
     upsertDraft,
     deleteDraft,
@@ -313,10 +343,43 @@ function AppPageInner() {
     completeEodForLocalDate,
   } = useVault()
 
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [highlightTaskId, setHighlightTaskId] = useState<string | null>(
+    () => searchParams.get('highlightTask'),
+  )
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('highlightTask')
+    if (!fromUrl) return
+    setHighlightTaskId(fromUrl)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('highlightTask')
+        return next
+      },
+      { replace: true },
+    )
+  }, [searchParams, setSearchParams])
+
   const [view, setView] = useState<'day' | 'week' | 'month'>('day')
   const [createOpen, setCreateOpen] = useState(false)
   const [resumeDraft, setResumeDraft] = useState<TaskDraft | null>(null)
   const [selectedDay, setSelectedDay] = useState(() => localDateKey())
+
+  useEffect(() => {
+    if (!highlightTaskId || !remoteHydrated) return
+    const scrollTimer = window.setTimeout(() => {
+      const el = document.querySelector(`[data-task-id="${CSS.escape(highlightTaskId)}"]`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+    const clearTimer = window.setTimeout(() => setHighlightTaskId(null), 4000)
+    return () => {
+      window.clearTimeout(scrollTimer)
+      window.clearTimeout(clearTimer)
+    }
+  }, [highlightTaskId, remoteHydrated, view, selectedDay, vault.tasks.length])
+
   const [weekStartMonday, setWeekStartMonday] = useState(() =>
     startOfWeekMonday(localDateKey()),
   )
@@ -339,7 +402,7 @@ function AppPageInner() {
   const [draftsModalOpen, setDraftsModalOpen] = useState(false)
   /** Рядом с кольцом недели/месяца: столбчатая диаграмма по группам или по цветам. */
   const [periodSlotsMode, setPeriodSlotsMode] = useState<'group' | 'color'>('group')
-  /** `lg+`: кольцо недели и график столбиком; уже — в одну строку с компактным кольцом. */
+  /** `lg+`: полноразмерные кольцо и столбчатый график в колонке недели. */
   const [weekPlanUiWide, setWeekPlanUiWide] = useState(() =>
     typeof globalThis !== 'undefined' && 'matchMedia' in globalThis
       ? globalThis.matchMedia('(min-width: 1024px)').matches
@@ -348,21 +411,13 @@ function AppPageInner() {
   const [eodModalContext, setEodModalContext] = useState<EodModalContext | null>(null)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
-  const accountMenuRef = useRef<HTMLDivElement>(null)
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false)
-  const [roadmapModalOpen, setRoadmapModalOpen] = useState(false)
+  const draftsDialogRef = useRef<HTMLDivElement>(null)
   const [chartsHidden, setChartsHidden] = useState(() =>
     typeof window !== 'undefined' ? readPlannerChartsHidden() : false,
   )
 
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
 
-  const accountRoleLabel = useMemo(() => {
-    const r = motivatorAppRole(session)
-    if (r === 'admin') return t('shell.roleLabelAdmin')
-    if (r === 'beta_tester') return t('shell.roleLabelBetaTester')
-    return t('shell.roleLabelUser')
-  }, [session, t])
 
   const occurrenceDayForEdit = editOccurrenceDayKey ?? selectedDay
 
@@ -392,17 +447,6 @@ function AppPageInner() {
     return () => document.removeEventListener('mousedown', handlePointerDown)
   }, [openFilterMenu])
 
-  useEffect(() => {
-    if (!accountMenuOpen) return
-    function handlePointerDown(e: MouseEvent) {
-      const node = accountMenuRef.current
-      if (node && !node.contains(e.target as Node)) {
-        setAccountMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handlePointerDown)
-    return () => document.removeEventListener('mousedown', handlePointerDown)
-  }, [accountMenuOpen])
 
   useEffect(() => {
     if (vault.drafts.length === 0) setDraftsModalOpen(false)
@@ -426,13 +470,7 @@ function AppPageInner() {
     return () => document.removeEventListener('keydown', onKey)
   }, [draftsModalOpen])
 
-  const syncHint = !remoteHydrated
-    ? t('app.syncLoadingVault')
-    : savePending
-      ? t('app.syncSaving')
-      : lastSyncedAt
-        ? t('app.syncDone', { time: formatSynced(lastSyncedAt, locale) ?? '' })
-        : t('app.syncReady')
+  useDialogFocusTrap(draftsModalOpen && vault.drafts.length > 0, draftsDialogRef)
 
   const canEdit = remoteHydrated && !decryptFailed
 
@@ -613,10 +651,84 @@ function AppPageInner() {
     return list
   }, [filteredVaultTasks, selectedDay])
 
+  const dayPlanProgress = useMemo(
+    () => plannedDayCompletionWeights(plannedForDay, selectedDay),
+    [plannedForDay, selectedDay],
+  )
+
+  const dayDoneCount = useMemo(
+    () =>
+      plannedForDay.filter((t) => isPlannedTaskFullyCompleteForDay(t, selectedDay)).length,
+    [plannedForDay, selectedDay],
+  )
+
+  const hiddenPlannedByFilterCount = useMemo(() => {
+    const all = tasksScheduledForPlannerDay(vault.tasks, selectedDay)
+    const visible = new Set(plannedForDay.map((t) => t.id))
+    return all.filter((t) => !visible.has(t.id)).length
+  }, [vault.tasks, selectedDay, plannedForDay])
+
+  const hiddenWeekByFilterCount = useMemo(
+    () => countHiddenByFilterInDays(vault.tasks, filteredVaultTasks, weekDays),
+    [vault.tasks, filteredVaultTasks, weekDays],
+  )
+
+  const hiddenMonthByFilterCount = useMemo(
+    () => countHiddenByFilterInDays(vault.tasks, filteredVaultTasks, monthDayKeysForPlan),
+    [vault.tasks, filteredVaultTasks, monthDayKeysForPlan],
+  )
+
+  const weekOverdueCount = useMemo(
+    () => countOverdueInDays(filteredVaultTasks, weekDays, todayKeyApp),
+    [filteredVaultTasks, weekDays, todayKeyApp],
+  )
+
+  const monthOverdueCount = useMemo(
+    () => countOverdueInDays(filteredVaultTasks, monthDayKeysForPlan, todayKeyApp),
+    [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp],
+  )
+
+  const monthDaySummaries = useMemo(() => {
+    const map: Record<string, ReturnType<typeof summarizePlannerDay>> = {}
+    for (const key of monthDayKeysForPlan) {
+      map[key] = summarizePlannerDay(filteredVaultTasks, key, todayKeyApp)
+    }
+    return map
+  }, [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp])
+
+  const groupNameById = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const g of vault.groups) m.set(g.id, g.name)
+    return m
+  }, [vault.groups])
+
   const eodClosedForSelectedDay = useMemo(
     () => Boolean(vault.eodCompletedLocalDates?.includes(selectedDay)),
     [vault.eodCompletedLocalDates, selectedDay],
   )
+
+  const openEodFromDayStats = useCallback(() => {
+    if (selectedDay > todayKeyApp) return
+    if (selectedDay < todayKeyApp) {
+      setEodModalContext({ dateKey: selectedDay, mode: 'report' })
+      return
+    }
+    setEodModalContext({
+      dateKey: todayKeyApp,
+      mode: eodDoneToday ? 'report' : 'ritual',
+    })
+  }, [selectedDay, todayKeyApp, eodDoneToday])
+
+  const eodStatActionLabel = useMemo(() => {
+    if (!eodEnabled || selectedDay > todayKeyApp) return undefined
+    if (selectedDay < todayKeyApp) return t('app.dayReportNav')
+    return eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')
+  }, [eodEnabled, selectedDay, todayKeyApp, eodDoneToday, t])
+
+  const openCreateTask = useCallback(() => {
+    setResumeDraft(null)
+    setCreateOpen(true)
+  }, [])
 
   const weekPlanProgress = useMemo(
     () => plannedPeriodProgress(filteredVaultTasks, weekDays, todayKeyApp),
@@ -664,20 +776,6 @@ function AppPageInner() {
     return list
   }, [filteredVaultTasks])
 
-  const taskCountByDay = useMemo(() => {
-    const map: Record<string, number> = {}
-    const daysInMonth = new Date(monthYear, monthIndex + 1, 0).getDate()
-    for (let d = 1; d <= daysInMonth; d++) {
-      const key = `${monthYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-      let c = 0
-      for (const task of filteredVaultTasks) {
-        if (taskOccursOnDate(task, key)) c++
-      }
-      map[key] = c
-    }
-    return map
-  }, [filteredVaultTasks, monthYear, monthIndex])
-
   const editingTask = editId ? vault.tasks.find((x) => x.id === editId) : undefined
 
   const overlapConfirm = useCallback(
@@ -716,12 +814,6 @@ function AppPageInner() {
     setFilterRepeats('all')
   }
 
-  async function handleSignOut() {
-    if (!window.confirm(t('settings.signOutConfirm'))) return
-    setAccountMenuOpen(false)
-    await lock()
-    await signOut()
-  }
 
   const priorityFilterSummary = useMemo(() => {
     if (priorityEnabled.size === PRIORITY_RANKS.length) {
@@ -807,19 +899,28 @@ function AppPageInner() {
     }
   }
 
+
+  function toggleChartsHidden() {
+    setChartsHidden((prev) => {
+      const next = !prev
+      writePlannerChartsHidden(next)
+      return next
+    })
+  }
+
   const draftListItems = vault.drafts.map((d) => (
     <li
       key={d.id}
-      className="flex flex-wrap items-center justify-between gap-2 rounded border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm"
+      className={DRAFT_LIST_ITEM}
     >
-      <span className="min-w-0 flex-1 truncate text-zinc-200">
+      <span className="min-w-0 flex-1 truncate text-on-surface">
         {d.title.trim() ? d.title : t('app.draftUntitled')}
       </span>
       <div className="flex shrink-0 gap-2">
         <button
           type="button"
           disabled={!canEdit}
-          className="rounded border border-emerald-800 px-2 py-1 text-xs text-emerald-300 hover:bg-emerald-950/50 disabled:opacity-40"
+          className="rounded-lg border border-primary/50 px-2 py-1 text-xs text-primary hover:bg-primary/10 disabled:opacity-40"
           onClick={() => {
             setResumeDraft(d)
             setCreateOpen(true)
@@ -831,7 +932,7 @@ function AppPageInner() {
         <button
           type="button"
           disabled={!canEdit}
-          className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
+          className="rounded-lg border border-surface-variant px-2 py-1 text-xs text-on-surface-variant hover:bg-surface-container disabled:opacity-40"
           onClick={() => void deleteDraft(d.id)}
         >
           {t('common.delete')}
@@ -840,158 +941,47 @@ function AppPageInner() {
     </li>
   ))
 
+
   return (
-    <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-8">
+    <MotivatorShell
+      activeNav="planner"
+      wide
+      title={t('app.plannerTitle')}
+    >
+      <div className="relative flex min-h-0 flex-col">
       {!remoteHydrated && !decryptFailed ? (
         <div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-zinc-950/90 px-6 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-background/90 px-6 backdrop-blur-sm"
           role="alertdialog"
           aria-modal="true"
           aria-labelledby="app-sync-blocking-title"
           aria-describedby="app-sync-blocking-desc"
         >
           <div
-            className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-500/25 border-t-emerald-400"
+            className="h-10 w-10 animate-spin rounded-full border-2 border-primary/25 border-t-primary"
             aria-hidden
           />
-          <p id="app-sync-blocking-title" className="max-w-sm text-center text-base font-medium text-zinc-100">
+          <p id="app-sync-blocking-title" className="max-w-sm text-center text-base font-medium text-on-surface">
             {t('app.syncBlockingTitle')}
           </p>
-          <p id="app-sync-blocking-desc" className="max-w-sm text-center text-sm text-zinc-400">
+          <p id="app-sync-blocking-desc" className="max-w-sm text-center text-sm text-on-surface-variant">
             {remoteError ? humanizeConnectivityError(remoteError, t) : t('app.syncBlockingHint')}
           </p>
           {remoteError ? (
             <button
               type="button"
-              className="rounded-lg border border-amber-600/70 bg-amber-950/50 px-4 py-2 text-sm font-medium text-amber-100 hover:bg-amber-900/40"
-              onClick={() => retryRemoteHydrate()}
+              className={SETTINGS_BTN_SECONDARY}
+              onClick={() => void retrySync()}
             >
               {t('app.syncRetry')}
             </button>
           ) : null}
         </div>
       ) : null}
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-emerald-400/90">
-            {t('app.brand')}
-          </p>
-          <h1 className="text-xl font-semibold text-white">{t('app.plannerTitle')}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={`rounded-md border px-2 py-1.5 text-xs hover:bg-zinc-900/80 disabled:opacity-40 ${
-              remoteError
-                ? 'border-amber-900/50 text-amber-300/90'
-                : savePending
-                  ? 'border-zinc-700/80 text-zinc-500'
-                  : 'border-transparent text-zinc-600 hover:text-zinc-400'
-            }`}
-            title={syncHint}
-            aria-label={t('app.syncIconAria')}
-          >
-            <span className="sr-only">{syncHint}</span>
-            <span aria-hidden className="text-[0.85rem] leading-none opacity-90">
-              {savePending ? '…' : remoteError ? '⚠' : '✓'}
-            </span>
-          </button>
-          <div className="relative" ref={accountMenuRef}>
-            <button
-              type="button"
-              className="rounded-lg border border-zinc-700 px-2.5 py-2 text-zinc-300 hover:bg-zinc-900"
-              aria-expanded={accountMenuOpen}
-              aria-haspopup="menu"
-              onClick={() => setAccountMenuOpen((v) => !v)}
-            >
-              <span className="sr-only">{t('app.accountMenuAria')}</span>
-              <svg
-                aria-hidden
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                />
-              </svg>
-            </button>
-            {accountMenuOpen ? (
-              <div
-                className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-lg border border-zinc-700 bg-zinc-950 py-1 shadow-xl"
-                role="menu"
-              >
-                <div
-                  className="border-b border-zinc-800 px-3 py-2 text-xs text-zinc-400"
-                  role="presentation"
-                >
-                  {t('app.accountMenuRoleLine', { role: accountRoleLabel })}
-                </div>
-                <Link
-                  to="/app/reports"
-                  role="menuitem"
-                  className="block px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                  onClick={() => setAccountMenuOpen(false)}
-                >
-                  {t('app.reportsNav')}
-                </Link>
-                {eodEnabled ? (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={!canEdit}
-                    className="block w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900 disabled:opacity-40"
-                    onClick={() => {
-                      setAccountMenuOpen(false)
-                      setEodModalContext({ dateKey: todayKeyApp, mode: 'ritual' })
-                    }}
-                  >
-                    {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="block w-full px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-900"
-                  onClick={() => {
-                    setAccountMenuOpen(false)
-                    setRoadmapModalOpen(true)
-                  }}
-                >
-                  {t('settings.roadmapTempButton')}
-                </button>
-                <Link
-                  to="/settings"
-                  role="menuitem"
-                  className="block px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-900"
-                  onClick={() => setAccountMenuOpen(false)}
-                >
-                  {t('app.settings')}
-                </Link>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="block w-full px-3 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-900"
-                  onClick={() => void handleSignOut()}
-                >
-                  {t('settings.signOut')}
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </header>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
-      <nav aria-label={t('app.viewNavAria')} className="min-w-0 flex-1 overflow-visible">
-        <div
-          className="inline-flex w-full min-w-0 rounded-lg border border-zinc-700/90 bg-zinc-900/50 p-0.5 shadow-sm"
-          role="tablist"
-        >
+      <div className="mb-4 flex flex-col gap-3 border-b border-surface-variant pb-3 lg:flex-row lg:items-center lg:justify-between">
+      <nav aria-label={t('app.viewNavAria')} className="min-w-0 flex-1 overflow-visible lg:max-w-md">
+        <div className={VIEW_TABLIST} role="tablist">
           {(['day', 'week', 'month'] as const).map((v) => {
             const active = view === v
             const label =
@@ -1002,11 +992,7 @@ function AppPageInner() {
                 type="button"
                 role="tab"
                 aria-selected={active}
-                className={`min-w-0 flex-1 rounded-md px-1.5 py-2 text-center text-xs font-medium leading-tight transition-colors ring-offset-0 ring-offset-zinc-900 sm:px-3 sm:text-sm ${
-                  active
-                    ? 'bg-zinc-800 text-emerald-300 shadow-sm ring-1 ring-zinc-600/80'
-                    : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'
-                }`}
+                className={viewTab(active)}
                 onClick={() => handleTab(v)}
               >
                 {label}
@@ -1017,36 +1003,29 @@ function AppPageInner() {
       </nav>
       <button
         type="button"
-        className="inline-flex shrink-0 items-center justify-center rounded-lg border border-zinc-700 p-2 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+        className={`${PLANNER_NAV_BTN} hidden shrink-0 items-center justify-center md:inline-flex`}
         aria-pressed={!chartsHidden}
         aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
         title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
-        onClick={() => {
-          setChartsHidden((prev) => {
-            const next = !prev
-            writePlannerChartsHidden(next)
-            return next
-          })
-        }}
+        onClick={toggleChartsHidden}
       >
         <PlannerChartsIcon chartsHidden={chartsHidden} />
       </button>
       </div>
-
       {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
 
       {remoteHydrated && remoteError && !decryptFailed ? (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-sm text-amber-100">
-          <div className="min-w-0 flex-1 leading-snug">
+        <div className={cn(ALERT_WARNING, 'mb-4 flex flex-wrap items-center justify-between gap-3')}>
+          <div className={cn('min-w-0 flex-1 leading-snug', ALERT_WARNING_BODY)}>
             <p>{humanizeConnectivityError(remoteError, t)}</p>
             {isLikelyNetworkFetchFailure(remoteError) ? (
-              <p className="mt-1 text-xs text-amber-200/85">{t('app.syncErrorRegionalHint')}</p>
+              <p className="mt-1 text-label-sm opacity-90">{t('app.syncErrorRegionalHint')}</p>
             ) : null}
           </div>
           <button
             type="button"
-            className="shrink-0 rounded-lg border border-amber-600/60 bg-amber-950/50 px-3 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-900/40"
-            onClick={() => retryRemoteHydrate()}
+            className={cn(SETTINGS_BTN_SECONDARY, 'shrink-0 px-3 py-1.5 text-label-sm')}
+            onClick={() => void retrySync()}
           >
             {t('app.syncRetry')}
           </button>
@@ -1054,80 +1033,31 @@ function AppPageInner() {
       ) : null}
 
       <div className="mb-6 flex flex-col gap-3">
-        <div className="scrollbar-site flex flex-nowrap items-center gap-1.5 overflow-x-auto">
+        <div className="scrollbar-site flex flex-nowrap items-center gap-1.5 overflow-x-auto py-2 pr-1.5">
           <div className="relative shrink-0">
             <button
               type="button"
               disabled={!canEdit}
               aria-expanded={filtersPanelOpen}
-              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-zinc-600 bg-zinc-900 px-2.5 py-1.5 pr-4 text-xs font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-40 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5 sm:text-sm"
+              className={`${PLANNER_TOOLBAR_BTN} inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap pr-4 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5`}
               onClick={() => setFiltersPanelOpen((v) => !v)}
             >
               {t('app.filterToggle')}
-              <span className="text-zinc-500" aria-hidden>
+              <span className="text-on-surface-variant" aria-hidden>
                 {filtersPanelOpen ? '▴' : '▾'}
               </span>
             </button>
           </div>
-          {view === 'day' && eodEnabled ? (
-            selectedDay > todayKeyApp ? null : selectedDay < todayKeyApp ? (
-              <button
-                type="button"
-                disabled={!canEdit}
-                className="shrink-0 whitespace-nowrap rounded-lg border border-zinc-600 px-2.5 py-1.5 text-xs text-zinc-200 hover:border-zinc-500 disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm"
-                onClick={() =>
-                  setEodModalContext({ dateKey: selectedDay, mode: 'report' })
-                }
-              >
-                {t('app.dayReportNav')}
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={!canEdit}
-                className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs hover:border-zinc-500 disabled:opacity-40 sm:px-3 sm:py-2 sm:text-sm ${
-                  eodDoneToday
-                    ? 'border-emerald-800 text-emerald-300'
-                    : 'border-violet-700 text-violet-200'
-                }`}
-                onClick={() =>
-                  setEodModalContext({ dateKey: todayKeyApp, mode: 'ritual' })
-                }
-              >
-                {eodDoneToday ? t('app.eodNavSummary') : t('app.eodNav')}
-              </button>
-            )
-          ) : null}
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              disabled={!canEdit}
-              className="inline-flex shrink-0 whitespace-nowrap rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40 sm:px-4 sm:py-2 sm:text-sm"
-              onClick={() => {
-                setResumeDraft(null)
-                setCreateOpen(true)
-              }}
-            >
-              {t('app.openCreateTask')}
-            </button>
-            {vault.drafts.length > 0 ? (
-              <button
-                type="button"
-                disabled={!canEdit}
-                aria-haspopup="dialog"
-                aria-expanded={draftsModalOpen}
-                aria-label={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-                title={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-                className="absolute -right-0.5 -top-1.5 z-10 flex h-6 min-w-[1.35rem] items-center justify-center rounded-full border border-amber-700/80 bg-amber-500 px-1 text-[11px] font-bold text-amber-950 shadow-md hover:bg-amber-400 disabled:opacity-40"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setDraftsModalOpen(true)
-                }}
-              >
-                {vault.drafts.length > 99 ? '99+' : vault.drafts.length}
-              </button>
-            ) : null}
-          </div>
+          <button
+            type="button"
+            className={`${PLANNER_NAV_BTN} inline-flex shrink-0 items-center justify-center md:hidden`}
+            aria-pressed={!chartsHidden}
+            aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+            title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+            onClick={toggleChartsHidden}
+          >
+            <PlannerChartsIcon chartsHidden={chartsHidden} />
+          </button>
         </div>
 
         {filtersPanelOpen ? (
@@ -1138,24 +1068,26 @@ function AppPageInner() {
               onClick={() => setFiltersPanelOpen(false)}
             />
             <div className="relative z-[45] md:z-auto">
-              <div className="rounded-lg border border-zinc-700 bg-zinc-900/40 shadow-inner max-md:fixed max-md:inset-0 max-md:z-[45] max-md:flex max-md:flex-col max-md:overflow-hidden max-md:rounded-none max-md:border-0 max-md:bg-zinc-950 max-md:p-0 md:p-3">
-                <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3 md:hidden">
-                  <span className="text-sm font-medium text-zinc-200">{t('app.filtersTitle')}</span>
+              <div className={FILTER_PANEL}>
+                <div className="flex shrink-0 items-center justify-between border-b border-surface-variant px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:hidden">
+                  <span className="font-display text-sm font-medium text-on-surface">{t('app.filtersTitle')}</span>
                   <button
                     type="button"
-                    className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
+                    className={PLANNER_TOOLBAR_BTN}
                     onClick={() => setFiltersPanelOpen(false)}
                   >
                     {t('app.filtersSheetDone')}
                   </button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-3 md:overflow-visible md:p-0">
-                  <p className="mb-3 hidden text-xs font-medium text-zinc-400 md:block">{t('app.filtersTitle')}</p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+                  <p className="mb-3 hidden font-display text-xs font-medium text-on-surface-variant md:block">
+                    {t('app.filtersTitle')}
+                  </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+              <label className={`flex min-w-0 flex-col gap-1.5 ${SETTINGS_LABEL}`}>
                 <span>{t('app.group')}</span>
                 <select
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  className={`${MOTIVATOR_INPUT} disabled:opacity-50`}
                   value={filterGroupId}
                   disabled={!canEdit}
                   onFocus={() => setOpenFilterMenu(null)}
@@ -1174,40 +1106,40 @@ function AppPageInner() {
                 </select>
               </label>
 
-              <div className="flex min-w-[11rem] flex-col gap-1 text-xs text-zinc-500">
+              <div className={`flex min-w-0 flex-col gap-1.5 ${SETTINGS_LABEL}`}>
                 <span>{t('app.filterPriorities')}</span>
                 <div className="relative" ref={priorityMenuRef}>
                   <button
                     type="button"
                     disabled={!canEdit}
                     aria-expanded={openFilterMenu === 'priorities'}
-                    className="flex w-full cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-white disabled:opacity-50"
+                    className={`${MOTIVATOR_INPUT} flex w-full cursor-pointer list-none items-center justify-between gap-2 text-left disabled:opacity-50`}
                     onClick={() =>
                       setOpenFilterMenu((v) => (v === 'priorities' ? null : 'priorities'))
                     }
                   >
                     <span className="min-w-0 flex-1 truncate">{priorityFilterSummary}</span>
-                    <span className="shrink-0 text-zinc-500" aria-hidden>
+                    <span className="shrink-0 text-on-surface-variant" aria-hidden>
                       ▾
                     </span>
                   </button>
                   {openFilterMenu === 'priorities' ? (
                     <div
-                      className="absolute left-0 top-full z-30 mt-1 min-w-[14rem] rounded-lg border border-zinc-700 bg-zinc-950 p-2 shadow-xl"
+                      className="absolute left-0 top-full z-30 mt-1 min-w-[14rem] rounded-xl border border-surface-variant bg-surface-container-lowest p-2 shadow-xl"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
                         {priorityRanksForFilterMenu.map((r) => (
                           <label
                             key={r}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-200 hover:bg-zinc-900"
+                            className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-on-surface hover:bg-surface-container"
                           >
                             <input
                               type="checkbox"
                               checked={priorityEnabled.has(r)}
                               disabled={!canEdit}
                               onChange={() => togglePriority(r)}
-                              className="h-3.5 w-3.5 shrink-0 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                              className="h-3.5 w-3.5 shrink-0 rounded border-outline-variant bg-surface-container-low text-primary disabled:opacity-40"
                             />
                             <span>{vault.priorityLabels[r]}</span>
                           </label>
@@ -1216,7 +1148,7 @@ function AppPageInner() {
                       <button
                         type="button"
                         disabled={!canEdit}
-                        className="mt-2 w-full rounded border border-zinc-700 px-2 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 disabled:opacity-40"
+                        className="btn-secondary mt-2 w-full px-2 py-1.5 text-xs disabled:opacity-40"
                         onClick={() => selectAllPriorities()}
                       >
                         {t('app.filterPrioritiesAllShort')}
@@ -1226,10 +1158,10 @@ function AppPageInner() {
                 </div>
               </div>
 
-              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+              <label className={`flex min-w-0 flex-col gap-1.5 ${SETTINGS_LABEL}`}>
                 <span>{t('app.filterColor')}</span>
                 <select
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  className={`${MOTIVATOR_INPUT} disabled:opacity-50`}
                   value={filterColor}
                   disabled={!canEdit}
                   onFocus={() => setOpenFilterMenu(null)}
@@ -1248,10 +1180,10 @@ function AppPageInner() {
                 </select>
               </label>
 
-              <label className="flex min-w-[10rem] flex-col gap-1 text-xs text-zinc-500">
+              <label className={`flex min-w-0 flex-col gap-1.5 ${SETTINGS_LABEL}`}>
                 <span>{t('app.filterRepeats')}</span>
                 <select
-                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  className={`${MOTIVATOR_INPUT} disabled:opacity-50`}
                   value={filterRepeats}
                   disabled={!canEdit}
                   onFocus={() => setOpenFilterMenu(null)}
@@ -1282,14 +1214,11 @@ function AppPageInner() {
             aria-live="polite"
           >
             {activeFilterChips.map((c) => (
-              <span
-                key={c.key}
-                className="inline-flex max-w-full items-center gap-1 rounded-full border border-cyan-800/50 bg-cyan-950/40 py-1 pl-2.5 pr-1 text-[11px] text-cyan-100"
-              >
+              <span key={c.key} className={FILTER_CHIP}>
                 <span className="min-w-0 truncate">{c.label}</span>
                 <button
                   type="button"
-                  className="shrink-0 rounded-full px-1.5 py-0.5 text-cyan-200/90 hover:bg-cyan-900/60"
+                  className={FILTER_CHIP_DISMISS}
                   onClick={c.onRemove}
                   aria-label={t('common.close')}
                 >
@@ -1297,14 +1226,28 @@ function AppPageInner() {
                 </button>
               </span>
             ))}
-            <button
-              type="button"
-              className="text-[11px] font-medium text-cyan-300/95 underline decoration-cyan-600/80 underline-offset-2 hover:text-cyan-200"
-              onClick={resetAllFilters}
-            >
+            <button type="button" className={FILTER_CHIP_RESET} onClick={resetAllFilters}>
               {t('app.filtersResetAll')}
             </button>
           </div>
+        ) : null}
+
+        {view === 'day' && hiddenPlannedByFilterCount > 0 ? (
+          <p className="mb-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
+            {t('app.filtersHiddenCount', { count: hiddenPlannedByFilterCount })}
+          </p>
+        ) : null}
+
+        {view === 'week' && hiddenWeekByFilterCount > 0 ? (
+          <p className="mb-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
+            {t('app.filtersHiddenCount', { count: hiddenWeekByFilterCount })}
+          </p>
+        ) : null}
+
+        {view === 'month' && hiddenMonthByFilterCount > 0 ? (
+          <p className="mb-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
+            {t('app.filtersHiddenCount', { count: hiddenMonthByFilterCount })}
+          </p>
         ) : null}
 
         {draftsModalOpen && vault.drafts.length > 0 ? (
@@ -1316,19 +1259,20 @@ function AppPageInner() {
             }}
           >
             <div
+              ref={draftsDialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="drafts-modal-title"
-              className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl"
+              className={MODAL_SHELL}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-800 px-4 py-3">
-                <h2 id="drafts-modal-title" className="text-sm font-semibold text-amber-200/90">
+              <div className={MODAL_HEADER}>
+                <h2 id="drafts-modal-title" className={MODAL_TITLE}>
                   {t('app.draftsTitle')}
                 </h2>
                 <button
                   type="button"
-                  className="rounded px-2 py-1 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                  className={`rounded-lg px-2 py-1 ${MODAL_CLOSE_BTN}`}
                   aria-label={t('common.close')}
                   onClick={() => setDraftsModalOpen(false)}
                 >
@@ -1356,8 +1300,7 @@ function AppPageInner() {
           setResumeDraft(null)
         }}
         onSave={async (input, opts) => {
-          await createTask(input)
-          if (opts.removeDraftId) await deleteDraft(opts.removeDraftId)
+          await createTask(input, { removeDraftId: opts.removeDraftId })
         }}
         onPersistDraft={(d) => upsertDraft(d)}
       />
@@ -1375,26 +1318,47 @@ function AppPageInner() {
             jumpLabel={t('app.today')}
           />
 
+          <DayPlannerStatsRow
+            progress={dayPlanProgress}
+            doneCount={dayDoneCount}
+            eodEnabled={eodEnabled}
+            eodClosedForDay={eodClosedForSelectedDay}
+            selectedDay={selectedDay}
+            todayKey={todayKeyApp}
+            onEodClick={openEodFromDayStats}
+            eodClickDisabled={!canEdit}
+            eodActionLabel={eodStatActionLabel}
+          />
+
           <section className="mb-8">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              {t('app.sectionPlanned')}
-            </h2>
+            <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+              <h2 className={cn(PLANNER_SECTION_HEAD, 'mb-0')}>{t('app.sectionPlanned')}</h2>
+              {plannedForDay.length > 0 ? (
+                <span className="text-label-sm text-on-surface-variant">
+                  {t('app.dayPlanCount', {
+                    done: dayDoneCount,
+                    total: plannedForDay.length,
+                  })}
+                </span>
+              ) : null}
+            </div>
             <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-10">
               <div className="min-w-0 w-full lg:max-w-lg lg:shrink-0">
                 {plannedForDay.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-zinc-700 px-4 py-8 text-center text-sm text-zinc-500">
-                    {t('app.emptyPlannedDay')}
-                  </p>
+                  <p className={EMPTY_STATE_BOX}>{t('app.emptyPlannedDay')}</p>
                 ) : (
                   <ul className="flex flex-col gap-3">
                     {plannedForDay.map((task) => (
                       <li key={task.id} className="list-none">
                         <TaskMiniCard
                           task={task}
+                          highlighted={highlightTaskId === task.id}
                           priorityLabels={vault.priorityLabels}
                           canEdit={canEdit}
                           occurrenceDayKey={selectedDay}
                           completionToggleAllowed={canToggleTaskCompletionOnDayView}
+                          groupName={groupNameById.get(task.groupId) ?? null}
+                          overdue={isPlannerTaskOverdue(task, selectedDay, todayKeyApp)}
                           planRowSurfaceClass={dayPlanRowSurfaceClass({
                             selectedDay,
                             todayKey: todayKeyApp,
@@ -1424,19 +1388,16 @@ function AppPageInner() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-amber-500/90">
-              {t('app.sectionBacklog')}
-            </h2>
+            <h2 className={PLANNER_SECTION_HEAD}>{t('app.sectionBacklog')}</h2>
             {backlogTasks.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-zinc-800 px-4 py-6 text-center text-sm text-zinc-600">
-                {t('app.emptyBacklog')}
-              </p>
+              <p className={`${EMPTY_STATE_BOX} py-6`}>{t('app.emptyBacklog')}</p>
             ) : (
               <ul className="flex max-w-lg flex-col gap-3">
                 {backlogTasks.map((task) => (
                   <li key={task.id} className="list-none">
                     <TaskMiniCard
                       task={task}
+                      highlighted={highlightTaskId === task.id}
                       priorityLabels={vault.priorityLabels}
                       canEdit={canEdit}
                       occurrenceDayKey={selectedDay}
@@ -1471,11 +1432,18 @@ function AppPageInner() {
             nextAriaLabel={t('app.weekNext')}
             jumpLabel={t('app.weekThis')}
           />
-          <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col-reverse gap-4 lg:flex-row lg:items-stretch lg:justify-center lg:gap-8">
+          <PeriodPlannerStatsRow
+            mode="week"
+            progress={weekPlanProgress}
+            periodLabel={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+            overdueCount={weekOverdueCount}
+          />
+          <div className="mx-auto flex min-h-0 w-full max-w-desktop flex-1 flex-col-reverse gap-4 xl:flex-row xl:items-stretch xl:justify-between xl:gap-8">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <WeekGrid
                 weekDays={weekDays}
                 tasks={filteredVaultTasks}
+                todayKey={todayKeyApp}
                 priorityLabels={vault.priorityLabels}
                 locale={locale}
                 canEdit={canEdit}
@@ -1483,52 +1451,38 @@ function AppPageInner() {
               />
             </div>
             {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:pt-1">
-                <div className="flex w-full min-w-0 flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-2">
-                  <div className="flex min-h-0 min-w-0 flex-1 justify-center lg:justify-center">
-                    <PeriodPlanDonut
-                      progress={weekPlanProgress}
-                      title={t('app.periodPlanWeekRingTitle')}
-                      subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
-                      ringSize={weekPlanUiWide ? 120 : 92}
-                      ringStroke={weekPlanUiWide ? 10 : 8}
-                    />
-                  </div>
-                  <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 lg:w-full">
-                    <PeriodPlanBreakdownChart
-                      compact={!weekPlanUiWide}
-                      rows={weekBreakdownChartRows}
-                      title={
-                        periodSlotsMode === 'group'
-                          ? t('app.periodBreakdownChartTitleGroup')
-                          : t('app.periodBreakdownChartTitleColor')
-                      }
-                    />
-                    <div className="flex flex-wrap justify-center gap-1">
-                      <button
-                        type="button"
-                        className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                          periodSlotsMode === 'group'
-                            ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                            : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                        }`}
-                        onClick={() => setPeriodSlotsMode('group')}
-                      >
-                        {t('app.periodBreakdownByGroup')}
-                      </button>
-                      <button
-                        type="button"
-                        className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                          periodSlotsMode === 'color'
-                            ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                            : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                        }`}
-                        onClick={() => setPeriodSlotsMode('color')}
-                      >
-                        {t('app.periodBreakdownByColor')}
-                      </button>
-                    </div>
-                  </div>
+              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:pt-1">
+                <PeriodPlanDonut
+                  progress={weekPlanProgress}
+                  title={t('app.periodPlanWeekRingTitle')}
+                  subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+                  ringSize={weekPlanUiWide ? 120 : 92}
+                  ringStroke={weekPlanUiWide ? 10 : 8}
+                />
+                <PeriodPlanBreakdownChart
+                  compact={!weekPlanUiWide}
+                  rows={weekBreakdownChartRows}
+                  title={
+                    periodSlotsMode === 'group'
+                      ? t('app.periodBreakdownChartTitleGroup')
+                      : t('app.periodBreakdownChartTitleColor')
+                  }
+                />
+                <div className="flex flex-wrap justify-center gap-1">
+                  <button
+                    type="button"
+                    className={periodBreakdownToggle(periodSlotsMode === 'group')}
+                    onClick={() => setPeriodSlotsMode('group')}
+                  >
+                    {t('app.periodBreakdownByGroup')}
+                  </button>
+                  <button
+                    type="button"
+                    className={periodBreakdownToggle(periodSlotsMode === 'color')}
+                    onClick={() => setPeriodSlotsMode('color')}
+                  >
+                    {t('app.periodBreakdownByColor')}
+                  </button>
                 </div>
               </div>
             ) : null}
@@ -1561,11 +1515,18 @@ function AppPageInner() {
             nextAriaLabel={t('app.monthNext')}
             jumpLabel={t('app.monthThis')}
           />
-          <div className="mx-auto flex w-full max-w-5xl flex-col-reverse items-stretch gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
-            <div className="mx-auto w-full max-w-md min-w-0 flex-1 lg:mx-0">
+          <PeriodPlannerStatsRow
+            mode="month"
+            progress={monthPlanProgress}
+            periodLabel={monthLabel(monthYear, monthIndex, locale)}
+            overdueCount={monthOverdueCount}
+          />
+          <div className="mx-auto flex w-full max-w-desktop flex-col-reverse items-stretch gap-6 xl:flex-row xl:items-start xl:justify-between xl:gap-10">
+            <div className="mx-auto w-full min-w-0 flex-1 xl:mx-0 xl:max-w-2xl">
               <MonthCalendar
                 matrix={monthMatrix}
-                taskCountByDay={taskCountByDay}
+                daySummaries={monthDaySummaries}
+                todayKey={todayKeyApp}
                 locale={locale}
                 canEdit={canEdit}
                 onPickDay={(dateKey) => {
@@ -1575,7 +1536,7 @@ function AppPageInner() {
               />
             </div>
             {monthPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 lg:w-[min(100%,300px)] lg:justify-end lg:pt-1">
+              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:justify-end xl:pt-1">
                 <PeriodPlanDonut
                   progress={monthPlanProgress}
                   title={t('app.periodPlanMonthRingTitle')}
@@ -1592,22 +1553,14 @@ function AppPageInner() {
                 <div className="flex flex-wrap justify-center gap-1">
                   <button
                     type="button"
-                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                      periodSlotsMode === 'group'
-                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                    }`}
+                    className={periodBreakdownToggle(periodSlotsMode === 'group')}
                     onClick={() => setPeriodSlotsMode('group')}
                   >
                     {t('app.periodBreakdownByGroup')}
                   </button>
                   <button
                     type="button"
-                    className={`rounded-lg border px-2 py-1 text-[11px] font-medium sm:text-xs ${
-                      periodSlotsMode === 'color'
-                        ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                        : 'border-zinc-700 text-zinc-500 hover:bg-zinc-900'
-                    }`}
+                    className={periodBreakdownToggle(periodSlotsMode === 'color')}
                     onClick={() => setPeriodSlotsMode('color')}
                   >
                     {t('app.periodBreakdownByColor')}
@@ -1631,10 +1584,12 @@ function AppPageInner() {
             : eodDoneToday
         }
         canEdit={canEdit}
-        onCompleteRitual={() => completeEodForLocalDate(todayKeyApp)}
+        onCompleteRitual={async () => {
+          await completeEodForLocalDate(todayKeyApp)
+          await awaitVaultSync()
+        }}
       />
 
-      <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />
 
       {editingTask ? (
         <TaskEditModal
@@ -1697,7 +1652,17 @@ function AppPageInner() {
           }
         />
       ) : null}
-    </div>
+
+      <PlannerCreateFab
+        disabled={!canEdit}
+        ariaLabel={t('app.openCreateTask')}
+        onClick={openCreateTask}
+        draftCount={vault.drafts.length}
+        onDraftsClick={() => setDraftsModalOpen(true)}
+        draftsBadgeLabel={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
+      />
+      </div>
+    </MotivatorShell>
   )
 }
 

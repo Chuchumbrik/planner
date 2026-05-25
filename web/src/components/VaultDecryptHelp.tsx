@@ -1,6 +1,12 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { VaultRecoverKeyPanel } from '@/components/VaultRecoverKeyPanel'
+import {
+  ALERT_WARNING,
+  ALERT_WARNING_BODY,
+  ALERT_WARNING_TITLE,
+} from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 
 type Props = {
   className?: string
@@ -11,21 +17,18 @@ export function VaultDecryptHelp({ className = '' }: Props) {
   const { t } = useTranslation()
 
   return (
-    <div
-      className={`rounded-lg border border-amber-900/60 bg-amber-950/30 px-3 py-3 text-sm text-amber-100 ${className}`}
-      role="alert"
-    >
-      <p className="font-medium">{t('vault.decryptHelpTitle')}</p>
-      <p className="mt-2 text-xs leading-relaxed text-amber-200/90">{t('vault.decryptHelpBody')}</p>
-      <ul className="mt-2 list-inside list-disc text-xs text-amber-200/80">
+    <div className={cn(ALERT_WARNING, className)} role="alert">
+      <p className={ALERT_WARNING_TITLE}>{t('vault.decryptHelpTitle')}</p>
+      <p className={cn('mt-2', ALERT_WARNING_BODY)}>{t('vault.decryptHelpBody')}</p>
+      <ul className={cn('mt-2 list-inside list-disc', ALERT_WARNING_BODY)}>
         <li>{t('vault.decryptHelpStepSeed')}</li>
         <li>{t('vault.decryptHelpStepPassword')}</li>
         <li>{t('vault.decryptHelpStepSupport')}</li>
       </ul>
       <VaultRecoverKeyPanel className="mt-4" />
       <Link
-        className="mt-3 inline-block text-xs font-medium text-emerald-400 hover:text-emerald-300"
-        to="/settings#seed-backup"
+        className="mt-3 inline-block text-label-sm font-medium text-primary hover:text-primary-fixed"
+        to="/settings#privacy"
       >
         {t('vault.decryptHelpSettingsLink')}
       </Link>

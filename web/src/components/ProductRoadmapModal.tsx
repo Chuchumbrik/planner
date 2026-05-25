@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   groupIdeasLaterForDisplay,
@@ -12,6 +12,15 @@ import {
   type RoadmapReleaseNoteBlock,
   type RoadmapReleaseNoteItem,
 } from '@/data/productRoadmap'
+import {
+  MODAL_OVERLAY,
+  MODAL_TITLE,
+  ROADMAP_ACCENT_NEUTRAL,
+  ROADMAP_ACCENT_SHIPPED,
+  ROADMAP_DETAILS_SUMMARY,
+} from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 
 function pickLocale(s: LocalizedString, lang: string): string {
   return lang === 'en' ? s.en : s.ru
@@ -126,7 +135,7 @@ function MvpProgressRing({ shipped, total }: { shipped: number; total: number })
 function Chevron({ nested }: { nested?: boolean }) {
   return (
     <span
-      className={`${nested ? 'text-[9px] group-open/details:rotate-180' : 'text-[10px] group-open:rotate-180'} text-zinc-500 transition-transform duration-200`}
+      className={`${nested ? 'text-[9px] group-open/details:rotate-180' : 'text-[10px] group-open:rotate-180'} text-on-surface-variant transition-transform duration-200`}
       aria-hidden
     >
       ▾
@@ -146,39 +155,33 @@ function PhaseRow({
 }) {
   const { t } = useTranslation()
   const hasDetails = phase.detailBullets.length > 0
-  const badgeClass =
-    variant === 'shipped'
-      ? 'text-emerald-500/90'
-      : 'text-amber-500/85'
-  const detailsAccent =
-    variant === 'shipped'
-      ? 'text-emerald-400/85'
-      : 'text-amber-400/85'
+  const badgeClass = variant === 'shipped' ? ROADMAP_ACCENT_SHIPPED : ROADMAP_ACCENT_NEUTRAL
+  const detailsAccent = variant === 'shipped' ? 'text-primary/85' : ROADMAP_ACCENT_NEUTRAL
   return (
-    <li className="rounded-lg border border-zinc-800/90 bg-zinc-950/50">
+    <li className="rounded-lg border border-surface-variant/90 bg-surface-container-lowest/50">
       <div className="px-3 py-2.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className={`text-[11px] font-semibold uppercase tracking-wide ${badgeClass}`}>
             {t('settings.roadmapPhaseBadge', { n: phase.id })}
           </span>
-          <span className="text-sm font-semibold text-zinc-100">{pickLocale(phase.title, lang)}</span>
+          <span className="text-sm font-semibold text-on-surface">{pickLocale(phase.title, lang)}</span>
         </div>
-        <p className="mt-1.5 text-xs leading-relaxed text-zinc-400">{pickLocale(phase.summary, lang)}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-on-surface-variant">{pickLocale(phase.summary, lang)}</p>
         {phase.plain ? (
-          <p className="mt-2 border-l-2 border-zinc-700/80 pl-3 text-xs leading-relaxed text-zinc-500">
-            <span className="font-medium text-zinc-600">{t('settings.roadmapReleaseNotePlain')} </span>
+          <p className="mt-2 border-l-2 border-surface-variant/80 pl-3 text-xs leading-relaxed text-on-surface-variant">
+            <span className="font-medium text-on-surface-variant">{t('settings.roadmapReleaseNotePlain')} </span>
             {pickLocale(phase.plain, lang)}
           </p>
         ) : null}
         {hasDetails ? (
-          <details className="group/details mt-2 rounded-md border border-zinc-800/80 bg-zinc-900/35 [&_summary::-webkit-details-marker]:hidden">
+          <details className="group/details mt-2 rounded-md border border-surface-variant/80 bg-surface-container-low/35 [&_summary::-webkit-details-marker]:hidden">
             <summary
-              className={`flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-xs font-medium hover:bg-zinc-900/55 ${detailsAccent}`}
+              className={`flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-xs font-medium hover:bg-surface-container-low/55 ${detailsAccent}`}
             >
               <span>{t('settings.roadmapExpandDetails')}</span>
               <Chevron nested />
             </summary>
-            <ul className="list-disc space-y-1.5 border-t border-zinc-800/80 px-5 py-2 pb-3 text-[11px] leading-relaxed text-zinc-400">
+            <ul className="list-disc space-y-1.5 border-t border-surface-variant/80 px-5 py-2 pb-3 text-[11px] leading-relaxed text-on-surface-variant">
               {phase.detailBullets.map((b, i) => (
                 <li key={i}>{pickLocale(b, lang)}</li>
               ))}
@@ -195,17 +198,17 @@ function IdeaRow({ idea, lang }: { idea: RoadmapIdeaEntry; lang: string }) {
   const bullets = idea.detailBullets ?? []
   const hasDetails = bullets.length > 0
   return (
-    <li className="rounded-lg border border-zinc-800/90 bg-zinc-950/50">
+    <li className="rounded-lg border border-surface-variant/90 bg-surface-container-lowest/50">
       <div className="px-3 py-2.5">
-        <p className="text-sm font-semibold text-zinc-100">{pickLocale(idea.title, lang)}</p>
-        <p className="mt-1.5 text-xs leading-relaxed text-zinc-400">{pickLocale(idea.summary, lang)}</p>
+        <p className="text-sm font-semibold text-on-surface">{pickLocale(idea.title, lang)}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-on-surface-variant">{pickLocale(idea.summary, lang)}</p>
         {hasDetails ? (
-          <details className="group/details mt-2 rounded-md border border-zinc-800/80 bg-zinc-900/35 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 text-xs font-medium text-violet-400/85 hover:bg-zinc-900/55">
+          <details className="group/details mt-2 rounded-md border border-surface-variant/80 bg-surface-container-low/35 [&_summary::-webkit-details-marker]:hidden">
+            <summary className={ROADMAP_DETAILS_SUMMARY}>
               <span>{t('settings.roadmapExpandDetails')}</span>
               <Chevron nested />
             </summary>
-            <ul className="list-disc space-y-1.5 border-t border-zinc-800/80 px-5 py-2 pb-3 text-[11px] leading-relaxed text-zinc-400">
+            <ul className="list-disc space-y-1.5 border-t border-surface-variant/80 px-5 py-2 pb-3 text-[11px] leading-relaxed text-on-surface-variant">
               {bullets.map((b, i) => (
                 <li key={i}>{pickLocale(b, lang)}</li>
               ))}
@@ -219,6 +222,8 @@ function IdeaRow({ idea, lang }: { idea: RoadmapIdeaEntry; lang: string }) {
 
 export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps) {
   const { t, i18n } = useTranslation()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useDialogFocusTrap(open, dialogRef)
   const lang = i18n.language === 'en' ? 'en' : 'ru'
 
   const { mvpPct, phasesShipped, phasesTotal } = useMemo(() => {
@@ -248,29 +253,30 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-4 sm:items-center"
+      className={cn(MODAL_OVERLAY, 'z-[70]')}
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal
         aria-labelledby="roadmap-modal-title"
-        className="scrollbar-site max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-zinc-600 bg-zinc-950 p-4 shadow-2xl"
+        className="scrollbar-site max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-card border border-surface-variant bg-surface-container-lowest p-sm shadow-2xl md:p-md"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 id="roadmap-modal-title" className="text-base font-semibold text-zinc-100">
+            <h2 id="roadmap-modal-title" className={MODAL_TITLE}>
               {t('settings.roadmapTitle')}
             </h2>
-            <p className="mt-2 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapIntro')}</p>
+            <p className="mt-2 text-xs leading-relaxed text-on-surface-variant">{t('settings.roadmapIntro')}</p>
           </div>
           <button
             type="button"
-            className="shrink-0 rounded px-1 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+            className="shrink-0 rounded px-1 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
             onClick={onClose}
             aria-label={t('common.close')}
           >
@@ -279,7 +285,7 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
         </div>
 
         <div
-          className="mt-6 rounded-lg border border-zinc-700/80 bg-zinc-900/40 px-4 py-4"
+          className="mt-6 rounded-lg border border-surface-variant/80 bg-surface-container-low/40 px-4 py-4"
           role="img"
           aria-label={t('settings.roadmapMvpProgressCaption', {
             pct: mvpPct,
@@ -287,12 +293,12 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             total: phasesTotal,
           })}
         >
-          <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
             {t('settings.roadmapMvpProgressTitle')}
           </p>
           <div className="mt-3 flex flex-col items-center gap-2">
             <MvpProgressRing shipped={phasesShipped} total={phasesTotal} />
-            <p className="max-w-sm text-center text-sm leading-snug text-zinc-400">
+            <p className="max-w-sm text-center text-sm leading-snug text-on-surface-variant">
               {t('settings.roadmapMvpProgressCaption', {
                 pct: mvpPct,
                 done: phasesShipped,
@@ -303,13 +309,13 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
         </div>
 
         <div className="mt-6 flex flex-col gap-3">
-          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-emerald-400/95 hover:bg-zinc-900/80">
+          <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-primary/95 hover:bg-surface-container-low/80">
               <span>{t('settings.roadmapImplemented')}</span>
               <Chevron />
             </summary>
-            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
-              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapImplementedHint')}</p>
+            <div className="border-t border-surface-variant px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-on-surface-variant">{t('settings.roadmapImplementedHint')}</p>
               <ol className="flex flex-col gap-2">
                 {IMPLEMENTED_MVP_PHASES.map((phase) => (
                   <PhaseRow key={phase.id} phase={phase} lang={lang} variant="shipped" />
@@ -318,13 +324,13 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             </div>
           </details>
 
-          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-amber-400/95 hover:bg-zinc-900/80">
+          <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80">
               <span>{t('settings.roadmapMvp')}</span>
               <Chevron />
             </summary>
-            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
-              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapMvpHint')}</p>
+            <div className="border-t border-surface-variant px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-on-surface-variant">{t('settings.roadmapMvpHint')}</p>
               <ol className="flex flex-col gap-2">
                 {MVP_PHASES_PLANNED.map((phase) => (
                   <PhaseRow key={phase.id} phase={phase} lang={lang} variant="planned" />
@@ -333,31 +339,31 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             </div>
           </details>
 
-          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-sky-400/95 hover:bg-zinc-900/80">
+          <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-primary/95 hover:bg-surface-container-low/80">
               <span>{t('settings.roadmapReleaseNotes')}</span>
               <Chevron />
             </summary>
-            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
-              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapReleaseNotesHint')}</p>
+            <div className="border-t border-surface-variant px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-on-surface-variant">{t('settings.roadmapReleaseNotesHint')}</p>
               <div className="flex flex-col gap-2">
                 {releaseNotesByDay.map((day) => (
                   <details
                     key={day.dateKey}
-                    className="group/details rounded-lg border border-zinc-800/90 bg-zinc-950/40 [&_summary::-webkit-details-marker]:hidden"
+                    className="group/details rounded-lg border border-surface-variant/90 bg-surface-container-lowest/40 [&_summary::-webkit-details-marker]:hidden"
                   >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-sky-400/90 hover:bg-zinc-900/55">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-primary/90 hover:bg-surface-container-low/55">
                       <span>{pickLocale(day.dateLabel, lang)}</span>
                       <Chevron nested />
                     </summary>
-                    <div className="border-t border-zinc-800/80 px-3 pb-3 pt-2">
+                    <div className="border-t border-surface-variant/80 px-3 pb-3 pt-2">
                       <div className="flex flex-col gap-3">
                         {day.segments.map((segment, si) => (
                           <div
                             key={si}
                             className={
                               day.segments.length > 1
-                                ? 'rounded-lg border border-zinc-800/70 bg-zinc-950/35 p-2'
+                                ? 'rounded-lg border border-surface-variant/70 bg-surface-container-lowest/35 p-2'
                                 : ''
                             }
                           >
@@ -365,33 +371,33 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
                               {sortReleaseNoteItems(segment.items, lang).map((item, ii) => (
                                 <div
                                   key={ii}
-                                  className="rounded-lg border border-zinc-800/90 bg-zinc-950/45 px-3 py-2.5"
+                                  className="rounded-lg border border-surface-variant/90 bg-surface-container-lowest/45 px-3 py-2.5"
                                 >
-                                  <p className="mb-2 text-[11px] font-medium tabular-nums text-zinc-400">
+                                  <p className="mb-2 text-[11px] font-medium tabular-nums text-on-surface-variant">
                                     {t('settings.roadmapReleaseNoteShippedIn', {
                                       version: pickLocale(item.releasedInVersion, lang),
                                     })}
                                   </p>
-                                  <ul className="list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-zinc-300">
+                                  <ul className="list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-on-surface">
                                     {item.changes.map((c, ci) => (
-                                      <li key={ci} className="marker:text-zinc-600">
+                                      <li key={ci} className="marker:text-on-surface-variant">
                                         {pickLocale(c, lang)}
                                       </li>
                                     ))}
                                   </ul>
                                   {item.plainBullets?.length ? (
-                                    <details className="group/details mt-3 rounded-md border border-zinc-800/80 bg-zinc-900/35 [&_summary::-webkit-details-marker]:hidden">
-                                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-2 text-xs font-medium text-sky-400/85 hover:bg-zinc-900/55">
+                                    <details className="group/details mt-3 rounded-md border border-surface-variant/80 bg-surface-container-low/35 [&_summary::-webkit-details-marker]:hidden">
+                                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-2 py-2 text-xs font-medium text-primary/85 hover:bg-surface-container-low/55">
                                         <span>{t('settings.roadmapReleaseNotePlainDetails')}</span>
                                         <Chevron nested />
                                       </summary>
-                                      <div className="border-t border-zinc-800/80 px-3 pb-3 pt-2">
-                                        <p className="text-[11px] leading-relaxed text-zinc-500">
+                                      <div className="border-t border-surface-variant/80 px-3 pb-3 pt-2">
+                                        <p className="text-[11px] leading-relaxed text-on-surface-variant">
                                           {t('settings.roadmapReleaseNotePlainLead')}
                                         </p>
-                                        <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-zinc-400">
+                                        <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-on-surface-variant">
                                           {item.plainBullets.map((p, pi) => (
-                                            <li key={pi} className="marker:text-zinc-600">
+                                            <li key={pi} className="marker:text-on-surface-variant">
                                               {pickLocale(p, lang)}
                                             </li>
                                           ))}
@@ -412,34 +418,34 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             </div>
           </details>
 
-          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-violet-400/95 hover:bg-zinc-900/80">
+          <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80">
               <span>
                 {t('settings.roadmapIdeas')}{' '}
-                <span className="font-normal tabular-nums text-violet-400/70">
+                <span className="font-normal tabular-nums text-on-surface-variant">
                   ({t('settings.roadmapIdeasCount', { count: ideasLaterTotal })})
                 </span>
               </span>
               <Chevron />
             </summary>
-            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
-              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapIdeasHint')}</p>
+            <div className="border-t border-surface-variant px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-on-surface-variant">{t('settings.roadmapIdeasHint')}</p>
               <div className="flex flex-col gap-2">
                 {ideasLaterGroups.map((g) => (
                   <details
                     key={g.groupId}
-                    className="group/details rounded-lg border border-zinc-800/90 bg-zinc-950/40 [&_summary::-webkit-details-marker]:hidden"
+                    className="group/details rounded-lg border border-surface-variant/90 bg-surface-container-lowest/40 [&_summary::-webkit-details-marker]:hidden"
                   >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold text-violet-400/90 hover:bg-zinc-900/55">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container-low/55">
                       <span className="min-w-0 text-left">
                         {t(`settings.roadmapIdeaGroup_${g.groupId}` as const)}{' '}
-                        <span className="font-normal tabular-nums text-zinc-500">
+                        <span className="font-normal tabular-nums text-on-surface-variant">
                           ({t('settings.roadmapIdeasCount', { count: g.ideas.length })})
                         </span>
                       </span>
                       <Chevron nested />
                     </summary>
-                    <ul className="flex flex-col gap-2 border-t border-zinc-800/80 px-3 py-3">
+                    <ul className="flex flex-col gap-2 border-t border-surface-variant/80 px-3 py-3">
                       {g.ideas.map((idea) => (
                         <IdeaRow
                           key={`${g.groupId}-${idea.ideaLaterOrder ?? 0}-${pickLocale(idea.title, lang)}`}
@@ -454,24 +460,24 @@ export function ProductRoadmapModal({ open, onClose }: ProductRoadmapModalProps)
             </div>
           </details>
 
-          <details className="group rounded-lg border border-zinc-800 bg-zinc-900/50 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-orange-400/95 hover:bg-zinc-900/80">
+          <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-orange-400/95 hover:bg-surface-container-low/80">
               <span>{t('settings.roadmapOpenQuestions')}</span>
               <Chevron />
             </summary>
-            <div className="border-t border-zinc-800 px-3 pb-4 pt-3">
-              <p className="mb-3 text-xs leading-relaxed text-zinc-500">{t('settings.roadmapOpenQuestionsHint')}</p>
-              <p className="text-sm leading-relaxed text-zinc-400">{t('settings.roadmapOpenQuestionBacklogUx')}</p>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-500">{t('settings.roadmapOpenQuestionCpt')}</p>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-500">{t('settings.roadmapOpenQuestionEodAuto')}</p>
+            <div className="border-t border-surface-variant px-3 pb-4 pt-3">
+              <p className="mb-3 text-xs leading-relaxed text-on-surface-variant">{t('settings.roadmapOpenQuestionsHint')}</p>
+              <p className="text-sm leading-relaxed text-on-surface-variant">{t('settings.roadmapOpenQuestionBacklogUx')}</p>
+              <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">{t('settings.roadmapOpenQuestionCpt')}</p>
+              <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">{t('settings.roadmapOpenQuestionEodAuto')}</p>
             </div>
           </details>
         </div>
 
-        <div className="mt-6 flex justify-end border-t border-zinc-800 pt-4">
+        <div className="mt-6 flex justify-end border-t border-surface-variant pt-4">
           <button
             type="button"
-            className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-100 hover:bg-zinc-700"
+            className="btn-secondary px-4 py-2 text-sm"
             onClick={onClose}
           >
             {t('common.close')}

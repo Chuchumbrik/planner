@@ -8,6 +8,7 @@ web/dist/
 .env.*
 !.env.example
 web/.env.local
+.cursor/test-account.local.md
 
 # Supabase CLI (локальные артефакты)
 web/supabase/.temp/

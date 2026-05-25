@@ -36,7 +36,7 @@ export function PlanDayProgressCaption({ progress, emptyClassName }: Props) {
       <p
         className={
           emptyClassName ??
-          'max-w-[14rem] text-center text-xs leading-snug text-zinc-400'
+          'max-w-[14rem] text-center text-xs leading-snug text-on-surface-variant'
         }
       >
         {t('eod.chartEmptyPlan')}
@@ -46,7 +46,7 @@ export function PlanDayProgressCaption({ progress, emptyClassName }: Props) {
 
   return (
     <div className="flex max-w-[15rem] flex-col items-center gap-0.5 text-center">
-      <p className="text-lg font-semibold tabular-nums text-zinc-100">
+      <p className="font-display text-lg font-semibold tabular-nums text-on-surface">
         {t('eod.chartPercentLine', { pct: labels.pctStr })}
       </p>
     </div>

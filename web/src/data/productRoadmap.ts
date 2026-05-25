@@ -325,6 +325,159 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-24', en: '2026-05-24' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Планировщик — полировка UX:** виджет **End of Day** открывает ритуал/отчёт (кнопки EOD убраны из toolbar); **FAB «+»** на всех вкладках — на desktop компактный у правого края, черновики на бейдже; чекбоксы задач — **`motivator-checkbox`**; фильтры — отступы и сетка; неделя/месяц — «Закрыто по плану» вместо дубля %; отчёты — тонкий горизонтальный скролл графика.',
+            en: '**Planner UX polish:** **End of Day** stat tile opens ritual/report (EOD toolbar buttons removed); **“+” FAB** on all tabs — compact on desktop at the right edge, drafts on badge; task checkboxes — **`motivator-checkbox`**; filters — padding and grid; week/month — “Plan completed” instead of duplicate %; reports — slim horizontal chart scrollbar.',
+          },
+          {
+            ru: '**Shell Design 2.0:** vault/plan в шапке (**`ShellVaultPlanButton`**), аккаунт в footer sidebar (**`ShellAccountFooter`**); admin sub-menu на dashboard/settings; AI-панель docked на desktop (resizable), overlay на mobile.',
+            en: '**Shell Design 2.0:** vault/plan in header (**`ShellVaultPlanButton`**), account in sidebar footer (**`ShellAccountFooter`**); admin sub-menu on dashboard/settings; AI panel docked on desktop (resizable), overlay on mobile.',
+          },
+          {
+            ru: '**QA прогон 20 — low fixes:** обратная связь по умолчанию (GitHub Issues); clamp title в «Завести дефект»; EOD без rank-шума; закрытие create task без лишнего диалога; «Краткая сводка» в Настройках → Общие.',
+            en: '**QA run 20 — low fixes:** default feedback (GitHub Issues); defect title clamp; cleaner EOD lists; create-task close without spurious confirm; Brief summary in Settings → General.',
+          },
+          {
+            ru: '**Design 2.0 — этап 8 (a11y):** focus trap и возврат фокуса в модалках; `aria-label` на close create/edit; `aria-live` sync и фильтры; spot-check контраста токенов.',
+            en: '**Design 2.0 — stage 8 (a11y):** focus trap and focus restore in modals; `aria-label` on create/edit close; `aria-live` for sync and filters; token contrast spot-check.',
+          },
+          {
+            ru: '**Настройки — «Безопасность»:** журнал безопасности перенесён из sidebar-прототипа во вкладку **`/settings#privacy`** (seed + журнал); **`/prototype/security-log`** → **`/settings#security-log`**.',
+            en: '**Settings — Security tab:** security log moved from sidebar prototype to **`/settings#privacy`** (seed + log); **`/prototype/security-log`** → **`/settings#security-log`**.',
+          },
+          {
+            ru: '**Design 2.0 — этап 7 (адаптив/PWA):** tap targets ≥44px в shell и toolbar планировщика; safe-area в шапках и filter sheet; manifest **`theme_color` #131315**; `:focus-visible` на кнопках; `prefers-reduced-motion` для pulse/spin.',
+            en: '**Design 2.0 — stage 7 (adaptive/PWA):** ≥44px tap targets in shell and planner toolbar; safe-area on headers and filter sheet; manifest **`theme_color` #131315**; `:focus-visible` on buttons; `prefers-reduced-motion` for pulse/spin.',
+          },
+          {
+            ru: '**UX QA (прогон 5):** единая шапка на всех страницах shell — sync с popover и «Повторить», меню аккаунта без дублей навигации; в sidebar — **shield** вместо второго «профиля», Premium с подписью **«Скоро»**; на мобилке кнопка скрытия диаграмм — в ряду с фильтрами и «Завершить день».',
+            en: '**UX QA (run 5):** shared shell header on all pages — sync popover with **Retry**, account menu without duplicate nav; sidebar **shield** instead of a second profile icon, Premium labeled **Coming soon**; on mobile, hide-charts control sits in the filters / End day row.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Завершить день или открыть отчёт — нажмите на карточку **End of Day** в сводке дня; создать задачу — круглая **«+»** справа (на компьютере меньше, у края экрана).',
+            en: 'End the day or open the report from the **End of Day** stat card; create a task with the round **“+”** on the right (smaller on desktop, at the screen edge).',
+          },
+          {
+            ru: 'Галочки у задач выглядят как остальной интерфейс — тёмная рамка, зелёная отметка при выполнении.',
+            en: 'Task checkboxes match the dark theme — bordered box, green fill when done.',
+          },
+          {
+            ru: 'Обратная связь в настройках работает без отдельной переменной окружения — по умолчанию открывается форма issue на GitHub.',
+            en: 'Feedback in Settings works without a custom env var — by default it opens the GitHub issue form.',
+          },
+          {
+            ru: '«Краткая сводка» (дорожная карта и релиз-ноты) доступна в Настройках → Общие, не только из меню аккаунта на планировщике.',
+            en: 'Brief summary (roadmap and release notes) is in Settings → General, not only from the planner account menu.',
+          },
+          {
+            ru: 'Модалки (создание/редактирование задачи, EOD, сводка и др.) удерживают клавиатурный фокус внутри и возвращают его после закрытия.',
+            en: 'Modals (create/edit task, EOD, roadmap, etc.) keep keyboard focus inside and restore it when closed.',
+          },
+          {
+            ru: 'На телефоне кнопки в шапке и панели фильтров стали удобнее для нажатия; notch и «челка» учитываются в отступах.',
+            en: 'Phone header and filter bar controls are easier to tap; notch safe areas respected in padding.',
+          },
+          {
+            ru: 'Sync и профиль теперь в шапке на Отчётах и Настройках; из меню убраны лишние пункты «Отчёты / Настройки / Завершить день». На телефоне иконка диаграмм больше не растягивается на всю ширину.',
+            en: 'Sync and account menu appear in the header on Reports and Settings; duplicate Reports/Settings/End day entries removed. On phone, the charts toggle is a compact icon next to filters.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-23', en: '2026-05-23' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**QA MVP 1.0.0 — критичные фиксы:** восстановлена ширина **`max-w-sm/md/lg`** (login, модалки, onboarding); **«Продолжить черновик → Сохранить»** снова создаёт задачу; **неделя** — ось времени скроллится вместе с колонками; **«Повторить»** при ошибке sync повторяет **upload**, а не перезагрузку vault; push **`?highlightTask=`** — scroll и подсветка карточки; EOD ждёт отправку на сервер; битый seed в localStorage — экран восстановления вместо вечной «Инициализации…».',
+            en: '**MVP 1.0.0 QA — critical fixes:** restored **`max-w-sm/md/lg`** widths (login, modals, onboarding); **resume draft → Save** creates the task again; **week** time axis scrolls with day columns; **Retry** after sync failure re-**uploads** local vault instead of re-fetch; push **`?highlightTask=`** scrolls and highlights the card; EOD waits for server sync; malformed localStorage seed shows recovery instead of endless “Initializing encryption…”.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Формы и модалки снова нормальной ширины на компьютере; черновик после «Продолжить» не пропадает впустую; клик по push открывает нужную задачу в списке.',
+            en: 'Forms and modals are readable width on desktop again; resuming a draft no longer deletes your work; tapping a push notification jumps to the task in the list.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Design 2.0 — навигация и настройки:** вкладки Stitch на **`/settings`** (`SettingsTabLayout`); прототипы **`/prototype/*`** и **AI-ассистент** (stub) — в sidebar / bottom nav для **admin** / **beta_tester**; глобальная кнопка AI → правая панель; **Настройки** внизу sidebar; hash **`#privacy`** для seed; **`RequireTesterPreview`**.',
+            en: '**Design 2.0 — navigation & settings:** Stitch tabs on **`/settings`** (`SettingsTabLayout`); **`/prototype/*`** and **AI assistant** (stub) in sidebar / bottom nav for **admin** / **beta_tester**; global AI button → right panel; **Settings** pinned at sidebar bottom; **`#privacy`** hash for seed; **`RequireTesterPreview`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Прототипы больше не спрятаны в настройках — они в боковом меню (если у вас роль тестера или админа). AI пока заглушка в выдвижной панели справа.',
+            en: 'Prototypes moved out of Settings into the sidebar (tester/admin roles). AI is still a stub in the slide-in panel on the right.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Design 2.0 — дизайн-система и планировщик:** подключён **Geist**, шкала типографики и **`designClasses`**; **MotivatorShell** — safe-area, крупные зоны нажатия, версия внизу sidebar; **День** — stat-карточки, mobile **FAB «+»**, chips групп на карточках, подсветка **просрочки**; **Неделя** и **Месяц** — stat-ряд, колонка «сегодня», просрочка в сетке/ячейках, подсказка **«скрыто фильтром»**, ширина контента до **1200px**.',
+            en: '**Design 2.0 — design system & planner:** **Geist** font, typography scale and **`designClasses`**; **MotivatorShell** — safe-area, larger tap targets, version in sidebar footer; **Day** — stat cards, mobile **FAB “+”**, group chips on cards, **overdue** styling; **Week** and **Month** — stat row, “today” column, overdue in grid/cells, **“hidden by filter”** hint, content width up to **1200px**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На телефоне создать задачу можно круглой кнопкой «+» внизу; на неделе и в месяце видно, что день уже прошёл или задача «висит» после времени слота.',
+            en: 'On your phone, use the round “+” button to add a task; on Week and Month you can see past days and tasks that slipped past their time slot.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Design 2.0 — модалки и вторичные экраны:** единые **`MODAL_*`** и **`ALERT_WARNING_*`** вместо янтарных плашек; обновлены создание/редактирование задачи, EOD, «Краткая сводка», дефект, cookie; вход, онбординг, настройки (seed/vault), баннеры синхронизации; прототипы **`/prototype/*`** на **`rounded-card`**.',
+            en: '**Design 2.0 — modals & secondary screens:** shared **`MODAL_*`** and **`ALERT_WARNING_*`** instead of amber callouts; refreshed create/edit task, EOD, Brief summary, defect report, cookie banner; login, onboarding, settings (seed/vault), sync banners; **`/prototype/*`** on **`rounded-card`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Предупреждения (сеть, seed, подсказки в формах) выглядят одинаково и читаются на тёмном фоне; длинные модалки не упираются в край экрана на телефоне.',
+            en: 'Warnings (network, seed backup, form hints) look consistent on the dark theme; tall modals respect the phone safe area.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-22', en: '2026-05-22' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Design 2.0 (ветка `design-2.0`):** единая тёмная тема по Stitch — primary `#4edea3`, шрифты Inter/Geist, карточки и поля **`motivator-*`**; оболочка **`MotivatorShell`** (навигация, план **Free**); обновлены лендинг, вход, онбординг, планировщик (день/неделя/месяц), модалки задач и EOD, настройки, отчёты, «Краткая сводка», дефекты, cookie-баннер; статические прототипы **`/prototype/*`**.',
+            en: '**Design 2.0 (`design-2.0` branch):** unified dark Stitch theme — primary `#4edea3`, Inter/Geist, **`motivator-*`** cards and inputs; **`MotivatorShell`** (nav, **Free** tier); refreshed landing, login, onboarding, planner (day/week/month), task & EOD modals, settings, reports, Brief summary, defect flow, cookie banner; static **`/prototype/*`** screens.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Интерфейс выглядит как один продукт: меньше «серого zinc», больше фирменного зелёного и читаемых подписей; на телефоне — нижняя навигация, на широком экране — боковая панель.',
+            en: 'The UI reads as one product: less generic gray zinc, more brand green and clearer labels; bottom nav on phones, sidebar on wide screens.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-16', en: '2026-05-16' },
     items: [
       {

@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { MOTIVATOR_INPUT } from '@/lib/designClasses'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 import { localDateKey, monthLabel, monthWeekMatrix, parseLocalDateKey } from '@motivator/core'
 
 function formatDateShort(dateKey: string, locale: string): string {
@@ -43,7 +45,10 @@ export function LocalDatePickerField({
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const [panelPos, setPanelPos] = useState({ top: 0, left: 0, width: 280 })
+
+  useDialogFocusTrap(open, panelRef)
 
   const now = new Date()
   const [viewY, setViewY] = useState(now.getFullYear())
@@ -144,7 +149,7 @@ export function LocalDatePickerField({
 
   return (
     <div ref={wrapRef} className={`relative ${className ?? ''}`}>
-      <div className="flex flex-col gap-1 text-xs text-zinc-500">
+      <div className="flex flex-col gap-1 text-xs text-on-surface-variant">
         <span>{label}</span>
         <button
           ref={triggerRef}
@@ -152,16 +157,16 @@ export function LocalDatePickerField({
           disabled={disabled}
           aria-expanded={open}
           aria-haspopup="dialog"
-          className="flex w-full items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm outline-none ring-emerald-500/30 hover:bg-zinc-800 focus-visible:ring-2 disabled:opacity-40"
+          className={`${MOTIVATOR_INPUT} flex w-full items-center justify-between gap-2 text-left outline-none ring-primary/30 focus-visible:ring-2`}
           onClick={() => {
             if (disabled) return
             setOpen((o) => !o)
           }}
         >
-          <span className={value ? 'text-zinc-100' : 'text-zinc-500'}>
+          <span className={value ? 'text-on-surface' : 'text-on-surface-variant'}>
             {value ? formatDateShort(value, locale) : t('app.datePickerPlaceholder')}
           </span>
-          <span className="shrink-0 text-zinc-500" aria-hidden>
+          <span className="shrink-0 text-on-surface-variant" aria-hidden>
             ▾
           </span>
         </button>
@@ -169,9 +174,11 @@ export function LocalDatePickerField({
 
       {open ? (
         <div
+          ref={panelRef}
           role="dialog"
           aria-modal="true"
-          className="fixed z-[100] rounded-xl border border-zinc-700 bg-zinc-950 p-3 shadow-2xl ring-1 ring-black/50"
+          aria-label={monthLabel(viewY, viewM, locale)}
+          className="fixed z-[100] rounded-xl border border-surface-variant bg-surface-container-lowest p-3 shadow-2xl ring-1 ring-black/50"
           style={{
             top: panelPos.top,
             left: panelPos.left,
@@ -182,19 +189,19 @@ export function LocalDatePickerField({
           <div className="mb-2 flex items-center justify-between gap-2">
             <button
               type="button"
-              className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-35"
+              className="rounded-lg border border-surface-variant px-2 py-1 text-xs text-on-surface hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-35"
               aria-label={t('app.datePickerPrevMonth')}
               disabled={disablePrevMonth}
               onClick={() => shiftMonth(-1)}
             >
               ←
             </button>
-            <span className="min-w-0 flex-1 truncate text-center text-xs font-medium text-zinc-200">
+            <span className="min-w-0 flex-1 truncate text-center font-display text-xs font-medium text-on-surface">
               {monthLabel(viewY, viewM, locale)}
             </span>
             <button
               type="button"
-              className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-900"
+              className="rounded-lg border border-surface-variant px-2 py-1 text-xs text-on-surface hover:bg-surface-container"
               aria-label={t('app.datePickerNextMonth')}
               onClick={() => shiftMonth(1)}
             >
@@ -202,7 +209,7 @@ export function LocalDatePickerField({
             </button>
           </div>
 
-          <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide text-zinc-500">
+          <div className="mb-2 grid grid-cols-7 gap-1 text-center font-display text-[10px] uppercase tracking-wide text-on-surface-variant">
             {weekDayLabels.map((wd, i) => (
               <div key={i}>{wd}</div>
             ))}
@@ -226,12 +233,12 @@ export function LocalDatePickerField({
                       key={dateKey}
                       type="button"
                       disabled={dayDisabled}
-                      className={`min-h-[2rem] rounded-lg border text-xs font-medium transition hover:bg-zinc-900 disabled:opacity-40 ${
+                      className={`min-h-[2rem] rounded-lg border text-xs font-medium transition hover:bg-surface-container disabled:opacity-40 ${
                         selected
-                          ? 'border-emerald-500 bg-emerald-950/70 text-emerald-50 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.45)]'
+                          ? 'border-primary bg-primary/20 text-primary shadow-[inset_0_0_0_1px_rgba(78,222,163,0.45)]'
                           : isToday
-                            ? 'border-zinc-500 bg-zinc-900/80 text-zinc-100'
-                            : 'border-zinc-800 bg-zinc-950/50 text-zinc-300'
+                            ? 'border-surface-variant bg-surface-container-high text-on-surface'
+                            : 'border-surface-variant bg-surface-container-low text-on-surface-variant'
                       }`}
                       onClick={() => {
                         onChange(dateKey)
@@ -249,7 +256,7 @@ export function LocalDatePickerField({
           {allowClear ? (
             <button
               type="button"
-              className="mt-3 w-full rounded-lg border border-zinc-700 py-2 text-xs text-zinc-400 hover:bg-zinc-900"
+              className="btn-secondary mt-3 w-full py-2 text-xs"
               onClick={() => {
                 onChange(null)
                 setOpen(false)

@@ -1,8 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { MotivatorShell } from '@/components/layout/MotivatorShell'
+import { SecurityLogPanel } from '@/components/settings/SecurityLogPanel'
+import { SettingsTabLayout } from '@/components/settings/SettingsTabLayout'
+import { useSettingsTab } from '@/components/settings/useSettingsTab'
 import { AdminMotivatorRolePanel } from '@/components/AdminMotivatorRolePanel'
+import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { RequireVault } from '@/components/RequireVault'
 import { SeedExportPanel } from '@/components/SeedExportPanel'
 import { SettingsLegalSection } from '@/components/SettingsLegalSection'
@@ -11,6 +15,16 @@ import { supabase } from '@/lib/supabase'
 import { APP_VERSION } from '@/version'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank, type NotificationDeliveryMode } from '@motivator/core'
 import { getVapidPublicKey } from '@/lib/notifications/pushSubscription'
+import {
+  MOTIVATOR_INPUT,
+  SETTINGS_BTN_SECONDARY,
+  SETTINGS_CARD,
+  SETTINGS_CHECKBOX_ROW,
+  SETTINGS_LABEL,
+  SETTINGS_SUBHEAD,
+  TEXT_HINT_WARNING,
+} from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 import { useVault } from '@/vault/VaultProvider'
 
 function formatMinutesAsTimeValue(mins: number): string {
@@ -46,11 +60,11 @@ function GroupRow({
   const [name, setName] = useState(initialName)
 
   return (
-    <div className="flex flex-wrap items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-      <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-zinc-500">
+    <div className="flex flex-wrap items-start gap-2 rounded-card border border-surface-variant bg-surface-container-low px-3 py-2">
+      <label className={`flex min-w-0 flex-1 flex-col gap-1 ${SETTINGS_LABEL}`}>
         <span>{t('settings.rename')}</span>
         <input
-          className="rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-white disabled:opacity-40"
+          className={MOTIVATOR_INPUT}
           value={name}
           disabled={!canEdit}
           onChange={(e) => setName(e.target.value)}
@@ -90,11 +104,11 @@ function PriorityLabelField({
 
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs text-zinc-500">
+      <span className={SETTINGS_LABEL}>
         {t('settings.priorityLevelLabel', { rank })}
       </span>
       <input
-        className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+        className={MOTIVATOR_INPUT}
         value={draft}
         disabled={!canEdit}
         onChange={(e) => setDraft(e.target.value)}
@@ -110,28 +124,6 @@ function PriorityLabelField({
 const MIN_ACCOUNT_PASSWORD_LEN = 6
 /** Дефолт времени EOD push-напоминания (20:30 локально). */
 const EOD_DEFAULT_PUSH_REMINDER_MINUTES = 20 * 60 + 30
-
-const SETTINGS_CARD = 'rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3'
-
-function SettingsSection({
-  id,
-  title,
-  description,
-  children,
-}: {
-  id?: string
-  title: string
-  description?: string
-  children: ReactNode
-}) {
-  return (
-    <section id={id} className="mt-8 scroll-mt-6">
-      <h2 className="text-sm font-medium text-zinc-300">{title}</h2>
-      {description ? <p className="mt-2 text-xs text-zinc-500">{description}</p> : null}
-      {children}
-    </section>
-  )
-}
 
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
@@ -166,6 +158,7 @@ function SettingsPageInner() {
   const [notifModeDraft, setNotifModeDraft] = useState<NotificationDeliveryMode>('off')
   const [notifModeSaving, setNotifModeSaving] = useState(false)
   const [savedFlash, setSavedFlash] = useState(false)
+  const [roadmapModalOpen, setRoadmapModalOpen] = useState(false)
   const savePendingWasRef = useRef(false)
 
   const deliveryMode: NotificationDeliveryMode =
@@ -193,6 +186,17 @@ function SettingsPageInner() {
   const hasEmailLogin = Boolean(session?.user?.email)
   const canEdit = remoteHydrated && !decryptFailed
   const notifModeDirty = notifModeDraft !== deliveryMode
+  const showAdminTab = Boolean(supabase && isAdmin)
+  const [activeTab, setActiveTab] = useSettingsTab(showAdminTab)
+
+  useEffect(() => {
+    if (activeTab !== 'privacy') return
+    const raw = window.location.hash.replace(/^#/, '').trim()
+    if (raw !== 'seed-backup' && raw !== 'security-log') return
+    requestAnimationFrame(() => {
+      document.getElementById(raw)?.scrollIntoView({ block: 'start' })
+    })
+  }, [activeTab])
 
   async function handleSignOut() {
     if (!window.confirm(t('settings.signOutConfirm'))) return
@@ -233,42 +237,141 @@ function SettingsPageInner() {
   const sortedGroups = [...vault.groups].sort((a, b) => a.sortOrder - b.sortOrder)
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-8 pb-12">
-      <header className="mb-6">
-        <Link className="text-sm text-emerald-400 hover:text-emerald-300" to="/app">
-          {t('settings.back')}
-        </Link>
-        <h1 className="mt-3 text-xl font-semibold text-white">{t('settings.title')}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-zinc-400">{t('settings.intro')}</p>
-      </header>
-
-      {decryptFailed ? <VaultDecryptHelp className="mt-4" /> : null}
+    <MotivatorShell activeNav="settings" wide>
+      {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
 
       {savePending ? (
-        <p className="mt-3 text-xs text-zinc-500" role="status" aria-live="polite">
+        <p className="mb-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
           {t('settings.savePending')}
         </p>
       ) : savedFlash ? (
-        <p className="mt-3 text-xs text-emerald-400/90" role="status" aria-live="polite">
+        <p className="mb-3 text-label-sm text-primary" role="status" aria-live="polite">
           {t('settings.saveDone')}
         </p>
       ) : null}
 
-      <SettingsSection
-        id="seed-backup"
-        title={t('settings.seedBackupTitle')}
-        description={t('settings.seedBackupHelp')}
+      <SettingsTabLayout
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        showAdminTab={showAdminTab}
       >
-        <div className={`mt-4 ${SETTINGS_CARD}`}>
-          <SeedExportPanel />
-        </div>
-      </SettingsSection>
+        {activeTab === 'general' ? (
+          <div className="space-y-md">
+            <div>
+              <h3 className={SETTINGS_SUBHEAD}>{t('common.language')}</h3>
+              <div className={`mt-3 ${SETTINGS_CARD}`}>
+                <select
+                  className={MOTIVATOR_INPUT}
+                  value={i18n.language === 'en' ? 'en' : 'ru'}
+                  onChange={(e) => void i18n.changeLanguage(e.target.value)}
+                >
+                  <option value="ru">{t('common.langRuFlag')}</option>
+                  <option value="en">{t('common.langEnFlag')}</option>
+                </select>
+              </div>
+            </div>
 
-      <SettingsSection title={t('settings.sectionPlanning')} description={t('settings.sectionPlanningHelp')}>
-        <h3 className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {t('settings.priorityLabelsTitle')}
-        </h3>
-        <p className="mt-2 text-xs text-zinc-500">{t('settings.priorityLabelsHelp')}</p>
+            <div>
+              <h3 className={SETTINGS_SUBHEAD}>{t('settings.accountPasswordTitle')}</h3>
+              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.accountPasswordHelp')}</p>
+              <form
+                className={`mt-3 flex flex-col gap-3 ${SETTINGS_CARD}`}
+                onSubmit={(e) => void handlePasswordSubmit(e)}
+              >
+                <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
+                  <span>{t('settings.currentPassword')}</span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    className={MOTIVATOR_INPUT}
+                    value={pwCurrent}
+                    disabled={!canEdit || !hasEmailLogin || pwBusy}
+                    onChange={(e) => setPwCurrent(e.target.value)}
+                  />
+                </label>
+                <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
+                  <span>{t('settings.newPasswordField')}</span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    className={MOTIVATOR_INPUT}
+                    value={pwNew}
+                    disabled={!canEdit || !hasEmailLogin || pwBusy}
+                    onChange={(e) => setPwNew(e.target.value)}
+                  />
+                </label>
+                <label className={`flex flex-col gap-1 ${SETTINGS_LABEL}`}>
+                  <span>{t('settings.confirmNewPassword')}</span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    className={MOTIVATOR_INPUT}
+                    value={pwConfirm}
+                    disabled={!canEdit || !hasEmailLogin || pwBusy}
+                    onChange={(e) => setPwConfirm(e.target.value)}
+                  />
+                </label>
+                {pwError ? (
+                  <p className="text-label-sm text-red-400" role="alert">
+                    {pwError}
+                  </p>
+                ) : null}
+                {pwSuccess ? (
+                  <p className="text-label-sm text-primary" role="status">
+                    {t('settings.passwordChanged')}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={!canEdit || !hasEmailLogin || pwBusy}
+                  className={SETTINGS_BTN_SECONDARY}
+                >
+                  {pwBusy ? t('common.loading') : t('settings.changePasswordSubmit')}
+                </button>
+              </form>
+            </div>
+
+            <div>
+              <h3 className={SETTINGS_SUBHEAD}>{t('settings.roadmapGeneralTitle')}</h3>
+              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.roadmapGeneralHelp')}</p>
+              <div className={`mt-3 ${SETTINGS_CARD}`}>
+                <button
+                  type="button"
+                  className={SETTINGS_BTN_SECONDARY}
+                  onClick={() => setRoadmapModalOpen(true)}
+                >
+                  {t('settings.roadmapTempButton')}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className={SETTINGS_SUBHEAD}>{t('settings.sectionLegal')}</h3>
+              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.sectionLegalHelp')}</p>
+              <div className={`mt-3 ${SETTINGS_CARD}`}>
+                <SettingsLegalSection />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {activeTab === 'privacy' ? (
+          <div className="space-y-md">
+            <section id="seed-backup" className="scroll-mt-6">
+              <h3 className={SETTINGS_SUBHEAD}>{t('settings.seedBackupTitle')}</h3>
+              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.seedBackupHelp')}</p>
+              <div className={`mt-3 ${SETTINGS_CARD}`}>
+                <SeedExportPanel />
+              </div>
+            </section>
+            <SecurityLogPanel />
+          </div>
+        ) : null}
+
+        {activeTab === 'planning' ? (
+          <div className="space-y-md">
+        <h3 className={SETTINGS_SUBHEAD}>{t('settings.priorityLabelsTitle')}</h3>
+        <p className="mt-2 text-xs text-on-surface-variant">{t('settings.priorityLabelsHelp')}</p>
         <div className={`mt-4 flex flex-col gap-3 ${SETTINGS_CARD}`}>
           {PRIORITY_RANKS.map((rank) => (
             <PriorityLabelField
@@ -281,9 +384,7 @@ function SettingsPageInner() {
           ))}
         </div>
 
-        <h3 className="mt-8 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {t('settings.groupsTitle')}
-        </h3>
+        <h3 className={`${SETTINGS_SUBHEAD} mt-8`}>{t('settings.groupsTitle')}</h3>
         <form
           className="mt-3 flex gap-2"
           onSubmit={(e) => {
@@ -293,7 +394,7 @@ function SettingsPageInner() {
           }}
         >
           <input
-            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            className={`${MOTIVATOR_INPUT} flex-1`}
             placeholder={t('settings.newGroupPlaceholder')}
             value={newGroupName}
             disabled={!canEdit}
@@ -302,7 +403,7 @@ function SettingsPageInner() {
           <button
             type="submit"
             disabled={!canEdit}
-            className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+            className={SETTINGS_BTN_SECONDARY}
           >
             {t('settings.addGroup')}
           </button>
@@ -320,11 +421,9 @@ function SettingsPageInner() {
           ))}
         </div>
 
-        <h3 className="mt-8 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {t('settings.eodTitle')}
-        </h3>
-        <p className="mt-2 text-xs text-zinc-500">{t('settings.eodHelp')}</p>
-        <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3">
+        <h3 className={`${SETTINGS_SUBHEAD} mt-8`}>{t('settings.eodTitle')}</h3>
+        <p className="mt-2 text-xs text-on-surface-variant">{t('settings.eodHelp')}</p>
+        <label className={`${SETTINGS_CHECKBOX_ROW} mt-4`}>
           <input
             type="checkbox"
             className="mt-0.5"
@@ -332,14 +431,12 @@ function SettingsPageInner() {
             disabled={!canEdit}
             onChange={(e) => void setEodEnabled(e.target.checked)}
           />
-          <span className="text-sm leading-snug text-zinc-300">{t('settings.eodToggle')}</span>
+          <span className="text-sm leading-snug text-on-surface">{t('settings.eodToggle')}</span>
         </label>
-        <h3 className="mt-6 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {t('settings.eodAutoCloseTitle')}
-        </h3>
-        <p className="mt-2 text-xs text-zinc-500">{t('settings.eodAutoCloseHelp')}</p>
+        <h3 className={`${SETTINGS_SUBHEAD} mt-6`}>{t('settings.eodAutoCloseTitle')}</h3>
+        <p className="mt-2 text-xs text-on-surface-variant">{t('settings.eodAutoCloseHelp')}</p>
         <label
-          className={`mt-3 flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3 ${
+          className={`${SETTINGS_CHECKBOX_ROW} mt-3 ${
             vault.eodPreferences?.enabled === false ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
           }`}
         >
@@ -350,17 +447,15 @@ function SettingsPageInner() {
             disabled={!canEdit || vault.eodPreferences?.enabled === false}
             onChange={(e) => void setEodAutoCloseAtDayEnd(e.target.checked)}
           />
-          <span className="text-sm leading-snug text-zinc-300">{t('settings.eodAutoCloseToggle')}</span>
+          <span className="text-sm leading-snug text-on-surface">{t('settings.eodAutoCloseToggle')}</span>
         </label>
-        <h3 className="mt-6 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {t('settings.eodPushReminderTitle')}
-        </h3>
-        <p className="mt-2 text-xs text-zinc-500">{t('settings.eodPushReminderHelp')}</p>
+        <h3 className={`${SETTINGS_SUBHEAD} mt-6`}>{t('settings.eodPushReminderTitle')}</h3>
+        <p className="mt-2 text-xs text-on-surface-variant">{t('settings.eodPushReminderHelp')}</p>
         {deliveryMode === 'off' ? (
-          <p className="mt-2 text-xs text-amber-500/90">{t('settings.eodPushReminderNeedNotifications')}</p>
+          <p className={cn('mt-2', TEXT_HINT_WARNING)}>{t('settings.eodPushReminderNeedNotifications')}</p>
         ) : null}
         <label
-          className={`mt-3 flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3 ${
+          className={`${SETTINGS_CHECKBOX_ROW} mt-3 ${
             vault.eodPreferences?.enabled === false || !canEdit || deliveryMode === 'off'
               ? 'cursor-not-allowed opacity-50'
               : 'cursor-pointer'
@@ -383,15 +478,15 @@ function SettingsPageInner() {
               }
             }}
           />
-          <span className="text-sm leading-snug text-zinc-300">{t('settings.eodPushReminderToggle')}</span>
+          <span className="text-sm leading-snug text-on-surface">{t('settings.eodPushReminderToggle')}</span>
         </label>
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <label className="flex min-w-0 flex-col gap-1">
-            <span className="text-xs text-zinc-500">{t('settings.eodPushReminderTime')}</span>
+            <span className={SETTINGS_LABEL}>{t('settings.eodPushReminderTime')}</span>
             <input
               type="time"
               step={60}
-              className="max-w-[12rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+              className={`${MOTIVATOR_INPUT} max-w-[12rem]`}
               value={eodPushTimeValue}
               disabled={
                 !canEdit || vault.eodPreferences?.enabled === false || deliveryMode === 'off' || !eodPushReminderOn
@@ -412,7 +507,7 @@ function SettingsPageInner() {
               (typeof eodPushReminder !== 'number' ||
                 eodPushReminder === EOD_DEFAULT_PUSH_REMINDER_MINUTES)
             }
-            className="shrink-0 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-700 disabled:opacity-40"
+            className={`${SETTINGS_BTN_SECONDARY} shrink-0 text-xs`}
             onClick={() => void setEodPushReminderMinutes(EOD_DEFAULT_PUSH_REMINDER_MINUTES)}
           >
             {t('settings.eodPushReminderResetDefault', {
@@ -420,13 +515,12 @@ function SettingsPageInner() {
             })}
           </button>
         </div>
-      </SettingsSection>
+          </div>
+        ) : null}
 
-      <SettingsSection
-        title={t('settings.notificationsTitle')}
-        description={t('settings.notificationsHelp')}
-      >
-        <div className="mt-4 flex flex-col gap-3 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3">
+        {activeTab === 'notifications' ? (
+          <div>
+        <div className={`${SETTINGS_CARD} flex flex-col gap-3`}>
           {(
             [
               ['off', t('settings.notificationsModeOff')],
@@ -443,15 +537,15 @@ function SettingsPageInner() {
                 disabled={!canEdit || notifModeSaving}
                 onChange={() => setNotifModeDraft(value)}
               />
-              <span className="text-sm leading-snug text-zinc-300">{label}</span>
+              <span className="text-sm leading-snug text-on-surface">{label}</span>
             </label>
           ))}
-          <p className="text-xs text-zinc-500">{t('settings.notificationsModeHybridHint')}</p>
-          <p className="text-xs text-amber-600/90">{t('settings.notificationsModeFullHint')}</p>
+          <p className="text-xs text-on-surface-variant">{t('settings.notificationsModeHybridHint')}</p>
+          <p className={TEXT_HINT_WARNING}>{t('settings.notificationsModeFullHint')}</p>
           <button
             type="button"
             disabled={!canEdit || !notifModeDirty || notifModeSaving}
-            className="mt-1 w-fit rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 disabled:opacity-40"
+            className="btn-primary mt-1 w-fit px-4 py-2 text-sm disabled:opacity-40"
             onClick={() => {
               setNotifModeSaving(true)
               void setNotificationDeliveryMode(notifModeDraft).finally(() => setNotifModeSaving(false))
@@ -465,7 +559,7 @@ function SettingsPageInner() {
             <button
               type="button"
               disabled={!canEdit}
-              className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+              className={SETTINGS_BTN_SECONDARY}
               onClick={() => {
                 setNotifPushHint(null)
                 void subscribePushNotifications().then((r: 'ok' | 'denied' | 'unconfigured' | 'no_sw') => {
@@ -478,11 +572,11 @@ function SettingsPageInner() {
             >
               {t('settings.notificationsEnablePush')}
             </button>
-            {notifPushHint ? <p className="text-xs text-zinc-400">{notifPushHint}</p> : null}
+            {notifPushHint ? <p className="text-xs text-on-surface-variant">{notifPushHint}</p> : null}
             <button
               type="button"
               disabled={!canEdit || testPushBusy}
-              className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
+              className={SETTINGS_BTN_SECONDARY}
               onClick={() => {
                 setTestPushError(null)
                 setTestPushBusy(true)
@@ -499,110 +593,32 @@ function SettingsPageInner() {
               </p>
             ) : null}
             {!getVapidPublicKey() ? (
-              <p className="text-xs text-zinc-500">{t('settings.notificationsVapidMissing')}</p>
+              <p className="text-xs text-on-surface-variant">{t('settings.notificationsVapidMissing')}</p>
             ) : null}
           </div>
         ) : null}
-      </SettingsSection>
+          </div>
+        ) : null}
 
-      <SettingsSection title={t('settings.sectionAccount')} description={t('settings.sectionAccountHelp')}>
-        <h3 className="mt-4 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {t('common.language')}
-        </h3>
-        <div className={`mt-4 ${SETTINGS_CARD}`}>
-          <select
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
-            value={i18n.language === 'en' ? 'en' : 'ru'}
-            onChange={(e) => void i18n.changeLanguage(e.target.value)}
-          >
-            <option value="ru">{t('common.langRuFlag')}</option>
-            <option value="en">{t('common.langEnFlag')}</option>
-          </select>
-        </div>
+        {activeTab === 'admin' && showAdminTab && supabase ? (
+          <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
+        ) : null}
+      </SettingsTabLayout>
 
-        <h3 className="mt-8 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          {t('settings.accountPasswordTitle')}
-        </h3>
-        <p className="mt-2 text-xs text-zinc-500">{t('settings.accountPasswordHelp')}</p>
-        <form
-          className={`mt-4 flex flex-col gap-3 ${SETTINGS_CARD}`}
-          onSubmit={(e) => void handlePasswordSubmit(e)}
-        >
-          <label className="flex flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('settings.currentPassword')}</span>
-            <input
-              type="password"
-              autoComplete="current-password"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-              value={pwCurrent}
-              disabled={!canEdit || !hasEmailLogin || pwBusy}
-              onChange={(e) => setPwCurrent(e.target.value)}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('settings.newPasswordField')}</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-              value={pwNew}
-              disabled={!canEdit || !hasEmailLogin || pwBusy}
-              onChange={(e) => setPwNew(e.target.value)}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-zinc-500">
-            <span>{t('settings.confirmNewPassword')}</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
-              value={pwConfirm}
-              disabled={!canEdit || !hasEmailLogin || pwBusy}
-              onChange={(e) => setPwConfirm(e.target.value)}
-            />
-          </label>
-          {pwError ? (
-            <p className="text-xs text-red-400" role="alert">
-              {pwError}
-            </p>
-          ) : null}
-          {pwSuccess ? (
-            <p className="text-xs text-emerald-400/90" role="status">
-              {t('settings.passwordChanged')}
-            </p>
-          ) : null}
-          <button
-            type="submit"
-            disabled={!canEdit || !hasEmailLogin || pwBusy}
-            className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-40"
-          >
-            {pwBusy ? t('common.loading') : t('settings.changePasswordSubmit')}
-          </button>
-        </form>
-      </SettingsSection>
+      <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />
 
-      <SettingsSection title={t('settings.sectionLegal')} description={t('settings.sectionLegalHelp')}>
-        <div className={`mt-4 ${SETTINGS_CARD}`}>
-          <SettingsLegalSection />
-        </div>
-      </SettingsSection>
-
-      {supabase && isAdmin ? (
-        <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
-      ) : null}
-
-      <p className="mt-10 text-center text-xs text-zinc-600">
+      <p className="mt-10 text-center text-mono-data text-label-sm text-on-surface-variant">
         {t('settings.appVersion', { version: APP_VERSION })}
       </p>
 
       <button
         type="button"
-        className="mt-4 w-full rounded-lg border border-zinc-700 py-2.5 text-sm text-zinc-100 hover:border-zinc-500"
+        className="btn-secondary mt-4 w-full py-2.5 text-sm"
         onClick={() => void handleSignOut()}
       >
         {t('settings.signOut')}
       </button>
-    </div>
+    </MotivatorShell>
   )
 }
 

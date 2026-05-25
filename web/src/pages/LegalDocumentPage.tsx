@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { SETTINGS_CARD } from '@/lib/designClasses'
 import type { LegalDocId } from '@/lib/legalLinks'
 
 const DOC_IDS: LegalDocId[] = ['privacy', 'terms', 'personalData']
@@ -21,13 +22,13 @@ export function LegalDocumentPage() {
   const placeholderKey = `legal.doc.${docId}.placeholder` as const
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg px-4 py-8 text-zinc-100">
-      <Link className="text-sm text-emerald-400 hover:text-emerald-300" to="/settings">
+    <div className="mx-auto min-h-dvh max-w-lg bg-background px-4 py-8 text-on-surface">
+      <Link className="text-sm text-primary hover:text-primary-fixed" to="/settings">
         {t('legal.backToSettings')}
       </Link>
-      <h1 className="mt-4 text-xl font-semibold">{t(titleKey)}</h1>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-400">{t(bodyKey)}</p>
-      <div className="mt-6 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-4 text-sm leading-relaxed text-zinc-300">
+      <h1 className="mt-4 font-display text-xl font-semibold">{t(titleKey)}</h1>
+      <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{t(bodyKey)}</p>
+      <div className={`mt-6 ${SETTINGS_CARD} text-sm leading-relaxed text-on-surface`}>
         {t(placeholderKey)}
       </div>
     </div>

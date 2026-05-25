@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   DOUBLE_CONFIRM_DEFAULT_GRACE_MIN,
@@ -39,6 +39,25 @@ import { useTranslation } from 'react-i18next'
 import { TaskColorAccordion } from '@/components/TaskColorAccordion'
 import { TaskTimeAccordion } from '@/components/TaskTimeAccordion'
 import { LocalDatePickerField } from '@/components/LocalDatePickerField'
+import {
+  ALERT_WARNING_MUTED,
+  CHECKBOX_INPUT,
+  FIELD_LABEL,
+  FIELDSET,
+  FIELDSET_LEGEND,
+  MODAL_CLOSE_BTN,
+  MODAL_FOOTER,
+  MODAL_HEADER,
+  MODAL_SHELL,
+  MODAL_TITLE,
+  MOTIVATOR_INPUT,
+  SETTINGS_BTN_SECONDARY,
+  TEXT_HINT_WARNING,
+  TEXT_LINK_IN_HINT,
+  weekdayToggle,
+} from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
+import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
@@ -129,6 +148,8 @@ export function TaskEditModal({
   todayLocalDateKey,
 }: Props) {
   const { t } = useTranslation()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useDialogFocusTrap(true, dialogRef)
   /** Портал в body + lock scroll: без этого на iOS/WebKit касания часто уходят на скроллящийся «планировщик» под модалкой. */
   useEffect(() => {
     const prevOverflow = document.body.style.overflow
@@ -483,18 +504,24 @@ export function TaskEditModal({
   return createPortal(
     <div
       className="fixed inset-0 z-[80] flex min-h-dvh w-full items-end justify-center bg-black/60 p-4 sm:items-center"
-      role="dialog"
-      aria-modal
+      role="presentation"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl sm:max-h-[min(90vh,800px)]">
-        <div className="flex shrink-0 items-start justify-between gap-2 border-b border-zinc-800/80 px-4 pb-3 pt-4">
-          <h2 className="text-sm font-semibold text-zinc-200">{t('app.editTask')}</h2>
+      <div
+        ref={dialogRef}
+        className={MODAL_SHELL}
+        role="dialog"
+        aria-modal
+        aria-labelledby="task-edit-modal-title"
+      >
+        <div className={MODAL_HEADER}>
+          <h2 id="task-edit-modal-title" className={MODAL_TITLE}>{t('app.editTask')}</h2>
           <button
             type="button"
-            className="text-zinc-500 hover:text-zinc-300"
+            className={MODAL_CLOSE_BTN}
+            aria-label={t('common.close')}
             onClick={onClose}
           >
             ✕
@@ -502,15 +529,15 @@ export function TaskEditModal({
         </div>
 
         <div className="scrollbar-site flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-2 pt-3">
-        <label className="flex flex-col gap-1 text-xs text-zinc-500">
+        <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
           <span className="flex flex-wrap items-center justify-between gap-2">
             <span>{t('app.taskTitle')}</span>
-            <span className="font-normal text-zinc-600">
+            <span className="font-normal text-on-surface-variant">
               {titleDraft.length}/{MAX_TASK_TITLE_CHARS}
             </span>
           </span>
           <input
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            className={MOTIVATOR_INPUT}
             value={titleDraft}
             disabled={!canEdit}
             onChange={(e) => setTitleDraft(sanitizeTaskTitleInput(e.target.value))}
@@ -518,10 +545,10 @@ export function TaskEditModal({
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-xs text-zinc-500">
+        <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
           <span>{t('app.priorityShort')}</span>
           <select
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            className={MOTIVATOR_INPUT}
             value={task.priorityRank}
             disabled={!canEdit}
             onChange={(e) =>
@@ -536,8 +563,8 @@ export function TaskEditModal({
           </select>
         </label>
 
-        <fieldset className="rounded-lg border border-zinc-800 p-3">
-          <legend className="px-1 text-xs text-zinc-500">{t('app.scheduleSection')}</legend>
+        <fieldset className={FIELDSET}>
+          <legend className={FIELDSET_LEGEND}>{t('app.scheduleSection')}</legend>
           <div className="flex flex-col gap-3">
             <LocalDatePickerField
               label={t('app.plannedDate')}
@@ -547,12 +574,12 @@ export function TaskEditModal({
               disabled={!canEdit}
               allowClear
             />
-            <p className="text-xs text-zinc-600">{t('app.backlogHint')}</p>
+            <p className="text-xs text-on-surface-variant">{t('app.backlogHint')}</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 disabled={!canEdit}
-                className="rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
+                className={`${SETTINGS_BTN_SECONDARY} text-xs`}
                 onClick={() => guardedSetScheduledLocalDate(null)}
               >
                 {t('app.moveToBacklog')}
@@ -560,7 +587,7 @@ export function TaskEditModal({
               <button
                 type="button"
                 disabled={!canEdit || !canPlanOnSelectedDay}
-                className="rounded border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900 disabled:opacity-40"
+                className={`${SETTINGS_BTN_SECONDARY} text-xs`}
                 onClick={() => guardedSetScheduledLocalDate(selectedDayKey)}
               >
                 {t('app.planForSelectedDay', { date: selectedDayKey })}
@@ -597,15 +624,15 @@ export function TaskEditModal({
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-xs text-zinc-500">{t('app.estimatedTimeSection')}</span>
+          <span className={FIELD_LABEL}>{t('app.estimatedTimeSection')}</span>
           <div className="flex flex-wrap items-end gap-3">
-            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+            <label className={`flex min-w-[6rem] flex-1 flex-col gap-1 ${FIELD_LABEL}`}>
               <span>{t('app.estimatedHours')}</span>
               <input
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                className={MOTIVATOR_INPUT}
                 placeholder="0"
                 value={estHoursDraft}
                 disabled={!canEdit}
@@ -617,13 +644,13 @@ export function TaskEditModal({
                 onBlur={() => commitEstimate()}
               />
             </label>
-            <label className="flex min-w-[6rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
+            <label className={`flex min-w-[6rem] flex-1 flex-col gap-1 ${FIELD_LABEL}`}>
               <span>{t('app.estimatedMinutesPart')}</span>
               <input
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-base text-white disabled:opacity-40"
+                className={MOTIVATOR_INPUT}
                 placeholder="0"
                 value={estMinutesDraft}
                 disabled={!canEdit}
@@ -637,16 +664,16 @@ export function TaskEditModal({
             </label>
           </div>
           {estFieldError ? <p className="text-xs text-red-400">{estFieldError}</p> : null}
-          <p className="text-[10px] leading-snug text-zinc-600">{t('app.estimateHint')}</p>
+          <p className="text-[10px] leading-snug text-on-surface-variant">{t('app.estimateHint')}</p>
           {floatingEstimateWarning ? (
-            <p className="text-[11px] leading-snug text-amber-400/90">{floatingEstimateWarning}</p>
+            <p className={TEXT_HINT_WARNING}>{floatingEstimateWarning}</p>
           ) : null}
         </div>
 
-        <fieldset className="rounded-lg border border-zinc-800 p-3">
-          <legend className="px-1 text-xs text-zinc-500">{t('app.recurrenceSection')}</legend>
+        <fieldset className={FIELDSET}>
+          <legend className={FIELDSET_LEGEND}>{t('app.recurrenceSection')}</legend>
           <select
-            className="mb-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+            className={`mb-2 w-full ${MOTIVATOR_INPUT}`}
             value={recurrenceUiKind(task)}
             disabled={!canEdit}
             onChange={(e) => {
@@ -661,13 +688,13 @@ export function TaskEditModal({
           </select>
 
           {task.recurrence?.kind === 'everyNDays' && (
-            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
               <span>{t('app.everyNDaysLabel')}</span>
               <input
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                className={MOTIVATOR_INPUT}
                 value={String(everyNDaysDraft)}
                 disabled={!canEdit}
                 onChange={(e) => {
@@ -694,11 +721,9 @@ export function TaskEditModal({
                   key={d}
                   type="button"
                   disabled={!canEdit}
-                  className={`rounded border px-2 py-1 text-[11px] disabled:opacity-40 ${
-                    task.recurrence?.kind === 'weekly' && task.recurrence.weekdays.includes(d)
-                      ? 'border-emerald-600 bg-emerald-950/50 text-emerald-200'
-                      : 'border-zinc-700 text-zinc-500'
-                  }`}
+                  className={`${weekdayToggle(
+                    task.recurrence?.kind === 'weekly' && task.recurrence.weekdays.includes(d),
+                  )} px-2 py-1 text-[11px] disabled:opacity-40`}
                   onClick={() => {
                     if (task.recurrence?.kind !== 'weekly') return
                     const next = toggleWeekday([...task.recurrence.weekdays], d)
@@ -726,13 +751,13 @@ export function TaskEditModal({
             </div>
           ) : null}
           {task.recurrence ? (
-            <p className="mt-2 text-[10px] leading-snug text-zinc-600">
+            <p className="mt-2 text-[10px] leading-snug text-on-surface-variant">
               {t('app.recurrenceEditHint')}
             </p>
           ) : null}
           {task.recurrence && onToggleOccurrenceForDay ? (
             <label
-              className={`mt-3 flex items-start gap-2 text-xs text-zinc-300 ${
+              className={`mt-3 flex items-start gap-2 text-xs text-on-surface ${
                 !canEdit || blockOccurrenceToggle || blockOccurrenceByCalendarDay
                   ? 'cursor-not-allowed'
                   : 'cursor-pointer'
@@ -740,7 +765,7 @@ export function TaskEditModal({
             >
               <input
                 type="checkbox"
-                className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                className={`mt-0.5 ${CHECKBOX_INPUT}`}
                 checked={occurrenceDoneThisDay}
                 disabled={
                   !canEdit || blockOccurrenceToggle || blockOccurrenceByCalendarDay
@@ -750,12 +775,12 @@ export function TaskEditModal({
               <span>
                 {t('app.recurrenceDoneThisDay', { date: occurrenceDayKey })}
                 {blockOccurrenceToggle ? (
-                  <span className="block text-[10px] text-zinc-600">
+                  <span className="block text-[10px] text-on-surface-variant">
                     {t('app.completeParentAfterChecklist')}
                   </span>
                 ) : null}
                 {blockOccurrenceByCalendarDay ? (
-                  <span className="block text-[10px] text-zinc-600">
+                  <span className="block text-[10px] text-on-surface-variant">
                     {t('app.completionOnlyToday')}
                   </span>
                 ) : null}
@@ -764,10 +789,10 @@ export function TaskEditModal({
           ) : null}
         </fieldset>
 
-        <div className="border-t border-zinc-800 pt-4">
-          <p className="text-xs font-medium text-zinc-400">{t('app.checklistTitle')}</p>
+        <div className="border-t border-surface-variant pt-4">
+          <p className="font-display text-xs font-medium text-on-surface-variant">{t('app.checklistTitle')}</p>
           {!checklistProgressToggleAllowed ? (
-            <p className="mt-1 text-[10px] leading-snug text-zinc-600">{t('app.completionOnlyToday')}</p>
+            <p className="mt-1 text-[10px] leading-snug text-on-surface-variant">{t('app.completionOnlyToday')}</p>
           ) : null}
           <ul className="mt-2 flex flex-col gap-2">
             {task.checklist.map((s) => (
@@ -787,10 +812,10 @@ export function TaskEditModal({
                       !checklistProgressToggleAllowed ? t('app.completionOnlyToday') : undefined
                     }
                     onChange={() => onToggleChecklistItem(s.id)}
-                    className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 text-emerald-500 disabled:opacity-40"
+                    className={`mt-0.5 ${CHECKBOX_INPUT}`}
                   />
                   <span
-                    className={`text-xs ${s.done ? 'text-zinc-500 line-through' : 'text-zinc-300'}`}
+                    className={`text-xs ${s.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}
                   >
                     {s.title}
                   </span>
@@ -798,7 +823,7 @@ export function TaskEditModal({
                 <button
                   type="button"
                   disabled={!canEdit}
-                  className="text-[11px] text-zinc-500 hover:text-red-400 disabled:opacity-40"
+                  className="text-[11px] text-on-surface-variant hover:text-error disabled:opacity-40"
                   onClick={() => onRemoveChecklistItem(s.id)}
                 >
                   ×
@@ -818,7 +843,7 @@ export function TaskEditModal({
             }}
           >
             <input
-              className="flex-1 rounded border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-base text-white outline-none focus:ring-1 focus:ring-emerald-500/80 disabled:opacity-40"
+              className={`${MOTIVATOR_INPUT} flex-1 px-2 py-1.5 text-base`}
               placeholder={t('app.addChecklistItem')}
               value={checkDraft}
               disabled={!canEdit}
@@ -829,22 +854,22 @@ export function TaskEditModal({
             <button
               type="submit"
               disabled={!canEdit}
-              className="rounded bg-zinc-800 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-700 disabled:opacity-40"
+              className={`${SETTINGS_BTN_SECONDARY} px-2 py-1 text-xs`}
             >
               {t('common.add')}
             </button>
           </form>
         </div>
 
-        <details className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
-          <summary className="cursor-pointer text-xs font-medium text-zinc-400">
+        <details className="motivator-card p-3">
+          <summary className="cursor-pointer font-display text-xs font-medium text-on-surface-variant">
             {t('app.createTaskAdditionalSettings')}
           </summary>
-          <div className="mt-3 flex flex-col gap-4 border-t border-zinc-800/80 pt-3">
-            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+          <div className="mt-3 flex flex-col gap-4 border-t border-surface-variant pt-3">
+            <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
               <span>{t('app.group')}</span>
               <select
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                className={MOTIVATOR_INPUT}
                 value={task.groupId}
                 disabled={!canEdit}
                 onChange={(e) => onSetGroup(e.target.value)}
@@ -878,22 +903,22 @@ export function TaskEditModal({
                 }
               }}
             />
-            <label className="flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
+            <label className={`flex cursor-pointer items-start gap-2 ${FIELD_LABEL}`}>
               <input
                 type="checkbox"
-                className="mt-0.5"
+                className={`mt-0.5 ${CHECKBOX_INPUT}`}
                 checked={task.includeInEodRitual !== false}
                 disabled={!canEdit}
                 onChange={(e) => onApplyTaskPatch({ includeInEodRitual: e.target.checked })}
               />
               <span className="leading-snug">{t('app.includeInEodRitual')}</span>
             </label>
-            <fieldset className="rounded-lg border border-zinc-800 p-3">
-              <legend className="px-1 text-xs text-zinc-500">{t('app.doubleConfirmSection')}</legend>
-              <label className="flex cursor-pointer items-start gap-2 text-xs text-zinc-500">
+            <fieldset className={FIELDSET}>
+              <legend className={FIELDSET_LEGEND}>{t('app.doubleConfirmSection')}</legend>
+              <label className={`flex cursor-pointer items-start gap-2 ${FIELD_LABEL}`}>
                 <input
                   type="checkbox"
-                  className="mt-0.5"
+                  className={`mt-0.5 ${CHECKBOX_INPUT}`}
                   checked={task.doubleConfirmEnabled === true}
                   disabled={!canEdit}
                   onChange={(e) =>
@@ -902,18 +927,18 @@ export function TaskEditModal({
                 />
                 <span className="leading-snug">{t('app.doubleConfirmEnable')}</span>
               </label>
-              <p className="mt-2 text-[10px] leading-snug text-zinc-600">{t('app.doubleConfirmHintEdit')}</p>
+              <p className="mt-2 text-[10px] leading-snug text-on-surface-variant">{t('app.doubleConfirmHintEdit')}</p>
 
               {task.doubleConfirmEnabled ? (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                  <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
                     <span>{t('app.doubleConfirmIntervalMin')}</span>
                     <input
                       type="number"
                       min={1}
                       max={1440}
                       inputMode="numeric"
-                      className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                      className={MOTIVATOR_INPUT}
                       placeholder={String(DOUBLE_CONFIRM_DEFAULT_INTERVAL_MIN)}
                       value={task.doubleConfirmIntervalMinutes ?? ''}
                       disabled={!canEdit}
@@ -931,14 +956,14 @@ export function TaskEditModal({
                       }}
                     />
                   </label>
-                  <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                  <label className={`flex flex-col gap-1 ${FIELD_LABEL}`}>
                     <span>{t('app.doubleConfirmGraceMin')}</span>
                     <input
                       type="number"
                       min={1}
                       max={1440}
                       inputMode="numeric"
-                      className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40"
+                      className={MOTIVATOR_INPUT}
                       placeholder={String(DOUBLE_CONFIRM_DEFAULT_GRACE_MIN)}
                       value={task.doubleConfirmGraceMinutes ?? ''}
                       disabled={!canEdit}
@@ -962,12 +987,12 @@ export function TaskEditModal({
               {task.doubleConfirmEnabled &&
               task.doubleConfirmPending &&
               task.doubleConfirmPending.localDate === occurrenceDayKey ? (
-                <div className="mt-3 rounded-md border border-amber-800/60 bg-amber-950/25 px-3 py-2 text-xs text-amber-100/90">
+                <div className={cn(ALERT_WARNING_MUTED, 'mt-3')}>
                   <p className="leading-snug">{t('app.doubleConfirmPendingInEditor')}</p>
                   <button
                     type="button"
                     disabled={!canEdit}
-                    className="mt-2 text-[11px] text-amber-300 underline hover:text-amber-200 disabled:opacity-40"
+                    className={cn('mt-2', TEXT_LINK_IN_HINT, 'disabled:opacity-40')}
                     onClick={() => onApplyTaskPatch({ doubleConfirmPending: undefined })}
                   >
                     {t('app.doubleConfirmCancelPending')}
@@ -980,7 +1005,7 @@ export function TaskEditModal({
 
         </div>
 
-        <div className="flex shrink-0 flex-col gap-3 border-t border-zinc-800 bg-zinc-950 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4">
+        <div className={`${MODAL_FOOTER} flex flex-col gap-3 pt-4`}>
           {commitGateError || scheduleValidationError || anchorValidationError ? (
             <p className="text-xs text-red-400" role="alert">
               {commitGateError ?? scheduleValidationError ?? anchorValidationError}
@@ -999,7 +1024,7 @@ export function TaskEditModal({
             <button
               type="button"
               disabled={!canEdit}
-              className="rounded-lg border border-amber-900/50 px-3 py-2 text-sm text-amber-200 hover:bg-amber-950/40 disabled:opacity-40"
+              className={cn(SETTINGS_BTN_SECONDARY, 'border-tertiary/40 text-tertiary hover:bg-tertiary-container/10 disabled:opacity-40')}
               onClick={() => requestSkipOccurrence()}
             >
               {t('app.removeFromPlanThisDay')}
@@ -1007,7 +1032,7 @@ export function TaskEditModal({
           ) : null}
           <button
             type="button"
-            className="ml-auto rounded-lg border border-zinc-600 px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+            className={`${SETTINGS_BTN_SECONDARY} ml-auto`}
             onClick={onClose}
           >
             {t('common.close')}

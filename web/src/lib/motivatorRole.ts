@@ -30,3 +30,9 @@ export function isMotivatorAdmin(session: Session | null): boolean {
 export function isMotivatorBetaTester(session: Session | null): boolean {
   return motivatorAppRole(session) === 'beta_tester'
 }
+
+/** Прототипы, AI-заглушка и прочий preview UI — только admin и beta_tester. */
+export function isMotivatorTesterOrAdmin(session: Session | null): boolean {
+  const r = motivatorAppRole(session)
+  return r === 'admin' || r === 'beta_tester'
+}

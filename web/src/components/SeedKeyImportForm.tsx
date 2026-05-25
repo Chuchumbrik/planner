@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { FIELD_LABEL, MOTIVATOR_INPUT } from '@/lib/designClasses'
 
 type Props = {
   disabled?: boolean
@@ -34,10 +35,10 @@ export function SeedKeyImportForm({ disabled, submitLabel, onSubmit }: Props) {
 
   return (
     <form className="space-y-4" onSubmit={(e) => void handleSubmit(e)}>
-      <label className="block text-sm">
-        <span className="text-zinc-400">{t('onboarding.importLabel')}</span>
+      <label className={`block text-sm ${FIELD_LABEL}`}>
+        <span>{t('onboarding.importLabel')}</span>
         <textarea
-          className="mt-1 min-h-[88px] w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500/80 disabled:opacity-40"
+          className={`${MOTIVATOR_INPUT} mt-1 min-h-[88px] resize-y font-mono text-xs outline-none focus-visible:ring-2 focus-visible:ring-primary/50`}
           value={importedSeed}
           disabled={disabled || pending}
           onChange={(e) => setImportedSeed(e.target.value)}
@@ -46,10 +47,10 @@ export function SeedKeyImportForm({ disabled, submitLabel, onSubmit }: Props) {
           autoComplete="off"
         />
       </label>
-      <label className="block text-sm">
-        <span className="text-zinc-400">{t('onboarding.kdfPassword')}</span>
+      <label className={`block text-sm ${FIELD_LABEL}`}>
+        <span>{t('onboarding.kdfPassword')}</span>
         <input
-          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-emerald-500/80 disabled:opacity-40"
+          className={`${MOTIVATOR_INPUT} mt-1 outline-none focus-visible:ring-2 focus-visible:ring-primary/50`}
           type="password"
           value={password}
           disabled={disabled || pending}
@@ -66,7 +67,7 @@ export function SeedKeyImportForm({ disabled, submitLabel, onSubmit }: Props) {
       <button
         type="submit"
         disabled={disabled || pending}
-        className="w-full rounded-lg bg-emerald-500 py-2.5 text-sm font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-40"
+        className="btn-primary w-full py-2.5 text-sm disabled:opacity-40"
       >
         {pending ? t('onboarding.saving') : (submitLabel ?? t('onboarding.continue'))}
       </button>

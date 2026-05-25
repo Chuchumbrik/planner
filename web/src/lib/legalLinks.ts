@@ -13,8 +13,11 @@ export function legalDocHref(id: LegalDocId): string {
   return `/legal/${id}`
 }
 
-export function feedbackHref(): string | null {
+/** Optional env override; fallback — GitHub Issues репозитория (BUG-005). */
+const DEFAULT_FEEDBACK_URL = 'https://github.com/Chuchumbrik/planner/issues/new'
+
+export function feedbackHref(): string {
   const url = import.meta.env.VITE_FEEDBACK_URL
   const trimmed = typeof url === 'string' ? url.trim() : ''
-  return trimmed.length > 0 ? trimmed : null
+  return trimmed.length > 0 ? trimmed : DEFAULT_FEEDBACK_URL
 }

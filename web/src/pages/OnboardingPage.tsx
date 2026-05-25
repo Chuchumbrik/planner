@@ -2,12 +2,31 @@ import { useEffect, useState } from 'react'
 import { useTranslation, Trans } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { BrandMark } from '@/components/brand/BrandMark'
+import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { generateSeedB64 } from '@motivator/core'
 import { SeedKeyImportForm } from '@/components/SeedKeyImportForm'
+import { AUTH_PAGE_HEADER } from '@/lib/designClasses'
 import { hasRemoteVault } from '@/lib/hasRemoteVault'
 import { useVault } from '@/vault/VaultProvider'
 
 type OnboardingMode = 'loading' | 'restore' | 'setup'
+
+function OnboardingLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-background">
+      <header className={AUTH_PAGE_HEADER}>
+        <BrandMark size="sm" showSubtitle />
+      </header>
+      <main className="relative flex flex-1 flex-col items-center px-4 py-10 md:px-10">
+        <div className="pointer-events-none absolute inset-0 grid-pattern opacity-15" aria-hidden />
+        <div className="glass-panel relative z-10 w-full max-w-lg rounded-card p-sm shadow-2xl md:p-md">
+          {children}
+        </div>
+      </main>
+    </div>
+  )
+}
 
 export function OnboardingPage() {
   const { t } = useTranslation()
@@ -46,8 +65,8 @@ export function OnboardingPage() {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-zinc-400">{t('shell.loading')}</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-sm text-on-surface-variant">{t('shell.loading')}</p>
       </div>
     )
   }
@@ -69,19 +88,27 @@ export function OnboardingPage() {
 
   if (mode === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-zinc-400">{t('shell.initCrypto')}</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-sm text-on-surface-variant">{t('shell.initCrypto')}</p>
       </div>
     )
   }
 
   if (mode === 'restore') {
     return (
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
-        <h1 className="text-2xl font-semibold text-white">{t('onboarding.restoreTitle')}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-zinc-400">{t('onboarding.restoreIntro')}</p>
+      <OnboardingLayout>
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-surface-variant bg-surface-container-high px-3 py-1">
+          <MaterialIcon name="lock" filled size={18} className="text-primary" />
+          <span className="font-display text-xs uppercase tracking-widest text-on-surface-variant">
+            {t('onboarding.restoreBadge')}
+          </span>
+        </div>
+        <h1 className="font-display text-2xl font-bold text-on-surface">{t('onboarding.restoreTitle')}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
+          {t('onboarding.restoreIntro')}
+        </p>
         {probeError ? (
-          <p className="mt-3 text-xs text-amber-500/90">{probeError}</p>
+          <p className="mt-3 text-xs text-error">{probeError}</p>
         ) : null}
         <div className="mt-6">
           <SeedKeyImportForm
@@ -91,19 +118,29 @@ export function OnboardingPage() {
             }}
           />
         </div>
-      </div>
+        <div className="mt-6 flex gap-2 rounded-lg border border-tertiary-container/30 bg-tertiary-container/5 p-3 text-sm text-on-surface-variant">
+          <MaterialIcon name="gpp_maybe" className="shrink-0 text-tertiary" size={20} />
+          <p>{t('onboarding.securityNotice')}</p>
+        </div>
+      </OnboardingLayout>
     )
   }
 
   const canContinueSetup = Boolean(seedPreview) && savedAck
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
-      <h1 className="text-2xl font-semibold text-white">{t('onboarding.setupTitle')}</h1>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+    <OnboardingLayout>
+      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-surface-variant bg-surface-container-high px-3 py-1">
+        <MaterialIcon name="key" size={18} className="text-primary" />
+        <span className="font-display text-xs uppercase tracking-widest text-on-surface-variant">
+          {t('onboarding.setupBadge')}
+        </span>
+      </div>
+      <h1 className="font-display text-2xl font-bold text-on-surface">{t('onboarding.setupTitle')}</h1>
+      <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
         <Trans
           i18nKey="onboarding.setupIntro"
-          components={{ strong: <strong className="text-zinc-300" /> }}
+          components={{ strong: <strong className="text-on-surface" /> }}
         />
       </p>
 
@@ -113,23 +150,27 @@ export function OnboardingPage() {
           setError(null)
           setSeedPreview(generateSeedB64())
         }}
-        className="mt-6 w-full rounded-lg border border-zinc-600 bg-zinc-900 py-2.5 text-sm text-white hover:border-zinc-500"
+        className="btn-secondary mt-6 w-full py-2.5"
       >
         {t('onboarding.generate')}
       </button>
 
       {seedPreview ? (
-        <div className="mt-4 rounded-lg border border-amber-900/50 bg-amber-950/25 px-3 py-3">
-          <p className="text-xs uppercase tracking-wide text-zinc-500">{t('onboarding.seedLabel')}</p>
-          <p className="mt-2 break-all font-mono text-xs text-emerald-300">{seedPreview}</p>
-          <p className="mt-3 text-xs leading-relaxed text-amber-100/90">{t('settings.seedWarningBody')}</p>
+        <div className="mt-4 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-3">
+          <p className="font-display text-xs uppercase tracking-wide text-on-surface-variant">
+            {t('onboarding.seedLabel')}
+          </p>
+          <p className="mt-2 break-all font-mono text-xs text-primary">{seedPreview}</p>
+          <p className="mt-3 text-xs leading-relaxed text-on-surface-variant">
+            {t('settings.seedWarningBody')}
+          </p>
         </div>
       ) : null}
 
-      <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm text-zinc-300">
+      <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm text-on-surface">
         <input
           type="checkbox"
-          className="mt-0.5"
+          className="mt-0.5 rounded border-surface-variant text-primary"
           checked={savedAck}
           disabled={!seedPreview}
           onChange={(e) => setSavedAck(e.target.checked)}
@@ -138,9 +179,11 @@ export function OnboardingPage() {
       </label>
 
       <label className="mt-4 block text-sm">
-        <span className="text-zinc-400">{t('onboarding.kdfPassword')}</span>
+        <span className="font-display text-xs uppercase tracking-wide text-on-surface-variant">
+          {t('onboarding.kdfPassword')}
+        </span>
         <input
-          className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-emerald-500/80"
+          className="motivator-input mt-1.5 w-full px-3 py-2.5 text-sm"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -150,7 +193,7 @@ export function OnboardingPage() {
       </label>
 
       {error ? (
-        <p className="mt-4 rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-100">
+        <p className="mt-4 rounded-lg border border-error-container/60 bg-error-container/20 px-3 py-2 text-sm text-error">
           {error}
         </p>
       ) : null}
@@ -159,10 +202,10 @@ export function OnboardingPage() {
         type="button"
         disabled={pending || !canContinueSetup}
         onClick={() => void finishSetup(seedPreview!)}
-        className="mt-8 w-full rounded-lg bg-emerald-500 py-2.5 text-sm font-medium text-emerald-950 hover:bg-emerald-400 disabled:opacity-40"
+        className="btn-primary mt-8 w-full py-3 disabled:opacity-40"
       >
         {pending ? t('onboarding.saving') : t('onboarding.continue')}
       </button>
-    </div>
+    </OnboardingLayout>
   )
 }
