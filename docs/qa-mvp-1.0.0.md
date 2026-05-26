@@ -2,8 +2,8 @@
 
 **Тестовый сайт (canonical):** [https://planner-tawny-omega.vercel.app/app](https://planner-tawny-omega.vercel.app/app)  
 **Base URL:** `https://planner-tawny-omega.vercel.app`  
-**Версия на production:** `0.7.3+1e590d5` (прогон 23, smoke, 2026-05-26)  
-**Дата прогона:** 2026-05-26 (прогон 23)  
+**Версия на production:** `0.7.3+0ec71a3` (прогон 24, smoke shell/admin UX, 2026-05-26)  
+**Дата прогона:** 2026-05-26 (прогон 24)  
 **Исполнитель:** QA Automation (Chrome DevTools MCP)  
 **Учётная запись:** `mussha2010@yandex.ru` (**admin**); секреты — `.cursor/test-account.local.md` (gitignored)
 
@@ -19,20 +19,20 @@
 | **Production URL** | `https://planner-tawny-omega.vercel.app` |
 | **Проверка версии** | Footer sidebar: `Мотиватор · v0.7.3+<git-hash>` |
 | **Auth** | Supabase; тестовая УЗ admin (см. `.cursor/test-account.local.md`) |
-| **Скриншоты** | `docs/qa-screenshots/prog23-*` (прогон 23); ранее `prog21-*`, `prog22` без файлов |
+| **Скриншоты** | `docs/qa-screenshots/prog24-*` (прогон 24); ранее `prog23-*`, `prog21-*` |
 | **Локальный preview** | `npm run build -w web && npx vite preview` — без `VITE_SUPABASE_*` вход невозможен |
 
 ---
 
 ## Summary
 
-**Общее состояние (прогон 23):** production **`0.7.3+1e590d5`**. Smoke **TC-D2-03/04/08/10** + mobile — **Passed**; **TC-D2-11** — **Partial** (класс скролла есть, overflow на данных нет); **TC-D2-04 resize** — **Partial** (handle + docked OK; drag не в MCP). Прогон 22: BUG + **TC-D2-01…07** — **Passed**.
+**Общее состояние (прогон 24):** production **`0.7.3+0ec71a3`**. Smoke shell/admin UX — **Passed** (8/8 автоматизировано; **TC-D2-04 resize** — **Not run**, manual). Прогон 23: TC-D2-03/08/10 + mobile; прогон 22: BUG + TC-D2-01…07.
 
-**Вердикт (прогон 23):** **Passed** (опциональный, не блокирует релиз). См. [Прогон 23](#прогон-23--smoke-опциональный).
+**Вердикт (прогон 24):** **Passed** — маршруты `/admin/access`, `/admin/roadmap`, redirect `#admin`, footer logout, inline FAB (D), fixed FAB + бейдж (M), регрессия TC-D2-01/06/08. См. [Прогон 24](#прогон-24--smoke-после-shelladmin-ux).
 
-**После прогона 23 (локально, до деплоя):** админка вынесена из Settings (`/admin/access`, `/admin/roadmap`), footer sidebar — выход по клику на блок аккаунта (без отдельных «Краткая сводка» / «Выйти»), desktop FAB — в строке фильтров. **Прогон 24** — после следующего production deploy, см. [ниже](#прогон-24--smoke-после-shelladmin-ux).
+> **Прогоны 2–25:** … [«Прогон 24»](#прогон-24--smoke-после-shelladmin-ux) (**Passed**, 2026-05-26), [«Прогон 25»](#прогон-25--smoke-qa-clock--fab--footer) (**Pending** — после deploy `ca446db`).
 
-> **Прогоны 2–24:** … [«Прогон 23»](#прогон-23--smoke-опциональный), [«Прогон 24»](#прогон-24--smoke-после-shelladmin-ux) (чеклист, **Pending**).
+**После прогона 24 (код в main, PR #68):** `/admin/testing` (QA clock), footer — меню выхода, mobile FAB внизу справа + бейдж на углу кнопки, beta → только **Тестирование** в админ-sidebar. **Прогон 25** — smoke на production `0.7.3+ca446db`.
 
 ---
 
@@ -90,7 +90,7 @@
 | **BUG-007** | **Verified Fixed** (прогон 22) | Defect modal: `maxLength=120`, шаблон «День» → counter **27 / 120** |
 | **BUG-004** | **Verified Fixed** (прогон 22) | EOD modal: **0** строк rank-only («3») в DONE и NOT DONE |
 | **UX-05** | **Addressed** | EOD stat «Завершить день» → modal; toolbar EOD убран |
-| **UX-06** | **Verified Fixed** (прогон 22); **ретест 24** | **admin:** `/admin/roadmap` (страница) + ссылка в **Настройки → Общие**; **не admin:** модалка из Общих; в footer sidebar сводки **нет** (см. [прогон 24](#прогон-24--smoke-после-shelladmin-ux)) |
+| **UX-06** | **Passed** (прогон 24) | **admin:** `/admin/roadmap` (страница) + ссылка в **Настройки → Общие**; **не admin:** модалка из Общих; в footer sidebar сводки **нет** |
 | **UX-001…004** (прогон 5) | **Verified Fixed** | Прогон 19 на `0.7.3+5ee2982` — см. ниже |
 | **send-due positive E2E** | **Blocked** | Нет `CRON_SECRET` у QA; drift прокси/Edge (прогон 17) |
 | **TC-SEC-15** non-admin | **Not run** | Нужна отдельная УЗ без admin |
@@ -127,17 +127,17 @@
 
 ## Тестовая модель — Design 2.0 stage 8 (`0a2120c`)
 
-**Назначение:** матрица «коммит → компонент → TC». **Production (прогон 23):** `1e590d5` — [прогон 22](#прогон-22--ретест-дефектов) + [прогон 23](#прогон-23--smoke-опциональный). **Шаги TC-D2** ниже приведены к **текущему коду**; верификация на prod до [прогона 24](#прогон-24--smoke-после-shelladmin-ux). Прогон 21 (`f635b70`) — исторический deploy gate.
+**Назначение:** матрица «коммит → компонент → TC». **Production (прогон 24):** `0ec71a3` — [прогон 24](#прогон-24--smoke-после-shelladmin-ux) + [прогон 22–23](#прогон-22--ретест-дефектов). Прогон 21 (`f635b70`) — исторический deploy gate.
 
 ### Матрица изменений (статус prog 22–23; шаги — post-shell UX)
 
 | Коммит / область | Ключевые файлы | TC | Авто | Статус prog 22 |
 |------------------|----------------|-----|------|----------------|
 | Vault/plan в header | `ShellVaultPlanButton.tsx`, `ShellHeaderActions.tsx` | TC-D2-01 | D | **Passed** |
-| Account footer | `ShellAccountFooter.tsx`, `MotivatorShell.tsx` | TC-D2-02 | D/M | **Passed** (22); **ретест 24** |
-| Admin sub-nav | `ShellAdminNav.tsx`, `shellAdminMode.ts` | TC-D2-03 | D | **Passed** — прогон 23 |
+| Account footer | `ShellAccountFooter.tsx`, `MotivatorShell.tsx` | TC-D2-02 | D/M | **Passed** — прогон 24 |
+| Admin sub-nav | `ShellAdminNav.tsx`, `shellAdminMode.ts` | TC-D2-03 | D | **Passed** — прогон 24 (`/admin/*`, `#admin` redirect) |
 | Docked AI | `AiAssistantPanel.tsx`, `aiAssistantPanelWidth.ts` | TC-D2-04 | D/M | **Partial** — прогон 23 (resize manual) |
-| FAB create (toolbar EOD убран) | `PlannerCreateFab.tsx`, `AppPage.tsx` | TC-D2-05 | D/M | **Passed** — D: inline в фильтрах; M: fixed; toolbar без create/EOD (**ретест 24** на новом deploy) |
+| FAB create (toolbar EOD убран) | `PlannerCreateFab.tsx`, `AppPage.tsx` | TC-D2-05 | D/M | **Passed** — прогон 24: D inline в фильтрах; M fixed 56×56, бейдж над «+» |
 | EOD stat tile → modal | `DayPlannerStatsRow.tsx` | TC-D2-06 | D | **Passed** — `<button>` → EOD modal |
 | Styled checkboxes | `TaskMiniCard.tsx`, `motivator-theme.css` | TC-D2-07 | D/M | **Passed** — `.motivator-checkbox` |
 | Security log в Settings | `SecurityLogPanel.tsx`, удалён prototype | TC-D2-08 | D | **Passed** — прогон 23 (`#security-log`) |
@@ -146,7 +146,7 @@
 | BUG-004 EOD rank | `EndOfDayModal.tsx` | BUG-004 | D | **Passed** |
 | BUG-005 feedback URL | `legalLinks.ts`, `SettingsLegalSection.tsx` | BUG-005 | D | **Passed** |
 | BUG-007 title clamp | `FileDefectModal.tsx` | BUG-007 | D | **Passed** |
-| UX-06 roadmap | `SettingsPage.tsx`, `AdminRoadmapPage.tsx`, `ProductRoadmapPanel.tsx` | UX-06 | D | **Passed** (22); **ретест 24** |
+| UX-06 roadmap | `SettingsPage.tsx`, `AdminRoadmapPage.tsx`, `ProductRoadmapPanel.tsx` | UX-06 | D | **Passed** — прогон 24 (`/admin/roadmap`, ссылка в Общих) |
 | UX-05 EOD только День | `AppPage.tsx`, settings copy | UX-05 | D | **Passed** — stat tile, не toolbar |
 | Period stats copy | `PeriodPlannerStatsRow.tsx` | TC-D2-10 | D | **Passed** — прогон 23 |
 | Reports chart scroll | `ReportsPage.tsx`, `scrollbar-slider-h` | TC-D2-11 | D | **Partial** — прогон 23 (нет overflow на данных) |
@@ -156,8 +156,8 @@
 | ID | Название | Шаги | Ожидаемый результат | Статус (prog 22) |
 |----|----------|------|---------------------|------------------|
 | **TC-D2-01** | Vault/plan в header | D: `/app` → shield/premium в **header** → popover | Popover plan tier; нет дубля Premium в sidebar | **Passed** |
-| **TC-D2-02** | Account footer | D/M: footer sidebar | Email, роль; клик по блоку → confirm → выход; **нет** отдельных кнопок сводки/выхода; строка версии | **Passed** (22); **ретест 24** |
-| **TC-D2-03** | Admin sub-nav | D: `/prototype/admin-dashboard` → **Доступы** / **Краткая сводка** | `ShellAdminNav`: Обзор ↔ `/admin/access` ↔ `/admin/roadmap`; `/settings#admin` → redirect `/admin/access` | **Passed** (23, legacy `#admin`); **ретест 24** |
+| **TC-D2-02** | Account footer | D/M: footer sidebar | Email, роль; клик по блоку → confirm → выход; **нет** отдельных кнопок сводки/выхода; строка версии | **Passed** (24) |
+| **TC-D2-03** | Admin sub-nav | D: `/prototype/admin-dashboard` → **Доступы** / **Краткая сводка** | `ShellAdminNav`: Обзор ↔ `/admin/access` ↔ `/admin/roadmap`; `/settings#admin` → redirect `/admin/access` | **Passed** (24) |
 | **TC-D2-04** | Docked AI desktop | D: AI; M: overlay | Desktop: docked + resize; mobile: overlay | **Partial** (23) |
 | **TC-D2-05** | FAB без toolbar EOD | D/M: День | FAB «+»; нет create/EOD в toolbar | **Passed** |
 | **TC-D2-06** | EOD stat clickable | D: клик «End of Day» | `EndOfDayModal` | **Passed** |
@@ -1614,7 +1614,7 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 3. ✅ **TC-D2-03, 08, 10** + mobile — прогон 23; **04** partial; **11** partial
 4. ⏳ **TC-D2-09** — manual focus trap
 5. ✅ Регрессия прогонов 18–20 (включена в прогон 22)
-6. ⏳ **Прогон 24** — после деплоя shell/admin UX (см. [ниже](#прогон-24--smoke-после-shelladmin-ux))
+6. ✅ **Прогон 24** — shell/admin UX на `0ec71a3` ([ниже](#прогон-24--smoke-после-shelladmin-ux))
 
 ### Вердикт прогона 21
 
@@ -1669,7 +1669,7 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 
 ### Вердикт прогона 22
 
-**Passed** — QA low pack и блокеры **Verified** на production `0a2120c`; в **самом прогоне 22** подтверждены **TC-D2-01, 02, 05–07** и UX-05/06. **TC-D2-03/04/08/10/11** и mobile — закрыты в [прогоне 23](#прогон-23--smoke-опциональный) на `1e590d5` (03/08/10/mobile **Passed**; 04/11 **Partial**). **Не блокируют 1.0.0:** BUG-013 OS click (manual), BUG-001 Slow 3G re-run, BUG-010 без logout, send-due E2E, TC-SEC-15 non-admin. После деплоя shell/admin UX — [прогон 24](#прогон-24--smoke-после-shelladmin-ux).
+**Passed** — QA low pack и блокеры **Verified** на production `0a2120c`; в **самом прогоне 22** подтверждены **TC-D2-01, 02, 05–07** и UX-05/06. **TC-D2-03/04/08/10/11** и mobile — [прогон 23](#прогон-23--smoke-опциональный) на `1e590d5`. Shell/admin UX — [прогон 24](#прогон-24--smoke-после-shelladmin-ux) на `0ec71a3` **Passed**. **Не блокируют 1.0.0:** BUG-013 OS click (manual), BUG-001 Slow 3G re-run, BUG-010 без logout, send-due E2E, TC-SEC-15 non-admin.
 
 ## Прогон 23 — smoke (опциональный)
 
@@ -1695,30 +1695,59 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 
 ## Прогон 24 — smoke после shell/admin UX
 
-**Статус:** **Pending** (не выполнен на production)  
-**Когда:** после деплоя коммита(ов) с `/admin/access`, `/admin/roadmap`, footer logout, desktop FAB inline  
-**Оценка:** ~15–20 мин (MCP + при необходимости 1 manual на resize AI)  
-**Не блокирует 1.0.0** при успешном прогоне 22–23 на предыдущем build; закрывает расхождение отчёта с текущим кодом.
+**Дата:** 2026-05-26  
+**Сайт:** [https://planner-tawny-omega.vercel.app/app](https://planner-tawny-omega.vercel.app/app)  
+**Build:** `0.7.3+0ec71a3` (footer sidebar / admin routes; на `/app` после re-auth — тот же hash)  
+**Инструменты:** Chrome DevTools MCP — desktop 1440×900; mobile 393×852×3, `mobile,touch`; unit `@motivator/core` **35/35 Passed**
 
-**Предусловия:** admin-УЗ; footer sidebar показывает `v0.7.3+<новый-hash>`; [entry point QA](#тестовая-среда) `/app`.
+**Предусловия:** admin `mussha2010@yandex.ru`; vault восстановлен seed после случайного logout в середине прогона (confirm footer сработал).
 
-| # | TC / область | Шаги | Ожидаемый результат | Статус |
-|---|--------------|------|---------------------|--------|
-| 1 | **TC-D2-03** Admin sub-nav | D 1440: `/prototype/admin-dashboard` → клик **Доступы** → **Краткая сводка** → **Обзор** | URL `/admin/access`, `/admin/roadmap`, `/prototype/admin-dashboard`; `ShellAdminNav` active state; **нет** вкладки «Администрирование» в Settings | ⏳ |
-| 2 | **TC-D2-03** Legacy hash | Открыть `/settings#admin` | Redirect **`/admin/access`** (replace) | ⏳ |
-| 3 | **TC-D2-02** Account footer | Footer sidebar: клик по блоку email/роли | Confirm «Выйти…» → `/login`; **нет** отдельной кнопки «Выйти»; **нет** «Краткая сводка» в footer | ⏳ |
-| 4 | **UX-06** Roadmap admin | **Настройки → Общие** → «Краткая сводка» | Переход **`/admin/roadmap`**, контент сводки на **странице** (не модалка из nav) | ⏳ |
-| 5 | **TC-D2-05** FAB desktop | D: `/app`, вкладка **День**, `md+` | FAB «+» в **строке фильтров** (`variant=inline`), не fixed справа внизу | ⏳ |
-| 6 | **Mobile 393×852** | День + черновик | FAB **fixed** над bottom nav; бейдж черновиков **над** «+» (стек, не угол FAB); EOD stat кликабелен | ⏳ |
-| 7 | **TC-D2-04** (опц.) | D: AI panel | Ручной drag resize 280–560px; reload → ширина из `localStorage` | ⏳ manual |
-| 8 | **Регрессия** | TC-D2-01, 06, 08 | Vault header, EOD stat → modal, `#security-log` без изменений | ⏳ |
+| # | TC / область | Результат | Примечание |
+|---|--------------|-----------|------------|
+| 1 | **TC-D2-03** Admin sub-nav | **Passed** | `/prototype/admin-dashboard` → **Доступы** `/admin/access`, **Краткая сводка** `/admin/roadmap`, **Обзор** `/prototype/admin-dashboard`; `ShellAdminNav` с `group`/`map`/`dashboard` |
+| 2 | **TC-D2-03** Legacy hash | **Passed** | `/settings#admin` → **`/admin/access`** (replace) |
+| 3 | **TC-D2-02** Account footer | **Passed** | Нет кнопок «Выйти» / «Краткая сводка» в footer; клик по блоку аккаунта → `confirm` «Выйти из аккаунта?…» (MCP `handle_dialog` dismiss после проверки) |
+| 4 | **UX-06** Roadmap admin | **Passed** | **Настройки → Общие** — ссылка «Краткая сводка» → `/admin/roadmap`; страница «Реализовано и дорожная карта», **не** модалка |
+| 5 | **TC-D2-05** FAB desktop | **Passed** | `.motivator-fab--toolbar`, FAB в строке фильтров (`top≈185`, не fixed bottom-right); `prog24-fab-inline-1440.png` |
+| 6 | **Mobile 393×852** | **Passed** | `.motivator-fab-shell--fixed`: **56×56**, `bottom≈88`, `right≈20`; бейдж **«1»** над «+» (стек: badge выше FAB); bottom nav |
+| 7 | **TC-D2-04** (опц.) | **Not run** | Resize AI — manual (как в прогоне 23) |
+| 8 | **Регрессия** | **Passed** | **TC-D2-01:** Productivity Vault в header. **TC-D2-06:** stat tile `aria-label` «Завершить день» → modal «Завершение дня». **TC-D2-08:** `/settings#security-log` → `#security-log`, «Журнал безопасности» |
 
-**Скриншоты (по желанию):** `docs/qa-screenshots/prog24-admin-access-1440.png`, `prog24-fab-inline-1440.png`, `prog24-mobile-393.png`.
+**Settings (побочно):** вкладки **Общие / Безопасность / Уведомления** — **нет** «Администрирование»; в shell — ссылка «Админ-панель» (не вкладка настроек).
+
+**Скриншоты:** `prog24-admin-access-1440.png`, `prog24-fab-inline-1440.png`, `prog24-mobile-393.png`
 
 ### Вердикт прогона 24
 
-*(заполнить после прогона)*
+**Passed** — целевой deploy shell/admin UX на production подтверждён; расхождение отчёта с кодом (маршруты `/admin/*`, footer, inline FAB) закрыто. **Не в scope:** TC-D2-04 resize (manual), TC-D2-09 focus trap, send-due E2E, BUG-013.
 
 ---
 
-*Обновление: 2026-05-22 — синхронизация TC-D2 с кодом (admin routes, footer, FAB); чеклист прогона 24; прогон 23 без смены вердикта.*
+## Прогон 25 — smoke (QA clock + FAB + footer)
+
+**Дата:** 2026-05-26 (чеклист; **автопрогон Pending** до deploy на canonical URL)  
+**Сайт:** [https://planner-tawny-omega.vercel.app/app](https://planner-tawny-omega.vercel.app/app)  
+**Build (цель):** `0.7.3+ca446db` (merge PR #68 — QA clock, shell FAB/footer, beta admin Testing)  
+**Инструменты:** Chrome DevTools MCP — desktop 1440×900; mobile 393×852×3, `mobile,touch`
+
+**Предусловия:** admin `mussha2010@yandex.ru`; для beta-пунктов — УЗ **beta_tester** (см. скрипты `scripts/qa-provision-role-accounts.mjs`).
+
+| # | TC / область | Результат | Примечание |
+|---|--------------|-----------|------------|
+| 1 | **QA clock** `/admin/testing` | **Pending** | Задать дату/время → баннер `QaClockBanner` на `/app`; планировщик и **Отчёты** используют подмену; **Выключить** — снова реальное время |
+| 2 | **TC-D2-02** Account footer | **Pending** | Клик по блоку → **меню** (не мгновенный `confirm`); пункт выхода → confirm |
+| 3 | **TC-D2-05** FAB mobile | **Pending** | Fixed **bottom-right**; бейдж черновика **на углу** FAB (не стеком выше); defect FAB сдвинут влево на `/app` |
+| 4 | **TC-D2-05** FAB desktop | **Pending** | Inline в строке фильтров (без регрессии прогона 24) |
+| 5 | **Admin Testing** beta | **Pending** | beta: sidebar **Админ-панель** → `/admin/testing`; в `ShellAdminNav` только **Тестирование**; `/admin/access` → redirect/deny |
+| 6 | **Settings** | **Pending** | **Общие** — **нет** блока «Тестирование» (перенесено в админку) |
+| 7 | **Регрессия** | **Pending** | TC-D2-01, 03, 06, 08, UX-06 — как в прогоне 24 |
+
+**Скриншоты (после прогона):** `prog25-*` в `docs/qa-screenshots/` (пока нет; для прогона 24 — `prog24-*`).
+
+### Вердикт прогона 25
+
+**Pending** — ждёт production/preview с hash **`ca446db`** и MCP-прогона по таблице выше. Прогон 24 на `0ec71a3` остаётся **Passed** для предыдущего UX (footer confirm, бейдж над FAB).
+
+---
+
+*Обновление: 2026-05-26 — прогон 24 Passed на `0ec71a3` + скриншоты `prog24-*`; прогон 25 — чеклист Pending после PR #68 (`ca446db`).*

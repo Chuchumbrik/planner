@@ -22,7 +22,7 @@
 ## Этап 5. Модалки и формы (1–2 дня)
 ## Этап 6. Вторичные экраны MVP (2 дня)
 ## Этап 7. Адаптив и PWA — формальный аудит (1–2 дня) ✅ 2026-05-24
-## Этап 8. Доступность — лёгкий проход (1 день)
+## Этап 8. Доступность — лёгкий проход (1 день) ✅ 2026-05-24
 ## Этап 9. Документация и закрытие фазы (½–1 день)
 ## Этап 10. Merge и выкат (после приёмки)
 ## Предлагаемый порядок спринтов
@@ -44,6 +44,18 @@
 **Отчёт:** [`docs/design-2.0-stage7-audit.md`](../docs/design-2.0-stage7-audit.md)
 
 **Инструмент:** Chrome DevTools device + реальный телефон (PWA add to home) — manual PWA pending.
+
+---
+
+## Этап 8. Доступность — лёгкий проход (1 день) ✅ 2026-05-24
+
+- [x] Contrast primary / on-surface-variant на card-фонах (spot-check)
+- [x] `aria-label` на icon-only (close create/edit; FAB/nav — уже были)
+- [x] Modals: focus trap + return focus (`useDialogFocusTrap`)
+- [x] `aria-live` — sync popover, скрытые фильтры
+- [x] Disabled AI Command: `aria-disabled` (без изменений)
+
+**Отчёт:** [`docs/design-2.0-stage8-audit.md`](../docs/design-2.0-stage8-audit.md)
 
 ---
 
