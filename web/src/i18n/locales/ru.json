@@ -508,7 +508,9 @@
       "user_not_found": "Пользователь не найден.",
       "update_failed": "Не удалось обновить роль.",
       "list_failed": "Не удалось загрузить список пользователей.",
-      "overview_failed": "Не удалось загрузить сводку админки."
+      "overview_failed": "Не удалось загрузить сводку админки.",
+      "activity_chart_failed": "Не удалось загрузить график активности.",
+      "activity_table_missing": "Таблица активности не найдена — примените миграцию 006 (см. README)."
     },
     "adminSectionTitle": "Администраторы",
     "adminSectionHelp": "Роль задаётся в Supabase Auth → пользователь → App metadata: ключ motivator_role (значения admin, beta_tester; без ключа — обычный пользователь). Первый admin — в Dashboard или SQL. Дальше admin может менять роли на экране /settings (блок «Пользователи и роли», Edge admin-motivator-roles). Секция «Тестирование» и «Завести дефект» (file-defect) — для admin и beta_tester; см. web/README. Модалка «Краткая сводка» на /app — у всех залогиненных."
@@ -661,6 +663,21 @@
       "kpiVaultStale": "Vault без синхр. {{days}}д+",
       "kpiWithPush": "С push",
       "kpiDefects7d": "Дефекты за 7д",
+      "activityChartTitle": "Активность в приложении",
+      "activityChartHint": "Уникальные пользователи с ≥1 открытием в UTC-день (heartbeat раз в час). Не путать с «Последний вход» в Auth.",
+      "activityChartRefresh": "Обновить график",
+      "activityChartDaysAria": "Период графика",
+      "activityChartRoleAria": "Роль на графике",
+      "activityChartDays": "{{count}} дн.",
+      "activityChartRole": {
+        "all": "Все роли",
+        "admin": "Admin",
+        "beta_tester": "Бета",
+        "user": "User"
+      },
+      "activityChartEmpty": "Нет данных за выбранный период (после миграции и визитов пользователей).",
+      "activityTableMissing": "График недоступен: примените SQL-миграцию `006_admin_user_activity_daily` и задеплойте Edge `admin-record-activity`.",
+      "activityDauWau": "Сегодня (UTC): {{dau}} · за 7 дней (WAU): {{wau}}",
       "colRegistered": "Регистрация",
       "colLastSignIn": "Последний вход",
       "usersFilterAria": "Фильтр списка пользователей",

@@ -19,6 +19,8 @@ const ERROR_CODES = [
   'update_failed',
   'list_failed',
   'overview_failed',
+  'activity_chart_failed',
+  'activity_table_missing',
 ] as const
 
 export function mapAdminRolesError(formatted: string, t: (key: string) => string): string {

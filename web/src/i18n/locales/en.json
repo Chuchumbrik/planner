@@ -507,7 +507,9 @@
       "user_not_found": "User not found.",
       "update_failed": "Could not update the role.",
       "list_failed": "Could not load the user list.",
-      "overview_failed": "Could not load the admin overview."
+      "overview_failed": "Could not load the admin overview.",
+      "activity_chart_failed": "Could not load the activity chart.",
+      "activity_table_missing": "Activity table missing — apply migration 006 (see README)."
     },
     "adminSectionTitle": "Administrators",
     "adminSectionHelp": "Roles live in Supabase Auth → user → **App metadata**: key **motivator_role** (`admin`, `beta_tester`; omit key for a regular user). Bootstrap the first admin in the Dashboard or SQL. After that, admins can change roles on **/settings** (Users & roles block, Edge **admin-motivator-roles**). **Testing** and **File a defect** (**file-defect**) are for **admin** and **beta_tester**; see web/README. **Brief summary** on **/app** is for every signed-in user."
@@ -660,6 +662,21 @@
       "kpiVaultStale": "Vault stale {{days}}d+",
       "kpiWithPush": "With push",
       "kpiDefects7d": "Defects in 7d",
+      "activityChartTitle": "In-app activity",
+      "activityChartHint": "Unique users with ≥1 app open per UTC day (hourly heartbeat). Not the same as Auth “last sign-in”.",
+      "activityChartRefresh": "Refresh chart",
+      "activityChartDaysAria": "Chart period",
+      "activityChartRoleAria": "Role filter",
+      "activityChartDays": "{{count}} days",
+      "activityChartRole": {
+        "all": "All roles",
+        "admin": "Admin",
+        "beta_tester": "Beta",
+        "user": "User"
+      },
+      "activityChartEmpty": "No data for this period yet (after migration and user visits).",
+      "activityTableMissing": "Chart unavailable: apply migration `006_admin_user_activity_daily` and deploy Edge `admin-record-activity`.",
+      "activityDauWau": "Today (UTC): {{dau}} · 7-day (WAU): {{wau}}",
       "colRegistered": "Registered",
       "colLastSignIn": "Last sign-in",
       "usersFilterAria": "User list filter",

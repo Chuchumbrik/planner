@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { maybeRecordAppActivity } from '@/lib/adminActivityPing'
 import { isMotivatorAdmin, isMotivatorBetaTester, isMotivatorTesterOrAdmin } from '@/lib/motivatorRole'
 import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 
@@ -57,6 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!supabase || !session) return
+    maybeRecordAppActivity(supabase)
+  }, [session])
 
   const signIn = useCallback(async (email: string, password: string) => {
     if (!supabase) return { error: new Error('Supabase не настроен') }
