@@ -6,6 +6,7 @@ import { AdminDashboardSummaryTab } from '@/components/admin/AdminDashboardSumma
 import { AdminDashboardTabLayout } from '@/components/admin/AdminDashboardTabLayout'
 import { useAdminDashboardTab } from '@/components/admin/useAdminDashboardTab'
 import { useAdminMotivatorUsers } from '@/components/admin/useAdminMotivatorUsers'
+import { useAdminOverview } from '@/components/admin/useAdminOverview'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
 import { RequireVault } from '@/components/RequireVault'
 import { supabase } from '@/lib/supabase'
@@ -14,7 +15,8 @@ function AdminDashboardPageInner() {
   const { t } = useTranslation()
   const { session } = useAuth()
   const [activeTab, setActiveTab] = useAdminDashboardTab()
-  const { users, loadBusy, loadError, load, setLoadError } = useAdminMotivatorUsers(supabase)
+  const overviewState = useAdminOverview(supabase)
+  const usersState = useAdminMotivatorUsers(supabase, { enabled: activeTab === 'users' })
 
   if (!supabase) {
     return <Navigate to="/app" replace />
@@ -25,21 +27,31 @@ function AdminDashboardPageInner() {
     return <Navigate to="/login" replace />
   }
 
+  async function reloadUsersAndOverview() {
+    await Promise.all([usersState.load(), overviewState.load()])
+  }
+
   return (
     <MotivatorShell activeNav="prototype-admin" wide title={t('admin.dashboard.title')}>
       <AdminDashboardTabLayout activeTab={activeTab} onTabChange={setActiveTab}>
         {activeTab === 'summary' ? (
-          <AdminDashboardSummaryTab users={users} loadBusy={loadBusy} />
+          <AdminDashboardSummaryTab
+            overview={overviewState.overview}
+            loadBusy={overviewState.loadBusy}
+            loadError={overviewState.loadError}
+            listDegraded={overviewState.listDegraded}
+          />
         ) : (
           <AdminMotivatorRolePanel
             supabase={supabase}
             currentUserId={userId}
-            users={users}
-            loadBusy={loadBusy}
-            loadError={loadError}
-            onRefresh={() => void load()}
-            onReload={load}
-            onLoadError={setLoadError}
+            users={usersState.users}
+            loadBusy={usersState.loadBusy}
+            loadError={usersState.loadError}
+            listDegraded={usersState.listDegraded}
+            onRefresh={() => void usersState.load()}
+            onReload={reloadUsersAndOverview}
+            onLoadError={usersState.setLoadError}
           />
         )}
       </AdminDashboardTabLayout>

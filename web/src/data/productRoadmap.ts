@@ -350,6 +350,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: '**Админ → Обзор** (`/admin/dashboard`): вкладки **«Сводка»** (KPI по Auth) и **«Пользователи»** (роли, даты регистрации и входа, фильтры неактивных); редиректы с `/admin/access` и `/prototype/admin-dashboard`.',
             en: '**Admin → Overview** (`/admin/dashboard`): **Summary** (Auth KPIs) and **Users** tabs (roles, registration/last sign-in, inactive filters); redirects from `/admin/access` and `/prototype/admin-dashboard`.',
           },
+          {
+            ru: '**Админ-мониторинг (PR2):** Edge **`overview`** + обогащённый **`list`** — vault (без ciphertext), push, дефекты; KPI на «Сводке»; в таблице — синхронизация vault, фильтры «без vault» / «stale 14д» / «с push».',
+            en: '**Admin monitoring (PR2):** Edge **`overview`** + enriched **`list`** — vault metadata (no ciphertext), push, defects; Summary KPIs; table vault sync column and filters (no vault / stale 14d / with push).',
+          },
         ],
         plainBullets: [
           {
@@ -363,6 +367,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           {
             ru: 'Администратор видит в обзоре, сколько пользователей зарегистрировалось и заходило за неделю, и может отфильтровать тех, кто давно не входил.',
             en: 'Admins see weekly sign-up and sign-in counts in Overview and can filter users who have been inactive.',
+          },
+          {
+            ru: 'На «Сводке» — сколько пользователей с vault и без синхронизации давно; в списке видно дату последней синхронизации vault (не содержимое).',
+            en: 'Summary shows vault adoption and stale sync counts; the user list shows last vault sync time (not vault contents).',
           },
         ],
       },
