@@ -1,7 +1,14 @@
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
-import { DRAFT_COUNT_BADGE_ON_FAB, FAB, FAB_SHELL } from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
+import {
+  DRAFT_COUNT_BADGE_STACKED,
+  FAB,
+  FAB_SHELL_FIXED,
+  FAB_SHELL_INLINE,
+} from '@/lib/designClasses'
 
 type PlannerCreateFabProps = {
+  variant?: 'fixed' | 'inline'
   disabled?: boolean
   ariaLabel: string
   onClick: () => void
@@ -10,8 +17,9 @@ type PlannerCreateFabProps = {
   draftsBadgeLabel?: string
 }
 
-/** FAB «+» — mobile над нижней навигацией; desktop компактный у правого края экрана. */
+/** FAB «+» — mobile: fixed над bottom nav; desktop: в строке фильтров. */
 export function PlannerCreateFab({
+  variant = 'fixed',
   disabled,
   ariaLabel,
   onClick,
@@ -19,18 +27,11 @@ export function PlannerCreateFab({
   onDraftsClick,
   draftsBadgeLabel,
 }: PlannerCreateFabProps) {
+  const shellClass = variant === 'inline' ? FAB_SHELL_INLINE : FAB_SHELL_FIXED
+
   return (
-    <div className={FAB_SHELL}>
-      <div className="relative">
-        <button
-          type="button"
-          className={FAB}
-          disabled={disabled}
-          aria-label={ariaLabel}
-          onClick={onClick}
-        >
-          <MaterialIcon name="add" size={28} className="motivator-fab-icon text-on-primary" />
-        </button>
+    <div className={shellClass}>
+      <div className="flex flex-col items-center gap-1.5">
         {draftCount > 0 && onDraftsClick ? (
           <button
             type="button"
@@ -38,7 +39,7 @@ export function PlannerCreateFab({
             aria-haspopup="dialog"
             aria-label={draftsBadgeLabel}
             title={draftsBadgeLabel}
-            className={DRAFT_COUNT_BADGE_ON_FAB}
+            className={DRAFT_COUNT_BADGE_STACKED}
             onClick={(e) => {
               e.stopPropagation()
               onDraftsClick()
@@ -47,6 +48,15 @@ export function PlannerCreateFab({
             {draftCount > 99 ? '99+' : draftCount}
           </button>
         ) : null}
+        <button
+          type="button"
+          className={cn(FAB, variant === 'inline' && 'motivator-fab--toolbar')}
+          disabled={disabled}
+          aria-label={ariaLabel}
+          onClick={onClick}
+        >
+          <MaterialIcon name="add" size={28} className="motivator-fab-icon text-on-primary" />
+        </button>
       </div>
     </div>
   )

@@ -13,7 +13,10 @@ import { LegalDocumentPage } from '@/pages/LegalDocumentPage'
 import { AdminDashboardPrototypePage } from '@/pages/prototypes/AdminDashboardPrototypePage'
 import { AiInsightsPrototypePage } from '@/pages/prototypes/AiInsightsPrototypePage'
 import { DeepFocusPrototypePage } from '@/pages/prototypes/DeepFocusPrototypePage'
+import { RequireAdmin } from '@/components/auth/RequireAdmin'
 import { RequireTesterPreview } from '@/components/auth/RequireTesterPreview'
+import { AdminAccessPage } from '@/pages/AdminAccessPage'
+import { AdminRoadmapPage } from '@/pages/AdminRoadmapPage'
 import { CookieConsentGate } from '@/components/CookieConsentGate'
 
 function SwNotificationNavigation() {
@@ -111,6 +114,30 @@ export function App() {
               <RequireTesterPreview>
                 <AdminDashboardPrototypePage />
               </RequireTesterPreview>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/admin/access"
+          element={
+            session ? (
+              <RequireAdmin>
+                <AdminAccessPage />
+              </RequireAdmin>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/admin/roadmap"
+          element={
+            session ? (
+              <RequireAdmin>
+                <AdminRoadmapPage />
+              </RequireAdmin>
             ) : (
               <Navigate to="/login" replace />
             )

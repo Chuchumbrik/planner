@@ -56,11 +56,9 @@ export const SHELL_PREVIEW_NAV: ShellNavItem[] = [
 
 export type ShellAdminNavItem = {
   id: 'admin-dashboard' | 'admin-users' | 'admin-roadmap'
-  to?: string
+  to: string
   icon: string
   labelKey: string
-  /** Opens ProductRoadmapModal instead of routing. */
-  action?: 'roadmap'
 }
 
 export const SHELL_ADMIN_NAV: ShellAdminNavItem[] = [
@@ -72,15 +70,15 @@ export const SHELL_ADMIN_NAV: ShellAdminNavItem[] = [
   },
   {
     id: 'admin-users',
-    to: '/settings#admin',
+    to: '/admin/access',
     icon: 'group',
-    labelKey: 'shell.adminNavUsers',
+    labelKey: 'shell.adminNavAccess',
   },
   {
     id: 'admin-roadmap',
+    to: '/admin/roadmap',
     icon: 'map',
-    labelKey: 'settings.roadmapTempButton',
-    action: 'roadmap',
+    labelKey: 'shell.adminNavRoadmap',
   },
 ]
 

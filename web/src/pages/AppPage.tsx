@@ -38,6 +38,7 @@ import {
   MODAL_TITLE,
   MOTIVATOR_INPUT,
   PLANNER_NAV_BTN,
+  PLANNER_PERIOD_ARROW_BTN,
   PLANNER_TOOLBAR_BTN,
   PLANNER_SECTION_HEAD,
   SETTINGS_BTN_SECONDARY,
@@ -217,7 +218,7 @@ function matchesFiltersExcept(
 /** Иконки навигации периода — те же SVG, что на вкладке «Неделя». */
 function PlannerChevronLeft() {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+    <svg className="h-4 w-4 max-md:h-5 max-md:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
       <path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" />
     </svg>
   )
@@ -225,7 +226,7 @@ function PlannerChevronLeft() {
 
 function PlannerChevronRight() {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+    <svg className="h-4 w-4 max-md:h-5 max-md:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
       <path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
     </svg>
   )
@@ -260,7 +261,7 @@ function PlannerPeriodNav({
         <button
           type="button"
           disabled={!canEdit}
-          className={PLANNER_NAV_BTN}
+          className={PLANNER_PERIOD_ARROW_BTN}
           onClick={onPrev}
           aria-label={prevAriaLabel}
         >
@@ -273,7 +274,7 @@ function PlannerPeriodNav({
         <button
           type="button"
           disabled={!canEdit}
-          className={PLANNER_NAV_BTN}
+          className={PLANNER_PERIOD_ARROW_BTN}
           onClick={onNext}
           aria-label={nextAriaLabel}
         >
@@ -1058,6 +1059,17 @@ function AppPageInner() {
           >
             <PlannerChartsIcon chartsHidden={chartsHidden} />
           </button>
+          <div className="ml-auto hidden shrink-0 md:flex md:pl-2">
+            <PlannerCreateFab
+              variant="inline"
+              disabled={!canEdit}
+              ariaLabel={t('app.openCreateTask')}
+              onClick={openCreateTask}
+              draftCount={vault.drafts.length}
+              onDraftsClick={() => setDraftsModalOpen(true)}
+              draftsBadgeLabel={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
+            />
+          </div>
         </div>
 
         {filtersPanelOpen ? (
@@ -1653,14 +1665,17 @@ function AppPageInner() {
         />
       ) : null}
 
-      <PlannerCreateFab
-        disabled={!canEdit}
-        ariaLabel={t('app.openCreateTask')}
-        onClick={openCreateTask}
-        draftCount={vault.drafts.length}
-        onDraftsClick={() => setDraftsModalOpen(true)}
-        draftsBadgeLabel={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-      />
+      <div className="md:hidden">
+        <PlannerCreateFab
+          variant="fixed"
+          disabled={!canEdit}
+          ariaLabel={t('app.openCreateTask')}
+          onClick={openCreateTask}
+          draftCount={vault.drafts.length}
+          onDraftsClick={() => setDraftsModalOpen(true)}
+          draftsBadgeLabel={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
+        />
+      </div>
       </div>
     </MotivatorShell>
   )

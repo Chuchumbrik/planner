@@ -76,21 +76,19 @@ function ShellSidebar({
   className,
   showPreviewNav,
   adminMode,
-  hideRoadmapInFooter,
 }: {
   activeNav: MotivatorNavId
   onNavigate?: () => void
   className?: string
   showPreviewNav: boolean
   adminMode: boolean
-  hideRoadmapInFooter: boolean
 }) {
   const { t } = useTranslation()
   const settingsActive = activeNav === 'settings'
 
   return (
     <aside className={cn(SHELL_SIDEBAR, className)}>
-      <div className="mb-xl px-md">
+      <div className="mb-md px-md">
         <BrandMark size="sm" showSubtitle />
       </div>
       <nav
@@ -126,7 +124,7 @@ function ShellSidebar({
           </div>
         ) : null}
       </nav>
-      <ShellAccountFooter hideRoadmap={hideRoadmapInFooter} />
+      <ShellAccountFooter />
     </aside>
   )
 }
@@ -149,8 +147,6 @@ function MotivatorShellInner({
   const isDesktop = useIsDesktopShell()
   const adminMode = isShellAdminMode(location.pathname, location.hash, isAdmin)
   const aiDocked = aiOpen && isDesktop && canAccessPreviewFeatures
-  const hideRoadmapInFooter = adminMode && isDesktop
-
   useEffect(() => {
     if (!canAccessPreviewFeatures) closeAssistant()
   }, [canAccessPreviewFeatures, closeAssistant])
@@ -172,7 +168,6 @@ function MotivatorShellInner({
     activeNav,
     showPreviewNav: canAccessPreviewFeatures,
     adminMode,
-    hideRoadmapInFooter,
   }
 
   return (
