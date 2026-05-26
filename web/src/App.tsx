@@ -17,6 +17,7 @@ import { RequireAdmin } from '@/components/auth/RequireAdmin'
 import { RequireTesterPreview } from '@/components/auth/RequireTesterPreview'
 import { AdminAccessPage } from '@/pages/AdminAccessPage'
 import { AdminRoadmapPage } from '@/pages/AdminRoadmapPage'
+import { AdminTestingPage } from '@/pages/AdminTestingPage'
 import { CookieConsentGate } from '@/components/CookieConsentGate'
 
 function SwNotificationNavigation() {
@@ -138,6 +139,18 @@ export function App() {
               <RequireAdmin>
                 <AdminRoadmapPage />
               </RequireAdmin>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/admin/testing"
+          element={
+            session ? (
+              <RequireTesterPreview>
+                <AdminTestingPage />
+              </RequireTesterPreview>
             ) : (
               <Navigate to="/login" replace />
             )

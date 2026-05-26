@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
+import { getAppNow } from '@/lib/appNow'
 import { isPlannerTaskOverdue } from '@/lib/plannerTaskDayStatus'
 import {
   getTaskSlotMinutes,
@@ -112,7 +113,7 @@ export function WeekGrid({
   }
 
   function taskBlockClass(task: Task, day: string, done: boolean): string {
-    const overdue = !done && isPlannerTaskOverdue(task, day, todayKey)
+    const overdue = !done && isPlannerTaskOverdue(task, day, todayKey, getAppNow())
     return cn(
       'absolute left-0.5 right-0.5 overflow-hidden rounded border border-l-[3px] px-1 py-0.5',
       'text-left text-[10px] leading-tight disabled:opacity-40',
@@ -187,7 +188,7 @@ export function WeekGrid({
                 uns.map((task) => {
                   const accent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
                   const done = isPlannedTaskFullyCompleteForDay(task, day)
-                  const overdue = !done && isPlannerTaskOverdue(task, day, todayKey)
+                  const overdue = !done && isPlannerTaskOverdue(task, day, todayKey, getAppNow())
                   return (
                     <button
                       key={task.id}

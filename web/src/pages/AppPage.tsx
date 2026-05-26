@@ -48,7 +48,9 @@ import {
   viewTab,
 } from '@/lib/designClasses'
 import { isPlannerTaskOverdue } from '@/lib/plannerTaskDayStatus'
+import { appLocalDateKey, getAppNow } from '@/lib/appNow'
 import { readPlannerChartsHidden, writePlannerChartsHidden } from '@/lib/plannerChartsPref'
+import { useAppNow } from '@/qa/QaClockProvider'
 import {
   countHiddenByFilterInDays,
   countOverdueInDays,
@@ -57,7 +59,6 @@ import {
 import {
   DEFAULT_GROUP_ID,
   PRIORITY_RANKS,
-  localDateKey,
   maxOverlapWithOthers,
   monthLabel,
   monthWeekMatrix,
@@ -102,7 +103,7 @@ function dayPlanRowSurfaceClass(opts: {
       ? 'border-tertiary-container/40 bg-tertiary-container/10'
       : 'border-tertiary-container/30 bg-tertiary-container/5'
   }
-  if (isPlannerTaskOverdue(task, selectedDay, todayKey)) {
+  if (isPlannerTaskOverdue(task, selectedDay, todayKey, getAppNow())) {
     return 'border-tertiary/45 bg-tertiary-container/10'
   }
   return undefined
@@ -366,7 +367,8 @@ function AppPageInner() {
   const [view, setView] = useState<'day' | 'week' | 'month'>('day')
   const [createOpen, setCreateOpen] = useState(false)
   const [resumeDraft, setResumeDraft] = useState<TaskDraft | null>(null)
-  const [selectedDay, setSelectedDay] = useState(() => localDateKey())
+  const { todayKey: todayKeyApp, now: appNow } = useAppNow()
+  const [selectedDay, setSelectedDay] = useState(() => appLocalDateKey())
 
   useEffect(() => {
     if (!highlightTaskId || !remoteHydrated) return
@@ -382,11 +384,15 @@ function AppPageInner() {
   }, [highlightTaskId, remoteHydrated, view, selectedDay, vault.tasks.length])
 
   const [weekStartMonday, setWeekStartMonday] = useState(() =>
-    startOfWeekMonday(localDateKey()),
+    startOfWeekMonday(appLocalDateKey()),
   )
-  const _now = new Date()
-  const [monthYear, setMonthYear] = useState(() => _now.getFullYear())
-  const [monthIndex, setMonthIndex] = useState(() => _now.getMonth())
+  const [monthYear, setMonthYear] = useState(() => getAppNow().getFullYear())
+  const [monthIndex, setMonthIndex] = useState(() => getAppNow().getMonth())
+
+  useEffect(() => {
+    setMonthYear(appNow.getFullYear())
+    setMonthIndex(appNow.getMonth())
+  }, [appNow])
 
   const [filterGroupId, setFilterGroupId] = useState<string | 'all'>('all')
   const [filterRepeats, setFilterRepeats] = useState<'all' | 'recurring' | 'nonRecurring'>(
@@ -476,7 +482,6 @@ function AppPageInner() {
   const canEdit = remoteHydrated && !decryptFailed
 
   const eodEnabled = vault.eodPreferences?.enabled !== false
-  const todayKeyApp = localDateKey()
   /** Главная галочка «выполнено» и DR-004 — только при просмотре календарного сегодня. */
   const canToggleTaskCompletionOnDayView = selectedDay === todayKeyApp
   const eodDoneToday = Boolean(vault.eodCompletedLocalDates?.includes(todayKeyApp))
@@ -1004,7 +1009,7 @@ function AppPageInner() {
       </nav>
       <button
         type="button"
-        className={`${PLANNER_NAV_BTN} hidden shrink-0 items-center justify-center md:inline-flex`}
+        className={cn(PLANNER_NAV_BTN, 'max-md:hidden self-start')}
         aria-pressed={!chartsHidden}
         aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
         title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
@@ -1051,7 +1056,7 @@ function AppPageInner() {
           </div>
           <button
             type="button"
-            className={`${PLANNER_NAV_BTN} inline-flex shrink-0 items-center justify-center md:hidden`}
+            className={cn(PLANNER_NAV_BTN, 'md:hidden')}
             aria-pressed={!chartsHidden}
             aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
             title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
@@ -1324,7 +1329,7 @@ function AppPageInner() {
             dateLabel={formatDayHeading(selectedDay, locale)}
             onPrev={() => setSelectedDay(shiftLocalDateKey(selectedDay, -1))}
             onNext={() => setSelectedDay(shiftLocalDateKey(selectedDay, 1))}
-            onJumpToCurrent={() => setSelectedDay(localDateKey())}
+            onJumpToCurrent={() => setSelectedDay(appLocalDateKey())}
             prevAriaLabel={t('app.dayPrev')}
             nextAriaLabel={t('app.dayNext')}
             jumpLabel={t('app.today')}
@@ -1370,7 +1375,7 @@ function AppPageInner() {
                           occurrenceDayKey={selectedDay}
                           completionToggleAllowed={canToggleTaskCompletionOnDayView}
                           groupName={groupNameById.get(task.groupId) ?? null}
-                          overdue={isPlannerTaskOverdue(task, selectedDay, todayKeyApp)}
+                          overdue={isPlannerTaskOverdue(task, selectedDay, todayKeyApp, appNow)}
                           planRowSurfaceClass={dayPlanRowSurfaceClass({
                             selectedDay,
                             todayKey: todayKeyApp,
@@ -1439,7 +1444,7 @@ function AppPageInner() {
             dateLabel={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
             onPrev={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, -1))}
             onNext={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, 1))}
-            onJumpToCurrent={() => setWeekStartMonday(startOfWeekMonday(localDateKey()))}
+            onJumpToCurrent={() => setWeekStartMonday(startOfWeekMonday(appLocalDateKey()))}
             prevAriaLabel={t('app.weekPrev')}
             nextAriaLabel={t('app.weekNext')}
             jumpLabel={t('app.weekThis')}
@@ -1519,7 +1524,7 @@ function AppPageInner() {
               setMonthIndex(d.getMonth())
             }}
             onJumpToCurrent={() => {
-              const now = parseLocalDateKey(localDateKey())!
+              const now = parseLocalDateKey(appLocalDateKey())!
               setMonthYear(now.getFullYear())
               setMonthIndex(now.getMonth())
             }}

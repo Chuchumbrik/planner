@@ -3,17 +3,19 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
 import { shellSideNavLink } from '@/lib/designClasses'
-import { SHELL_ADMIN_NAV } from '@/lib/shellNavigation'
+import { shellAdminNavForUser } from '@/lib/shellNavigation'
 
 type Props = {
   onNavigate?: () => void
+  isAdmin: boolean
 }
 
-export function ShellAdminNav({ onNavigate }: Props) {
+export function ShellAdminNav({ onNavigate, isAdmin }: Props) {
   const { t } = useTranslation()
   const location = useLocation()
+  const items = shellAdminNavForUser(isAdmin)
 
-  function isItemActive(item: (typeof SHELL_ADMIN_NAV)[number]): boolean {
+  function isItemActive(item: (typeof items)[number]): boolean {
     if (item.id === 'admin-dashboard') {
       return location.pathname === '/prototype/admin-dashboard'
     }
@@ -22,6 +24,9 @@ export function ShellAdminNav({ onNavigate }: Props) {
     }
     if (item.id === 'admin-roadmap') {
       return location.pathname === '/admin/roadmap'
+    }
+    if (item.id === 'admin-testing') {
+      return location.pathname === '/admin/testing'
     }
     return false
   }
@@ -43,7 +48,7 @@ export function ShellAdminNav({ onNavigate }: Props) {
         {t('shell.adminNavSection')}
       </p>
 
-      {SHELL_ADMIN_NAV.map((item) => {
+      {items.map((item) => {
         const active = isItemActive(item)
         return (
           <NavLink

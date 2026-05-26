@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { NotificationDeliveryMode, VaultPayload } from '@motivator/core'
 
+import { getAppNow } from '@/lib/appNow'
 import { computeScheduledFireRequests, type FireRowInput } from './computeScheduledFires'
 
 export async function deleteScheduledFiresForUser(
@@ -74,6 +75,6 @@ export async function syncNotificationScheduleFromVault(
     return
   }
 
-  const rows = computeScheduledFireRequests(vault, { deliveryMode, locale })
+  const rows = computeScheduledFireRequests(vault, { deliveryMode, locale, now: getAppNow() })
   await replaceScheduledFires(client, userId, rows)
 }

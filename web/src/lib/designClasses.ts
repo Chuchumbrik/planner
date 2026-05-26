@@ -272,9 +272,6 @@ export const ROADMAP_DETAILS_SUMMARY = cn(
 /** Overlay on «Создать задачу» (desktop / week-month toolbar). */
 export const DRAFT_COUNT_BADGE = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-2 -top-2')
 
-/** Черновики над кнопкой «+» (стек, не уголок). */
-export const DRAFT_COUNT_BADGE_STACKED = cn(DRAFT_COUNT_BADGE_BASE)
-
 export const DC_PENDING_SHELL = cn(
   'animate-dc-pending border-primary/40 bg-surface-container ring-1 ring-primary/25',
 )

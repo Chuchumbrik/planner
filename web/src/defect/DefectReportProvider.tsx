@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
+import { cn } from '@/lib/cn'
 import { FileDefectModal } from '@/components/FileDefectModal'
 import { DefectReportContext } from '@/defect/defectReportContext'
 import { motivatorAppRole } from '@/lib/motivatorRole'
@@ -12,6 +13,7 @@ function defectFabEligiblePath(pathname: string): boolean {
   if (pathname === '/settings') return true
   if (pathname === '/admin/access') return true
   if (pathname === '/admin/roadmap') return true
+  if (pathname === '/admin/testing') return true
   return false
 }
 
@@ -52,11 +54,10 @@ export function DefectReportProvider({ children }: { children: ReactNode }) {
       {showFab ? (
         <button
           type="button"
-          className="fixed z-40 flex h-14 w-14 items-center justify-center rounded-full border border-primary/50 bg-surface-container-lowest/95 text-xl text-primary shadow-xl backdrop-blur-sm hover:bg-primary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/80"
-          style={{
-            right: 'max(1rem, env(safe-area-inset-right, 0px))',
-            bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-          }}
+          className={cn(
+            'motivator-defect-fab flex h-14 w-14 items-center justify-center rounded-full border border-primary/50 bg-surface-container-lowest/95 text-xl text-primary shadow-xl backdrop-blur-sm hover:bg-primary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/80',
+            location.pathname.startsWith('/app') && 'motivator-defect-fab--offset-for-create',
+          )}
           aria-label={t('settings.fileDefectFabAria')}
           onClick={openDefectReport}
         >

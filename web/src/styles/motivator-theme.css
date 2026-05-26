@@ -269,9 +269,22 @@
 
   .motivator-fab-shell--fixed {
     position: fixed;
-    right: 1.25rem;
-    bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    z-index: 55;
+  }
+
+  .motivator-defect-fab {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    bottom: max(1rem, env(safe-area-inset-bottom, 0px));
     z-index: 40;
+  }
+
+  @media (max-width: 767px) {
+    .motivator-defect-fab--offset-for-create {
+      right: calc(max(1rem, env(safe-area-inset-right, 0px)) + 3.5rem + 0.75rem);
+    }
   }
 
   .motivator-fab-shell-inline {

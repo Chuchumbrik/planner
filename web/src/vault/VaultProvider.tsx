@@ -42,7 +42,6 @@ import {
   decryptUtf8,
   deriveAesKey,
   encryptUtf8,
-  localDateKey,
   normalizeVault,
   DEFAULT_GROUP_ID,
   emptyVault,
@@ -65,6 +64,7 @@ import {
   syncNotificationScheduleFromVault,
   upsertPushSubscriptionRow,
 } from '@/lib/notifications/syncNotificationSchedule'
+import { appLocalDateKey, appNowIso } from '@/lib/appNow'
 import { supabase } from '@/lib/supabase'
 
 const SEED_KEY = 'motivator_seed_b64'
@@ -72,7 +72,7 @@ const PASSWORD_KEY = 'motivator_kdf_password'
 
 const vaultDepsDefault: VaultDeps = {
   newId: () => crypto.randomUUID(),
-  nowIso: () => new Date().toISOString(),
+  nowIso: () => appNowIso(),
 }
 
 type VaultContextValue = {
@@ -649,7 +649,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       await mutate((v) => {
         let n = applySetEodAutoCloseAtDayEnd(v, value)
         if (value && n.eodPreferences?.enabled !== false) {
-          n = applyAutoCompleteEodForElapsedPlannerDays(n, localDateKey())
+          n = applyAutoCompleteEodForElapsedPlannerDays(n, appLocalDateKey())
         }
         return n
       })
@@ -699,7 +699,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     const runAuto = () => {
       const base = latestPayloadRef.current
       if (!base) return
-      const today = localDateKey()
+      const today = appLocalDateKey()
       const next = applyAutoCompleteEodForElapsedPlannerDays(base, today)
       if (next !== base) void pushVault(next)
     }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { MOTIVATOR_INPUT } from '@/lib/designClasses'
 import { useDialogFocusTrap } from '@/lib/useDialogFocusTrap'
 import { localDateKey, monthLabel, monthWeekMatrix, parseLocalDateKey } from '@motivator/core'
+import { appLocalDateKey, getAppNow } from '@/lib/appNow'
 
 function formatDateShort(dateKey: string, locale: string): string {
   const dt = parseLocalDateKey(dateKey)
@@ -50,7 +51,7 @@ export function LocalDatePickerField({
 
   useDialogFocusTrap(open, panelRef)
 
-  const now = new Date()
+  const now = getAppNow()
   const [viewY, setViewY] = useState(now.getFullYear())
   const [viewM, setViewM] = useState(now.getMonth())
 
@@ -64,7 +65,7 @@ export function LocalDatePickerField({
         return
       }
     }
-    const n = new Date()
+    const n = getAppNow()
     setViewY(n.getFullYear())
     setViewM(n.getMonth())
   }, [open, value])
@@ -116,7 +117,7 @@ export function LocalDatePickerField({
   }, [open])
 
   const matrix = useMemo(() => monthWeekMatrix(viewY, viewM), [viewY, viewM])
-  const todayKey = localDateKey()
+  const todayKey = appLocalDateKey()
 
   const lastDayOfPreviousMonthKey = useMemo(
     () => localDateKey(new Date(viewY, viewM, 0)),

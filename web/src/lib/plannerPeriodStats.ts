@@ -3,6 +3,7 @@ import {
   tasksScheduledForPlannerDay,
   type Task,
 } from '@motivator/core'
+import { getAppNow } from '@/lib/appNow'
 import { isPlannerTaskOverdue } from '@/lib/plannerTaskDayStatus'
 
 export type PlannerDaySummary = {
@@ -21,7 +22,7 @@ export function summarizePlannerDay(
   let overdue = 0
   for (const task of dayTasks) {
     if (isPlannedTaskFullyCompleteForDay(task, dayKey)) done += 1
-    else if (isPlannerTaskOverdue(task, dayKey, todayKey)) overdue += 1
+    else if (isPlannerTaskOverdue(task, dayKey, todayKey, getAppNow())) overdue += 1
   }
   return { total: dayTasks.length, done, overdue }
 }
@@ -31,7 +32,7 @@ export function countOverdueInDays(tasks: Task[], dayKeys: string[], todayKey: s
   for (const dayKey of dayKeys) {
     if (dayKey > todayKey) continue
     for (const task of tasksScheduledForPlannerDay(tasks, dayKey)) {
-      if (isPlannerTaskOverdue(task, dayKey, todayKey)) count += 1
+      if (isPlannerTaskOverdue(task, dayKey, todayKey, getAppNow())) count += 1
     }
   }
   return count

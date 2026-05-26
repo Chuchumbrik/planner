@@ -1,3 +1,5 @@
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '@/auth/AuthProvider'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { PrototypePageLayout } from '@/pages/prototypes/PrototypePageLayout'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +12,11 @@ const MOCK_STATS = [
 
 export function AdminDashboardPrototypePage() {
   const { t } = useTranslation()
+  const { isAdmin } = useAuth()
+
+  if (!isAdmin) {
+    return <Navigate to="/admin/testing" replace />
+  }
 
   return (
     <PrototypePageLayout activeNav="prototype-admin" titleKey="prototype.admin.title">
