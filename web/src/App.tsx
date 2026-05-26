@@ -136,9 +136,9 @@ export function App() {
           path="/admin/roadmap"
           element={
             session ? (
-              <RequireAdmin>
+              <RequireTesterPreview>
                 <AdminRoadmapPage />
-              </RequireAdmin>
+              </RequireTesterPreview>
             ) : (
               <Navigate to="/login" replace />
             )

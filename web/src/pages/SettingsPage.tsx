@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
 import { SecurityLogPanel } from '@/components/settings/SecurityLogPanel'
 import { SettingsTabLayout } from '@/components/settings/SettingsTabLayout'
 import { useSettingsTab } from '@/components/settings/useSettingsTab'
-import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { RequireVault } from '@/components/RequireVault'
 import { SeedExportPanel } from '@/components/SeedExportPanel'
 import { SettingsLegalSection } from '@/components/SettingsLegalSection'
@@ -127,7 +126,7 @@ const EOD_DEFAULT_PUSH_REMINDER_MINUTES = 20 * 60 + 30
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { session, updatePassword, isAdmin } = useAuth()
+  const { session, updatePassword, isAdmin, canAccessPreviewFeatures } = useAuth()
   const {
     vault,
     remoteHydrated,
@@ -157,7 +156,6 @@ function SettingsPageInner() {
   const [notifModeDraft, setNotifModeDraft] = useState<NotificationDeliveryMode>('off')
   const [notifModeSaving, setNotifModeSaving] = useState(false)
   const [savedFlash, setSavedFlash] = useState(false)
-  const [roadmapModalOpen, setRoadmapModalOpen] = useState(false)
   const savePendingWasRef = useRef(false)
 
   const deliveryMode: NotificationDeliveryMode =
@@ -188,10 +186,13 @@ function SettingsPageInner() {
   const [activeTab, setActiveTab] = useSettingsTab()
 
   useEffect(() => {
-    if (window.location.hash.replace(/^#/, '') === 'admin') {
+    if (window.location.hash.replace(/^#/, '') !== 'admin') return
+    if (isAdmin) {
       navigate('/admin/access', { replace: true })
+    } else if (canAccessPreviewFeatures) {
+      navigate('/admin/roadmap', { replace: true })
     }
-  }, [navigate])
+  }, [navigate, isAdmin, canAccessPreviewFeatures])
 
   useEffect(() => {
     if (activeTab !== 'privacy') return
@@ -323,26 +324,6 @@ function SettingsPageInner() {
                   {pwBusy ? t('common.loading') : t('settings.changePasswordSubmit')}
                 </button>
               </form>
-            </div>
-
-            <div>
-              <h3 className={SETTINGS_SUBHEAD}>{t('settings.roadmapGeneralTitle')}</h3>
-              <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.roadmapGeneralHelp')}</p>
-              <div className={`mt-3 ${SETTINGS_CARD}`}>
-                {isAdmin ? (
-                  <Link to="/admin/roadmap" className={`inline-flex ${SETTINGS_BTN_SECONDARY}`}>
-                    {t('settings.roadmapTempButton')}
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    className={SETTINGS_BTN_SECONDARY}
-                    onClick={() => setRoadmapModalOpen(true)}
-                  >
-                    {t('settings.roadmapTempButton')}
-                  </button>
-                )}
-              </div>
             </div>
 
             <div>
@@ -601,10 +582,6 @@ function SettingsPageInner() {
         ) : null}
 
       </SettingsTabLayout>
-
-      {!isAdmin ? (
-        <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />
-      ) : null}
 
       <p className="mt-10 text-center text-mono-data text-label-sm text-on-surface-variant">
         {t('settings.appVersion', { version: APP_VERSION })}

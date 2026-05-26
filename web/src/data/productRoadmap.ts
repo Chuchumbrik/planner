@@ -331,8 +331,16 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
         changes: [
           {
-            ru: '**Админ-панель → Тестирование** (`/admin/testing`): для **admin** и **beta_tester** — подмена «сейчас» (дата и время в **localStorage**); влияет на планировщик, EOD, просрочку и отчёты. У **beta_tester** в sidebar админки только **Тестирование**; у **admin** — полный набор + тестирование.',
-            en: '**Admin panel → Testing** (`/admin/testing`): **admin** and **beta_tester** can override “now” (date/time in **localStorage**); affects planner, EOD, overdue rules, and reports. **Beta_tester** admin sidebar shows **Testing** only; **admin** keeps full admin nav plus testing.',
+            ru: '**Shell / планировщик:** сворачиваемый **sidebar** (иконки ↔ подписи, состояние в **localStorage**); единые отступы на **`/app`**; переключатель **диаграмм** рядом с **Фильтры**; бейдж **черновиков** на FAB — непрозрачный круг; **версия сборки** только в **Настройках** (убрана из footer sidebar).',
+            en: '**Shell / planner:** collapsible **sidebar** (icons ↔ labels, **localStorage**); unified **`/app`** spacing; **charts** toggle next to **Filters**; draft badge on FAB — solid circle; **build version** only in **Settings** (removed from sidebar footer).',
+          },
+          {
+            ru: '**Краткая сводка:** убрана из **Настройки → Общие**; только **админ-панель → Краткая сводка** (`/admin/roadmap`) для **admin** и **beta_tester** (у beta в админ-sidebar: **Краткая сводка** + **Тестирование**).',
+            en: '**Brief summary:** removed from **Settings → General**; **Admin panel → Brief summary** (`/admin/roadmap`) only for **admin** and **beta_tester** (beta admin sidebar: **Brief summary** + **Testing**).',
+          },
+          {
+            ru: '**Админ-панель → Тестирование** (`/admin/testing`): для **admin** и **beta_tester** — подмена «сейчас» (дата и время в **localStorage**); влияет на планировщик, EOD, просрочку и отчёты.',
+            en: '**Admin panel → Testing** (`/admin/testing`): **admin** and **beta_tester** can override “now” (date/time in **localStorage**); affects planner, EOD, overdue rules, and reports.',
           },
           {
             ru: '**Shell / FAB:** footer аккаунта — **меню** с выходом (не мгновенный sign-out по клику); mobile **FAB «+»** — правый нижний угол, бейдж черновиков **в углу** кнопки; FAB дефекта на `/app` сдвинут левее, чтобы не перекрывать «+».',

@@ -1,6 +1,6 @@
 export type ShellAdminModeOptions = {
   isAdmin: boolean
-  /** admin или beta_tester — доступ к /admin/testing */
+  /** admin или beta_tester — /admin/testing и /admin/roadmap */
   canAccessQaTools: boolean
 }
 
@@ -10,7 +10,9 @@ export function isShellAdminMode(
   _hash: string,
   { isAdmin, canAccessQaTools }: ShellAdminModeOptions,
 ): boolean {
-  if (pathname === '/admin/testing' && canAccessQaTools) return true
+  if (canAccessQaTools && (pathname === '/admin/testing' || pathname === '/admin/roadmap')) {
+    return true
+  }
   if (!isAdmin) return false
   return (
     pathname === '/prototype/admin-dashboard' ||

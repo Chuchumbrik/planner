@@ -17,11 +17,16 @@ import {
   SHELL_HEADER,
   SHELL_HEADER_ACTIONS,
   SHELL_PAGE_TITLE,
-  SHELL_SIDEBAR,
   shellMainContent,
+  shellMainOffsetClass,
   shellMobileNavLink,
+  shellSidebarClass,
   shellSideNavLink,
 } from '@/lib/designClasses'
+import {
+  readShellSidebarCollapsed,
+  writeShellSidebarCollapsed,
+} from '@/lib/shellSidebarStorage'
 import { isShellAdminMode } from '@/lib/shellAdminMode'
 import { getPlanTier, type PlanTier } from '@/lib/planTier'
 import {
@@ -46,27 +51,37 @@ function ShellNavLinks({
   activeNav,
   onNavigate,
   items,
+  collapsed,
 }: {
   activeNav: MotivatorNavId
   onNavigate?: () => void
   items: ShellNavItem[]
+  collapsed: boolean
 }) {
   const { t } = useTranslation()
 
   return (
     <>
-      {items.map((item) => (
-        <NavLink
-          key={item.id}
-          to={item.to}
-          end={item.end}
-          className={({ isActive }) => shellSideNavLink(isActive || activeNav === item.id)}
-          onClick={onNavigate}
-        >
-          <MaterialIcon name={item.icon} size={22} />
-          <span>{t(item.labelKey)}</span>
-        </NavLink>
-      ))}
+      {items.map((item) => {
+        const label = t(item.labelKey)
+        const isActive = activeNav === item.id
+        return (
+          <NavLink
+            key={item.id}
+            to={item.to}
+            end={item.end}
+            className={({ isActive: navActive }) =>
+              shellSideNavLink(navActive || isActive, collapsed)
+            }
+            title={collapsed ? label : undefined}
+            aria-label={collapsed ? label : undefined}
+            onClick={onNavigate}
+          >
+            <MaterialIcon name={item.icon} size={22} />
+            <span className={collapsed ? 'sr-only' : undefined}>{label}</span>
+          </NavLink>
+        )
+      })}
     </>
   )
 }
@@ -78,6 +93,9 @@ function ShellSidebar({
   showPreviewNav,
   adminMode,
   isAdmin,
+  collapsed,
+  onToggleCollapsed,
+  showCollapseToggle,
 }: {
   activeNav: MotivatorNavId
   onNavigate?: () => void
@@ -85,34 +103,60 @@ function ShellSidebar({
   showPreviewNav: boolean
   adminMode: boolean
   isAdmin: boolean
+  collapsed: boolean
+  onToggleCollapsed?: () => void
+  showCollapseToggle?: boolean
 }) {
   const { t } = useTranslation()
   const settingsActive = activeNav === 'settings'
+  const settingsLabel = t(SHELL_SETTINGS_NAV.labelKey)
 
   return (
-    <aside className={cn(SHELL_SIDEBAR, className)}>
-      <div className="mb-md px-md">
-        <BrandMark size="sm" showSubtitle />
+    <aside className={cn(shellSidebarClass(collapsed), className)}>
+      <div className={cn('mb-md', collapsed ? 'flex justify-center px-2' : 'px-md')}>
+        {collapsed ? (
+          <p
+            className="font-display text-lg font-bold text-primary"
+            title={t('shell.brandSubtitle')}
+            aria-hidden
+          >
+            M
+          </p>
+        ) : (
+          <BrandMark size="sm" showSubtitle />
+        )}
       </div>
       <nav
         className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-sm"
         aria-label={adminMode ? t('shell.adminNavAria') : t('shell.sideNavAria')}
       >
         {adminMode ? (
-          <ShellAdminNav onNavigate={onNavigate} isAdmin={isAdmin} />
+          <ShellAdminNav onNavigate={onNavigate} isAdmin={isAdmin} collapsed={collapsed} />
         ) : (
           <>
-            <ShellNavLinks activeNav={activeNav} items={SHELL_MAIN_NAV} onNavigate={onNavigate} />
+            <ShellNavLinks
+              activeNav={activeNav}
+              items={SHELL_MAIN_NAV}
+              onNavigate={onNavigate}
+              collapsed={collapsed}
+            />
             {showPreviewNav ? (
               <>
-                <AiAssistantTrigger variant="sidebar" className="mt-1" />
-                <p className="mt-4 px-4 pb-1 text-label-sm uppercase tracking-wide text-on-surface-variant/80">
-                  {t('shell.navPreviews')}
-                </p>
+                <AiAssistantTrigger
+                  variant="sidebar"
+                  className="mt-1"
+                  sidebarCollapsed={collapsed}
+                />
+                {!collapsed ? (
+                  <p className="mt-4 px-4 pb-1 text-label-sm uppercase tracking-wide text-on-surface-variant/80">
+                    {t('shell.navPreviews')}
+                  </p>
+                ) : null}
                 <ShellNavLinks
                   activeNav={activeNav}
                   items={shellPreviewNavForUser(isAdmin)}
                   onNavigate={onNavigate}
+                  collapsed={collapsed}
                 />
               </>
             ) : null}
@@ -122,16 +166,42 @@ function ShellSidebar({
           <div className="mt-auto border-t border-surface-variant/60 py-3">
             <NavLink
               to={SHELL_SETTINGS_NAV.to}
-              className={({ isActive }) => shellSideNavLink(isActive || settingsActive)}
+              className={({ isActive }) =>
+                shellSideNavLink(isActive || settingsActive, collapsed)
+              }
+              title={collapsed ? settingsLabel : undefined}
+              aria-label={collapsed ? settingsLabel : undefined}
               onClick={onNavigate}
             >
               <MaterialIcon name={SHELL_SETTINGS_NAV.icon} size={22} />
-              <span>{t(SHELL_SETTINGS_NAV.labelKey)}</span>
+              <span className={collapsed ? 'sr-only' : undefined}>{settingsLabel}</span>
             </NavLink>
           </div>
         ) : null}
       </nav>
-      <ShellAccountFooter />
+
+      {showCollapseToggle && onToggleCollapsed ? (
+        <div className={cn('border-t border-surface-variant/60 py-2', collapsed ? 'px-1' : 'px-sm')}>
+          <button
+            type="button"
+            className={cn(
+              'flex min-h-[44px] w-full items-center rounded text-on-surface-variant transition-colors',
+              'hover:bg-surface-container-high hover:text-on-surface',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+              collapsed ? 'justify-center px-2' : 'gap-3 px-md',
+            )}
+            aria-label={collapsed ? t('shell.sidebarExpand') : t('shell.sidebarCollapse')}
+            onClick={onToggleCollapsed}
+          >
+            <MaterialIcon name={collapsed ? 'chevron_right' : 'chevron_left'} size={22} />
+            <span className={collapsed ? 'sr-only' : 'text-label-md'}>
+              {collapsed ? t('shell.sidebarExpand') : t('shell.sidebarCollapse')}
+            </span>
+          </button>
+        </div>
+      ) : null}
+
+      <ShellAccountFooter collapsed={collapsed} />
     </aside>
   )
 }
@@ -148,6 +218,7 @@ function MotivatorShellInner({
   const planTier = planTierProp ?? getPlanTier()
   const pageTitle = title ?? t(shellTitleKey(activeNav))
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(readShellSidebarCollapsed)
   const settingsActive = activeNav === 'settings'
   const { canAccessPreviewFeatures, isAdmin } = useAuth()
   const { open: aiOpen, closeAssistant } = useAiAssistant()
@@ -174,16 +245,32 @@ function MotivatorShellInner({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [mobileNavOpen])
 
+  const desktopSidebarCollapsed = isDesktop && sidebarCollapsed
+
+  function toggleSidebarCollapsed() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev
+      writeShellSidebarCollapsed(next)
+      return next
+    })
+  }
+
   const sidebarProps = {
     activeNav,
     showPreviewNav: canAccessPreviewFeatures,
     adminMode,
     isAdmin,
+    collapsed: desktopSidebarCollapsed,
   }
 
   return (
     <div className="min-h-dvh overflow-x-hidden bg-background text-on-surface">
-      <ShellSidebar {...sidebarProps} className="max-md:hidden" />
+      <ShellSidebar
+        {...sidebarProps}
+        className="max-md:hidden"
+        showCollapseToggle
+        onToggleCollapsed={toggleSidebarCollapsed}
+      />
 
       {mobileNavOpen ? (
         <>
@@ -195,13 +282,20 @@ function MotivatorShellInner({
           />
           <ShellSidebar
             {...sidebarProps}
+            collapsed={false}
             className="z-[56] flex md:hidden"
             onNavigate={() => setMobileNavOpen(false)}
           />
         </>
       ) : null}
 
-      <div className={cn('flex min-h-dvh min-w-0 md:ml-64', aiDocked && 'md:flex-row')}>
+      <div
+        className={cn(
+          'flex min-h-dvh min-w-0 transition-[margin] duration-200 ease-out',
+          shellMainOffsetClass(desktopSidebarCollapsed),
+          aiDocked && 'md:flex-row',
+        )}
+      >
         <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
           <header className={SHELL_HEADER}>
             <div className="flex min-w-0 flex-1 items-center gap-2">

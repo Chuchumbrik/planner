@@ -54,10 +54,11 @@ export const FAB = cn(
 )
 
 const DRAFT_COUNT_BADGE_BASE = cn(
-  'z-10 flex size-6 min-w-6 shrink-0 items-center justify-center rounded-full p-0',
-  'border border-tertiary/55 bg-tertiary-container/30 text-[11px] font-bold leading-none tabular-nums text-tertiary',
-  'ring-2 ring-background shadow-md',
-  'transition-colors hover:bg-tertiary-container/45 disabled:opacity-40',
+  'motivator-draft-badge',
+  'z-10 box-border flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full p-0',
+  'border-2 border-background bg-tertiary-container text-[10px] font-bold leading-none tabular-nums text-background',
+  'shadow-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+  'transition-[filter] hover:brightness-110 disabled:opacity-40',
 )
 
 export const TASK_META_CHIP = cn(
@@ -208,11 +209,31 @@ export const TASK_CHECKBOX_MAIN = cn('motivator-checkbox h-6 w-6 shrink-0 md:h-5
 export const TASK_CHECKBOX_CHECKLIST = cn('motivator-checkbox h-4 w-4 shrink-0')
 
 export const PLANNER_SECTION_HEAD = cn(
-  'mb-3 text-label-sm font-semibold uppercase text-on-surface-variant',
+  'text-label-sm font-semibold uppercase text-on-surface-variant',
+)
+
+/** Vertical rhythm on `/app` — tabs, toolbar, period nav, sections (16px). */
+export const PLANNER_PAGE_STACK = 'flex flex-col gap-4'
+
+/** Tabs + filters block above view content. */
+export const PLANNER_VIEW_HEAD = cn(
+  PLANNER_PAGE_STACK,
+  'border-b border-surface-variant pb-4',
+)
+
+/** Period nav, stats, plan sections (24px between major blocks). */
+export const PLANNER_VIEW_BODY = 'flex flex-col gap-6'
+
+/** Section title + list / empty state (12px). */
+export const PLANNER_SECTION = 'flex flex-col gap-3'
+
+/** Filters row: charts toggle, FAB — same height as filter button. */
+export const PLANNER_TOOLBAR_TRACK = cn(
+  'scrollbar-site flex min-h-11 flex-nowrap items-center gap-2 overflow-x-auto overflow-y-visible',
 )
 
 export const EMPTY_STATE_BOX = cn(
-  'rounded-card border border-dashed border-surface-variant p-sm py-8 text-center text-body-sm text-on-surface-variant',
+  'w-full rounded-card border border-dashed border-surface-variant p-sm py-8 text-center text-body-sm text-on-surface-variant',
 )
 
 export const MODAL_OVERLAY = 'fixed inset-0 z-[60] flex items-end justify-center glass-overlay p-4 sm:items-center'
@@ -270,7 +291,7 @@ export const ROADMAP_DETAILS_SUMMARY = cn(
 )
 
 /** Overlay on «Создать задачу» (desktop / week-month toolbar). */
-export const DRAFT_COUNT_BADGE = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-2 -top-2')
+export const DRAFT_COUNT_BADGE = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-1 -top-1')
 
 export const DC_PENDING_SHELL = cn(
   'animate-dc-pending border-primary/40 bg-surface-container ring-1 ring-primary/25',
@@ -313,13 +334,32 @@ export function shellMainContent(wide: boolean): string {
   )
 }
 
-export function shellSideNavLink(isActive: boolean): string {
+export function shellSideNavLink(isActive: boolean, collapsed = false): string {
   return cn(
-    'flex min-h-[44px] items-center gap-4 rounded px-md py-3 text-label-md transition-all duration-200',
+    'flex min-h-[44px] items-center rounded text-label-md transition-all duration-200',
+    collapsed ? 'justify-center gap-0 px-2 py-3' : 'gap-4 px-md py-3',
     isActive
-      ? 'translate-x-0.5 border-r-2 border-primary bg-surface-container-high font-semibold text-primary'
-      : 'text-on-surface-variant hover:translate-x-0.5 hover:bg-surface-container-high',
+      ? cn(
+          'border-primary bg-surface-container-high font-semibold text-primary',
+          collapsed ? 'border-r-2' : 'translate-x-0.5 border-r-2',
+        )
+      : cn(
+          'text-on-surface-variant hover:bg-surface-container-high',
+          !collapsed && 'hover:translate-x-0.5',
+        ),
   )
+}
+
+export function shellSidebarClass(collapsed: boolean): string {
+  return cn(
+    'fixed left-0 top-0 z-50 hidden h-dvh flex-col border-r border-surface-variant',
+    'bg-surface pt-md pb-lg transition-[width] duration-200 ease-out md:flex',
+    collapsed ? 'w-16' : 'w-64',
+  )
+}
+
+export function shellMainOffsetClass(collapsed: boolean): string {
+  return collapsed ? 'md:ml-16' : 'md:ml-64'
 }
 
 export function shellMobileNavLink(isActive: boolean): string {
@@ -336,10 +376,8 @@ export const SHELL_BOTTOM_NAV = cn(
   'pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]',
 )
 
-export const SHELL_SIDEBAR = cn(
-  'fixed left-0 top-0 z-50 hidden h-dvh w-64 flex-col border-r border-surface-variant',
-  'bg-surface pt-md pb-lg md:flex',
-)
+/** @deprecated Use shellSidebarClass(collapsed) — width depends on collapsed state. */
+export const SHELL_SIDEBAR = shellSidebarClass(false)
 
 export const SHELL_PLAN_BADGE = cn(
   'inline-flex rounded border px-1.5 py-0.5 text-label-sm uppercase tracking-wide',

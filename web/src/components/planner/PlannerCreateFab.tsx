@@ -26,7 +26,7 @@ export function PlannerCreateFab({
 
   return (
     <div className={shellClass}>
-      <div className="relative">
+      <div className="relative overflow-visible">
         <button
           type="button"
           className={cn(FAB, variant === 'inline' && 'motivator-fab--toolbar')}
@@ -43,7 +43,11 @@ export function PlannerCreateFab({
             aria-haspopup="dialog"
             aria-label={draftsBadgeLabel}
             title={draftsBadgeLabel}
-            className={cn(DRAFT_COUNT_BADGE, 'z-20')}
+            className={cn(
+              DRAFT_COUNT_BADGE,
+              'z-20',
+              draftCount > 9 && 'h-5 w-auto min-w-5 max-w-[2.25rem] px-0.5',
+            )}
             onClick={(e) => {
               e.stopPropagation()
               onDraftsClick()

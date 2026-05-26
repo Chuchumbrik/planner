@@ -61,10 +61,12 @@ export type ShellAdminNavItem = {
   labelKey: string
 }
 
-/** Пункты админ-sidebar: у beta_tester только «Тестирование». */
+/** Пункты админ-sidebar: у beta_tester — «Краткая сводка» и «Тестирование». */
 export function shellAdminNavForUser(isAdmin: boolean): ShellAdminNavItem[] {
   if (isAdmin) return SHELL_ADMIN_NAV
-  return SHELL_ADMIN_NAV.filter((item) => item.id === 'admin-testing')
+  return SHELL_ADMIN_NAV.filter(
+    (item) => item.id === 'admin-roadmap' || item.id === 'admin-testing',
+  )
 }
 
 /** Превью в sidebar: у beta_tester «Админ-панель» ведёт на /admin/testing, без прототипа dashboard. */

@@ -107,7 +107,7 @@ export function DayPlannerStatsRow({
   const eodClickable = eodEnabled && selectedDay <= todayKey && Boolean(onEodClick)
 
   return (
-    <section className="mb-md space-y-sm" aria-label={t('app.dayStatsAria')}>
+    <section className="flex flex-col gap-4" aria-label={t('app.dayStatsAria')}>
       {progress.plannedTaskCount > 0 ? (
         <div className="motivator-card p-sm md:p-md">
           <div className="flex items-center justify-between gap-3">
@@ -130,7 +130,7 @@ export function DayPlannerStatsRow({
         </div>
       ) : null}
 
-      <div className="scrollbar-site -mx-margin-mobile flex snap-x snap-mandatory gap-sm overflow-x-auto px-margin-mobile pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
+      <div className="scrollbar-site flex snap-x snap-mandatory gap-sm overflow-x-auto pb-1 md:grid md:grid-cols-3 md:overflow-visible">
         <StatTile
           icon="task_alt"
           label={t('app.dayStatsTasks')}

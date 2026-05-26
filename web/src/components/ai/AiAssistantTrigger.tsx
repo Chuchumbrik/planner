@@ -8,9 +8,11 @@ type Variant = 'header' | 'bottomNav' | 'sidebar'
 type Props = {
   variant: Variant
   className?: string
+  /** Sidebar icon-only mode (desktop collapsed nav). */
+  sidebarCollapsed?: boolean
 }
 
-export function AiAssistantTrigger({ variant, className }: Props) {
+export function AiAssistantTrigger({ variant, className, sidebarCollapsed = false }: Props) {
   const { t } = useTranslation()
   const { open, toggleAssistant } = useAiAssistant()
 
@@ -35,22 +37,32 @@ export function AiAssistantTrigger({ variant, className }: Props) {
   }
 
   if (variant === 'sidebar') {
+    const label = t('shell.navAi')
     return (
       <button
         type="button"
         aria-expanded={open}
         aria-controls="ai-assistant-panel"
+        aria-label={sidebarCollapsed ? label : undefined}
+        title={sidebarCollapsed ? label : undefined}
         className={cn(
-          'flex min-h-[44px] w-full items-center gap-4 rounded px-md py-3 text-left text-label-md transition-all duration-200',
+          'flex min-h-[44px] w-full items-center rounded text-left text-label-md transition-all duration-200',
+          sidebarCollapsed ? 'justify-center gap-0 px-2 py-3' : 'gap-4 px-md py-3',
           open
-            ? 'translate-x-0.5 border-r-2 border-primary bg-surface-container-high font-semibold text-primary'
-            : 'text-on-surface-variant hover:translate-x-0.5 hover:bg-surface-container-high',
+            ? cn(
+                'border-r-2 border-primary bg-surface-container-high font-semibold text-primary',
+                !sidebarCollapsed && 'translate-x-0.5',
+              )
+            : cn(
+                'text-on-surface-variant hover:bg-surface-container-high',
+                !sidebarCollapsed && 'hover:translate-x-0.5',
+              ),
           className,
         )}
         onClick={toggleAssistant}
       >
         <MaterialIcon name="psychology" size={22} filled={open} />
-        <span>{t('shell.navAi')}</span>
+        <span className={sidebarCollapsed ? 'sr-only' : undefined}>{label}</span>
       </button>
     )
   }
