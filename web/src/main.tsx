@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import '@/i18n'
 import { AuthProvider } from '@/auth/AuthProvider'
 import { DefectReportProvider } from '@/defect/DefectReportProvider'
+import { QaClockProvider } from '@/qa/QaClockProvider'
 import { VaultProvider } from '@/vault/VaultProvider'
 import { initPwaServiceWorker } from '@/lib/pwaServiceWorker'
 import './index.css'
@@ -16,9 +17,11 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <AuthProvider>
         <DefectReportProvider>
-          <VaultProvider>
-            <App />
-          </VaultProvider>
+          <QaClockProvider>
+            <VaultProvider>
+              <App />
+            </VaultProvider>
+          </QaClockProvider>
         </DefectReportProvider>
       </AuthProvider>
     </BrowserRouter>

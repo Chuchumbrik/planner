@@ -22,7 +22,9 @@ import {
   viewTab,
 } from '@/lib/designClasses'
 import { ReportHint } from '@/components/ReportHint'
+import { getAppNow } from '@/lib/appNow'
 import { RequireVault } from '@/components/RequireVault'
+import { useAppNow } from '@/qa/QaClockProvider'
 import { useVault } from '@/vault/VaultProvider'
 
 function formatDayLabel(dateKey: string, locale: string): string {
@@ -42,12 +44,13 @@ function formatDayLabel(dateKey: string, locale: string): string {
 function ReportsPageInner() {
   const { t, i18n } = useTranslation()
   const { vault } = useVault()
+  const { tick: appNowTick } = useAppNow()
   const [periodDays, setPeriodDays] = useState<7 | 30>(7)
 
   const locale = i18n.language === 'en' ? 'en-US' : 'ru-RU'
 
   const analytics = useMemo(() => {
-    const { todayKey, fromKey, toKey } = reportsWindowKeys(periodDays)
+    const { todayKey, fromKey, toKey } = reportsWindowKeys(periodDays, getAppNow())
     const tasks = vault.tasks
     const eodSet = new Set(vault.eodCompletedLocalDates ?? [])
     const buckets = dailyCompletionBuckets(tasks, fromKey, toKey)
@@ -69,7 +72,7 @@ function ReportsPageInner() {
       oneOffFails,
       maxBar,
     }
-  }, [vault.tasks, vault.eodCompletedLocalDates, periodDays])
+  }, [vault.tasks, vault.eodCompletedLocalDates, periodDays, appNowTick])
 
   const pct = Math.round(analytics.rate.ratio * 100)
 

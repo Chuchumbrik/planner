@@ -9,6 +9,7 @@ import { BrandMark } from '@/components/brand/BrandMark'
 import { ShellAccountFooter } from '@/components/layout/ShellAccountFooter'
 import { ShellAdminNav } from '@/components/layout/ShellAdminNav'
 import { ShellHeaderActions } from '@/components/layout/ShellHeaderActions'
+import { QaClockBanner } from '@/components/qa/QaClockBanner'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
 import {
@@ -25,7 +26,7 @@ import { isShellAdminMode } from '@/lib/shellAdminMode'
 import { getPlanTier, type PlanTier } from '@/lib/planTier'
 import {
   SHELL_MAIN_NAV,
-  SHELL_PREVIEW_NAV,
+  shellPreviewNavForUser,
   SHELL_SETTINGS_NAV,
   shellTitleKey,
   type MotivatorNavId,
@@ -76,12 +77,14 @@ function ShellSidebar({
   className,
   showPreviewNav,
   adminMode,
+  isAdmin,
 }: {
   activeNav: MotivatorNavId
   onNavigate?: () => void
   className?: string
   showPreviewNav: boolean
   adminMode: boolean
+  isAdmin: boolean
 }) {
   const { t } = useTranslation()
   const settingsActive = activeNav === 'settings'
@@ -96,7 +99,7 @@ function ShellSidebar({
         aria-label={adminMode ? t('shell.adminNavAria') : t('shell.sideNavAria')}
       >
         {adminMode ? (
-          <ShellAdminNav onNavigate={onNavigate} />
+          <ShellAdminNav onNavigate={onNavigate} isAdmin={isAdmin} />
         ) : (
           <>
             <ShellNavLinks activeNav={activeNav} items={SHELL_MAIN_NAV} onNavigate={onNavigate} />
@@ -106,7 +109,11 @@ function ShellSidebar({
                 <p className="mt-4 px-4 pb-1 text-label-sm uppercase tracking-wide text-on-surface-variant/80">
                   {t('shell.navPreviews')}
                 </p>
-                <ShellNavLinks activeNav={activeNav} items={SHELL_PREVIEW_NAV} onNavigate={onNavigate} />
+                <ShellNavLinks
+                  activeNav={activeNav}
+                  items={shellPreviewNavForUser(isAdmin)}
+                  onNavigate={onNavigate}
+                />
               </>
             ) : null}
           </>
@@ -145,7 +152,10 @@ function MotivatorShellInner({
   const { canAccessPreviewFeatures, isAdmin } = useAuth()
   const { open: aiOpen, closeAssistant } = useAiAssistant()
   const isDesktop = useIsDesktopShell()
-  const adminMode = isShellAdminMode(location.pathname, location.hash, isAdmin)
+  const adminMode = isShellAdminMode(location.pathname, location.hash, {
+    isAdmin,
+    canAccessQaTools: canAccessPreviewFeatures,
+  })
   const aiDocked = aiOpen && isDesktop && canAccessPreviewFeatures
   useEffect(() => {
     if (!canAccessPreviewFeatures) closeAssistant()
@@ -168,6 +178,7 @@ function MotivatorShellInner({
     activeNav,
     showPreviewNav: canAccessPreviewFeatures,
     adminMode,
+    isAdmin,
   }
 
   return (
@@ -210,7 +221,10 @@ function MotivatorShellInner({
             </div>
           </header>
 
-          <main className={shellMainContent(wide)}>{children}</main>
+          <main className={shellMainContent(wide)}>
+            <QaClockBanner />
+            {children}
+          </main>
 
           <nav className={SHELL_BOTTOM_NAV} aria-label={t('shell.bottomNavAria')}>
             {SHELL_MAIN_NAV.map((item) => {

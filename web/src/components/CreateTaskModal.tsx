@@ -40,7 +40,6 @@ import {
   type TaskDraft,
   type TaskGroup,
   type TaskTimeMode,
-  localDateKey,
 } from '@motivator/core'
 import {
   MAX_TASK_TITLE_CHARS,
@@ -56,13 +55,14 @@ import {
   computeTaskScheduleValidationError,
   type TaskScheduleValidationFields,
 } from '@/lib/taskScheduleValidation'
+import { appLocalDateKey, getAppNow } from '@/lib/appNow'
 
 type RecurrenceUiKind = 'none' | 'daily' | 'everyNDays' | 'weekly'
 
 /** Плановая дата не раньше локального сегодня (строки YYYY-MM-DD). */
 function clampPlanDateKey(dateKey: string): string {
-  const t = localDateKey()
-  return dateKey < t ? t : dateKey
+  const today = appLocalDateKey()
+  return dateKey < today ? today : dateKey
 }
 
 type Snapshot = {
@@ -295,7 +295,7 @@ export function CreateTaskModal({
         open &&
           !snap.backlogOnly &&
           snap.scheduledLocalDate &&
-          snap.scheduledLocalDate === localDateKey(),
+          snap.scheduledLocalDate === appLocalDateKey(),
       ),
     [open, snap.backlogOnly, snap.scheduledLocalDate],
   )
@@ -309,13 +309,13 @@ export function CreateTaskModal({
   const earliestClockMinutesFromMidnight = useMemo(() => {
     void todayTimeFloorTick
     if (!planDateIsToday) return null
-    const n = new Date()
+    const n = getAppNow()
     return n.getHours() * 60 + n.getMinutes()
   }, [planDateIsToday, todayTimeFloorTick])
 
   useEffect(() => {
     if (!open || !planDateIsToday || snap.timeMode === 'none') return
-    const floor = new Date().getHours() * 60 + new Date().getMinutes()
+    const floor = getAppNow().getHours() * 60 + getAppNow().getMinutes()
     const m = timeInputToMinutes(snap.timeClock.trim())
     if (m == null) return
     if (m < floor) {
@@ -392,7 +392,7 @@ export function CreateTaskModal({
     let m = timeInputToMinutes(snap.timeClock)
     if (m == null) m = 9 * 60
     if (planDateIsToday) {
-      const floor = new Date().getHours() * 60 + new Date().getMinutes()
+      const floor = getAppNow().getHours() * 60 + getAppNow().getMinutes()
       if (m < floor) m = floor
     }
     return { mode: snap.timeMode, minutes: m }
@@ -639,7 +639,7 @@ export function CreateTaskModal({
               <LocalDatePickerField
                 label={t('app.plannedDate')}
                 value={snap.scheduledLocalDate}
-                minLocalDateKey={localDateKey()}
+                minLocalDateKey={appLocalDateKey()}
                 onChange={(v) =>
                   setSnap((s) => {
                     const plan = v == null ? null : clampPlanDateKey(v)
@@ -687,10 +687,10 @@ export function CreateTaskModal({
                 const today =
                   !s.backlogOnly &&
                   s.scheduledLocalDate != null &&
-                  s.scheduledLocalDate === localDateKey()
+                  s.scheduledLocalDate === appLocalDateKey()
                 let m = timeInputToMinutes((s.timeClock || '').trim()) ?? 9 * 60
                 if (today) {
-                  const floor = new Date().getHours() * 60 + new Date().getMinutes()
+                  const floor = getAppNow().getHours() * 60 + getAppNow().getMinutes()
                   if (m < floor) m = floor
                 }
                 return { ...s, timeMode: 'start', timeClock: minutesToTimeInput(m) }
@@ -701,10 +701,10 @@ export function CreateTaskModal({
                 const today =
                   !s.backlogOnly &&
                   s.scheduledLocalDate != null &&
-                  s.scheduledLocalDate === localDateKey()
+                  s.scheduledLocalDate === appLocalDateKey()
                 let m = timeInputToMinutes((s.timeClock || '').trim()) ?? 18 * 60
                 if (today) {
-                  const floor = new Date().getHours() * 60 + new Date().getMinutes()
+                  const floor = getAppNow().getHours() * 60 + getAppNow().getMinutes()
                   if (m < floor) m = floor
                 }
                 return { ...s, timeMode: 'end', timeClock: minutesToTimeInput(m) }
@@ -846,7 +846,7 @@ export function CreateTaskModal({
               <LocalDatePickerField
                 label={t('app.recurrenceAnchor')}
                 value={snap.anchorLocalDate}
-                minLocalDateKey={localDateKey()}
+                minLocalDateKey={appLocalDateKey()}
                 onChange={(v) =>
                   setSnap((s) => ({
                     ...s,

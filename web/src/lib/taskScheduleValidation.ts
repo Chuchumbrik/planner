@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next'
-import { localDateKey, timeInputToMinutes, type TaskTimeMode } from '@motivator/core'
+import { timeInputToMinutes, type TaskTimeMode } from '@motivator/core'
+import { appLocalDateKey, getAppNow } from '@/lib/appNow'
 import { mergeEstimateParts, normalizeEstimatePair } from '@/lib/fieldSanitize'
 
 export const MINUTES_PER_DAY = 24 * 60
@@ -32,13 +33,13 @@ export function computeTaskScheduleValidationError(
   const date = f.scheduledLocalDate
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
 
-  const todayKey = localDateKey()
+  const todayKey = appLocalDateKey()
   if (date < todayKey) return t('app.createTaskPastDate')
 
   const clockMin = clockMinutesFromScheduleFields(f)
 
   if (date === todayKey && clockMin != null) {
-    const now = new Date()
+    const now = getAppNow()
     const nowMin = now.getHours() * 60 + now.getMinutes()
     if (f.timeMode === 'start' && clockMin < nowMin) return t('app.createTaskPastClockToday')
     if (f.timeMode === 'end' && clockMin < nowMin) return t('app.createTaskPastClockToday')
@@ -69,7 +70,7 @@ export function computeFloatingEstimateDayWarning(
   t: TFunction,
 ): string | null {
   if (f.backlogOnly) return null
-  if (f.scheduledLocalDate !== localDateKey()) return null
+  if (f.scheduledLocalDate !== appLocalDateKey()) return null
   if (f.timeMode !== 'none') return null
 
   const estNorm = normalizeEstimatePair(f.estimatedHours, f.estimatedMinutesPart)
@@ -77,7 +78,7 @@ export function computeFloatingEstimateDayWarning(
   if (estMerge.invalid || estMerge.total == null || estMerge.total <= 0) return null
   if (!f.plannedWithEstimateRequired) return null
 
-  const now = new Date()
+  const now = getAppNow()
   const nowMin = now.getHours() * 60 + now.getMinutes()
   const remainder = MINUTES_PER_DAY - nowMin
   if (estMerge.total > remainder) return t('app.estimateExceedsRestOfCalendarDay')
@@ -94,6 +95,6 @@ export function computeRecurrenceAnchorPastError(
   if (!hasRecurrence) return null
   const a = anchorLocalDate?.trim()
   if (!a || !/^\d{4}-\d{2}-\d{2}$/.test(a)) return null
-  if (a < localDateKey()) return t('app.recurrenceAnchorPast')
+  if (a < appLocalDateKey()) return t('app.recurrenceAnchorPast')
   return null
 }

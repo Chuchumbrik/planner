@@ -325,6 +325,34 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-26', en: '2026-05-26' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Админ-панель → Тестирование** (`/admin/testing`): для **admin** и **beta_tester** — подмена «сейчас» (дата и время в **localStorage**); влияет на планировщик, EOD, просрочку и отчёты. У **beta_tester** в sidebar админки только **Тестирование**; у **admin** — полный набор + тестирование.',
+            en: '**Admin panel → Testing** (`/admin/testing`): **admin** and **beta_tester** can override “now” (date/time in **localStorage**); affects planner, EOD, overdue rules, and reports. **Beta_tester** admin sidebar shows **Testing** only; **admin** keeps full admin nav plus testing.',
+          },
+          {
+            ru: '**Shell / FAB:** footer аккаунта — **меню** с выходом (не мгновенный sign-out по клику); mobile **FAB «+»** — правый нижний угол, бейдж черновиков **в углу** кнопки; FAB дефекта на `/app` сдвинут левее, чтобы не перекрывать «+».',
+            en: '**Shell / FAB:** account footer — **menu** with sign out (no instant logout on block click); mobile **“+” FAB** — bottom-right corner, draft badge **on the button corner**; defect FAB on `/app` offset left of “+”.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'В «Тестирование» можно выставить вчерашний день и проверить отчёты и «Сегодня» в планировщике — без смены часов на телефоне.',
+            en: 'In **Testing**, set yesterday’s date and check reports and planner “Today” without changing the device clock.',
+          },
+          {
+            ru: 'Пока подмена включена, сверху страниц — жёлтый баннер с выбранным «сейчас».',
+            en: 'While override is on, a banner at the top shows the simulated “now”.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-24', en: '2026-05-24' },
     items: [
       {

@@ -18,7 +18,6 @@ import {
   type Task,
   type TaskColorKey,
   type TaskTimeMode,
-  localDateKey,
 } from '@motivator/core'
 import {
   MAX_TASK_TITLE_CHARS,
@@ -29,6 +28,7 @@ import {
   sanitizeEveryNDaysInput,
   sanitizeTaskTitleInput,
 } from '@/lib/fieldSanitize'
+import { appLocalDateKey, getAppNow } from '@/lib/appNow'
 import {
   computeFloatingEstimateDayWarning,
   computeRecurrenceAnchorPastError,
@@ -208,12 +208,12 @@ export function TaskEditModal({
   }, [task.timeMode, task.timeMinutesFromMidnight, timeDraft])
 
   const planDateIsToday = useMemo(
-    () => Boolean(task.scheduledLocalDate && task.scheduledLocalDate === localDateKey()),
+    () => Boolean(task.scheduledLocalDate && task.scheduledLocalDate === appLocalDateKey()),
     [task.scheduledLocalDate],
   )
 
   const canPlanOnSelectedDay = useMemo(
-    () => selectedDayKey >= localDateKey(),
+    () => selectedDayKey >= appLocalDateKey(),
     [selectedDayKey],
   )
 
@@ -226,13 +226,13 @@ export function TaskEditModal({
   const earliestClockMinutesFromMidnight = useMemo(() => {
     void todayTimeFloorTick
     if (!planDateIsToday) return null
-    const n = new Date()
+    const n = getAppNow()
     return n.getHours() * 60 + n.getMinutes()
   }, [planDateIsToday, todayTimeFloorTick])
 
   useEffect(() => {
     if (!planDateIsToday || task.timeMode === 'none' || task.timeMinutesFromMidnight == null) return
-    const floor = new Date().getHours() * 60 + new Date().getMinutes()
+    const floor = getAppNow().getHours() * 60 + getAppNow().getMinutes()
     if (task.timeMinutesFromMidnight < floor) {
       void onSetTimePlan(task.timeMode, floor)
       setTimeDraft(minutesToTimeInput(floor))
@@ -398,12 +398,12 @@ export function TaskEditModal({
   }
 
   function guardedSetScheduledLocalDate(date: string | null) {
-    const todayKey = localDateKey()
+    const todayKey = appLocalDateKey()
     const resolvedDate =
       date != null && /^\d{4}-\d{2}-\d{2}$/.test(date) && date < todayKey ? todayKey : date
 
     const floor =
-      resolvedDate === todayKey ? new Date().getHours() * 60 + new Date().getMinutes() : null
+      resolvedDate === todayKey ? getAppNow().getHours() * 60 + getAppNow().getMinutes() : null
     let timeClockForVal = effectiveTimeClock
     if (floor != null && task.timeMode !== 'none') {
       let m = timeInputToMinutes(timeDraft.trim())
@@ -461,7 +461,7 @@ export function TaskEditModal({
       m = mode === 'start' ? 9 * 60 : 18 * 60
     }
     if (planDateIsToday) {
-      const floor = new Date().getHours() * 60 + new Date().getMinutes()
+      const floor = getAppNow().getHours() * 60 + getAppNow().getMinutes()
       if (m < floor) m = floor
     }
     const clockStr = minutesToTimeInput(m)
@@ -569,7 +569,7 @@ export function TaskEditModal({
             <LocalDatePickerField
               label={t('app.plannedDate')}
               value={task.scheduledLocalDate}
-              minLocalDateKey={localDateKey()}
+              minLocalDateKey={appLocalDateKey()}
               onChange={(v) => guardedSetScheduledLocalDate(v)}
               disabled={!canEdit}
               allowClear
@@ -741,7 +741,7 @@ export function TaskEditModal({
               <LocalDatePickerField
                 label={t('app.recurrenceAnchor')}
                 value={task.recurrenceAnchorLocalDate ?? anchorBase}
-                minLocalDateKey={localDateKey()}
+                minLocalDateKey={appLocalDateKey()}
                 onChange={(v) => {
                   if (!task.recurrence) return
                   guardedAnchorChange(v)
