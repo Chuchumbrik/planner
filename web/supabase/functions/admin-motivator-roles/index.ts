@@ -1,6 +1,7 @@
 /**
  * Список пользователей Auth и смена `app_metadata.motivator_role` (только вызывающий с ролью admin).
  * `list` / `overview` — метаданные vault, push, defects (без ciphertext).
+ * `activityChart` / `activityDayUsers` — агрегаты и drill-down по `admin_user_activity_daily`.
  * Секреты: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
  */
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
@@ -321,6 +322,99 @@ async function buildActivityChart(
   }
 }
 
+const ACTIVITY_DAY_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+const ACTIVITY_DAY_USER_BATCH = 25
+
+async function buildActivityDayUsers(
+  admin: SupabaseClient,
+  date: string,
+  roleFilter: ActivityChartRoleFilter,
+): Promise<
+  | {
+      ok: true
+      detail: {
+        date: string
+        role: ActivityChartRoleFilter
+        timezone: 'UTC'
+        users: Array<{
+          user_id: string
+          email: string
+          motivator_role: MotivatorRoleWire
+          first_seen_at: string
+          last_seen_at: string
+        }>
+      }
+    }
+  | { ok: false; response: Response }
+> {
+  if (!ACTIVITY_DAY_DATE_RE.test(date)) {
+    return { ok: false, response: json(400, { error: 'invalid_body' }) }
+  }
+
+  const { data, error } = await admin
+    .from('admin_user_activity_daily')
+    .select('user_id, motivator_role, first_seen_at, last_seen_at')
+    .eq('activity_date', date)
+    .order('last_seen_at', { ascending: false })
+
+  if (error) {
+    if (error.message?.includes('admin_user_activity_daily') || error.code === '42P01') {
+      return { ok: false, response: json(503, { error: 'activity_table_missing' }) }
+    }
+    return {
+      ok: false,
+      response: json(500, { error: 'activity_day_users_failed', detail: String(error.message).slice(0, 300) }),
+    }
+  }
+
+  const rows = (data ?? []).filter((row) => {
+    if (roleFilter === 'all') return true
+    return row.motivator_role === roleFilter
+  })
+
+  const users: Array<{
+    user_id: string
+    email: string
+    motivator_role: MotivatorRoleWire
+    first_seen_at: string
+    last_seen_at: string
+  }> = []
+
+  for (let i = 0; i < rows.length; i += ACTIVITY_DAY_USER_BATCH) {
+    const chunk = rows.slice(i, i + ACTIVITY_DAY_USER_BATCH)
+    const chunkUsers = await Promise.all(
+      chunk.map(async (row) => {
+        const user_id = String(row.user_id)
+        const { data: authData } = await admin.auth.admin.getUserById(user_id)
+        const email = (authData?.user?.email ?? '').trim()
+        const role = row.motivator_role
+        const motivator_role: MotivatorRoleWire =
+          role === 'admin' || role === 'beta_tester' || role === 'user' ? role : 'user'
+        return {
+          user_id,
+          email,
+          motivator_role,
+          first_seen_at: String(row.first_seen_at),
+          last_seen_at: String(row.last_seen_at),
+        }
+      }),
+    )
+    users.push(...chunkUsers)
+  }
+
+  users.sort((a, b) => b.last_seen_at.localeCompare(a.last_seen_at))
+
+  return {
+    ok: true,
+    detail: {
+      date,
+      role: roleFilter,
+      timezone: 'UTC',
+      users,
+    },
+  }
+}
+
 function buildOverview(users: ListUserRow[], nowMs: number) {
   const regCutoff = nowMs - 7 * MS_PER_DAY
   const signCutoff = regCutoff
@@ -416,7 +510,8 @@ Deno.serve(async (req) => {
     b.action === 'list' ||
     b.action === 'setRole' ||
     b.action === 'overview' ||
-    b.action === 'activityChart'
+    b.action === 'activityChart' ||
+    b.action === 'activityDayUsers'
       ? b.action
       : null
   if (!action) {
@@ -431,6 +526,16 @@ Deno.serve(async (req) => {
     const chartResult = await buildActivityChart(admin, daysRaw, roleRaw)
     if (!chartResult.ok) return chartResult.response
     return json(200, { chart: chartResult.chart })
+  }
+
+  if (action === 'activityDayUsers') {
+    const dateRaw = typeof b.date === 'string' ? b.date.trim() : ''
+    const roleRaw = b.role === 'admin' || b.role === 'beta_tester' || b.role === 'user' || b.role === 'all'
+      ? b.role
+      : 'all'
+    const dayResult = await buildActivityDayUsers(admin, dateRaw, roleRaw)
+    if (!dayResult.ok) return dayResult.response
+    return json(200, { detail: dayResult.detail })
   }
 
   if (action === 'list' || action === 'overview') {

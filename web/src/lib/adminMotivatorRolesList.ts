@@ -1,4 +1,9 @@
-import type { AdminActivityChart, AdminOverview, MotivatorRoleRow } from '@/types/adminMonitoring'
+import type {
+  AdminActivityChart,
+  AdminActivityDayDetail,
+  AdminOverview,
+  MotivatorRoleRow,
+} from '@/types/adminMonitoring'
 
 function parseMonitoringFields(o: Record<string, unknown>): Omit<
   MotivatorRoleRow,
@@ -68,6 +73,37 @@ export function parseAdminActivityChartResponse(raw: unknown): AdminActivityChar
     series,
     dau_today: typeof o.dau_today === 'number' ? o.dau_today : 0,
     wau: typeof o.wau === 'number' ? o.wau : 0,
+  }
+}
+
+export function parseAdminActivityDayDetailResponse(raw: unknown): AdminActivityDayDetail | null {
+  if (!raw || typeof raw !== 'object') return null
+  const o = raw as Record<string, unknown>
+  if (typeof o.date !== 'string') return null
+  const role = o.role
+  if (role !== 'all' && role !== 'admin' && role !== 'beta_tester' && role !== 'user') return null
+  const usersRaw = o.users
+  if (!Array.isArray(usersRaw)) return null
+  const users: AdminActivityDayDetail['users'] = []
+  for (const item of usersRaw) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as Record<string, unknown>
+    const user_id = typeof row.user_id === 'string' ? row.user_id : ''
+    const email = typeof row.email === 'string' ? row.email : ''
+    const r = row.motivator_role
+    const motivator_role =
+      r === 'admin' || r === 'beta_tester' || r === 'user' ? r : ('user' as const)
+    const first_seen_at = typeof row.first_seen_at === 'string' ? row.first_seen_at : ''
+    const last_seen_at = typeof row.last_seen_at === 'string' ? row.last_seen_at : ''
+    if (user_id && first_seen_at && last_seen_at) {
+      users.push({ user_id, email, motivator_role, first_seen_at, last_seen_at })
+    }
+  }
+  return {
+    date: o.date,
+    role,
+    timezone: o.timezone === 'UTC' ? 'UTC' : 'UTC',
+    users,
   }
 }
 

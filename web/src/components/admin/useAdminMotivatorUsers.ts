@@ -20,6 +20,7 @@ const ERROR_CODES = [
   'list_failed',
   'overview_failed',
   'activity_chart_failed',
+  'activity_day_users_failed',
   'activity_table_missing',
 ] as const
 

@@ -355,8 +355,8 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             en: '**Admin monitoring (PR2):** Edge **`overview`** + enriched **`list`** — vault metadata (no ciphertext), push, defects; Summary KPIs; table vault sync column and filters (no vault / stale 14d / with push).',
           },
           {
-            ru: '**Админ-мониторинг (PR3):** таблица **`admin_user_activity_daily`**, Edge **`admin-record-activity`** (heartbeat) и **`activityChart`** — график DAU/WAU на «Сводке» (UTC, фильтр по роли, retention 90 дней).',
-            en: '**Admin monitoring (PR3):** **`admin_user_activity_daily`**, Edge **`admin-record-activity`** (heartbeat) and **`activityChart`** — DAU/WAU chart on Summary (UTC, role filter, 90-day retention).',
+            ru: '**Админ-мониторинг (PR3):** таблица **`admin_user_activity_daily`**, Edge **`admin-record-activity`** (heartbeat), **`activityChart`** (DAU/WAU) и **`activityDayUsers`** — по клику на день графика список email и первого/последнего ping (UTC, фильтр роли, retention 90 дней).',
+            en: '**Admin monitoring (PR3):** **`admin_user_activity_daily`**, Edge **`admin-record-activity`** (heartbeat), **`activityChart`** (DAU/WAU), and **`activityDayUsers`** — click a chart day for email plus first/last ping (UTC, role filter, 90-day retention).',
           },
         ],
         plainBullets: [
@@ -379,6 +379,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           {
             ru: 'График «Активность в приложении» показывает, сколько разных людей открывали продукт по дням — отдельно от даты входа в Auth.',
             en: 'The “In-app activity” chart shows how many distinct people opened the app per day — separate from Auth last sign-in.',
+          },
+          {
+            ru: 'По клику на столбец графика можно открыть список: кто заходил в этот UTC-день, с первым и последним ping за день.',
+            en: 'Click a chart bar to see who was active that UTC day, with first and last ping times for the day.',
           },
         ],
       },
