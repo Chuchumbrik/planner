@@ -16,6 +16,8 @@ const MAX_LIST_PAGES = 40
 /** Keep in sync with `web/src/lib/adminMonitoringConstants.ts`. */
 const STALE_VAULT_DAYS = 14
 const MS_PER_DAY = 86_400_000
+const MAX_ACTIVITY_CHART_DAYS = 90
+const WAU_DAYS = 7
 
 type MotivatorRoleWire = 'admin' | 'beta_tester' | 'user'
 
@@ -229,6 +231,96 @@ function isVaultStale(enrichment: MonitoringEnrichment, nowMs: number): boolean 
   return t < nowMs - STALE_VAULT_DAYS * MS_PER_DAY
 }
 
+function utcDateKey(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function addUtcDays(d: Date, days: number): Date {
+  const x = new Date(d.getTime())
+  x.setUTCDate(x.getUTCDate() + days)
+  return x
+}
+
+type ActivityChartRoleFilter = 'all' | MotivatorRoleWire
+
+async function buildActivityChart(
+  admin: SupabaseClient,
+  days: number,
+  roleFilter: ActivityChartRoleFilter,
+): Promise<
+  | {
+      ok: true
+      chart: {
+        days: number
+        role: ActivityChartRoleFilter
+        timezone: 'UTC'
+        series: Array<{ date: string; unique_users: number }>
+        dau_today: number
+        wau: number
+      }
+    }
+  | { ok: false; response: Response }
+> {
+  const safeDays = Math.min(MAX_ACTIVITY_CHART_DAYS, Math.max(7, Math.floor(days)))
+  const end = new Date()
+  const start = addUtcDays(end, -(safeDays - 1))
+  const fromKey = utcDateKey(start)
+  const todayKey = utcDateKey(end)
+  const wauFromKey = utcDateKey(addUtcDays(end, -(WAU_DAYS - 1)))
+
+  const { data, error } = await admin
+    .from('admin_user_activity_daily')
+    .select('user_id, activity_date, motivator_role')
+    .gte('activity_date', wauFromKey)
+    .order('activity_date', { ascending: true })
+
+  if (error) {
+    if (error.message?.includes('admin_user_activity_daily') || error.code === '42P01') {
+      return { ok: false, response: json(503, { error: 'activity_table_missing' }) }
+    }
+    return { ok: false, response: json(500, { error: 'activity_chart_failed', detail: String(error.message).slice(0, 300) }) }
+  }
+
+  const rows = (data ?? []).filter((row) => {
+    if (roleFilter === 'all') return true
+    return row.motivator_role === roleFilter
+  })
+
+  const seriesMap = new Map<string, Set<string>>()
+  for (let i = 0; i < safeDays; i++) {
+    seriesMap.set(utcDateKey(addUtcDays(start, i)), new Set())
+  }
+
+  const wauSet = new Set<string>()
+  const dauTodaySet = new Set<string>()
+
+  for (const row of rows) {
+    const uid = String(row.user_id)
+    const date = String(row.activity_date)
+    if (date >= wauFromKey) wauSet.add(uid)
+    if (date === todayKey) dauTodaySet.add(uid)
+    const bucket = seriesMap.get(date)
+    if (bucket) bucket.add(uid)
+  }
+
+  const series = [...seriesMap.entries()].map(([date, set]) => ({
+    date,
+    unique_users: set.size,
+  }))
+
+  return {
+    ok: true,
+    chart: {
+      days: safeDays,
+      role: roleFilter,
+      timezone: 'UTC',
+      series,
+      dau_today: dauTodaySet.size,
+      wau: wauSet.size,
+    },
+  }
+}
+
 function buildOverview(users: ListUserRow[], nowMs: number) {
   const regCutoff = nowMs - 7 * MS_PER_DAY
   const signCutoff = regCutoff
@@ -321,9 +413,24 @@ Deno.serve(async (req) => {
   }
   const b = parsed as Record<string, unknown>
   const action =
-    b.action === 'list' || b.action === 'setRole' || b.action === 'overview' ? b.action : null
+    b.action === 'list' ||
+    b.action === 'setRole' ||
+    b.action === 'overview' ||
+    b.action === 'activityChart'
+      ? b.action
+      : null
   if (!action) {
     return json(400, { error: 'invalid_body' })
+  }
+
+  if (action === 'activityChart') {
+    const daysRaw = typeof b.days === 'number' ? b.days : 30
+    const roleRaw = b.role === 'admin' || b.role === 'beta_tester' || b.role === 'user' || b.role === 'all'
+      ? b.role
+      : 'all'
+    const chartResult = await buildActivityChart(admin, daysRaw, roleRaw)
+    if (!chartResult.ok) return chartResult.response
+    return json(200, { chart: chartResult.chart })
   }
 
   if (action === 'list' || action === 'overview') {

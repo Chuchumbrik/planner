@@ -12,6 +12,15 @@ export type MotivatorRoleRow = {
   defect_last_at: string | null
 }
 
+export type AdminActivityChart = {
+  days: number
+  role: 'all' | 'admin' | 'beta_tester' | 'user'
+  timezone: 'UTC'
+  series: Array<{ date: string; unique_users: number }>
+  dau_today: number
+  wau: number
+}
+
 export type AdminOverview = {
   total_users: number
   registered_last_7d: number

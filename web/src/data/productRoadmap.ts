@@ -354,6 +354,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: '**Админ-мониторинг (PR2):** Edge **`overview`** + обогащённый **`list`** — vault (без ciphertext), push, дефекты; KPI на «Сводке»; в таблице — синхронизация vault, фильтры «без vault» / «stale 14д» / «с push».',
             en: '**Admin monitoring (PR2):** Edge **`overview`** + enriched **`list`** — vault metadata (no ciphertext), push, defects; Summary KPIs; table vault sync column and filters (no vault / stale 14d / with push).',
           },
+          {
+            ru: '**Админ-мониторинг (PR3):** таблица **`admin_user_activity_daily`**, Edge **`admin-record-activity`** (heartbeat) и **`activityChart`** — график DAU/WAU на «Сводке» (UTC, фильтр по роли, retention 90 дней).',
+            en: '**Admin monitoring (PR3):** **`admin_user_activity_daily`**, Edge **`admin-record-activity`** (heartbeat) and **`activityChart`** — DAU/WAU chart on Summary (UTC, role filter, 90-day retention).',
+          },
         ],
         plainBullets: [
           {
@@ -371,6 +375,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           {
             ru: 'На «Сводке» — сколько пользователей с vault и без синхронизации давно; в списке видно дату последней синхронизации vault (не содержимое).',
             en: 'Summary shows vault adoption and stale sync counts; the user list shows last vault sync time (not vault contents).',
+          },
+          {
+            ru: 'График «Активность в приложении» показывает, сколько разных людей открывали продукт по дням — отдельно от даты входа в Auth.',
+            en: 'The “In-app activity” chart shows how many distinct people opened the app per day — separate from Auth last sign-in.',
           },
         ],
       },

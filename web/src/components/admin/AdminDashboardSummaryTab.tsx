@@ -1,5 +1,10 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
+import { AdminDashboardActivityChart } from '@/components/admin/AdminDashboardActivityChart'
+import { useAdminActivityChart } from '@/components/admin/useAdminActivityChart'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import type { AdminOverview } from '@/types/adminMonitoring'
 
 type KpiCard = {
@@ -13,13 +18,18 @@ export function AdminDashboardSummaryTab({
   loadBusy,
   loadError,
   listDegraded,
+  supabase,
 }: {
   overview: AdminOverview | null
   loadBusy: boolean
   loadError: string | null
   listDegraded: boolean
+  supabase: SupabaseClient
 }) {
   const { t } = useTranslation()
+  const [chartDays, setChartDays] = useState<ActivityChartDays>(30)
+  const [chartRole, setChartRole] = useState<ActivityChartRoleFilter>('all')
+  const activityChart = useAdminActivityChart(supabase, chartDays, chartRole)
 
   const o = overview
   const staleDays = o?.stale_vault_days ?? 14
@@ -104,6 +114,18 @@ export function AdminDashboardSummaryTab({
           </article>
         ))}
       </div>
+
+      <AdminDashboardActivityChart
+        chart={activityChart.chart}
+        loadBusy={activityChart.loadBusy}
+        loadError={activityChart.loadError}
+        tableMissing={activityChart.tableMissing}
+        days={chartDays}
+        role={chartRole}
+        onDaysChange={setChartDays}
+        onRoleChange={setChartRole}
+        onRefresh={() => void activityChart.load()}
+      />
     </div>
   )
 }

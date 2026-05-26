@@ -1,4 +1,4 @@
-import type { AdminOverview, MotivatorRoleRow } from '@/types/adminMonitoring'
+import type { AdminActivityChart, AdminOverview, MotivatorRoleRow } from '@/types/adminMonitoring'
 
 function parseMonitoringFields(o: Record<string, unknown>): Omit<
   MotivatorRoleRow,
@@ -43,6 +43,32 @@ export function parseMotivatorRoleListResponse(raw: unknown): MotivatorRoleRow[]
     if (id) next.push({ id, email, created_at, last_sign_in_at, motivator_role, ...parseMonitoringFields(o) })
   }
   return next
+}
+
+export function parseAdminActivityChartResponse(raw: unknown): AdminActivityChart | null {
+  if (!raw || typeof raw !== 'object') return null
+  const o = raw as Record<string, unknown>
+  const seriesRaw = o.series
+  if (typeof o.days !== 'number' || !Array.isArray(seriesRaw)) return null
+  const role = o.role
+  if (role !== 'all' && role !== 'admin' && role !== 'beta_tester' && role !== 'user') return null
+  const series: AdminActivityChart['series'] = []
+  for (const item of seriesRaw) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as Record<string, unknown>
+    if (typeof row.date === 'string' && typeof row.unique_users === 'number') {
+      series.push({ date: row.date, unique_users: row.unique_users })
+    }
+  }
+  if (series.length === 0 && seriesRaw.length > 0) return null
+  return {
+    days: o.days,
+    role,
+    timezone: o.timezone === 'UTC' ? 'UTC' : 'UTC',
+    series,
+    dau_today: typeof o.dau_today === 'number' ? o.dau_today : 0,
+    wau: typeof o.wau === 'number' ? o.wau : 0,
+  }
 }
 
 export function parseAdminOverviewResponse(raw: unknown): AdminOverview | null {

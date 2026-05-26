@@ -40,6 +40,7 @@ function AdminDashboardPageInner() {
             loadBusy={overviewState.loadBusy}
             loadError={overviewState.loadError}
             listDegraded={overviewState.listDegraded}
+            supabase={supabase}
           />
         ) : (
           <AdminMotivatorRolePanel
