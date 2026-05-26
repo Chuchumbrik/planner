@@ -371,6 +371,7 @@ curl.exe -s -S -X POST "https://planner-tawny-omega.vercel.app/api/defect-attach
   - `{ "action": "list" }` — пользователи Auth + метаданные (**`user_vault.updated_at`**, push, defect_submissions; без **ciphertext**);
   - `{ "action": "overview" }` — KPI для вкладки **«Сводка»** (те же агрегаты, без полного массива в ответе);
   - `{ "action": "activityChart", "days": 7|30|90, "role": "all"|"admin"|"beta_tester"|"user" }` — серия уникальных пользователей по UTC-дням, **DAU** (сегодня), **WAU** (7 дней);
+  - `{ "action": "activityDayUsers", "date": "YYYY-MM-DD", "role": "all"|"admin"|"beta_tester"|"user" }` — кто был в приложении в выбранный **UTC-день** (email из Auth, **first_seen_at** / **last_seen_at** heartbeat; для drill-down по клику на столбец графика на «Сводке»);
   - `{ "action": "setRole", "userId": "<uuid>", "role": "admin" | "beta_tester" | "user" }`.
   Список Auth — постранично **`auth.admin.listUsers`** (до **40×100** записей). Порог «устаревший vault» — **14** дней (`STALE_VAULT_DAYS`, синхрон с `web/src/lib/adminMonitoringConstants.ts`). При сбое join таблиц — **`list_degraded: true`**, частичные данные. Для роли **`user`** Edge выставляет **`motivator_role: null`** в **`app_metadata`** (GoTrue **мержит** метаданные — см. фикс **#39**).
 - **Секреты:** те же **`SUPABASE_URL`**, **`SUPABASE_ANON_KEY`**, **`SUPABASE_SERVICE_ROLE_KEY`**, что и у **`file-defect`** (отдельные GitHub-секреты **не** нужны).
@@ -388,7 +389,7 @@ curl.exe -s -S -X POST "https://planner-tawny-omega.vercel.app/api/defect-attach
 | **`missing_authorization`** / **`invalid_token`** (401) | Перезайдите в аккаунт. |
 | **404 / Function not found** | Задеплойте **`admin-motivator-roles`** с тем же **project ref**, что у клиента. |
 | **`activity_table_missing`** (503) | Примените миграцию **`006_admin_user_activity_daily.sql`**. |
-| **`activity_chart_failed`** (5xx) | Логи Edge; проверьте Service Role и таблицу активности. |
+| **`activity_chart_failed`** / **`activity_day_users_failed`** (5xx) | Логи Edge; проверьте Service Role и таблицу активности. |
 
 ## Edge `admin-record-activity`: heartbeat активности
 

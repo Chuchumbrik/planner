@@ -21,6 +21,21 @@ export type AdminActivityChart = {
   wau: number
 }
 
+export type AdminActivityDayUser = {
+  user_id: string
+  email: string
+  motivator_role: 'admin' | 'beta_tester' | 'user'
+  first_seen_at: string
+  last_seen_at: string
+}
+
+export type AdminActivityDayDetail = {
+  date: string
+  role: 'all' | 'admin' | 'beta_tester' | 'user'
+  timezone: 'UTC'
+  users: AdminActivityDayUser[]
+}
+
 export type AdminOverview = {
   total_users: number
   registered_last_7d: number

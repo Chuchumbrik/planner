@@ -122,6 +122,7 @@ export function AdminDashboardSummaryTab({
         tableMissing={activityChart.tableMissing}
         days={chartDays}
         role={chartRole}
+        supabase={supabase}
         onDaysChange={setChartDays}
         onRoleChange={setChartRole}
         onRefresh={() => void activityChart.load()}
