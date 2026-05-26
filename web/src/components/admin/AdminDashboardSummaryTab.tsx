@@ -1,8 +1,6 @@
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
-import type { MotivatorRoleRow } from '@/components/AdminMotivatorRolePanel'
-import { computeAdminAuthKpis } from '@/components/admin/adminDashboardMetrics'
+import type { AdminOverview } from '@/types/adminMonitoring'
 
 type KpiCard = {
   icon: string
@@ -11,49 +9,96 @@ type KpiCard = {
 }
 
 export function AdminDashboardSummaryTab({
-  users,
+  overview,
   loadBusy,
+  loadError,
+  listDegraded,
 }: {
-  users: MotivatorRoleRow[]
+  overview: AdminOverview | null
   loadBusy: boolean
+  loadError: string | null
+  listDegraded: boolean
 }) {
   const { t } = useTranslation()
-  const kpis = useMemo(() => computeAdminAuthKpis(users), [users])
+
+  const o = overview
+  const staleDays = o?.stale_vault_days ?? 14
 
   const cards: KpiCard[] = [
-    { icon: 'group', labelKey: 'admin.dashboard.kpiTotal', value: loadBusy ? '…' : String(kpis.total) },
+    { icon: 'group', labelKey: 'admin.dashboard.kpiTotal', value: loadBusy ? '…' : String(o?.total_users ?? '—') },
     {
       icon: 'person_add',
       labelKey: 'admin.dashboard.kpiRegistered7d',
-      value: loadBusy ? '…' : String(kpis.registeredLast7d),
+      value: loadBusy ? '…' : String(o?.registered_last_7d ?? '—'),
     },
     {
       icon: 'login',
       labelKey: 'admin.dashboard.kpiSignedIn7d',
-      value: loadBusy ? '…' : String(kpis.signedInLast7d),
+      value: loadBusy ? '…' : String(o?.signed_in_last_7d ?? '—'),
+    },
+    {
+      icon: 'lock',
+      labelKey: 'admin.dashboard.kpiWithVault',
+      value: loadBusy ? '…' : String(o?.with_vault ?? '—'),
+    },
+    {
+      icon: 'cloud_off',
+      labelKey: 'admin.dashboard.kpiWithoutVault',
+      value: loadBusy ? '…' : String(o?.without_vault ?? '—'),
+    },
+    {
+      icon: 'sync_problem',
+      labelKey: 'admin.dashboard.kpiVaultStale',
+      value: loadBusy ? '…' : String(o?.vault_stale_14d ?? '—'),
+    },
+    {
+      icon: 'notifications',
+      labelKey: 'admin.dashboard.kpiWithPush',
+      value: loadBusy ? '…' : String(o?.with_push ?? '—'),
+    },
+    {
+      icon: 'bug_report',
+      labelKey: 'admin.dashboard.kpiDefects7d',
+      value: loadBusy ? '…' : String(o?.defect_submissions_7d ?? '—'),
     },
     {
       icon: 'badge',
       labelKey: 'admin.dashboard.kpiRoles',
       value: loadBusy
         ? '…'
-        : t('admin.dashboard.kpiRolesValue', {
-            admin: kpis.roleAdmin,
-            beta: kpis.roleBeta,
-            user: kpis.roleUser,
-          }),
+        : o
+          ? t('admin.dashboard.kpiRolesValue', {
+              admin: o.by_role.admin,
+              beta: o.by_role.beta_tester,
+              user: o.by_role.user,
+            })
+          : '—',
     },
   ]
 
   return (
     <div className="space-y-md">
-      <p className="text-body-sm text-on-surface-variant">{t('admin.dashboard.authMetricsHint')}</p>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <p className="text-body-sm text-on-surface-variant">{t('admin.dashboard.summaryMetricsHint')}</p>
+      {loadError ? (
+        <p className="text-xs text-red-400" role="alert">
+          {loadError}
+        </p>
+      ) : null}
+      {listDegraded ? (
+        <p className="text-xs text-amber-400/90" role="status">
+          {t('admin.dashboard.listDegraded')}
+        </p>
+      ) : null}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((c) => (
           <article key={c.labelKey} className="motivator-card flex items-center gap-4 p-5">
             <MaterialIcon name={c.icon} className="text-primary" size={28} />
             <div className="min-w-0">
-              <p className="text-xs text-on-surface-variant">{t(c.labelKey)}</p>
+              <p className="text-xs text-on-surface-variant">
+                {c.labelKey === 'admin.dashboard.kpiVaultStale'
+                  ? t(c.labelKey, { days: staleDays })
+                  : t(c.labelKey)}
+              </p>
               <p className="font-display text-2xl font-bold text-on-surface">{c.value}</p>
             </div>
           </article>

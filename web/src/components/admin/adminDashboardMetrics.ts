@@ -1,4 +1,5 @@
-import type { MotivatorRoleRow } from '@/components/AdminMotivatorRolePanel'
+import { STALE_VAULT_DAYS } from '@/lib/adminMonitoringConstants'
+import type { MotivatorRoleRow } from '@/types/adminMonitoring'
 
 const MS_PER_DAY = 86_400_000
 
@@ -9,15 +10,9 @@ export type AdminUsersSegmentFilter =
   | 'role_admin'
   | 'role_beta'
   | 'role_user'
-
-export type AdminAuthKpis = {
-  total: number
-  registeredLast7d: number
-  signedInLast7d: number
-  roleAdmin: number
-  roleBeta: number
-  roleUser: number
-}
+  | 'no_vault'
+  | 'vault_stale_14d'
+  | 'with_push'
 
 function daysAgoMs(days: number, now = Date.now()): number {
   return now - days * MS_PER_DAY
@@ -29,33 +24,11 @@ function parseTime(iso: string | null | undefined): number | null {
   return Number.isNaN(t) ? null : t
 }
 
-export function computeAdminAuthKpis(users: MotivatorRoleRow[], now = Date.now()): AdminAuthKpis {
-  const regCutoff = daysAgoMs(7, now)
-  const signCutoff = daysAgoMs(7, now)
-  let registeredLast7d = 0
-  let signedInLast7d = 0
-  let roleAdmin = 0
-  let roleBeta = 0
-  let roleUser = 0
-
-  for (const u of users) {
-    const created = parseTime(u.created_at)
-    if (created != null && created >= regCutoff) registeredLast7d++
-    const sign = parseTime(u.last_sign_in_at)
-    if (sign != null && sign >= signCutoff) signedInLast7d++
-    if (u.motivator_role === 'admin') roleAdmin++
-    else if (u.motivator_role === 'beta_tester') roleBeta++
-    else roleUser++
-  }
-
-  return {
-    total: users.length,
-    registeredLast7d,
-    signedInLast7d,
-    roleAdmin,
-    roleBeta,
-    roleUser,
-  }
+export function isVaultStale(user: MotivatorRoleRow, now = Date.now()): boolean {
+  if (!user.has_vault) return false
+  const t = parseTime(user.vault_updated_at)
+  if (t == null) return true
+  return t < now - STALE_VAULT_DAYS * MS_PER_DAY
 }
 
 export function compareUsersByLastSignIn(a: MotivatorRoleRow, b: MotivatorRoleRow): number {
@@ -77,6 +50,9 @@ export function userMatchesSegment(
   if (segment === 'role_admin') return user.motivator_role === 'admin'
   if (segment === 'role_beta') return user.motivator_role === 'beta_tester'
   if (segment === 'role_user') return user.motivator_role === 'user'
+  if (segment === 'no_vault') return !user.has_vault
+  if (segment === 'vault_stale_14d') return isVaultStale(user, now)
+  if (segment === 'with_push') return user.push_device_count > 0
 
   const sign = parseTime(user.last_sign_in_at)
   const cutoff = segment === 'inactive7' ? daysAgoMs(7, now) : daysAgoMs(30, now)

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { MotivatorRoleRow } from '@/components/AdminMotivatorRolePanel'
-import {
-  computeAdminAuthKpis,
-  userMatchesSegment,
-} from '@/components/admin/adminDashboardMetrics'
+import type { MotivatorRoleRow } from '@/types/adminMonitoring'
+import { isVaultStale, userMatchesSegment } from '@/components/admin/adminDashboardMetrics'
 
 const now = new Date('2026-05-26T12:00:00Z').getTime()
 
@@ -13,31 +10,35 @@ function row(partial: Partial<MotivatorRoleRow> & Pick<MotivatorRoleRow, 'id'>):
     created_at: '2026-01-01T00:00:00Z',
     last_sign_in_at: '2026-05-20T00:00:00Z',
     motivator_role: 'user',
+    has_vault: false,
+    vault_updated_at: null,
+    push_device_count: 0,
+    push_last_seen_at: null,
+    defect_submission_count: 0,
+    defect_last_at: null,
     ...partial,
   }
 }
 
 describe('adminDashboardMetrics', () => {
-  it('computeAdminAuthKpis counts roles and windows', () => {
-    const users = [
-      row({ id: '1', motivator_role: 'admin', created_at: '2026-05-24T00:00:00Z', last_sign_in_at: '2026-05-25T00:00:00Z' }),
-      row({ id: '2', motivator_role: 'beta_tester', last_sign_in_at: null }),
-      row({ id: '3', created_at: '2020-01-01T00:00:00Z', last_sign_in_at: '2026-01-01T00:00:00Z' }),
-    ]
-    const kpis = computeAdminAuthKpis(users, now)
-    expect(kpis.total).toBe(3)
-    expect(kpis.registeredLast7d).toBe(1)
-    expect(kpis.signedInLast7d).toBe(1)
-    expect(kpis.roleAdmin).toBe(1)
-    expect(kpis.roleBeta).toBe(1)
-    expect(kpis.roleUser).toBe(1)
+  it('isVaultStale when vault updated long ago', () => {
+    const fresh = row({ id: '1', has_vault: true, vault_updated_at: '2026-05-25T00:00:00Z' })
+    const stale = row({ id: '2', has_vault: true, vault_updated_at: '2026-01-01T00:00:00Z' })
+    expect(isVaultStale(fresh, now)).toBe(false)
+    expect(isVaultStale(stale, now)).toBe(true)
+    expect(isVaultStale(row({ id: '3' }), now)).toBe(false)
   })
 
-  it('userMatchesSegment inactive7', () => {
-    const active = row({ id: 'a', last_sign_in_at: '2026-05-25T00:00:00Z' })
-    const stale = row({ id: 'b', last_sign_in_at: '2026-01-01T00:00:00Z' })
-    expect(userMatchesSegment(active, 'inactive7', now)).toBe(false)
-    expect(userMatchesSegment(stale, 'inactive7', now)).toBe(true)
-    expect(userMatchesSegment(row({ id: 'c', last_sign_in_at: null }), 'inactive7', now)).toBe(true)
+  it('userMatchesSegment vault and push filters', () => {
+    expect(userMatchesSegment(row({ id: 'a' }), 'no_vault', now)).toBe(true)
+    expect(userMatchesSegment(row({ id: 'b', has_vault: true }), 'no_vault', now)).toBe(false)
+    expect(userMatchesSegment(row({ id: 'c', push_device_count: 2 }), 'with_push', now)).toBe(true)
+    expect(
+      userMatchesSegment(
+        row({ id: 'd', has_vault: true, vault_updated_at: '2026-01-01T00:00:00Z' }),
+        'vault_stale_14d',
+        now,
+      ),
+    ).toBe(true)
   })
 })

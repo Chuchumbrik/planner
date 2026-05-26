@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { MotivatorRoleRow } from '@/components/AdminMotivatorRolePanel'
 import { parseMotivatorRoleListResponse } from '@/lib/adminMotivatorRolesList'
+import type { MotivatorRoleRow } from '@/types/adminMonitoring'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
 
 const ADMIN_ROLES_FN = 'admin-motivator-roles'
@@ -18,6 +18,7 @@ const ERROR_CODES = [
   'user_not_found',
   'update_failed',
   'list_failed',
+  'overview_failed',
 ] as const
 
 export function mapAdminRolesError(formatted: string, t: (key: string) => string): string {
@@ -29,11 +30,17 @@ export function mapAdminRolesError(formatted: string, t: (key: string) => string
   return formatted
 }
 
-export function useAdminMotivatorUsers(supabase: SupabaseClient | null) {
+export function useAdminMotivatorUsers(
+  supabase: SupabaseClient | null,
+  options?: { enabled?: boolean },
+) {
   const { t } = useTranslation()
+  const enabled = options?.enabled ?? true
   const [users, setUsers] = useState<MotivatorRoleRow[]>([])
   const [loadBusy, setLoadBusy] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [listDegraded, setListDegraded] = useState(false)
+  const loadedOnce = useRef(false)
 
   const load = useCallback(async () => {
     if (!supabase) return
@@ -48,13 +55,16 @@ export function useAdminMotivatorUsers(supabase: SupabaseClient | null) {
         setLoadError(mapAdminRolesError(msg, t))
         return
       }
-      const raw = data && typeof data === 'object' && 'users' in data ? (data as { users?: unknown }).users : null
+      const body = data && typeof data === 'object' ? (data as Record<string, unknown>) : null
+      const raw = body?.users
       const next = parseMotivatorRoleListResponse(raw)
       if (!next) {
         setLoadError(t('settings.adminRolesErrors.list_failed'))
         return
       }
       setUsers(next)
+      setListDegraded(body?.list_degraded === true)
+      loadedOnce.current = true
     } catch (e: unknown) {
       setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
     } finally {
@@ -63,10 +73,11 @@ export function useAdminMotivatorUsers(supabase: SupabaseClient | null) {
   }, [supabase, t])
 
   useEffect(() => {
-    if (!supabase) return
+    if (!enabled || !supabase) return
+    if (loadedOnce.current) return
     const id = window.setTimeout(() => void load(), 0)
     return () => window.clearTimeout(id)
-  }, [load, supabase])
+  }, [load, supabase, enabled])
 
-  return { users, setUsers, loadBusy, loadError, load, setLoadError }
+  return { users, setUsers, loadBusy, loadError, listDegraded, load, setLoadError, loadedOnce }
 }

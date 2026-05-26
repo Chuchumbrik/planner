@@ -6,9 +6,12 @@ import { formatAdminDateTime } from '@/lib/formatAdminDate'
 import {
   type AdminUsersSegmentFilter,
   compareUsersByLastSignIn,
+  isVaultStale,
   userMatchesSegment,
 } from '@/components/admin/adminDashboardMetrics'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
+import type { MotivatorRoleRow } from '@/types/adminMonitoring'
+import { STALE_VAULT_DAYS } from '@/lib/adminMonitoringConstants'
 import {
   MOTIVATOR_INPUT,
   SETTINGS_BTN_SECONDARY,
@@ -18,13 +21,7 @@ import {
 } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 
-export type MotivatorRoleRow = {
-  id: string
-  email: string
-  created_at: string
-  last_sign_in_at: string | null
-  motivator_role: 'admin' | 'beta_tester' | 'user'
-}
+export type { MotivatorRoleRow } from '@/types/adminMonitoring'
 
 const ADMIN_ROLES_FN = 'admin-motivator-roles'
 
@@ -32,6 +29,9 @@ const SEGMENT_FILTERS: AdminUsersSegmentFilter[] = [
   'all',
   'inactive7',
   'inactive30',
+  'no_vault',
+  'vault_stale_14d',
+  'with_push',
   'role_admin',
   'role_beta',
   'role_user',
@@ -43,6 +43,7 @@ export function AdminMotivatorRolePanel({
   users,
   loadBusy,
   loadError,
+  listDegraded,
   onRefresh,
   onReload,
   onLoadError,
@@ -52,6 +53,7 @@ export function AdminMotivatorRolePanel({
   users: MotivatorRoleRow[]
   loadBusy: boolean
   loadError: string | null
+  listDegraded?: boolean
   onRefresh: () => void
   onReload: () => Promise<void>
   onLoadError: (message: string | null) => void
@@ -149,7 +151,9 @@ export function AdminMotivatorRolePanel({
               className={cn(chipActive(segment === id), 'text-label-sm')}
               onClick={() => setSegment(id)}
             >
-              {t(`admin.dashboard.filter.${id}`)}
+              {id === 'vault_stale_14d'
+                ? t(`admin.dashboard.filter.${id}`, { days: STALE_VAULT_DAYS })
+                : t(`admin.dashboard.filter.${id}`)}
             </button>
           ))}
         </div>
@@ -159,9 +163,16 @@ export function AdminMotivatorRolePanel({
             {loadError}
           </p>
         ) : null}
+        {listDegraded ? (
+          <p className="mt-3 text-xs text-amber-400/90" role="status">
+            {t('admin.dashboard.listDegraded')}
+          </p>
+        ) : null}
 
         <p className="mt-3 text-label-sm text-on-surface-variant">{t('settings.adminRolesSelfHint')}</p>
-        <p className="mt-1 text-label-sm text-on-surface-variant">{t('admin.dashboard.authMetricsHint')}</p>
+        <p className="mt-1 text-label-sm text-on-surface-variant">
+          {t('admin.dashboard.usersMetricsHint', { days: STALE_VAULT_DAYS })}
+        </p>
 
         <div className="mt-4 flex flex-col gap-2 md:hidden">
           {filtered.length === 0 && !loadBusy ? (
@@ -182,6 +193,24 @@ export function AdminMotivatorRolePanel({
                   <dd className="text-on-surface">{formatDate(u.created_at || null)}</dd>
                   <dt>{t('admin.dashboard.colLastSignIn')}</dt>
                   <dd className="text-on-surface">{formatDate(u.last_sign_in_at)}</dd>
+                  <dt>{t('admin.dashboard.colVault')}</dt>
+                  <dd className="text-on-surface">
+                    {u.has_vault ? t('admin.dashboard.vaultYes') : t('admin.dashboard.vaultNo')}
+                  </dd>
+                  <dt>{t('admin.dashboard.colVaultSync')}</dt>
+                  <dd className={isVaultStale(u) ? 'text-amber-400/90' : 'text-on-surface'}>
+                    {u.has_vault ? formatDate(u.vault_updated_at) : '—'}
+                  </dd>
+                  <dt>{t('admin.dashboard.colPush')}</dt>
+                  <dd className="text-on-surface">
+                    {u.push_device_count > 0
+                      ? t('admin.dashboard.pushDevices', { count: u.push_device_count })
+                      : '—'}
+                  </dd>
+                  <dt>{t('admin.dashboard.colDefects')}</dt>
+                  <dd className="text-on-surface">
+                    {u.defect_submission_count > 0 ? String(u.defect_submission_count) : '—'}
+                  </dd>
                 </dl>
                 <label className="mt-2 flex flex-col gap-1">
                   <span className={`${SETTINGS_SUBHEAD} mt-0 text-[10px]`}>
@@ -214,13 +243,17 @@ export function AdminMotivatorRolePanel({
                 <th className="px-3 py-2 font-medium">{t('settings.adminRolesColEmail')}</th>
                 <th className="px-3 py-2 font-medium">{t('admin.dashboard.colRegistered')}</th>
                 <th className="px-3 py-2 font-medium">{t('admin.dashboard.colLastSignIn')}</th>
+                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colVault')}</th>
+                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colVaultSync')}</th>
+                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colPush')}</th>
+                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colDefects')}</th>
                 <th className="px-3 py-2 font-medium">{t('settings.adminRolesColRole')}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && !loadBusy ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-6 text-center text-xs text-on-surface-variant">
+                  <td colSpan={8} className="px-3 py-6 text-center text-xs text-on-surface-variant">
                     {t('settings.adminRolesEmpty')}
                   </td>
                 </tr>
@@ -242,6 +275,23 @@ export function AdminMotivatorRolePanel({
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
                       {formatDate(u.last_sign_in_at)}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
+                      {u.has_vault ? t('admin.dashboard.vaultYes') : t('admin.dashboard.vaultNo')}
+                    </td>
+                    <td
+                      className={`whitespace-nowrap px-3 py-2 align-middle ${isVaultStale(u) ? 'text-amber-400/90' : 'text-on-surface'}`}
+                      title={t('admin.dashboard.vaultSyncHint', { days: STALE_VAULT_DAYS })}
+                    >
+                      {u.has_vault ? formatDate(u.vault_updated_at) : '—'}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
+                      {u.push_device_count > 0
+                        ? t('admin.dashboard.pushDevices', { count: u.push_device_count })
+                        : '—'}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
+                      {u.defect_submission_count > 0 ? u.defect_submission_count : '—'}
                     </td>
                     <td className="px-3 py-2 align-middle">
                       <select
