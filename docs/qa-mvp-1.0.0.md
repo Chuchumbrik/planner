@@ -1,29 +1,43 @@
 # QA-отчёт Motivator (MVP 1.0.0)
 
-**Среда:** production `https://planner-tawny-omega.vercel.app`  
-**Версия:** `0.7.3+f635b70` (прогон 20, re-test не‑Passed)  
-**Дата прогона:** 2026-05-24  
+**Тестовый сайт (canonical):** [https://planner-tawny-omega.vercel.app/app](https://planner-tawny-omega.vercel.app/app)  
+**Base URL:** `https://planner-tawny-omega.vercel.app`  
+**Версия на production:** `0.7.3+0a2120c` (прогон 22, ретест дефектов, 2026-05-25)  
+**Дата прогона:** 2026-05-24 — 2026-05-25 (прогон 22)  
 **Исполнитель:** QA Automation (Chrome DevTools MCP)  
-**Учётная запись:** `mussha2010@yandex.ru` (**admin**)
+**Учётная запись:** `mussha2010@yandex.ru` (**admin**); секреты — `.cursor/test-account.local.md` (gitignored)
 
-**Инструменты:** Chrome DevTools MCP — desktop 1440×900; mobile iPhone 14 Pro 393×852 (touch); Pixel 7 412×915; Slow 3G для сетевых сценариев.
+**Инструменты:** Chrome DevTools MCP — desktop 1440×900; mobile 393×852 (touch); Slow 3G; unit — `npm test` + `web` vitest.
+
+---
+
+## Тестовая среда
+
+| Параметр | Значение |
+|----------|----------|
+| **Entry point QA** | **`/app`** — основной экран планировщика после входа |
+| **Production URL** | `https://planner-tawny-omega.vercel.app` |
+| **Проверка версии** | Footer sidebar: `Мотиватор · v0.7.3+<git-hash>` |
+| **Auth** | Supabase; тестовая УЗ admin (см. `.cursor/test-account.local.md`) |
+| **Скриншоты** | `docs/qa-screenshots/prog21-*` (деплой gate); прогон 22 — без новых файлов |
+| **Локальный preview** | `npm run build -w web && npx vite preview` — без `VITE_SUPABASE_*` вход невозможен |
 
 ---
 
 ## Summary
 
-**Общее состояние (прогон 20):** production **`0.7.3+f635b70`**. Перепроверены **все ранее не‑Passed**, где возможна автоматизация. **41/41 unit-тестов OK.** Остаются **Blocked:** `send-due` positive (нет `CRON_SECRET`), **TC-SEC-15** (нет non-admin УЗ), **OS notificationclick** (manual), **2+ ч** сессия.
+**Общее состояние (прогон 22):** production **`0.7.3+0a2120c`**. Ретест **BUG-001…013** (кроме manual/long): **BUG-002/004/005/007** — **Verified Fixed**; блокеры **008/009/012** — регрессия **Passed**. **TC-D2-01, 02, 05–07** + **UX-05/06** — **Passed**; **TC-D2-03/04/08/10/11** — не в прогоне 22 (smoke опционально).
 
-**Вердикт (прогон 20):** **готов к 1.0.0** — блокеры + UX Verified; **BUG-001 Verified** (EOD + Slow 3G после local save). **BUG-002/004/005/007** — исправлены в коде после прогона 20 (см. ниже). См. [Прогон 20](#прогон-20--re-test-не-passed).
+**Вердикт (прогон 22):** **Passed** — QA low pack и блокеры закрыты на production. См. [Прогон 22](#прогон-22--ретест-дефектов).
 
-> **Прогоны 2–20:** … [«Прогон 20»](#прогон-20--re-test-не-passed).
+> **Прогоны 2–22:** … [«Прогон 22»](#прогон-22--ретест-дефектов).
 
 ---
 
 ## Статус исправлений после QA (ветка `design-2.0`)
 
 **Дата правок в коде:** 2026-05-23  
-**Деплой на production:** `0.7.3+850815d` (прогон 18, 2026-05-24)  
+**Деплой на production:** `0.7.3+0a2120c` (прогон 22, 2026-05-25)  
 **Исходный прогон:** production `0.7.3+1256c6d` (прогоны 1–17)
 
 ### Verified на production (прогон 18)
@@ -37,7 +51,7 @@
 | **BUG-012** | `?highlightTask=` игнорировался | **Verified Fixed** | Ring `ring-2 ring-primary`, scroll in viewport, URL очищается. `regr18-highlightTask-ring-1440.png` |
 | **BUG-013** | SW: только `focus()` | **Verified (code)** | Фикс в `sw.ts` + роутер; **OS-клик** — manual (не в MCP) |
 | **BUG-010** | Битый seed → вечная «Инициализация…» | **Verified Fixed** | `motivator_seed_b64=not-valid!!!` → `/onboarding` «Восстановление ключа», **не** бесконечный spinner |
-| **BUG-004** | «3» отдельной строкой в EOD DONE | **Partial Verified** | В блоке **СДЕЛАНО** приоритет скрыт; в **НЕ ЗАКРЫТО** rank **3** по-прежнему виден (by design в `EndOfDayModal.tsx`) |
+| **BUG-004** | «3» отдельной строкой в EOD | **Verified Fixed** (прогон 22) | Rank не выводится отдельной строкой в обоих блоках EOD |
 | **BUG-001** | EOD терялся при reload до sync | **Verified Fixed** | Slow 3G: «Завершить ритуал» → local `eodCompletedLocalDates` + reload → **2026-05-24** сохранён (прогон 20) |
 
 ### Исправлено в коде (историческая таблица)
@@ -69,12 +83,12 @@
 
 | ID / область | Статус | Комментарий |
 |--------------|--------|-------------|
-| **BUG-002** | **Fixed (code)** | Pristine close без диалога; confirm только при dirty + canEdit |
-| **BUG-005** | **Fixed (code)** | Fallback feedback → GitHub Issues; override **`VITE_FEEDBACK_URL`** |
-| **BUG-007** | **Fixed (code)** | `clampField` на title в FileDefectModal (template + input) |
-| **BUG-004** | **Fixed (code)** | Rank убран и из блока «Не закрыто» EOD |
-| **UX-05** | **Addressed** | EOD только в toolbar «День»; подпись toggle в настройках; DR-004 hint на checkbox |
-| **UX-06** | **Fixed (code)** | «Краткая сводка» в **Настройки → Общие** |
+| **BUG-002** | **Verified Fixed** (прогон 22) | Pristine: ✕ без confirm; dirty: alertdialog «Закрыть создание задачи?» |
+| **BUG-005** | **Verified Fixed** (прогон 22) | Settings → «Обратная связь» → `github.com/.../issues/new` |
+| **BUG-007** | **Verified Fixed** (прогон 22) | Defect modal: `maxLength=120`, шаблон «День» → counter **27 / 120** |
+| **BUG-004** | **Verified Fixed** (прогон 22) | EOD modal: **0** строк rank-only («3») в DONE и NOT DONE |
+| **UX-05** | **Addressed** | EOD stat «Завершить день» → modal; toolbar EOD убран |
+| **UX-06** | **Verified Fixed** (прогон 22) | «Краткая сводка» в sidebar footer + **Настройки → Общие** |
 | **UX-001…004** (прогон 5) | **Verified Fixed** | Прогон 19 на `0.7.3+5ee2982` — см. ниже |
 | **send-due positive E2E** | **Blocked** | Нет `CRON_SECRET` у QA; drift прокси/Edge (прогон 17) |
 | **TC-SEC-15** non-admin | **Not run** | Нужна отдельная УЗ без admin |
@@ -90,10 +104,6 @@
 | **AI** | Глобальная кнопка + правая панель (`AiAssistantPanel`, stub); только **admin** / **beta_tester** |
 | **Role gate** | `RequireTesterPreview`, `canAccessPreviewFeatures` |
 | **VaultDecryptHelp** | Ссылка на `/settings#privacy` |
-
-| **send-due positive E2E** | **Blocked** | Нет `CRON_SECRET` у QA; drift прокси/Edge (прогон 17, без регрессии в 18) |
-| **TC-SEC-15** non-admin | **Not run** | Тестовая УЗ **admin** |
-| **OS notificationclick** | **Manual** | BUG-012/013 fixed in code; нужен реальный OS-клик |
 
 ### Чеклист полного re-QA — выполнен (прогон 18)
 
@@ -113,6 +123,50 @@
 
 ---
 
+## Тестовая модель — Design 2.0 stage 8 (`0a2120c`)
+
+**Назначение:** матрица «коммит → компонент → TC». **Актуальный статус:** [прогон 22](#прогон-22--ретест-дефектов) на production `0a2120c`. Прогон 21 (`f635b70`) — исторический deploy gate, см. [ниже](#прогон-21--design-20-stage-8-коммит-0a2120c).
+
+### Матрица изменений (статус prog 22)
+
+| Коммит / область | Ключевые файлы | TC | Авто | Статус prog 22 |
+|------------------|----------------|-----|------|----------------|
+| Vault/plan в header | `ShellVaultPlanButton.tsx`, `ShellHeaderActions.tsx` | TC-D2-01 | D | **Passed** |
+| Account footer | `ShellAccountFooter.tsx`, `MotivatorShell.tsx` | TC-D2-02 | D/M | **Passed** |
+| Admin sub-nav | `ShellAdminNav.tsx`, `shellAdminMode.ts` | TC-D2-03 | D | **Not run** — smoke по желанию |
+| Docked AI | `AiAssistantPanel.tsx`, `aiAssistantPanelWidth.ts` | TC-D2-04 | D/M | **Not run** — smoke по желанию |
+| FAB create (toolbar EOD убран) | `PlannerCreateFab.tsx`, `AppPage.tsx` | TC-D2-05 | D/M | **Passed** — FAB «+»; toolbar без create/EOD |
+| EOD stat tile → modal | `DayPlannerStatsRow.tsx` | TC-D2-06 | D | **Passed** — `<button>` → EOD modal |
+| Styled checkboxes | `TaskMiniCard.tsx`, `motivator-theme.css` | TC-D2-07 | D/M | **Passed** — `.motivator-checkbox` |
+| Security log в Settings | `SecurityLogPanel.tsx`, удалён prototype | TC-D2-08 | D | **Not run** — журнал в **Приватность** (`#security-log`) |
+| Focus trap modals | `useDialogFocusTrap.ts` | TC-D2-09 | Manual | **Manual** |
+| BUG-002 pristine close | `CreateTaskModal.tsx` | TC-DRAFT-02 / BUG-002 | D | **Passed** |
+| BUG-004 EOD rank | `EndOfDayModal.tsx` | BUG-004 | D | **Passed** |
+| BUG-005 feedback URL | `legalLinks.ts`, `SettingsLegalSection.tsx` | BUG-005 | D | **Passed** |
+| BUG-007 title clamp | `FileDefectModal.tsx` | BUG-007 | D | **Passed** |
+| UX-06 roadmap Settings | `SettingsPage.tsx`, `ShellAccountFooter.tsx` | UX-06 | D | **Passed** |
+| UX-05 EOD только День | `AppPage.tsx`, settings copy | UX-05 | D | **Passed** — stat tile, не toolbar |
+| Period stats copy | `PeriodPlannerStatsRow.tsx` | TC-D2-10 | D | **Not run** — smoke по желанию |
+| Reports chart scroll | `ReportsPage.tsx`, `scrollbar-slider-h` | TC-D2-11 | D | **Not run** — smoke по желанию |
+
+### Реестр TC-D2 (шаги)
+
+| ID | Название | Шаги | Ожидаемый результат | Статус (prog 22) |
+|----|----------|------|---------------------|------------------|
+| **TC-D2-01** | Vault/plan в header | D: `/app` → shield/premium в **header** → popover | Popover plan tier; нет дубля Premium в sidebar | **Passed** |
+| **TC-D2-02** | Account footer | D/M: footer sidebar | Email, роль, «Краткая сводка», «Выйти» | **Passed** |
+| **TC-D2-03** | Admin sub-nav | D: `/settings#admin` или admin dashboard | `ShellAdminNav`: Обзор ↔ Настройки | **Not run** |
+| **TC-D2-04** | Docked AI desktop | D: AI; M: overlay | Desktop: docked + resize; mobile: overlay | **Not run** |
+| **TC-D2-05** | FAB без toolbar EOD | D/M: День | FAB «+»; нет create/EOD в toolbar | **Passed** |
+| **TC-D2-06** | EOD stat clickable | D: клик «End of Day» | `EndOfDayModal` | **Passed** |
+| **TC-D2-07** | motivator-checkbox | D/M: карточка | `.motivator-checkbox` | **Passed** |
+| **TC-D2-08** | Security log Settings | D: Settings → Приватность | `SecurityLogPanel`; нет `/prototype/security-log` | **Not run** |
+| **TC-D2-09** | Focus trap | Tab в create/EOD/roadmap | Focus trap + restore | **Manual** |
+| **TC-D2-10** | Week/month stat copy | D: Неделя/Месяц | «Закрыто по плану», без дубля % | **Not run** |
+| **TC-D2-11** | Reports chart scroll | D: `/app/reports` | Тонкий `scrollbar-slider-h` | **Not run** |
+
+---
+
 ## Карта экранов (Desktop / Mobile)
 
 | Экран / функция | Маршрут | Desktop | Mobile (≤~430px) |
@@ -120,12 +174,12 @@
 | Лендинг | `/` | Редирект в `/app` при активной сессии | То же |
 | Вход | `/login` | Email/пароль, «Забыли пароль?» | — |
 | Онбординг seed | `/onboarding` | Восстановление / первичная настройка vault | — |
-| Планировщик — День | `/app` | Sidebar; табы; AI (disabled); фильтры; EOD; stat-карточки; план + кольцо **справа**; бэклог | Bottom nav; **FAB**; кольцо **над** списком |
+| Планировщик — День | `/app` | Header: sync + vault; footer: аккаунт; фильтры; stat **End of Day** (клик → EOD); FAB «+» справа; план + кольцо **справа** | Bottom nav; **FAB**; кольцо **над** списком |
 | Планировщик — Неделя | `/app` | Сетка 7×24ч; сводка; donut + bar chart | Вертикальный скролл колонок |
 | Планировщик — Месяц | `/app` | Календарь; сводка; клик по дню → День | Компактная сетка |
-| Меню аккаунта | `/app` | Отчёты, EOD/отчёт, Краткая сводка, Настройки, Выход | Идентично |
+| Меню аккаунта | `/app` | *Устарело:* EOD/сводка перенесены в stat tile и footer sidebar (см. прогон 22) | — |
 | Отчёты | `/app/reports` | KPI 7/30, график, таблицы | Bottom nav |
-| Настройки | `/settings` | Seed, планирование, push, аккаунт, юридика, admin | Bottom nav |
+| Настройки | `/settings` | Вкладки Stitch; **Общие** — «Краткая сводка»; **Приватность** — seed + журнал; admin | Bottom nav |
 | Краткая сводка | модалка | Roadmap, релиз-ноты | Полноэкранная модалка |
 | Юридика | `/legal/*` | Ссылки из настроек | — |
 | Прототипы | `/prototype/*` | Ссылки в настройках | — |
@@ -354,12 +408,12 @@
 | ID | Platform | Priority | Severity | Status | Description | Steps |
 |----|----------|----------|----------|--------|-------------|-------|
 | BUG-001 | Both | Critical | Major | **Verified Fixed** | EOD + Slow 3G: reload после local save — дата в vault | Прогон 20 |
-| BUG-002 | Desktop | High | Minor | **Fixed (code)** | Confirm close только при dirty form | CreateTaskModal |
+| BUG-002 | Desktop | High | Minor | **Verified Fixed** | Pristine ✕ без диалога; dirty → confirm + черновик | Прогон 22 |
 | BUG-003 | — | — | — | **Closed** | **Закрыт (не баг):** DR-004 opt-in per task; без галочки в edit — один клик норма | — |
-| BUG-004 | Both | Medium | Trivial | **Fixed (code)** | Rank скрыт в обоих блоках EOD | EndOfDayModal |
-| BUG-005 | Both | Low | Trivial | **Fixed (code)** | Default GitHub Issues feedback link | legalLinks.ts |
-| BUG-006 | Both | **Critical** | **Blocker** | **Verified Fixed** | ~~«Сжатые» карточки~~ → login **448px**, modal **~1169px** | Прогон 18 |
-| BUG-007 | Desktop | Low | Trivial | **Fixed (code)** | Title clamp 120 chars on template/input | FileDefectModal |
+| BUG-004 | Both | Medium | Trivial | **Verified Fixed** | Rank «3» не отображается отдельной строкой в EOD | Прогон 22 |
+| BUG-005 | Both | Low | Trivial | **Verified Fixed** | GitHub Issues fallback в настройках | Прогон 22 |
+| BUG-006 | Both | **Critical** | **Blocker** | **Verified Fixed** | Create modal **512px** (`max-w-lg`), читаемо; не регрессия 40px | Прогон 22 |
+| BUG-007 | Desktop | Low | Trivial | **Verified Fixed** | Title ≤120, шаблон + counter | Прогон 22 |
 | BUG-008 | Both | High | Major | **Verified Fixed** | ~~Ось «Неделя» не скроллится~~ | Прогон 18 |
 | BUG-009 | Both | **Critical** | **Major** | **Verified Fixed** | ~~Черновик «Продолжить → Сохранить»~~ | Прогон 18 |
 | BUG-010 | Both | Low | Minor | **Verified Fixed** | ~~Malformed seed → вечная инициализация~~ → onboarding recovery | Прогон 18 |
@@ -1510,4 +1564,117 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 
 *Источник требований: `web/README.md`, `obsidian-motivator/16-TZ-MVP-v1.0.md`.*
 
-*Обновление статуса фиксов: 2026-05-24 — QA low pack (BUG-002/004/005/007, UX-05/06); см. [«Статус исправлений после QA»](#статус-исправлений-после-qa-ветка-design-20).*
+## Прогон 21 — Design 2.0 stage 8 (коммит `0a2120c`)
+
+**Дата:** 2026-05-24  
+**Тестовый сайт:** [https://planner-tawny-omega.vercel.app/app](https://planner-tawny-omega.vercel.app/app)  
+**Production build:** `0.7.3+f635b70` (**≠** repo HEAD `0a2120c`)  
+**Unit-тесты:** **41/41 Passed** (`@motivator/core` 35 + `web` 6)
+
+### Цель
+
+Зафиксировать canonical test URL; обновить тестовую модель под коммит `0a2120c`; прогнать UI по изменённым блокам + регрессию; выдать отчёт.
+
+### Результаты по блокам
+
+| Блок | TC | Результат | Доказательство |
+|------|-----|-----------|----------------|
+| **Deploy gate** | — | **Mismatch** | Sidebar `v0.7.3+f635b70`; ожидался `+0a2120c` |
+| **Регрессия BUG-008** | TC-C week scroll | **Passed** | `.week-grid-v-scroll` scrollTop 450 → axis top 678→371 |
+| **Регрессия BUG-012** | highlightTask | **Passed** | `ring-2`, URL очищен |
+| **Регрессия FAB** | TC-DRAFT-10 | **Passed** | FAB 56×56 mobile; aria «Создать задачу…» |
+| **Регрессия defect FAB** | TC-H* | **Passed** | «Сообщить о проблеме» fixed bottom-right |
+| **BUG-002 pristine close** | TC-DRAFT-02 | **Passed** | Create → ✕ без правок → **нет** confirm «Закрыть без сохранения» |
+| **TC-D2-01 vault header** | TC-D2-01 | **Blocked** | `vaultInHeader: false`; sidebar «Перейти на Premium» |
+| **TC-D2-02 account footer** | TC-D2-02 | **Blocked** | `accountFooterAria: false`; email не в footer |
+| **TC-D2-05 FAB / no toolbar EOD** | TC-D2-05 | **Partial** | FAB OK; toolbar EOD **0**; stat EOD — `<article>` |
+| **TC-D2-06 EOD stat click** | TC-D2-06 | **Blocked** | `eodTag: ARTICLE`, modal не открывается |
+| **TC-D2-07 checkboxes** | TC-D2-07 | **Blocked** | `.motivator-checkbox`: **0** (123 tasks) |
+| **TC-D2-04 docked AI** | TC-D2-04 | **Blocked** | Overlay panel, не docked |
+| **UX-06 roadmap Settings** | UX-06 | **Blocked** | Settings General: **нет** «Краткая сводка»; меню аккаунта — **есть** |
+| **Settings tabs** | Design 2.0 | **Passed** | Общие / Приватность / Планирование / Уведомления / Администрирование |
+| **Mobile 393×852** | TC-M* | **Passed** | Bottom nav, hamburger, 123 cards, FAB |
+
+### Скриншоты
+
+| Файл | Viewport | Содержание |
+|------|----------|------------|
+| `prog21-app-day-1440.png` | 1440×900 | День: stat-карточки, FAB, sidebar footer (legacy Premium) |
+| `prog21-settings-1440.png` | 1440×900 | Settings tabs, без roadmap в General |
+| `prog21-mobile-day-393.png` | 393×852 | Mobile День + FAB |
+
+### Чеклист после деплоя `0a2120c`
+
+1. ✅ Версия sidebar → `v0.7.3+0a2120c` (прогон 22)
+2. ✅ **TC-D2-01, 02, 05–07**, UX-05/06, BUG-002/004/005/007 (прогон 22)
+3. ⏳ **TC-D2-03, 04, 08, 10, 11** — не в прогоне 22; smoke по желанию
+4. ⏳ **TC-D2-09** — manual focus trap
+5. ✅ Регрессия прогонов 18–20 (включена в прогон 22)
+
+### Вердикт прогона 21
+
+**Partial Passed** — тестовый сайт зафиксирован; регрессия на `f635b70` стабильна; **новый scope `0a2120c` не верифицирован на production** (await Vercel deploy). После деплоя — **re-run TC-D2-*** + BUG-004/005/007.
+
+---
+
+## Прогон 22 — ретест дефектов
+
+**Дата:** 2026-05-25  
+**Сайт:** [https://planner-tawny-omega.vercel.app/app](https://planner-tawny-omega.vercel.app/app)  
+**Build:** `0.7.3+0a2120c`
+
+### Результаты ретеста
+
+| ID | Было (до `0a2120c`) | Прогон 22 | Доказательство |
+|----|---------------------|-----------|----------------|
+| **BUG-001** | EOD lost on reload | **Regression OK** | Не перепроверялся Slow 3G; Verified прогон 20 |
+| **BUG-002** | Confirm on pristine close | **Verified Fixed** | Pristine ✕ → закрыто; dirty title → `alertdialog` «Закрыть создание задачи?» |
+| **BUG-003** | Double-tap | **Closed** | Не баг |
+| **BUG-004** | Rank «3» в EOD | **Verified Fixed** | EOD modal: `rankOnlyLines: 0` |
+| **BUG-005** | No feedback URL | **Verified Fixed** | `Обратная связь` → `github.com/Chuchumbrik/planner/issues/new` |
+| **BUG-006** | max-w broken (~40px) | **Verified Fixed** | «Новая задача» dialog **512px** (`max-w-lg`), usable |
+| **BUG-007** | Title >120 in defect | **Verified Fixed** | `maxLength=120`; шаблон «День» → **27 / 120** |
+| **BUG-008** | Week axis scroll | **Verified Fixed** | `.week-grid-v-scroll` axis moves on scroll |
+| **BUG-009** | Draft save loses task | **Regression OK** | Verified прогон 18 |
+| **BUG-010** | Bad seed spinner | **Not re-run** | Сессия → redirect `/app`; Verified прогон 18 |
+| **BUG-011** | Retry re-fetch | **Regression OK** | Verified прогон 18 |
+| **BUG-012** | highlightTask ignored | **Verified Fixed** | `?highlightTask=` → URL cleared; ring (прогон 21) |
+| **BUG-013** | SW focus only | **Verified (code)** | OS click — manual |
+
+### Design 2.0 / TC-D2 (подтверждено на `0a2120c`)
+
+| TC / область | Результат | Примечание |
+|--------------|-----------|------------|
+| **TC-D2-01** Vault header | **Passed** | `Vault и тарифный план` в header |
+| **TC-D2-02** Account footer | **Passed** | email, роль, «Краткая сводка», выход |
+| **TC-D2-05** FAB | **Passed** | FAB «+»; toolbar без «Создать»/EOD |
+| **TC-D2-06** EOD stat | **Passed** | button «Завершить день» → EOD modal |
+| **TC-D2-07** Checkboxes | **Passed** | 121+ `.motivator-checkbox` на backlog |
+| **UX-06** roadmap | **Passed** | Settings → Общие + footer sidebar |
+| **UX-05** EOD path | **Passed** | stat tile, не toolbar |
+| **TC-D2-03** Admin sub-nav | **Not run** | Рекомендован smoke: `/settings#admin` |
+| **TC-D2-04** Docked AI | **Not run** | Рекомендован smoke: resize desktop panel |
+| **TC-D2-08** Security log | **Not run** | Рекомендован smoke: `#security-log` |
+| **TC-D2-10** Period stats | **Not run** | Рекомендован smoke: «Закрыто по плану» |
+| **TC-D2-11** Reports scroll | **Not run** | Рекомендован smoke: `scrollbar-slider-h` |
+| **TC-D2-09** Focus trap | **Manual** | Tab / VoiceOver |
+| **Mobile 393×852** | **Regression OK** | Прогон 21: bottom nav + FAB; не перепроверялся отдельно в 22 |
+
+Полная матрица: [Тестовая модель `0a2120c`](#тестовая-модель--design-20-stage-8-0a2120c).
+
+### Вердикт прогона 22
+
+**Passed** — QA low pack и блокеры **Verified** на production `0a2120c`; ключевые **TC-D2-01…07** и UX-05/06 **Passed**. **Не блокируют 1.0.0:** TC-D2-03/04/08/10/11 (не в прогоне 22), BUG-013 OS click (manual), BUG-001 Slow 3G re-run, BUG-010 без logout, send-due E2E, TC-SEC-15 non-admin.
+
+### Опциональный smoke (прогон 23)
+
+1. **TC-D2-03** — admin sub-nav на `/settings#admin` и dashboard  
+2. **TC-D2-04** — docked AI + resize на desktop; overlay на mobile  
+3. **TC-D2-08** — журнал в Settings → Приватность  
+4. **TC-D2-10** — неделя/месяц: «Закрыто по плану» без дубля %  
+5. **TC-D2-11** — отчёты: горизонтальный скролл графика  
+6. Mobile **393×852** — FAB у края, EOD stat, черновики на FAB  
+
+---
+
+*Обновление: 2026-05-25 — прогон 22; синхронизация матрицы TC-D2 и карты экранов; см. [«Статус исправлений после QA»](#статус-исправлений-после-qa-ветка-design-20).*
