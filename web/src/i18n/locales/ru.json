@@ -491,7 +491,7 @@
     "adminRolesEmpty": "Нет пользователей по текущему фильтру.",
     "adminRolesYou": "Это вы",
     "adminRolesSelfHint": "Если снимете с себя роль admin, этот блок исчезнет после сохранения — дальнейшие роли снова через Dashboard или SQL.",
-    "adminRolesConfirmSelfDemote": "Снять с себя роль администратора? Раздел «Доступы» пропадёт до восстановления прав через Dashboard.",
+    "adminRolesConfirmSelfDemote": "Снять с себя роль администратора? Админ-обзор пропадёт до восстановления прав через Dashboard.",
     "adminRolesConfirmSelfDemoteAgain": "Подтвердите ещё раз: вы теряете доступ администратора в этом приложении.",
     "adminRolesConfirmChange": "Назначить пользователю {{email}} роль «{{role}}»?",
     "adminRolesOptionUser": "Обычный пользователь",
@@ -641,6 +641,35 @@
   "admin": {
     "accessTitle": "Доступы",
     "accessIntro": "Назначение ролей motivator_role для учётных записей. Отдельные права на возможности (режим custom) — в планах после MVP, см. «Краткая сводка» → идеи.",
+    "dashboard": {
+      "title": "Обзор",
+      "authMetricsHint": "«Последний вход» — дата входа в Supabase Auth, не каждый визит в приложение. Синхронизация vault и график активности — в следующих обновлениях админки.",
+      "colRegistered": "Регистрация",
+      "colLastSignIn": "Последний вход",
+      "usersFilterAria": "Фильтр списка пользователей",
+      "kpiTotal": "Всего пользователей",
+      "kpiRegistered7d": "Регистрация за 7 дней",
+      "kpiSignedIn7d": "Вход за 7 дней",
+      "kpiRoles": "По ролям",
+      "kpiRolesValue": "admin {{admin}} · beta {{beta}} · user {{user}}",
+      "filter": {
+        "all": "Все",
+        "inactive7": "Не заходил 7д",
+        "inactive30": "Не заходил 30д",
+        "role_admin": "Admin",
+        "role_beta": "Бета",
+        "role_user": "User"
+      },
+      "tabs": {
+        "navAria": "Вкладки обзора админки",
+        "summary": "Сводка",
+        "summaryTitle": "Сводка",
+        "summaryIntro": "Ключевые показатели по учётным записям Supabase Auth. Подробный список и роли — на вкладке «Пользователи».",
+        "users": "Пользователи",
+        "usersTitle": "Пользователи",
+        "usersIntro": "Список учётных записей, даты регистрации и последнего входа, назначение ролей motivator_role."
+      }
+    },
     "roadmapIntro": "Дорожная карта MVP, релиз-ноты по датам, идеи после релиза и открытые вопросы. Источник данных — src/data/productRoadmap.ts; правила сопровождения — web/README.md.",
     "testingTitle": "Тестирование",
     "testingWarning": "Не попадает в vault и не синхронизируется между устройствами. Сбросьте подмену перед обычной работой.",

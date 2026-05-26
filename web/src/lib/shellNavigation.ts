@@ -48,14 +48,14 @@ export const SHELL_PREVIEW_NAV: ShellNavItem[] = [
   },
   {
     id: 'prototype-admin',
-    to: '/prototype/admin-dashboard',
+    to: '/admin/dashboard',
     icon: 'dashboard',
     labelKey: 'prototype.nav.admin',
   },
 ]
 
 export type ShellAdminNavItem = {
-  id: 'admin-dashboard' | 'admin-users' | 'admin-roadmap' | 'admin-testing'
+  id: 'admin-dashboard' | 'admin-roadmap' | 'admin-testing'
   to: string
   icon: string
   labelKey: string
@@ -86,15 +86,9 @@ export function shellPreviewNavForUser(isAdmin: boolean): ShellNavItem[] {
 export const SHELL_ADMIN_NAV: ShellAdminNavItem[] = [
   {
     id: 'admin-dashboard',
-    to: '/prototype/admin-dashboard',
+    to: '/admin/dashboard',
     icon: 'dashboard',
     labelKey: 'shell.adminNavDashboard',
-  },
-  {
-    id: 'admin-users',
-    to: '/admin/access',
-    icon: 'group',
-    labelKey: 'shell.adminNavAccess',
   },
   {
     id: 'admin-roadmap',

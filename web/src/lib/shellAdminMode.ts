@@ -14,9 +14,5 @@ export function isShellAdminMode(
     return true
   }
   if (!isAdmin) return false
-  return (
-    pathname === '/prototype/admin-dashboard' ||
-    pathname === '/admin/access' ||
-    pathname === '/admin/roadmap'
-  )
+  return pathname === '/admin/dashboard' || pathname === '/admin/roadmap'
 }

@@ -303,8 +303,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'DR-004: create/edit task; second checkbox tap within the window; expiry without response clears pending without recording completion.',
       },
       {
-        ru: 'Роли **`user` / `beta_tester` / `admin`**: для **admin** — раздел **«Доступы»** в админ-панели (`/admin/access`, Edge **`admin-motivator-roles`**); **`SessionSyncInformer`**, если роль в JWT изменилась на сервере. Режим **custom** (права помимо ролей) — в идеях после MVP.',
-        en: '**`user` / `beta_tester` / `admin`**: **Access** in the admin panel (`/admin/access`, Edge **`admin-motivator-roles`**); **`SessionSyncInformer`** when the JWT role changed server-side. **Custom** per-feature access — post-MVP ideas.',
+        ru: 'Роли **`user` / `beta_tester` / `admin`**: для **admin** — **«Обзор»** (`/admin/dashboard`, вкладка пользователей, Edge **`admin-motivator-roles`**); **`SessionSyncInformer`**, если роль в JWT изменилась на сервере. Режим **custom** (права помимо ролей) — в идеях после MVP.',
+        en: '**`user` / `beta_tester` / `admin`**: **Overview** (`/admin/dashboard`, Users tab, Edge **`admin-motivator-roles`**); **`SessionSyncInformer`** when the JWT role changed server-side. **Custom** per-feature access — post-MVP ideas.',
       },
       {
         ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; круговая диаграмма доли закрытых задач по плану; продуктовые **«Открытые вопросы»** ведутся в модалке **«Краткая сводка»** (открытие с **`/app`**, меню аккаунта), строки — в i18n.',
@@ -346,6 +346,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: '**Shell / FAB:** footer аккаунта — **меню** с выходом (не мгновенный sign-out по клику); mobile **FAB «+»** — правый нижний угол, бейдж черновиков **в углу** кнопки; FAB дефекта на `/app` сдвинут левее, чтобы не перекрывать «+».',
             en: '**Shell / FAB:** account footer — **menu** with sign out (no instant logout on block click); mobile **“+” FAB** — bottom-right corner, draft badge **on the button corner**; defect FAB on `/app` offset left of “+”.',
           },
+          {
+            ru: '**Админ → Обзор** (`/admin/dashboard`): вкладки **«Сводка»** (KPI по Auth) и **«Пользователи»** (роли, даты регистрации и входа, фильтры неактивных); редиректы с `/admin/access` и `/prototype/admin-dashboard`.',
+            en: '**Admin → Overview** (`/admin/dashboard`): **Summary** (Auth KPIs) and **Users** tabs (roles, registration/last sign-in, inactive filters); redirects from `/admin/access` and `/prototype/admin-dashboard`.',
+          },
         ],
         plainBullets: [
           {
@@ -355,6 +359,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           {
             ru: 'Пока подмена включена, сверху страниц — жёлтый баннер с выбранным «сейчас».',
             en: 'While override is on, a banner at the top shows the simulated “now”.',
+          },
+          {
+            ru: 'Администратор видит в обзоре, сколько пользователей зарегистрировалось и заходило за неделю, и может отфильтровать тех, кто давно не входил.',
+            en: 'Admins see weekly sign-up and sign-in counts in Overview and can filter users who have been inactive.',
           },
         ],
       },

@@ -18,10 +18,7 @@ export function ShellAdminNav({ onNavigate, isAdmin, collapsed = false }: Props)
 
   function isItemActive(item: (typeof items)[number]): boolean {
     if (item.id === 'admin-dashboard') {
-      return location.pathname === '/prototype/admin-dashboard'
-    }
-    if (item.id === 'admin-users') {
-      return location.pathname === '/admin/access'
+      return location.pathname === '/admin/dashboard'
     }
     if (item.id === 'admin-roadmap') {
       return location.pathname === '/admin/roadmap'

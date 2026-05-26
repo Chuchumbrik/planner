@@ -490,7 +490,7 @@
     "adminRolesEmpty": "No users match the current filter.",
     "adminRolesYou": "This is you",
     "adminRolesSelfHint": "If you remove your own admin role, this block disappears after the change — assign roles again via Dashboard or SQL.",
-    "adminRolesConfirmSelfDemote": "Remove your own administrator role? The Access section will disappear until rights are restored in the Dashboard.",
+    "adminRolesConfirmSelfDemote": "Remove your own administrator role? Admin overview will disappear until rights are restored in the Dashboard.",
     "adminRolesConfirmSelfDemoteAgain": "Confirm again: you will lose administrator access in this app.",
     "adminRolesConfirmChange": "Assign role “{{role}}” to {{email}}?",
     "adminRolesOptionUser": "Regular user",
@@ -640,6 +640,35 @@
   "admin": {
     "accessTitle": "Access",
     "accessIntro": "Assign motivator_role for accounts. Per-feature **custom** access (beyond fixed roles) is planned post-MVP — see Brief summary → Ideas.",
+    "dashboard": {
+      "title": "Overview",
+      "authMetricsHint": "“Last sign-in” is Supabase Auth login time, not every app visit. Vault sync and activity charts are planned in later admin updates.",
+      "colRegistered": "Registered",
+      "colLastSignIn": "Last sign-in",
+      "usersFilterAria": "User list filter",
+      "kpiTotal": "Total users",
+      "kpiRegistered7d": "Registered in 7 days",
+      "kpiSignedIn7d": "Signed in within 7 days",
+      "kpiRoles": "By role",
+      "kpiRolesValue": "admin {{admin}} · beta {{beta}} · user {{user}}",
+      "filter": {
+        "all": "All",
+        "inactive7": "Inactive 7d",
+        "inactive30": "Inactive 30d",
+        "role_admin": "Admin",
+        "role_beta": "Beta",
+        "role_user": "User"
+      },
+      "tabs": {
+        "navAria": "Admin overview tabs",
+        "summary": "Summary",
+        "summaryTitle": "Summary",
+        "summaryIntro": "Key metrics from Supabase Auth accounts. Full list and roles — Users tab.",
+        "users": "Users",
+        "usersTitle": "Users",
+        "usersIntro": "Account list with registration and last sign-in dates; assign motivator_role."
+      }
+    },
     "roadmapIntro": "MVP roadmap, dated release notes, post-release ideas, and open questions. Data source: src/data/productRoadmap.ts; maintenance rules: web/README.md.",
     "testingTitle": "Testing",
     "testingIntro": "Override “now” to exercise the planner and reports: the app treats the chosen date and time as calendar “today”, not the device clock. Stored in this browser only.",
