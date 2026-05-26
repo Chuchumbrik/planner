@@ -3,12 +3,15 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/auth/AuthProvider'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
-import { SHELL_VERSION_FOOTER } from '@/lib/designClasses'
 import { motivatorAppRole } from '@/lib/motivatorRole'
 import { useVault } from '@/vault/VaultProvider'
-import { APP_VERSION } from '@/version'
 
-export function ShellAccountFooter() {
+type ShellAccountFooterProps = {
+  /** Desktop sidebar icon-only mode. */
+  collapsed?: boolean
+}
+
+export function ShellAccountFooter({ collapsed = false }: ShellAccountFooterProps) {
   const { t } = useTranslation()
   const { signOut, session } = useAuth()
   const { lock } = useVault()
@@ -52,23 +55,32 @@ export function ShellAccountFooter() {
     await signOut()
   }
 
+  const accountSummaryTitle = accountEmail
+    ? `${accountEmail} · ${t('app.accountMenuRoleLine', { role: accountRoleLabel })}`
+    : t('app.accountMenuAria')
+
   return (
     <div
-      className="border-t border-surface-variant/80 px-md pb-md pt-md"
+      className={cn(
+        'border-t border-surface-variant/80 pb-md pt-md',
+        collapsed ? 'px-2' : 'px-md',
+      )}
       aria-label={t('shell.accountFooterAria')}
     >
       <div ref={menuRef} className="relative">
         <button
           type="button"
           className={cn(
-            'flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left',
-            'transition-colors hover:bg-surface-container-high',
+            'flex w-full items-center rounded-lg py-2 text-left transition-colors',
+            'hover:bg-surface-container-high',
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
             menuOpen && 'bg-surface-container-high',
+            collapsed ? 'justify-center px-0' : 'gap-3 px-2',
           )}
           aria-label={t('shell.accountFooterOpenMenuAria')}
           aria-expanded={menuOpen}
           aria-haspopup="menu"
+          title={collapsed ? accountSummaryTitle : undefined}
           onClick={() => setMenuOpen((open) => !open)}
         >
           <div
@@ -77,27 +89,34 @@ export function ShellAccountFooter() {
           >
             <MaterialIcon name="account_circle" size={24} />
           </div>
-          <div className="min-w-0 flex-1">
-            {accountEmail ? (
-              <p className="truncate text-label-md text-on-surface" title={accountEmail}>
-                {accountEmail}
-              </p>
-            ) : (
-              <p className="truncate text-label-md text-on-surface">{t('app.accountMenuAria')}</p>
-            )}
-            <p className="mt-0.5 text-label-sm text-on-surface-variant">
-              {t('app.accountMenuRoleLine', { role: accountRoleLabel })}
-            </p>
-          </div>
-          <MaterialIcon
-            name="expand_more"
-            size={22}
-            className={cn(
-              'shrink-0 text-on-surface-variant transition-transform',
-              menuOpen && 'rotate-180',
-            )}
-            aria-hidden
-          />
+          {!collapsed ? (
+            <>
+              <div className="min-w-0 flex-1">
+                {accountEmail ? (
+                  <p className="truncate text-label-md text-on-surface" title={accountEmail}>
+                    {accountEmail}
+                  </p>
+                ) : (
+                  <p className="truncate text-label-md text-on-surface">{t('app.accountMenuAria')}</p>
+                )}
+                <p
+                  className="mt-0.5 truncate text-label-sm text-on-surface-variant"
+                  title={t('app.accountMenuRoleLine', { role: accountRoleLabel })}
+                >
+                  {accountRoleLabel}
+                </p>
+              </div>
+              <MaterialIcon
+                name="expand_more"
+                size={22}
+                className={cn(
+                  'shrink-0 text-on-surface-variant transition-transform',
+                  menuOpen && 'rotate-180',
+                )}
+                aria-hidden
+              />
+            </>
+          ) : null}
         </button>
 
         {menuOpen ? (
@@ -117,8 +136,6 @@ export function ShellAccountFooter() {
           </div>
         ) : null}
       </div>
-
-      <p className={cn(SHELL_VERSION_FOOTER, 'mt-sm')}>{t('home.badge', { version: APP_VERSION })}</p>
     </div>
   )
 }

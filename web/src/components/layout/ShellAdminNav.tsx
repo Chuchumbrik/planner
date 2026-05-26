@@ -8,9 +8,10 @@ import { shellAdminNavForUser } from '@/lib/shellNavigation'
 type Props = {
   onNavigate?: () => void
   isAdmin: boolean
+  collapsed?: boolean
 }
 
-export function ShellAdminNav({ onNavigate, isAdmin }: Props) {
+export function ShellAdminNav({ onNavigate, isAdmin, collapsed = false }: Props) {
   const { t } = useTranslation()
   const location = useLocation()
   const items = shellAdminNavForUser(isAdmin)
@@ -36,29 +37,39 @@ export function ShellAdminNav({ onNavigate, isAdmin }: Props) {
       <NavLink
         to="/app"
         className={({ isActive }) =>
-          cn(shellSideNavLink(isActive), 'mb-1 text-on-surface-variant hover:text-on-surface')
+          cn(
+            shellSideNavLink(isActive, collapsed),
+            'mb-1 text-on-surface-variant hover:text-on-surface',
+          )
         }
+        title={collapsed ? t('shell.adminBackToApp') : undefined}
+        aria-label={collapsed ? t('shell.adminBackToApp') : undefined}
         onClick={onNavigate}
       >
         <MaterialIcon name="arrow_back" size={22} />
-        <span>{t('shell.adminBackToApp')}</span>
+        <span className={collapsed ? 'sr-only' : undefined}>{t('shell.adminBackToApp')}</span>
       </NavLink>
 
-      <p className="mt-sm px-4 pb-1 text-label-sm uppercase tracking-wide text-on-surface-variant/80">
-        {t('shell.adminNavSection')}
-      </p>
+      {!collapsed ? (
+        <p className="mt-sm px-4 pb-1 text-label-sm uppercase tracking-wide text-on-surface-variant/80">
+          {t('shell.adminNavSection')}
+        </p>
+      ) : null}
 
       {items.map((item) => {
         const active = isItemActive(item)
+        const label = t(item.labelKey)
         return (
           <NavLink
             key={item.id}
             to={item.to!}
-            className={() => shellSideNavLink(active)}
+            className={() => shellSideNavLink(active, collapsed)}
+            title={collapsed ? label : undefined}
+            aria-label={collapsed ? label : undefined}
             onClick={onNavigate}
           >
             <MaterialIcon name={item.icon} size={22} />
-            <span>{t(item.labelKey)}</span>
+            <span className={collapsed ? 'sr-only' : undefined}>{label}</span>
           </NavLink>
         )
       })}

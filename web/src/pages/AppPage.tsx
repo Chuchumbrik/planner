@@ -40,7 +40,12 @@ import {
   PLANNER_NAV_BTN,
   PLANNER_PERIOD_ARROW_BTN,
   PLANNER_TOOLBAR_BTN,
+  PLANNER_PAGE_STACK,
+  PLANNER_SECTION,
   PLANNER_SECTION_HEAD,
+  PLANNER_TOOLBAR_TRACK,
+  PLANNER_VIEW_BODY,
+  PLANNER_VIEW_HEAD,
   SETTINGS_BTN_SECONDARY,
   SETTINGS_LABEL,
   VIEW_TABLIST,
@@ -244,7 +249,7 @@ function PlannerPeriodNav({
   prevAriaLabel,
   nextAriaLabel,
   jumpLabel,
-  className = 'mb-4',
+  className = '',
 }: {
   canEdit: boolean
   dateLabel: string
@@ -312,6 +317,30 @@ function PlannerChartsIcon({ chartsHidden }: { chartsHidden: boolean }) {
     <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
       <path d="M3 14h2.5v4H3v-4zm4.25-6h2.5v10h-2.5V8zm4.25-4h2.5v14h-2.5V4zm4.25 3h2.5v11h-2.5V7z" />
     </svg>
+  )
+}
+
+function PlannerChartsToggleButton({
+  chartsHidden,
+  onToggle,
+  className,
+}: {
+  chartsHidden: boolean
+  onToggle: () => void
+  className?: string
+}) {
+  const { t } = useTranslation()
+  return (
+    <button
+      type="button"
+      className={cn(PLANNER_NAV_BTN, className)}
+      aria-pressed={!chartsHidden}
+      aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+      title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
+      onClick={onToggle}
+    >
+      <PlannerChartsIcon chartsHidden={chartsHidden} />
+    </button>
   )
 }
 
@@ -985,122 +1014,86 @@ function AppPageInner() {
         </div>
       ) : null}
 
-      <div className="mb-4 flex flex-col gap-3 border-b border-surface-variant pb-3 lg:flex-row lg:items-center lg:justify-between">
-      <nav aria-label={t('app.viewNavAria')} className="min-w-0 flex-1 overflow-visible lg:max-w-md">
-        <div className={VIEW_TABLIST} role="tablist">
-          {(['day', 'week', 'month'] as const).map((v) => {
-            const active = view === v
-            const label =
-              v === 'day' ? t('app.viewDay') : v === 'week' ? t('app.viewWeek') : t('app.viewMonth')
-            return (
-              <button
-                key={v}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                className={viewTab(active)}
-                onClick={() => handleTab(v)}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </nav>
-      <button
-        type="button"
-        className={cn(PLANNER_NAV_BTN, 'max-md:hidden self-start')}
-        aria-pressed={!chartsHidden}
-        aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
-        title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
-        onClick={toggleChartsHidden}
-      >
-        <PlannerChartsIcon chartsHidden={chartsHidden} />
-      </button>
-      </div>
-      {decryptFailed ? <VaultDecryptHelp className="mb-4" /> : null}
-
-      {remoteHydrated && remoteError && !decryptFailed ? (
-        <div className={cn(ALERT_WARNING, 'mb-4 flex flex-wrap items-center justify-between gap-3')}>
-          <div className={cn('min-w-0 flex-1 leading-snug', ALERT_WARNING_BODY)}>
-            <p>{humanizeConnectivityError(remoteError, t)}</p>
-            {isLikelyNetworkFetchFailure(remoteError) ? (
-              <p className="mt-1 text-label-sm opacity-90">{t('app.syncErrorRegionalHint')}</p>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            className={cn(SETTINGS_BTN_SECONDARY, 'shrink-0 px-3 py-1.5 text-label-sm')}
-            onClick={() => void retrySync()}
-          >
-            {t('app.syncRetry')}
-          </button>
-        </div>
-      ) : null}
-
-      <div className="mb-6 flex flex-col gap-3">
-        <div className="scrollbar-site flex flex-nowrap items-center gap-1.5 overflow-x-auto py-2 pr-1.5">
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              disabled={!canEdit}
-              aria-expanded={filtersPanelOpen}
-              className={`${PLANNER_TOOLBAR_BTN} inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap pr-4 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5`}
-              onClick={() => setFiltersPanelOpen((v) => !v)}
-            >
-              {t('app.filterToggle')}
-              <span className="text-on-surface-variant" aria-hidden>
-                {filtersPanelOpen ? '▴' : '▾'}
-              </span>
-            </button>
-          </div>
-          <button
-            type="button"
-            className={cn(PLANNER_NAV_BTN, 'md:hidden')}
-            aria-pressed={!chartsHidden}
-            aria-label={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
-            title={chartsHidden ? t('app.chartsShow') : t('app.chartsHide')}
-            onClick={toggleChartsHidden}
-          >
-            <PlannerChartsIcon chartsHidden={chartsHidden} />
-          </button>
-          <div className="ml-auto hidden shrink-0 md:flex md:pl-2">
-            <PlannerCreateFab
-              variant="inline"
-              disabled={!canEdit}
-              ariaLabel={t('app.openCreateTask')}
-              onClick={openCreateTask}
-              draftCount={vault.drafts.length}
-              onDraftsClick={() => setDraftsModalOpen(true)}
-              draftsBadgeLabel={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
-            />
-          </div>
-        </div>
-
-        {filtersPanelOpen ? (
-          <>
-            <div
-              className="fixed inset-0 z-[44] bg-black/65 md:hidden"
-              aria-hidden
-              onClick={() => setFiltersPanelOpen(false)}
-            />
-            <div className="relative z-[45] md:z-auto">
-              <div className={FILTER_PANEL}>
-                <div className="flex shrink-0 items-center justify-between border-b border-surface-variant px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:hidden">
-                  <span className="font-display text-sm font-medium text-on-surface">{t('app.filtersTitle')}</span>
+      <div className={PLANNER_PAGE_STACK}>
+        <div className={PLANNER_VIEW_HEAD}>
+          <nav aria-label={t('app.viewNavAria')} className="min-w-0 overflow-visible lg:max-w-md">
+            <div className={VIEW_TABLIST} role="tablist">
+              {(['day', 'week', 'month'] as const).map((v) => {
+                const active = view === v
+                const label =
+                  v === 'day' ? t('app.viewDay') : v === 'week' ? t('app.viewWeek') : t('app.viewMonth')
+                return (
                   <button
+                    key={v}
                     type="button"
-                    className={PLANNER_TOOLBAR_BTN}
-                    onClick={() => setFiltersPanelOpen(false)}
+                    role="tab"
+                    aria-selected={active}
+                    className={viewTab(active)}
+                    onClick={() => handleTab(v)}
                   >
-                    {t('app.filtersSheetDone')}
+                    {label}
                   </button>
-                </div>
-                <div className="min-h-0 flex-1 overflow-y-auto p-3 md:overflow-visible md:p-0">
-                  <p className="mb-3 hidden font-display text-xs font-medium text-on-surface-variant md:block">
-                    {t('app.filtersTitle')}
-                  </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+                )
+              })}
+            </div>
+          </nav>
+
+          <div className={PLANNER_TOOLBAR_TRACK}>
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                disabled={!canEdit}
+                aria-expanded={filtersPanelOpen}
+                className={`${PLANNER_TOOLBAR_BTN} inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap pr-4 sm:gap-2 sm:px-4 sm:py-2 sm:pr-5`}
+                onClick={() => setFiltersPanelOpen((v) => !v)}
+              >
+                {t('app.filterToggle')}
+                <span className="text-on-surface-variant" aria-hidden>
+                  {filtersPanelOpen ? '▴' : '▾'}
+                </span>
+              </button>
+            </div>
+            <PlannerChartsToggleButton
+              chartsHidden={chartsHidden}
+              onToggle={toggleChartsHidden}
+            />
+            <div className="ml-auto hidden shrink-0 md:flex md:pl-2">
+              <PlannerCreateFab
+                variant="inline"
+                disabled={!canEdit}
+                ariaLabel={t('app.openCreateTask')}
+                onClick={openCreateTask}
+                draftCount={vault.drafts.length}
+                onDraftsClick={() => setDraftsModalOpen(true)}
+                draftsBadgeLabel={`${t('app.draftsTitle')}: ${vault.drafts.length}`}
+              />
+            </div>
+          </div>
+
+          {filtersPanelOpen ? (
+            <>
+              <div
+                className="fixed inset-0 z-[44] bg-black/65 md:hidden"
+                aria-hidden
+                onClick={() => setFiltersPanelOpen(false)}
+              />
+              <div className="relative z-[45] md:z-auto">
+                <div className={FILTER_PANEL}>
+                  <div className="flex shrink-0 items-center justify-between border-b border-surface-variant px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:hidden">
+                    <span className="font-display text-sm font-medium text-on-surface">{t('app.filtersTitle')}</span>
+                    <button
+                      type="button"
+                      className={PLANNER_TOOLBAR_BTN}
+                      onClick={() => setFiltersPanelOpen(false)}
+                    >
+                      {t('app.filtersSheetDone')}
+                    </button>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto p-3 md:overflow-visible md:p-0">
+                    <p className="mb-3 hidden font-display text-xs font-medium text-on-surface-variant md:block">
+                      {t('app.filtersTitle')}
+                    </p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
               <label className={`flex min-w-0 flex-col gap-1.5 ${SETTINGS_LABEL}`}>
                 <span>{t('app.group')}</span>
                 <select
@@ -1250,21 +1243,42 @@ function AppPageInner() {
         ) : null}
 
         {view === 'day' && hiddenPlannedByFilterCount > 0 ? (
-          <p className="mb-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
+          <p className="text-label-sm text-on-surface-variant" role="status" aria-live="polite">
             {t('app.filtersHiddenCount', { count: hiddenPlannedByFilterCount })}
           </p>
         ) : null}
 
         {view === 'week' && hiddenWeekByFilterCount > 0 ? (
-          <p className="mb-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
+          <p className="text-label-sm text-on-surface-variant" role="status" aria-live="polite">
             {t('app.filtersHiddenCount', { count: hiddenWeekByFilterCount })}
           </p>
         ) : null}
 
         {view === 'month' && hiddenMonthByFilterCount > 0 ? (
-          <p className="mb-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
+          <p className="text-label-sm text-on-surface-variant" role="status" aria-live="polite">
             {t('app.filtersHiddenCount', { count: hiddenMonthByFilterCount })}
           </p>
+        ) : null}
+        </div>
+
+        {decryptFailed ? <VaultDecryptHelp /> : null}
+
+        {remoteHydrated && remoteError && !decryptFailed ? (
+          <div className={cn(ALERT_WARNING, 'flex flex-wrap items-center justify-between gap-3')}>
+            <div className={cn('min-w-0 flex-1 leading-snug', ALERT_WARNING_BODY)}>
+              <p>{humanizeConnectivityError(remoteError, t)}</p>
+              {isLikelyNetworkFetchFailure(remoteError) ? (
+                <p className="mt-1 text-label-sm opacity-90">{t('app.syncErrorRegionalHint')}</p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className={cn(SETTINGS_BTN_SECONDARY, 'shrink-0 px-3 py-1.5 text-label-sm')}
+              onClick={() => void retrySync()}
+            >
+              {t('app.syncRetry')}
+            </button>
+          </div>
         ) : null}
 
         {draftsModalOpen && vault.drafts.length > 0 ? (
@@ -1302,7 +1316,6 @@ function AppPageInner() {
             </div>
           </div>
         ) : null}
-      </div>
 
       <CreateTaskModal
         open={createOpen}
@@ -1323,7 +1336,7 @@ function AppPageInner() {
       />
 
       {view === 'day' && (
-        <>
+        <div className={PLANNER_VIEW_BODY}>
           <PlannerPeriodNav
             canEdit={canEdit}
             dateLabel={formatDayHeading(selectedDay, locale)}
@@ -1347,9 +1360,9 @@ function AppPageInner() {
             eodActionLabel={eodStatActionLabel}
           />
 
-          <section className="mb-8">
-            <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-              <h2 className={cn(PLANNER_SECTION_HEAD, 'mb-0')}>{t('app.sectionPlanned')}</h2>
+          <section className={PLANNER_SECTION}>
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <h2 className={PLANNER_SECTION_HEAD}>{t('app.sectionPlanned')}</h2>
               {plannedForDay.length > 0 ? (
                 <span className="text-label-sm text-on-surface-variant">
                   {t('app.dayPlanCount', {
@@ -1359,8 +1372,8 @@ function AppPageInner() {
                 </span>
               ) : null}
             </div>
-            <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-10">
-              <div className="min-w-0 w-full lg:max-w-lg lg:shrink-0">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+              <div className="min-w-0 w-full lg:max-w-lg lg:flex-1">
                 {plannedForDay.length === 0 ? (
                   <p className={EMPTY_STATE_BOX}>{t('app.emptyPlannedDay')}</p>
                 ) : (
@@ -1397,19 +1410,19 @@ function AppPageInner() {
                 )}
               </div>
               {!chartsHidden ? (
-                <div className="flex w-full min-w-0 flex-1 justify-center lg:min-h-[1px] lg:justify-center lg:pt-0.5">
+                <div className="flex w-full min-w-0 shrink-0 justify-center lg:w-auto lg:justify-start">
                   <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
                 </div>
               ) : null}
             </div>
           </section>
 
-          <section>
+          <section className={PLANNER_SECTION}>
             <h2 className={PLANNER_SECTION_HEAD}>{t('app.sectionBacklog')}</h2>
             {backlogTasks.length === 0 ? (
-              <p className={`${EMPTY_STATE_BOX} py-6`}>{t('app.emptyBacklog')}</p>
+              <p className={EMPTY_STATE_BOX}>{t('app.emptyBacklog')}</p>
             ) : (
-              <ul className="flex max-w-lg flex-col gap-3">
+              <ul className="flex w-full max-w-lg flex-col gap-3">
                 {backlogTasks.map((task) => (
                   <li key={task.id} className="list-none">
                     <TaskMiniCard
@@ -1433,14 +1446,13 @@ function AppPageInner() {
               </ul>
             )}
           </section>
-        </>
+        </div>
       )}
 
       {view === 'week' && (
-        <section className="flex min-h-0 flex-1 flex-col space-y-3">
+        <div className={cn(PLANNER_VIEW_BODY, 'min-h-0 flex-1')}>
           <PlannerPeriodNav
             canEdit={canEdit}
-            className=""
             dateLabel={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
             onPrev={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, -1))}
             onNext={() => setWeekStartMonday((w) => shiftWeekStartMonday(w, 1))}
@@ -1455,7 +1467,7 @@ function AppPageInner() {
             periodLabel={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
             overdueCount={weekOverdueCount}
           />
-          <div className="mx-auto flex min-h-0 w-full max-w-desktop flex-1 flex-col-reverse gap-4 xl:flex-row xl:items-stretch xl:justify-between xl:gap-8">
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <WeekGrid
                 weekDays={weekDays}
@@ -1504,14 +1516,13 @@ function AppPageInner() {
               </div>
             ) : null}
           </div>
-        </section>
+        </div>
       )}
 
       {view === 'month' && (
-        <section className="space-y-4">
+        <div className={PLANNER_VIEW_BODY}>
           <PlannerPeriodNav
             canEdit={canEdit}
-            className=""
             dateLabel={monthLabel(monthYear, monthIndex, locale)}
             onPrev={() => {
               const d = new Date(monthYear, monthIndex - 1, 1)
@@ -1538,8 +1549,8 @@ function AppPageInner() {
             periodLabel={monthLabel(monthYear, monthIndex, locale)}
             overdueCount={monthOverdueCount}
           />
-          <div className="mx-auto flex w-full max-w-desktop flex-col-reverse items-stretch gap-6 xl:flex-row xl:items-start xl:justify-between xl:gap-10">
-            <div className="mx-auto w-full min-w-0 flex-1 xl:mx-0 xl:max-w-2xl">
+          <div className="flex w-full flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0 w-full flex-1 xl:max-w-2xl">
               <MonthCalendar
                 matrix={monthMatrix}
                 daySummaries={monthDaySummaries}
@@ -1586,8 +1597,10 @@ function AppPageInner() {
               </div>
             ) : null}
           </div>
-        </section>
+        </div>
       )}
+
+      </div>
 
       <EndOfDayModal
         open={eodModalContext !== null}

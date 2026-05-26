@@ -58,7 +58,7 @@ export function PeriodPlannerStatsRow({
   const ariaKey = mode === 'week' ? 'app.weekStatsAria' : 'app.monthStatsAria'
 
   return (
-    <section className="mb-md space-y-sm" aria-label={t(ariaKey)}>
+    <section className="flex flex-col gap-4" aria-label={t(ariaKey)}>
       {progress.plannedTaskCount > 0 ? (
         <div className="motivator-card p-sm md:p-md">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -85,7 +85,7 @@ export function PeriodPlannerStatsRow({
         </div>
       ) : null}
 
-      <div className="scrollbar-site -mx-margin-mobile flex snap-x snap-mandatory gap-sm overflow-x-auto px-margin-mobile pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
+      <div className="scrollbar-site flex snap-x snap-mandatory gap-sm overflow-x-auto pb-1 md:grid md:grid-cols-3 md:overflow-visible">
         <StatTile
           icon="donut_large"
           label={mode === 'week' ? t('app.weekStatsSlots') : t('app.monthStatsSlots')}
