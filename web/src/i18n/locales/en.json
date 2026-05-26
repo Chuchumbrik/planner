@@ -253,10 +253,7 @@
       "planningIntro": "Priorities, groups, and the End-of-Day ritual.",
       "notifications": "Notifications",
       "notificationsTitle": "Notifications",
-      "notificationsIntro": "Web Push delivery mode and test messages.",
-      "admin": "Administration",
-      "adminTitle": "Users & roles",
-      "adminIntro": "Assign motivator_role values (admin only)."
+      "notificationsIntro": "Web Push delivery mode and test messages."
     },
     "seedHint": "Seed is stored locally. Copy it on onboarding or add export later.",
     "seedBackupTitle": "Seed backup (DR-006)",
@@ -319,9 +316,9 @@
     "appVersion": "App version {{version}}",
     "roadmapTempButton": "Brief summary",
     "roadmapGeneralTitle": "About the product",
-    "roadmapGeneralHelp": "Roadmap, release notes, and open questions — same modal as in the header account menu.",
+    "roadmapGeneralHelp": "Roadmap, release notes, and open questions. Admins open the admin panel page; others get a modal.",
     "roadmapTitle": "Shipped and roadmap",
-    "roadmapIntro": "A ring shows shipped phases 0–6 of 13 toward MVP 1.0.0. Below: five collapsible blocks — shipped, plan to 1.0.0, dated release notes, post-release ideas, open questions (last block strings live in locales). Open this modal from the account menu on the planner page (/app). For the full layout and maintenance rules, see the “Brief summary” section in web/README.md; data lives in src/data/productRoadmap.ts.",
+    "roadmapIntroModal": "A ring shows shipped phases 0–6 of 13 toward MVP 1.0.0. Below: shipped, plan, release notes, ideas, and open questions. Admins also have the full page under Admin panel → Brief summary. Data: src/data/productRoadmap.ts; maintenance: web/README.md.",
     "roadmapImplemented": "Shipped",
     "roadmapImplementedHint": "Phases 0–6 per the MVP plan; open “Details” under each phase for task bullets.",
     "roadmapMvp": "MVP 1.0.0 plan (phases 7–13)",
@@ -481,8 +478,8 @@
         "steps": "1. Signed in on two devices …\n2. …\n3. …"
       }
     },
-    "adminRolesTitle": "Users & roles",
-    "adminRolesHelp": "Admin only: Supabase Auth users and motivator_role (admin / beta tester / regular user). Deploy Edge **admin-motivator-roles** and set Supabase URL, anon, and service_role secrets — see web/README.",
+    "adminRolesTitle": "Access",
+    "adminRolesHelp": "Admin only: Supabase Auth users and motivator_role (admin / beta tester / regular user). Deploy Edge **admin-motivator-roles** and set Supabase URL, anon, and service_role secrets — see web/README. **Custom** per-feature access (beyond fixed roles) is planned post-MVP.",
     "adminRolesSearchPlaceholder": "Search by email or UUID…",
     "adminRolesRefresh": "Refresh list",
     "adminRolesColEmail": "User",
@@ -490,7 +487,7 @@
     "adminRolesEmpty": "No users match the current filter.",
     "adminRolesYou": "This is you",
     "adminRolesSelfHint": "If you remove your own admin role, this block disappears after the change — assign roles again via Dashboard or SQL.",
-    "adminRolesConfirmSelfDemote": "Remove your own administrator role? The Users & roles block will disappear until rights are restored in the Dashboard.",
+    "adminRolesConfirmSelfDemote": "Remove your own administrator role? The Access section will disappear until rights are restored in the Dashboard.",
     "adminRolesConfirmSelfDemoteAgain": "Confirm again: you will lose administrator access in this app.",
     "adminRolesConfirmChange": "Assign role “{{role}}” to {{email}}?",
     "adminRolesOptionUser": "Regular user",
@@ -637,6 +634,11 @@
     "errNeedImport": "Paste the saved base64 seed.",
     "errSave": "Could not save key. Try again."
   },
+  "admin": {
+    "accessTitle": "Access",
+    "accessIntro": "Assign motivator_role for accounts. Per-feature **custom** access (beyond fixed roles) is planned post-MVP — see Brief summary → Ideas.",
+    "roadmapIntro": "MVP roadmap, dated release notes, post-release ideas, and open questions. Data source: src/data/productRoadmap.ts; maintenance rules: web/README.md."
+  },
   "shell": {
     "loading": "Loading…",
     "initCrypto": "Initializing crypto…",
@@ -655,7 +657,8 @@
     "adminNavSection": "Admin panel",
     "adminNavAria": "Admin panel navigation",
     "adminNavDashboard": "Overview",
-    "adminNavUsers": "Users & roles",
+    "adminNavAccess": "Access",
+    "adminNavRoadmap": "Brief summary",
     "navPreviews": "Design previews",
     "menuOpen": "Open menu",
     "menuClose": "Close menu",
@@ -663,6 +666,7 @@
     "bottomNavAria": "App navigation",
     "vaultPlanIconAria": "Vault and plan",
     "accountFooterAria": "Account",
+    "accountFooterSignOutAria": "Account — click to sign out",
     "vaultLocked": "Vault secured",
     "clientEncrypted": "Client-side data",
     "planFree": "Free",

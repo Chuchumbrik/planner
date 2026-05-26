@@ -10,6 +10,8 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 function defectFabEligiblePath(pathname: string): boolean {
   if (pathname.startsWith('/app')) return true
   if (pathname === '/settings') return true
+  if (pathname === '/admin/access') return true
+  if (pathname === '/admin/roadmap') return true
   return false
 }
 

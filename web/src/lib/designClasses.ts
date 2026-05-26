@@ -42,8 +42,11 @@ export function chipActive(active: boolean): string {
   return cn('motivator-chip', active && 'motivator-chip-active')
 }
 
-/** Fixed anchor for create FAB + optional draft badge (mobile + desktop). */
-export const FAB_SHELL = cn('motivator-fab-shell')
+/** Fixed viewport anchor for create FAB (mobile). */
+export const FAB_SHELL_FIXED = cn('motivator-fab-shell motivator-fab-shell--fixed')
+
+/** Inline in planner toolbar (desktop), aligned with filters. */
+export const FAB_SHELL_INLINE = cn('motivator-fab-shell-inline shrink-0')
 
 export const FAB = cn(
   'motivator-fab',
@@ -99,6 +102,13 @@ export function weekdayToggle(active: boolean): string {
 export const PLANNER_NAV_BTN = cn(
   'inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-surface-variant p-2 text-on-surface',
   'transition-colors hover:bg-surface-container active:scale-95 disabled:opacity-40',
+)
+
+/** Стрелки «пред./след.» в `PlannerPeriodNav` — на desktop как кнопка «Сегодня», на mobile — 44px. */
+export const PLANNER_PERIOD_ARROW_BTN = cn(
+  'inline-flex shrink-0 items-center justify-center rounded-lg border border-surface-variant p-1.5 text-on-surface',
+  'transition-colors hover:bg-surface-container active:scale-95 disabled:opacity-40',
+  'max-md:min-h-11 max-md:min-w-11 max-md:p-2',
 )
 
 export const MOTIVATOR_INPUT = cn(
@@ -262,11 +272,8 @@ export const ROADMAP_DETAILS_SUMMARY = cn(
 /** Overlay on «Создать задачу» (desktop / week-month toolbar). */
 export const DRAFT_COUNT_BADGE = cn(DRAFT_COUNT_BADGE_BASE, 'absolute -right-2 -top-2')
 
-/** Overlay on mobile create FAB — ring-offset от primary-круга. */
-export const DRAFT_COUNT_BADGE_ON_FAB = cn(
-  DRAFT_COUNT_BADGE_BASE,
-  'absolute -right-1.5 -top-1.5 ring-2 ring-primary',
-)
+/** Черновики над кнопкой «+» (стек, не уголок). */
+export const DRAFT_COUNT_BADGE_STACKED = cn(DRAFT_COUNT_BADGE_BASE)
 
 export const DC_PENDING_SHELL = cn(
   'animate-dc-pending border-primary/40 bg-surface-container ring-1 ring-primary/25',
@@ -334,7 +341,7 @@ export const SHELL_BOTTOM_NAV = cn(
 
 export const SHELL_SIDEBAR = cn(
   'fixed left-0 top-0 z-50 hidden h-dvh w-64 flex-col border-r border-surface-variant',
-  'bg-surface py-lg md:flex',
+  'bg-surface pt-md pb-lg md:flex',
 )
 
 export const SHELL_PLAN_BADGE = cn(

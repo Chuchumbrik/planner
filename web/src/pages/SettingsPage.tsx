@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
 import { SecurityLogPanel } from '@/components/settings/SecurityLogPanel'
 import { SettingsTabLayout } from '@/components/settings/SettingsTabLayout'
 import { useSettingsTab } from '@/components/settings/useSettingsTab'
-import { AdminMotivatorRolePanel } from '@/components/AdminMotivatorRolePanel'
 import { ProductRoadmapModal } from '@/components/ProductRoadmapModal'
 import { RequireVault } from '@/components/RequireVault'
 import { SeedExportPanel } from '@/components/SeedExportPanel'
 import { SettingsLegalSection } from '@/components/SettingsLegalSection'
 import { VaultDecryptHelp } from '@/components/VaultDecryptHelp'
-import { supabase } from '@/lib/supabase'
 import { APP_VERSION } from '@/version'
 import { DEFAULT_GROUP_ID, PRIORITY_RANKS, type PriorityRank, type NotificationDeliveryMode } from '@motivator/core'
 import { getVapidPublicKey } from '@/lib/notifications/pushSubscription'
@@ -127,9 +126,9 @@ const EOD_DEFAULT_PUSH_REMINDER_MINUTES = 20 * 60 + 30
 
 function SettingsPageInner() {
   const { t, i18n } = useTranslation()
-  const { signOut, session, updatePassword, isAdmin } = useAuth()
+  const navigate = useNavigate()
+  const { session, updatePassword, isAdmin } = useAuth()
   const {
-    lock,
     vault,
     remoteHydrated,
     decryptFailed,
@@ -186,8 +185,13 @@ function SettingsPageInner() {
   const hasEmailLogin = Boolean(session?.user?.email)
   const canEdit = remoteHydrated && !decryptFailed
   const notifModeDirty = notifModeDraft !== deliveryMode
-  const showAdminTab = Boolean(supabase && isAdmin)
-  const [activeTab, setActiveTab] = useSettingsTab(showAdminTab)
+  const [activeTab, setActiveTab] = useSettingsTab()
+
+  useEffect(() => {
+    if (window.location.hash.replace(/^#/, '') === 'admin') {
+      navigate('/admin/access', { replace: true })
+    }
+  }, [navigate])
 
   useEffect(() => {
     if (activeTab !== 'privacy') return
@@ -197,12 +201,6 @@ function SettingsPageInner() {
       document.getElementById(raw)?.scrollIntoView({ block: 'start' })
     })
   }, [activeTab])
-
-  async function handleSignOut() {
-    if (!window.confirm(t('settings.signOutConfirm'))) return
-    await lock()
-    await signOut()
-  }
 
   async function handlePasswordSubmit(e: FormEvent) {
     e.preventDefault()
@@ -250,11 +248,7 @@ function SettingsPageInner() {
         </p>
       ) : null}
 
-      <SettingsTabLayout
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        showAdminTab={showAdminTab}
-      >
+      <SettingsTabLayout activeTab={activeTab} onTabChange={setActiveTab}>
         {activeTab === 'general' ? (
           <div className="space-y-md">
             <div>
@@ -335,13 +329,19 @@ function SettingsPageInner() {
               <h3 className={SETTINGS_SUBHEAD}>{t('settings.roadmapGeneralTitle')}</h3>
               <p className="mt-2 text-body-sm text-on-surface-variant">{t('settings.roadmapGeneralHelp')}</p>
               <div className={`mt-3 ${SETTINGS_CARD}`}>
-                <button
-                  type="button"
-                  className={SETTINGS_BTN_SECONDARY}
-                  onClick={() => setRoadmapModalOpen(true)}
-                >
-                  {t('settings.roadmapTempButton')}
-                </button>
+                {isAdmin ? (
+                  <Link to="/admin/roadmap" className={`inline-flex ${SETTINGS_BTN_SECONDARY}`}>
+                    {t('settings.roadmapTempButton')}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className={SETTINGS_BTN_SECONDARY}
+                    onClick={() => setRoadmapModalOpen(true)}
+                  >
+                    {t('settings.roadmapTempButton')}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -600,24 +600,15 @@ function SettingsPageInner() {
           </div>
         ) : null}
 
-        {activeTab === 'admin' && showAdminTab && supabase ? (
-          <AdminMotivatorRolePanel supabase={supabase} currentUserId={session?.user?.id} />
-        ) : null}
       </SettingsTabLayout>
 
-      <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />
+      {!isAdmin ? (
+        <ProductRoadmapModal open={roadmapModalOpen} onClose={() => setRoadmapModalOpen(false)} />
+      ) : null}
 
       <p className="mt-10 text-center text-mono-data text-label-sm text-on-surface-variant">
         {t('settings.appVersion', { version: APP_VERSION })}
       </p>
-
-      <button
-        type="button"
-        className="btn-secondary mt-4 w-full py-2.5 text-sm"
-        onClick={() => void handleSignOut()}
-      >
-        {t('settings.signOut')}
-      </button>
     </MotivatorShell>
   )
 }

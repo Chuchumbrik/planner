@@ -46,26 +46,17 @@ const TABS: TabDef[] = [
     titleKey: 'settings.tabs.notificationsTitle',
     introKey: 'settings.tabs.notificationsIntro',
   },
-  {
-    id: 'admin',
-    icon: 'admin_panel_settings',
-    labelKey: 'settings.tabs.admin',
-    titleKey: 'settings.tabs.adminTitle',
-    introKey: 'settings.tabs.adminIntro',
-  },
 ]
 
 type Props = {
   activeTab: SettingsTabId
   onTabChange: (tab: SettingsTabId) => void
-  showAdminTab: boolean
   children: ReactNode
 }
 
-export function SettingsTabLayout({ activeTab, onTabChange, showAdminTab, children }: Props) {
+export function SettingsTabLayout({ activeTab, onTabChange, children }: Props) {
   const { t } = useTranslation()
-  const visibleTabs = TABS.filter((tab) => tab.id !== 'admin' || showAdminTab)
-  const activeMeta = visibleTabs.find((tab) => tab.id === activeTab) ?? visibleTabs[0]
+  const activeMeta = TABS.find((tab) => tab.id === activeTab) ?? TABS[0]
 
   return (
     <div className="flex flex-col gap-lg lg:flex-row">
@@ -74,7 +65,7 @@ export function SettingsTabLayout({ activeTab, onTabChange, showAdminTab, childr
         aria-label={t('settings.tabs.navAria')}
       >
         <div className="scrollbar-site flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
-          {visibleTabs.map((tab) => {
+          {TABS.map((tab) => {
             const active = tab.id === activeTab
             return (
               <button

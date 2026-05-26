@@ -254,10 +254,7 @@
       "planningIntro": "Приоритеты, группы и ритуал End-of-Day.",
       "notifications": "Уведомления",
       "notificationsTitle": "Уведомления",
-      "notificationsIntro": "Режим Web Push и тестовые сообщения.",
-      "admin": "Администрирование",
-      "adminTitle": "Пользователи и роли",
-      "adminIntro": "Назначение ролей motivator_role (только для admin)."
+      "notificationsIntro": "Режим Web Push и тестовые сообщения."
     },
     "seedHint": "Seed хранится локально в браузере. Для экспорта скопируйте его на шаге онбординга или добавьте экран экспорта позже.",
     "seedBackupTitle": "Резервная копия seed (DR-006)",
@@ -320,9 +317,9 @@
     "appVersion": "Версия приложения {{version}}",
     "roadmapTempButton": "Краткая сводка",
     "roadmapGeneralTitle": "О продукте",
-    "roadmapGeneralHelp": "Дорожная карта, релиз-ноты и открытые вопросы — та же модалка, что в меню аккаунта в шапке.",
+    "roadmapGeneralHelp": "Дорожная карта, релиз-ноты и открытые вопросы. Для admin — раздел в админ-панели; для остальных — модальное окно.",
     "roadmapTitle": "Реализовано и дорожная карта",
-    "roadmapIntro": "Сверху — кольцо прогресса фаз 0–6 из 13 до MVP 1.0.0. Ниже пять раскрывающихся блоков: уже реализовано, план до 1.0.0, релиз-ноты по датам, идеи после релиза, открытые вопросы (последние — в локалях). Открыть эту модалку можно из меню аккаунта на странице планировщика (/app). Подробное описание состава и правил сопровождения — в разделе «Краткая сводка» файла web/README.md; данные — src/data/productRoadmap.ts.",
+    "roadmapIntroModal": "Сверху — кольцо прогресса фаз 0–6 из 13 до MVP 1.0.0. Ниже — реализованное, план, релиз-ноты, идеи и открытые вопросы. Для администраторов полная версия также в админ-панели → «Краткая сводка». Данные — src/data/productRoadmap.ts; сопровождение — web/README.md.",
     "roadmapImplemented": "Уже реализовано",
     "roadmapImplementedHint": "Фазы 0–6 по плану MVP; у каждой фазы раскройте «Подробнее» для списка работ.",
     "roadmapMvp": "План на MVP 1.0.0 (фазы 7–13)",
@@ -482,8 +479,8 @@
         "steps": "1. Вошёл на двух устройствах …\n2. …\n3. …"
       }
     },
-    "adminRolesTitle": "Пользователи и роли",
-    "adminRolesHelp": "Только для admin: список учётных записей Supabase Auth и поле motivator_role (admin / бета-тестер / обычный пользователь). Нужен деплой Edge admin-motivator-roles и секреты SUPABASE_* — см. web/README.",
+    "adminRolesTitle": "Доступы",
+    "adminRolesHelp": "Только для admin: список учётных записей Supabase Auth и поле motivator_role (admin / бета-тестер / обычный пользователь). Нужен деплой Edge admin-motivator-roles и секреты SUPABASE_* — см. web/README. Режим **custom** (гранулярные права помимо ролей) — в идеях после MVP.",
     "adminRolesSearchPlaceholder": "Поиск по email или UUID…",
     "adminRolesRefresh": "Обновить список",
     "adminRolesColEmail": "Пользователь",
@@ -491,7 +488,7 @@
     "adminRolesEmpty": "Нет пользователей по текущему фильтру.",
     "adminRolesYou": "Это вы",
     "adminRolesSelfHint": "Если снимете с себя роль admin, этот блок исчезнет после сохранения — дальнейшие роли снова через Dashboard или SQL.",
-    "adminRolesConfirmSelfDemote": "Снять с себя роль администратора? Блок «Пользователи и роли» пропадёт до восстановления прав через Dashboard.",
+    "adminRolesConfirmSelfDemote": "Снять с себя роль администратора? Раздел «Доступы» пропадёт до восстановления прав через Dashboard.",
     "adminRolesConfirmSelfDemoteAgain": "Подтвердите ещё раз: вы теряете доступ администратора в этом приложении.",
     "adminRolesConfirmChange": "Назначить пользователю {{email}} роль «{{role}}»?",
     "adminRolesOptionUser": "Обычный пользователь",
@@ -638,6 +635,11 @@
     "errNeedImport": "Вставьте сохранённый seed (base64) одной строкой.",
     "errSave": "Не удалось сохранить ключ. Попробуйте снова."
   },
+  "admin": {
+    "accessTitle": "Доступы",
+    "accessIntro": "Назначение ролей motivator_role для учётных записей. Отдельные права на возможности (режим custom) — в планах после MVP, см. «Краткая сводка» → идеи.",
+    "roadmapIntro": "Дорожная карта MVP, релиз-ноты по датам, идеи после релиза и открытые вопросы. Источник данных — src/data/productRoadmap.ts; правила сопровождения — web/README.md."
+  },
   "shell": {
     "loading": "Загрузка…",
     "initCrypto": "Инициализация шифрования…",
@@ -656,7 +658,8 @@
     "adminNavSection": "Админ-панель",
     "adminNavAria": "Навигация админ-панели",
     "adminNavDashboard": "Обзор",
-    "adminNavUsers": "Пользователи и роли",
+    "adminNavAccess": "Доступы",
+    "adminNavRoadmap": "Краткая сводка",
     "navPreviews": "Превью дизайна",
     "menuOpen": "Открыть меню",
     "menuClose": "Закрыть меню",
@@ -664,6 +667,7 @@
     "bottomNavAria": "Навигация приложения",
     "vaultPlanIconAria": "Vault и тарифный план",
     "accountFooterAria": "Аккаунт",
+    "accountFooterSignOutAria": "Аккаунт — нажмите, чтобы выйти",
     "vaultLocked": "Vault защищён",
     "clientEncrypted": "Данные на устройстве",
     "planFree": "Бесплатно",

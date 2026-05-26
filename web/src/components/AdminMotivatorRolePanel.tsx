@@ -150,9 +150,8 @@ export function AdminMotivatorRolePanel({
   }
 
   return (
-    <section className="mt-8">
-      <h2 className="font-display text-sm font-semibold text-on-surface">{t('settings.adminRolesTitle')}</h2>
-      <p className="mt-2 text-xs text-on-surface-variant">{t('settings.adminRolesHelp')}</p>
+    <section>
+      <p className="text-body-sm text-on-surface-variant">{t('settings.adminRolesHelp')}</p>
 
       <div className={`mt-4 ${SETTINGS_CARD}`}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

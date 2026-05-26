@@ -303,8 +303,8 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
         en: 'DR-004: create/edit task; second checkbox tap within the window; expiry without response clears pending without recording completion.',
       },
       {
-        ru: 'Роли **`user` / `beta_tester` / `admin`**: в настройках для **admin** — блок **«Пользователи и роли»** (Edge **`admin-motivator-roles`**); при фокусе вкладки — **`SessionSyncInformer`**, если роль в JWT изменилась на сервере. Ограничения видимости экранов по ролям (фаза 7) — в плане.',
-        en: '**`user` / `beta_tester` / `admin`**: settings **Users & roles** for **admin** (Edge **`admin-motivator-roles`**); on tab focus — **`SessionSyncInformer`** when the server-side role in the JWT changed. Screen-level role gating (phase 8) remains planned.',
+        ru: 'Роли **`user` / `beta_tester` / `admin`**: для **admin** — раздел **«Доступы»** в админ-панели (`/admin/access`, Edge **`admin-motivator-roles`**); **`SessionSyncInformer`**, если роль в JWT изменилась на сервере. Режим **custom** (права помимо ролей) — в идеях после MVP.',
+        en: '**`user` / `beta_tester` / `admin`**: **Access** in the admin panel (`/admin/access`, Edge **`admin-motivator-roles`**); **`SessionSyncInformer`** when the JWT role changed server-side. **Custom** per-feature access — post-MVP ideas.',
       },
       {
         ru: 'Модалка **«Завершение дня»**: блоки только по **плану на календарный день**; бэклог — отдельное мягкое напоминание; заголовок для локали **ru** на русском; круговая диаграмма доли закрытых задач по плану; продуктовые **«Открытые вопросы»** ведутся в модалке **«Краткая сводка»** (открытие с **`/app`**, меню аккаунта), строки — в i18n.',
@@ -460,6 +460,21 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-05-22', en: '2026-05-22' },
     items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Админ-панель и shell:** роли — **«Доступы»** (`/admin/access`); **«Краткая сводка»** для admin — `/admin/roadmap`; `/settings#admin` → redirect; вкладка «Администрирование» убрана из **Настроек**. Footer: выход по клику на блок аккаунта. Desktop: **FAB «+»** в строке фильтров; бейдж черновиков **над** «+».',
+            en: '**Admin panel & shell:** roles in **Access** (`/admin/access`); admin **Brief summary** at `/admin/roadmap`; `/settings#admin` redirects; **Administration** tab removed from **Settings**. Footer: sign out via account block. Desktop: **“+” FAB** in filters row; draft badge **above** “+”.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Роли — в админке «Доступы»; сводка для admin — отдельная страница, для остальных — модалка из «Общих».',
+            en: 'Roles under admin **Access**; admins get Brief summary as a page, others — modal from **General**.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
         changes: [
@@ -2345,6 +2360,24 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
       {
         ru: 'Варианты и чеклист — **`web/README.md`** («Доступ из РФ»); не путать с временным VPN для команды.',
         en: 'Options and checklist — **`web/README.md`** (“Access from Russia”); distinct from temporary team VPN.',
+      },
+    ],
+  },
+  {
+    ideaLaterGroup: 'reliability_accounts',
+    ideaLaterOrder: 6,
+    title: {
+      ru: 'Доступы: режим custom помимо ролей',
+      en: 'Access: custom mode beyond fixed roles',
+    },
+    summary: {
+      ru: 'После MVP: в разделе **«Доступы»** (`/admin/access`) — не только **user / beta_tester / admin**, но **гранулярные** флаги на возможности (прототипы, AI, push-cron, отдельные админ-экраны) без заведения новой роли на каждую комбинацию; хранение в `app_metadata` или отдельной таблице с аудитом.',
+      en: 'Post-MVP: in **Access** (`/admin/access`) — not only **user / beta_tester / admin**, but **granular** toggles per capability (previews, AI, push cron, admin screens) without inventing a role per combo; store in `app_metadata` or a service table with audit.',
+    },
+    detailBullets: [
+      {
+        ru: 'Сейчас: фиксированные роли через Edge **`admin-motivator-roles`**; UI вынесен из **Настроек** в админ-панель.',
+        en: 'Now: fixed roles via Edge **`admin-motivator-roles`**; UI moved out of **Settings** into the admin panel.',
       },
     ],
   },
