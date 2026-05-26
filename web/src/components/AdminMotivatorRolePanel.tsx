@@ -1,13 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
+import { formatAdminDateTime } from '@/lib/formatAdminDate'
+import {
+  type AdminUsersSegmentFilter,
+  compareUsersByLastSignIn,
+  userMatchesSegment,
+} from '@/components/admin/adminDashboardMetrics'
+import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
 import {
   MOTIVATOR_INPUT,
   SETTINGS_BTN_SECONDARY,
   SETTINGS_CARD,
   SETTINGS_SUBHEAD,
+  chipActive,
 } from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 
 export type MotivatorRoleRow = {
   id: string
@@ -19,91 +28,46 @@ export type MotivatorRoleRow = {
 
 const ADMIN_ROLES_FN = 'admin-motivator-roles'
 
-const ERROR_CODES = [
-  'forbidden',
-  'missing_authorization',
-  'invalid_token',
-  'supabase_env_missing',
-  'role_lookup_failed',
-  'invalid_body',
-  'invalid_role',
-  'user_not_found',
-  'update_failed',
-  'list_failed',
-] as const
-
-function mapAdminRolesError(formatted: string, t: (key: string) => string): string {
-  for (const code of ERROR_CODES) {
-    if (formatted.includes(code)) {
-      return t(`settings.adminRolesErrors.${code}`)
-    }
-  }
-  return formatted
-}
+const SEGMENT_FILTERS: AdminUsersSegmentFilter[] = [
+  'all',
+  'inactive7',
+  'inactive30',
+  'role_admin',
+  'role_beta',
+  'role_user',
+]
 
 export function AdminMotivatorRolePanel({
   supabase,
   currentUserId,
+  users,
+  loadBusy,
+  loadError,
+  onRefresh,
+  onReload,
+  onLoadError,
 }: {
   supabase: SupabaseClient
   currentUserId: string | undefined
+  users: MotivatorRoleRow[]
+  loadBusy: boolean
+  loadError: string | null
+  onRefresh: () => void
+  onReload: () => Promise<void>
+  onLoadError: (message: string | null) => void
 }) {
-  const { t } = useTranslation()
-  const [users, setUsers] = useState<MotivatorRoleRow[]>([])
+  const { t, i18n } = useTranslation()
   const [search, setSearch] = useState('')
-  const [loadBusy, setLoadBusy] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [segment, setSegment] = useState<AdminUsersSegmentFilter>('all')
   const [rowBusyId, setRowBusyId] = useState<string | null>(null)
-
-  const load = useCallback(async () => {
-    setLoadError(null)
-    setLoadBusy(true)
-    try {
-      const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
-        body: { action: 'list', search: '' },
-      })
-      if (fnErr) {
-        const msg = await formatSupabaseFunctionInvokeError(fnErr)
-        setLoadError(mapAdminRolesError(msg, t))
-        return
-      }
-      const raw = data && typeof data === 'object' && 'users' in data ? (data as { users?: unknown }).users : null
-      if (!Array.isArray(raw)) {
-        setLoadError(t('settings.adminRolesErrors.list_failed'))
-        return
-      }
-      const next: MotivatorRoleRow[] = []
-      for (const item of raw) {
-        if (!item || typeof item !== 'object') continue
-        const o = item as Record<string, unknown>
-        const id = typeof o.id === 'string' ? o.id : ''
-        const email = typeof o.email === 'string' ? o.email : ''
-        const created_at = typeof o.created_at === 'string' ? o.created_at : ''
-        const last_sign_in_at =
-          o.last_sign_in_at === null ? null : typeof o.last_sign_in_at === 'string' ? o.last_sign_in_at : null
-        const r = o.motivator_role
-        const motivator_role =
-          r === 'admin' || r === 'beta_tester' || r === 'user' ? r : ('user' as const)
-        if (id) next.push({ id, email, created_at, last_sign_in_at, motivator_role })
-      }
-      setUsers(next)
-    } catch (e: unknown) {
-      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
-    } finally {
-      setLoadBusy(false)
-    }
-  }, [supabase, t])
-
-  useEffect(() => {
-    const id = window.setTimeout(() => void load(), 0)
-    return () => window.clearTimeout(id)
-  }, [load])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    if (!q) return users
-    return users.filter((u) => u.email.toLowerCase().includes(q) || u.id.toLowerCase().includes(q))
-  }, [users, search])
+    const list = users
+      .filter((u) => userMatchesSegment(u, segment))
+      .filter((u) => !q || u.email.toLowerCase().includes(q) || u.id.toLowerCase().includes(q))
+    return [...list].sort(compareUsersByLastSignIn)
+  }, [users, search, segment])
 
   async function applyRole(
     user: MotivatorRoleRow,
@@ -119,7 +83,7 @@ export function AdminMotivatorRolePanel({
         return
       }
     }
-    setLoadError(null)
+    onLoadError(null)
     setRowBusyId(user.id)
     const userId = user.id
     try {
@@ -127,26 +91,30 @@ export function AdminMotivatorRolePanel({
         body: { action: 'setRole', userId, role },
       })
       if (fnErr) {
-        await load()
+        await onReload()
         const msg = await formatSupabaseFunctionInvokeError(fnErr)
-        setLoadError(mapAdminRolesError(msg, t))
+        onLoadError(mapAdminRolesError(msg, t))
         return
       }
       if (!data || typeof data !== 'object' || !('ok' in data) || !(data as { ok?: unknown }).ok) {
-        await load()
-        setLoadError(t('settings.adminRolesErrors.update_failed'))
+        await onReload()
+        onLoadError(t('settings.adminRolesErrors.update_failed'))
         return
       }
-      await load()
+      await onReload()
       if (userId === currentUserId) {
         await supabase.auth.refreshSession()
       }
     } catch (e: unknown) {
-      await load()
-      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
+      await onReload()
+      onLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
     } finally {
       setRowBusyId(null)
     }
+  }
+
+  function formatDate(iso: string | null) {
+    return formatAdminDateTime(iso, i18n.language)
   }
 
   return (
@@ -154,120 +122,148 @@ export function AdminMotivatorRolePanel({
       <p className="text-body-sm text-on-surface-variant">{t('settings.adminRolesHelp')}</p>
 
       <div className={`mt-4 ${SETTINGS_CARD}`}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input
-          type="search"
-          autoComplete="off"
-          placeholder={t('settings.adminRolesSearchPlaceholder')}
-          className={`${MOTIVATOR_INPUT} min-w-0 flex-1 placeholder:text-on-surface-variant`}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button
-          type="button"
-          disabled={loadBusy}
-          className={`${SETTINGS_BTN_SECONDARY} shrink-0`}
-          onClick={() => void load()}
-        >
-          {loadBusy ? t('common.loading') : t('settings.adminRolesRefresh')}
-        </button>
-      </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            type="search"
+            autoComplete="off"
+            placeholder={t('settings.adminRolesSearchPlaceholder')}
+            className={`${MOTIVATOR_INPUT} min-w-0 flex-1 placeholder:text-on-surface-variant`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            type="button"
+            disabled={loadBusy}
+            className={`${SETTINGS_BTN_SECONDARY} shrink-0`}
+            onClick={onRefresh}
+          >
+            {loadBusy ? t('common.loading') : t('settings.adminRolesRefresh')}
+          </button>
+        </div>
 
-      {loadError ? (
-        <p className="mt-3 text-xs text-red-400" role="alert">
-          {loadError}
-        </p>
-      ) : null}
+        <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={t('admin.dashboard.usersFilterAria')}>
+          {SEGMENT_FILTERS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              className={cn(chipActive(segment === id), 'text-label-sm')}
+              onClick={() => setSegment(id)}
+            >
+              {t(`admin.dashboard.filter.${id}`)}
+            </button>
+          ))}
+        </div>
 
-      <p className="mt-3 text-label-sm text-on-surface-variant">{t('settings.adminRolesSelfHint')}</p>
-
-      <div className="mt-4 flex flex-col gap-2 md:hidden">
-        {filtered.length === 0 && !loadBusy ? (
-          <p className="rounded-xl border border-surface-variant px-3 py-6 text-center text-xs text-on-surface-variant">
-            {t('settings.adminRolesEmpty')}
+        {loadError ? (
+          <p className="mt-3 text-xs text-red-400" role="alert">
+            {loadError}
           </p>
         ) : null}
-        {filtered.map((u) => {
-          const busy = rowBusyId === u.id
-          return (
-            <div key={u.id} className="motivator-card px-3 py-3">
-              <div className="min-w-0 break-all text-sm text-on-surface">{u.email || u.id}</div>
-              {u.id === currentUserId ? (
-                <div className="mt-0.5 text-[10px] text-on-surface-variant">{t('settings.adminRolesYou')}</div>
-              ) : null}
-              <label className="mt-2 flex flex-col gap-1">
-                <span className={`${SETTINGS_SUBHEAD} mt-0 text-[10px]`}>
-                  {t('settings.adminRolesColRole')}
-                </span>
-                <select
-                  className={MOTIVATOR_INPUT}
-                  value={u.motivator_role}
-                  disabled={busy || loadBusy}
-                  onChange={(e) => {
-                    const v = e.target.value as MotivatorRoleRow['motivator_role']
-                    if (v === u.motivator_role) return
-                    void applyRole(u, v)
-                  }}
-                >
-                  <option value="user">{t('settings.adminRolesOptionUser')}</option>
-                  <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
-                  <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
-                </select>
-              </label>
-            </div>
-          )
-        })}
-      </div>
+
+        <p className="mt-3 text-label-sm text-on-surface-variant">{t('settings.adminRolesSelfHint')}</p>
+        <p className="mt-1 text-label-sm text-on-surface-variant">{t('admin.dashboard.authMetricsHint')}</p>
+
+        <div className="mt-4 flex flex-col gap-2 md:hidden">
+          {filtered.length === 0 && !loadBusy ? (
+            <p className="rounded-xl border border-surface-variant px-3 py-6 text-center text-xs text-on-surface-variant">
+              {t('settings.adminRolesEmpty')}
+            </p>
+          ) : null}
+          {filtered.map((u) => {
+            const busy = rowBusyId === u.id
+            return (
+              <div key={u.id} className="motivator-card px-3 py-3">
+                <div className="min-w-0 break-all text-sm text-on-surface">{u.email || u.id}</div>
+                {u.id === currentUserId ? (
+                  <div className="mt-0.5 text-[10px] text-on-surface-variant">{t('settings.adminRolesYou')}</div>
+                ) : null}
+                <dl className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-on-surface-variant">
+                  <dt>{t('admin.dashboard.colRegistered')}</dt>
+                  <dd className="text-on-surface">{formatDate(u.created_at || null)}</dd>
+                  <dt>{t('admin.dashboard.colLastSignIn')}</dt>
+                  <dd className="text-on-surface">{formatDate(u.last_sign_in_at)}</dd>
+                </dl>
+                <label className="mt-2 flex flex-col gap-1">
+                  <span className={`${SETTINGS_SUBHEAD} mt-0 text-[10px]`}>
+                    {t('settings.adminRolesColRole')}
+                  </span>
+                  <select
+                    className={MOTIVATOR_INPUT}
+                    value={u.motivator_role}
+                    disabled={busy || loadBusy}
+                    onChange={(e) => {
+                      const v = e.target.value as MotivatorRoleRow['motivator_role']
+                      if (v === u.motivator_role) return
+                      void applyRole(u, v)
+                    }}
+                  >
+                    <option value="user">{t('settings.adminRolesOptionUser')}</option>
+                    <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
+                    <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
+                  </select>
+                </label>
+              </div>
+            )
+          })}
+        </div>
 
         <div className="motivator-card mt-4 hidden overflow-x-auto p-0 md:block">
-        <table className="w-full border-collapse text-left text-sm">
-          <thead>
-            <tr className="border-b border-surface-variant bg-surface-container-low font-display text-xs uppercase tracking-wide text-on-surface-variant">
-              <th className="px-3 py-2 font-medium">{t('settings.adminRolesColEmail')}</th>
-              <th className="px-3 py-2 font-medium">{t('settings.adminRolesColRole')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && !loadBusy ? (
-              <tr>
-                <td colSpan={2} className="px-3 py-6 text-center text-xs text-on-surface-variant">
-                  {t('settings.adminRolesEmpty')}
-                </td>
+          <table className="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-surface-variant bg-surface-container-low font-display text-xs uppercase tracking-wide text-on-surface-variant">
+                <th className="px-3 py-2 font-medium">{t('settings.adminRolesColEmail')}</th>
+                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colRegistered')}</th>
+                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colLastSignIn')}</th>
+                <th className="px-3 py-2 font-medium">{t('settings.adminRolesColRole')}</th>
               </tr>
-            ) : null}
-            {filtered.map((u) => {
-              const busy = rowBusyId === u.id
-              return (
-                <tr key={u.id} className="border-b border-surface-variant/80 last:border-0">
-                  <td className="max-w-[14rem] px-3 py-2 align-middle">
-                    <div className="truncate text-on-surface" title={u.email || u.id}>
-                      {u.email || u.id}
-                    </div>
-                    {u.id === currentUserId ? (
-                      <div className="text-[10px] text-on-surface-variant">{t('settings.adminRolesYou')}</div>
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-2 align-middle">
-                    <select
-                      className={`${MOTIVATOR_INPUT} max-w-[11rem]`}
-                      value={u.motivator_role}
-                      disabled={busy || loadBusy}
-                      onChange={(e) => {
-                        const v = e.target.value as MotivatorRoleRow['motivator_role']
-                        if (v === u.motivator_role) return
-                        void applyRole(u, v)
-                      }}
-                    >
-                      <option value="user">{t('settings.adminRolesOptionUser')}</option>
-                      <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
-                      <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
-                    </select>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && !loadBusy ? (
+                <tr>
+                  <td colSpan={4} className="px-3 py-6 text-center text-xs text-on-surface-variant">
+                    {t('settings.adminRolesEmpty')}
                   </td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
+              ) : null}
+              {filtered.map((u) => {
+                const busy = rowBusyId === u.id
+                return (
+                  <tr key={u.id} className="border-b border-surface-variant/80 last:border-0">
+                    <td className="max-w-[14rem] px-3 py-2 align-middle">
+                      <div className="truncate text-on-surface" title={u.email || u.id}>
+                        {u.email || u.id}
+                      </div>
+                      {u.id === currentUserId ? (
+                        <div className="text-[10px] text-on-surface-variant">{t('settings.adminRolesYou')}</div>
+                      ) : null}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
+                      {formatDate(u.created_at || null)}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
+                      {formatDate(u.last_sign_in_at)}
+                    </td>
+                    <td className="px-3 py-2 align-middle">
+                      <select
+                        className={`${MOTIVATOR_INPUT} max-w-[11rem]`}
+                        value={u.motivator_role}
+                        disabled={busy || loadBusy}
+                        onChange={(e) => {
+                          const v = e.target.value as MotivatorRoleRow['motivator_role']
+                          if (v === u.motivator_role) return
+                          void applyRole(u, v)
+                        }}
+                      >
+                        <option value="user">{t('settings.adminRolesOptionUser')}</option>
+                        <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
+                        <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
+                      </select>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>

@@ -10,12 +10,11 @@ import { OnboardingPage } from '@/pages/OnboardingPage'
 import { ReportsPage } from '@/pages/ReportsPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { LegalDocumentPage } from '@/pages/LegalDocumentPage'
-import { AdminDashboardPrototypePage } from '@/pages/prototypes/AdminDashboardPrototypePage'
 import { AiInsightsPrototypePage } from '@/pages/prototypes/AiInsightsPrototypePage'
 import { DeepFocusPrototypePage } from '@/pages/prototypes/DeepFocusPrototypePage'
 import { RequireAdmin } from '@/components/auth/RequireAdmin'
 import { RequireTesterPreview } from '@/components/auth/RequireTesterPreview'
-import { AdminAccessPage } from '@/pages/AdminAccessPage'
+import { AdminDashboardPage } from '@/pages/AdminDashboardPage'
 import { AdminRoadmapPage } from '@/pages/AdminRoadmapPage'
 import { AdminTestingPage } from '@/pages/AdminTestingPage'
 import { CookieConsentGate } from '@/components/CookieConsentGate'
@@ -110,22 +109,18 @@ export function App() {
         />
         <Route
           path="/prototype/admin-dashboard"
-          element={
-            session ? (
-              <RequireTesterPreview>
-                <AdminDashboardPrototypePage />
-              </RequireTesterPreview>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
+          element={<Navigate to="/admin/dashboard?tab=summary" replace />}
         />
         <Route
           path="/admin/access"
+          element={<Navigate to="/admin/dashboard?tab=users" replace />}
+        />
+        <Route
+          path="/admin/dashboard"
           element={
             session ? (
               <RequireAdmin>
-                <AdminAccessPage />
+                <AdminDashboardPage />
               </RequireAdmin>
             ) : (
               <Navigate to="/login" replace />

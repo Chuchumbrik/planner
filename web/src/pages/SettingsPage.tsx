@@ -188,7 +188,7 @@ function SettingsPageInner() {
   useEffect(() => {
     if (window.location.hash.replace(/^#/, '') !== 'admin') return
     if (isAdmin) {
-      navigate('/admin/access', { replace: true })
+      navigate('/admin/dashboard?tab=users', { replace: true })
     } else if (canAccessPreviewFeatures) {
       navigate('/admin/roadmap', { replace: true })
     }
