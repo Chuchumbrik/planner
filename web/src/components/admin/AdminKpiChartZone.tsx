@@ -67,7 +67,7 @@ export function AdminKpiChartZone({
 
   const series = trend?.series ?? []
 
-  const { points, minV, maxV } = useMemo(() => {
+  const { points } = useMemo(() => {
     if (series.length < 2) return { points: [], minV: 0, maxV: 1 }
     const vals = series.map((s) => s.value)
     const minV = Math.min(...vals)
