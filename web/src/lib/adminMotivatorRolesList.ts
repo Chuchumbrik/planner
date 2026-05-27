@@ -1,6 +1,8 @@
 import type {
   AdminActivityChart,
   AdminActivityDayDetail,
+  AdminKpiTrend,
+  AdminKpiTrendPoint,
   AdminOverview,
   MotivatorRoleRow,
 } from '@/types/adminMonitoring'
@@ -136,11 +138,42 @@ export function parseAdminOverviewResponse(raw: unknown): AdminOverview | null {
     vault_stale_14d: o.vault_stale_14d,
     with_push: o.with_push,
     defect_submissions_7d: o.defect_submissions_7d,
+    mau_30d: typeof o.mau_30d === 'number' ? o.mau_30d : 0,
     stale_vault_days: o.stale_vault_days,
     by_role: {
       admin: typeof role.admin === 'number' ? role.admin : 0,
       beta_tester: typeof role.beta_tester === 'number' ? role.beta_tester : 0,
       user: typeof role.user === 'number' ? role.user : 0,
     },
+  }
+}
+
+export function parseAdminKpiTrendResponse(raw: unknown): AdminKpiTrend | null {
+  if (!raw || typeof raw !== 'object') return null
+  const o = raw as Record<string, unknown>
+  const metric = o.metric
+  if (
+    metric !== 'total_users' &&
+    metric !== 'registrations' &&
+    metric !== 'mau' &&
+    metric !== 'churn'
+  ) return null
+  const rawSeries = o.series
+  if (!Array.isArray(rawSeries)) return null
+  const series: AdminKpiTrendPoint[] = rawSeries
+    .filter((pt) => pt && typeof pt === 'object')
+    .map((pt) => {
+      const p = pt as Record<string, unknown>
+      return {
+        label: typeof p.label === 'string' ? p.label : '',
+        value: typeof p.value === 'number' ? p.value : 0,
+      }
+    })
+    .filter((pt) => pt.label !== '')
+  return {
+    metric,
+    series,
+    unit: typeof o.unit === 'string' ? o.unit : undefined,
+    table_missing: o.table_missing === true,
   }
 }

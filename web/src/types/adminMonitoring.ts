@@ -45,6 +45,18 @@ export type AdminOverview = {
   vault_stale_14d: number
   with_push: number
   defect_submissions_7d: number
+  mau_30d: number
   by_role: { admin: number; beta_tester: number; user: number }
   stale_vault_days: number
+}
+
+export type AdminKpiTrendPoint = { label: string; value: number }
+
+export type AdminKpiMetric = 'total_users' | 'registrations' | 'mau' | 'churn'
+
+export type AdminKpiTrend = {
+  metric: AdminKpiMetric
+  series: AdminKpiTrendPoint[]
+  unit?: string
+  table_missing?: boolean
 }

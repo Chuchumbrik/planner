@@ -415,7 +415,104 @@ async function buildActivityDayUsers(
   }
 }
 
-function buildOverview(users: ListUserRow[], nowMs: number) {
+async function computeMau30d(admin: SupabaseClient, nowMs: number): Promise<number> {
+  const fromDate = utcDateKey(new Date(nowMs - 30 * MS_PER_DAY))
+  const { data, error } = await admin
+    .from('admin_user_activity_daily')
+    .select('user_id')
+    .gte('activity_date', fromDate)
+  if (error) return 0
+  return new Set((data ?? []).map((r) => String(r.user_id))).size
+}
+
+type KpiMetric = 'total_users' | 'registrations' | 'mau' | 'churn'
+type KpiTrendSeries = { label: string; value: number }
+
+async function buildKpiTrend(
+  admin: SupabaseClient,
+  metric: KpiMetric,
+  authUsers: AuthUserRow[] | null,
+): Promise<{ series: KpiTrendSeries[]; unit?: string; table_missing?: boolean }> {
+  const now = new Date()
+
+  if (metric === 'total_users' || metric === 'registrations') {
+    if (!authUsers) return { series: [] }
+    const months: Array<{ label: string; start: number; end: number }> = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1)
+      months.push({
+        label: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        start: d.getTime(),
+        end: end.getTime(),
+      })
+    }
+    if (metric === 'registrations') {
+      return {
+        series: months.map(({ label, start, end }) => ({
+          label,
+          value: authUsers.filter((u) => {
+            const t = parseTime(u.created_at)
+            return t != null && t >= start && t < end
+          }).length,
+        })),
+      }
+    }
+    return {
+      series: months.map(({ label, end }) => ({
+        label,
+        value: authUsers.filter((u) => {
+          const t = parseTime(u.created_at)
+          return t != null && t < end
+        }).length,
+      })),
+    }
+  }
+
+  // mau / churn: query activity table (90-day window)
+  const fromDate = utcDateKey(new Date(now.getTime() - 90 * MS_PER_DAY))
+  const { data, error } = await admin
+    .from('admin_user_activity_daily')
+    .select('user_id, activity_date')
+    .gte('activity_date', fromDate)
+
+  if (error) {
+    const missing = error.message?.includes('admin_user_activity_daily') || error.code === '42P01'
+    return { series: [], table_missing: missing }
+  }
+
+  const monthMap = new Map<string, Set<string>>()
+  for (const row of data ?? []) {
+    const month = String(row.activity_date).slice(0, 7)
+    if (!monthMap.has(month)) monthMap.set(month, new Set())
+    monthMap.get(month)!.add(String(row.user_id))
+  }
+
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const sorted = [...monthMap.keys()].sort()
+  const full = sorted.filter((m) => m < currentMonth).slice(-3)
+  if (monthMap.has(currentMonth)) full.push(currentMonth)
+
+  if (metric === 'mau') {
+    return { series: full.map((m) => ({ label: m, value: monthMap.get(m)?.size ?? 0 })) }
+  }
+
+  // churn: % of prev-month users absent in current month
+  const series: KpiTrendSeries[] = []
+  for (let i = 1; i < full.length; i++) {
+    const prev = monthMap.get(full[i - 1]) ?? new Set()
+    const curr = monthMap.get(full[i]) ?? new Set()
+    if (prev.size === 0) continue
+    let churned = 0
+    for (const uid of prev) {
+      if (!curr.has(uid)) churned++
+    }
+    series.push({ label: full[i], value: Math.round((churned / prev.size) * 1000) / 10 })
+  }
+  return { series, unit: '%' }
+}
+
+function buildOverview(users: ListUserRow[], nowMs: number, mau_30d: number) {
   const regCutoff = nowMs - 7 * MS_PER_DAY
   const signCutoff = regCutoff
   const defectCutoff = regCutoff
@@ -456,6 +553,7 @@ function buildOverview(users: ListUserRow[], nowMs: number) {
     vault_stale_14d,
     with_push,
     defect_submissions_7d,
+    mau_30d,
     by_role,
     stale_vault_days: STALE_VAULT_DAYS,
   }
@@ -511,7 +609,8 @@ Deno.serve(async (req) => {
     b.action === 'setRole' ||
     b.action === 'overview' ||
     b.action === 'activityChart' ||
-    b.action === 'activityDayUsers'
+    b.action === 'activityDayUsers' ||
+    b.action === 'kpiTrend'
       ? b.action
       : null
   if (!action) {
@@ -552,13 +651,34 @@ Deno.serve(async (req) => {
     }))
 
     if (action === 'overview') {
+      const nowMs = Date.now()
+      const mau30d = await computeMau30d(admin, nowMs)
       return json(200, {
-        overview: buildOverview(enriched, Date.now()),
+        overview: buildOverview(enriched, nowMs, mau30d),
         list_degraded: maps.degraded,
       })
     }
 
     return json(200, { users: enriched, list_degraded: maps.degraded })
+  }
+
+  if (action === 'kpiTrend') {
+    const metricRaw = b.metric
+    const metric: KpiMetric =
+      metricRaw === 'total_users' ||
+      metricRaw === 'registrations' ||
+      metricRaw === 'mau' ||
+      metricRaw === 'churn'
+        ? metricRaw
+        : 'mau'
+    let authUsers: AuthUserRow[] | null = null
+    if (metric === 'total_users' || metric === 'registrations') {
+      const authResult = await listAuthUsers(admin, '')
+      if (!authResult.ok) return authResult.response
+      authUsers = authResult.users
+    }
+    const result = await buildKpiTrend(admin, metric, authUsers)
+    return json(200, { trend: { metric, ...result } })
   }
 
   // setRole

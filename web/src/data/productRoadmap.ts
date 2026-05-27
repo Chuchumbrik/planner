@@ -325,6 +325,26 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-28', en: '2026-05-28' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        changes: [
+          {
+            ru: '**Админ → Сводка:** по клику на KPI (**всего пользователей**, **регистрации**, **MAU 30д**, **отток**) — мини-график тренда по месяцам; Edge **`kpiTrend`**.',
+            en: '**Admin → Summary:** click KPI cards (**total users**, **registrations**, **MAU 30d**, **churn**) for a monthly trend mini-chart; Edge **`kpiTrend`**.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На обзоре админа можно не только увидеть цифру «сейчас», но и открыть, как она менялась по месяцам — отдельно для регистраций, активной аудитории и оттока.',
+            en: 'On the admin overview you can open how a KPI changed month by month — registrations, active users, or churn — not just the current number.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-26', en: '2026-05-26' },
     items: [
       {
