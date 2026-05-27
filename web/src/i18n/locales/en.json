@@ -698,8 +698,23 @@
       "kpiTotal": "Total users",
       "kpiRegistered7d": "Registered in 7 days",
       "kpiSignedIn7d": "Signed in within 7 days",
+      "kpiMau30d": "MAU 30d",
+      "kpiChurn30d": "Churn 30d",
       "kpiRoles": "By role",
       "kpiRolesValue": "admin {{admin}} · beta {{beta}} · user {{user}}",
+      "kpiTrend": {
+        "clickHint": "Click a card with the ↗ icon to see its trend chart",
+        "hint": "From the activity table (UTC). History limited to 90 days.",
+        "refresh": "Refresh",
+        "noData": "Not enough data yet. Charts build up as users are active.",
+        "utcNote": "Periods are UTC calendar months.",
+        "title": {
+          "total_users": "Total users — growth",
+          "registrations": "Registrations — monthly",
+          "mau": "MAU — monthly active users",
+          "churn": "Churn rate — trend"
+        }
+      },
       "filter": {
         "all": "All",
         "inactive7": "Inactive 7d",
