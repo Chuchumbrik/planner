@@ -681,11 +681,16 @@ export function AiAssistantPanel({ mode }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLElement>(null)
   const [width, setWidth] = useState(readAiAssistantPanelWidth)
+  const [hasOpened, setHasOpened] = useState(false)
   useDialogFocusTrap(open, panelRef, closeRef)
 
   const onResizeWidth = useCallback((next: number) => {
     setWidth(next)
   }, [])
+
+  useEffect(() => {
+    if (open) setHasOpened(true)
+  }, [open])
 
   useEffect(() => {
     if (!open || mode !== 'overlay') return
@@ -696,21 +701,26 @@ export function AiAssistantPanel({ mode }: Props) {
     }
   }, [open, mode])
 
-  if (!open) return null
-
-  const body = (
-    <AiAssistantPanelBody
-      mode={mode}
-      width={width}
-      panelRef={panelRef}
-      closeRef={closeRef}
-      onResizeWidth={onResizeWidth}
-    />
-  )
-
   if (mode === 'docked') {
-    return body
+    return (
+      <div
+        className="ai-panel-docked-wrapper"
+        style={{ width: open ? `${width}px` : 0 }}
+      >
+        {hasOpened ? (
+          <AiAssistantPanelBody
+            mode="docked"
+            width={width}
+            panelRef={panelRef}
+            closeRef={closeRef}
+            onResizeWidth={onResizeWidth}
+          />
+        ) : null}
+      </div>
+    )
   }
+
+  if (!open) return null
 
   return createPortal(
     <div className="fixed inset-0 z-[80] flex justify-end" role="presentation">
@@ -720,7 +730,13 @@ export function AiAssistantPanel({ mode }: Props) {
         aria-label={t('common.close')}
         onClick={closeAssistant}
       />
-      {body}
+      <AiAssistantPanelBody
+        mode="overlay"
+        width={width}
+        panelRef={panelRef}
+        closeRef={closeRef}
+        onResizeWidth={onResizeWidth}
+      />
     </div>,
     document.body,
   )

@@ -348,6 +348,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: 'AI-помощник перестал быть макетом: можно переписываться голосом/текстом и подтверждать предложенные изменения задач в один клик.',
             en: 'AI assistant is no longer a mock: you can chat by voice/text and confirm proposed task updates in one click.',
           },
+          {
+            ru: 'На компьютере AI открывается из шапки; панель плавно выезжает справа, и переписка не сбрасывается при закрытии.',
+            en: 'On desktop, AI opens from the header; the panel slides in smoothly and your chat is kept when you close it.',
+          },
         ],
       },
     ],

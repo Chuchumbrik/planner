@@ -455,7 +455,13 @@
   }
 
   .ai-assistant-drawer {
-    animation: slide-in-right 0.2s ease-out;
+    animation: slide-in-right 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ai-panel-docked-wrapper {
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Design 2.0 pad utilities (replaces Tailwind p-sm/md/lg tied to broken max-w scale) */
@@ -563,5 +569,8 @@
 @media (prefers-reduced-motion: reduce) {
   .ai-assistant-drawer {
     animation: none;
+  }
+  .ai-panel-docked-wrapper {
+    transition: none;
   }
 }
