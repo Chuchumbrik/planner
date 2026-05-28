@@ -2,12 +2,13 @@
 
 **Тестовый сайт (canonical):** [https://planner-tawny-omega.vercel.app/app](https://planner-tawny-omega.vercel.app/app)  
 **Base URL:** `https://planner-tawny-omega.vercel.app`  
-**Версия на production:** `0.7.3+0ec71a3` (прогон 24, smoke shell/admin UX, 2026-05-26)  
-**Дата прогона:** 2026-05-26 (прогон 24)  
-**Исполнитель:** QA Automation (Chrome DevTools MCP)  
-**Учётная запись:** `mussha2010@yandex.ru` (**admin**); секреты — `.cursor/test-account.local.md` (gitignored)
+**Версия в репозитории:** `0.7.3` · **HEAD:** `b61f972` (merge: activity drill-down + KPI trends)  
+**Версия на production:** уточнять в footer (`0.7.3+<hash>`); последний задокументированный smoke shell — `0ec71a3` (прогон 24)  
+**Дата актуализации модели:** 2026-05-28  
+**Исполнитель:** QA Automation (Chrome DevTools MCP + unit)  
+**Учётные записи QA:** `.cursor/test-accounts.local.md` (gitignored): **admin** / **beta_tester** / **user**
 
-**Инструменты:** Chrome DevTools MCP — desktop 1440×900; mobile 393×852 (touch); Slow 3G; unit — `npm test` + `web` vitest.
+**Инструменты:** Chrome DevTools MCP — desktop 1440×900; mobile 393×852 (touch); Slow 3G; unit — `npm test` (`@motivator/core`) + `npx vitest run` в `web/`; сборка — `npm run build -w web`.
 
 ---
 
@@ -26,13 +27,13 @@
 
 ## Summary
 
-**Общее состояние (прогон 24):** production **`0.7.3+0ec71a3`**. Smoke shell/admin UX — **Passed** (8/8 автоматизировано; **TC-D2-04 resize** — **Not run**, manual). Прогон 23: TC-D2-03/08/10 + mobile; прогон 22: BUG + TC-D2-01…07.
+**Общее состояние:** shell/admin UX (прогон 24) — **Passed** на `0ec71a3`; **админ-мониторинг** (`/admin/dashboard`, DAU, KPI trends) — модель и unit в [прогоне 30](#прогон-30--актуализация-модели-b61f972--unitbuild); UI smoke на production — **Pending** до деплоя `b61f972`.
 
-**Вердикт (прогон 24):** **Passed** — маршруты `/admin/access`, `/admin/roadmap`, redirect `#admin`, footer logout, inline FAB (D), fixed FAB + бейдж (M), регрессия TC-D2-01/06/08. См. [Прогон 24](#прогон-24--smoke-после-shelladmin-ux).
+**Вердикт (прогон 30):** **Passed*** — TC-ADM **01–06, 09–10**; **07 Partial** (**BUG-ADM-014** tooltip); Edge задеплоен 2026-05-28.
 
-> **Прогоны 2–25:** … [«Прогон 24»](#прогон-24--smoke-после-shelladmin-ux) (**Passed**, 2026-05-26), [«Прогон 25»](#прогон-25--smoke-qa-clock--fab--footer) (**Pending** — после deploy `ca446db`).
+> **Прогоны:** [24](#прогон-24--smoke-после-shelladmin-ux) shell (**Passed**), [25](#прогон-25--smoke-qa-clock--fab--footer) QA clock (**Pending** deploy), [30](#прогон-30--актуализация-модели-b61f972--unitbuild) admin monitoring model + unit (**2026-05-28**).
 
-**После прогона 24 (код в main, PR #68):** `/admin/testing` (QA clock), footer — меню выхода, mobile FAB внизу справа + бейдж на углу кнопки, beta → только **Тестирование** в админ-sidebar. **Прогон 25** — smoke на production `0.7.3+ca446db`.
+**В main после `fe38e29` / `b61f972`:** `/admin/dashboard` (вкладки **Сводка** / **Пользователи**), график **активности** (DAU/WAU, drill-down по UTC-дню), **KPI trends** по клику на карточку (`kpiTrend`), Edge `activityChart` / `activityDayUsers` / `kpiTrend`, миграция **`006_admin_user_activity_daily.sql`**.
 
 ---
 
@@ -150,6 +151,11 @@
 | UX-05 EOD только День | `AppPage.tsx`, settings copy | UX-05 | D | **Passed** — stat tile, не toolbar |
 | Period stats copy | `PeriodPlannerStatsRow.tsx` | TC-D2-10 | D | **Passed** — прогон 23 |
 | Reports chart scroll | `ReportsPage.tsx`, `scrollbar-slider-h` | TC-D2-11 | D | **Partial** — прогон 23 (нет overflow на данных) |
+| Admin dashboard | `AdminDashboardPage.tsx`, `AdminDashboardSummaryTab.tsx` | TC-ADM-01…03 | D | **Passed** [30-UI] — `0.7.3+6d0c7cd` |
+| Activity chart + drill-down | `AdminDashboardActivityChart.tsx`, Edge `activityChart` / `activityDayUsers` | TC-ADM-04…06 | D | **Passed** [30-UI] |
+| KPI monthly trends | `AdminKpiChartZone.tsx`, `useAdminKpiTrend.ts`, Edge `kpiTrend` | TC-ADM-07, **TC-ADM-CHART** | D/unit | **Partial** [30-UI] — Edge OK; **BUG-ADM-014** tooltip на пике |
+| Activity ping | `admin-record-activity`, `006_admin_user_activity_daily.sql` | TC-ADM-10 | D/Edge | **Passed*** [30-UI] |
+| Admin routes | `App.tsx` redirects | TC-ADM-11 | D | **Passed** [30-UI] |
 
 ### Реестр TC-D2 (шаги)
 
@@ -157,7 +163,7 @@
 |----|----------|------|---------------------|------------------|
 | **TC-D2-01** | Vault/plan в header | D: `/app` → shield/premium в **header** → popover | Popover plan tier; нет дубля Premium в sidebar | **Passed** |
 | **TC-D2-02** | Account footer | D/M: footer sidebar | Email, роль; клик по блоку → confirm → выход; **нет** отдельных кнопок сводки/выхода; строка версии | **Passed** (24) |
-| **TC-D2-03** | Admin sub-nav | D: `/prototype/admin-dashboard` → **Доступы** / **Краткая сводка** | `ShellAdminNav`: Обзор ↔ `/admin/access` ↔ `/admin/roadmap`; `/settings#admin` → redirect `/admin/access` | **Passed** (24) |
+| **TC-D2-03** | Admin sub-nav | D: `/admin/dashboard` → **Краткая сводка** / **Тестирование**; legacy `/admin/access` → users tab | `ShellAdminNav`: **Обзор** `/admin/dashboard`, **Краткая сводка** `/admin/roadmap`; `/settings#admin` → `/admin/dashboard?tab=users` | **Passed** (24)* — маршрут обзора уточнён в [TC-ADM-11](#реестр-tc-adm-админ-мониторинг) |
 | **TC-D2-04** | Docked AI desktop | D: AI; M: overlay | Desktop: docked + resize; mobile: overlay | **Partial** (23) |
 | **TC-D2-05** | FAB без toolbar EOD | D/M: День | FAB «+»; нет create/EOD в toolbar | **Passed** |
 | **TC-D2-06** | EOD stat clickable | D: клик «End of Day» | `EndOfDayModal` | **Passed** |
@@ -166,6 +172,54 @@
 | **TC-D2-09** | Focus trap | Tab в create/EOD/roadmap | Focus trap + restore | **Manual** |
 | **TC-D2-10** | Week/month stat copy | D: Неделя/Месяц | «Закрыто по плану», без дубля % | **Passed** (23) |
 | **TC-D2-11** | Reports chart scroll | D: `/app/reports` | Тонкий `scrollbar-slider-h` | **Partial** (23) |
+
+---
+
+## Тестовая модель — админ-мониторинг (`b61f972`)
+
+**Коммиты:** `fe38e29` — activity chart drill-down (#73); `d6f1b48` / `9c6bdda` — KPI monthly trends (`kpiTrend`); merge **`b61f972`**.  
+**Документация продукта:** `web/README.md` → «Админ-мониторинг», миграция **`006_admin_user_activity_daily.sql`**.  
+**Edge:** `admin-motivator-roles` — actions `overview`, `activityChart`, `activityDayUsers`, `kpiTrend`; `admin-record-activity` — ping ≤1/час/пользователь/UTC-день.
+
+### Реестр TC-ADM (админ-мониторинг)
+
+| ID | Шаги | Ожидаемый результат | Авто | Статус |
+|----|------|---------------------|------|--------|
+| **TC-ADM-01** | **admin**, D 1440: `/admin/dashboard`, вкладка **Сводка** | KPI-карточки (всего, рег. 7д, MAU 30д, отток, вход 7д, vault, push, дефекты 7д); подсказка Auth vs активность | — | **Passed** [30-UI] |
+| **TC-ADM-02** | Вкладка **Пользователи** | Список УЗ, фильтры сегментов; смена роли — только admin | unit + UI | **Passed** [30-UI] |
+| **TC-ADM-03** | **user:** `/admin/dashboard` | Redirect **`/app`** | — | **Passed** [30-UI] |
+| **TC-ADM-04** | Сводка: график **Активность**; **7 / 30 / 90** дн. и фильтр роли | Серия UTC-дней; DAU today / WAU | — | **Passed** [30-UI] |
+| **TC-ADM-05** | Клик столбец с **числом > 0** | Список email + роль за UTC-день (`activityDayUsers`) | — | **Passed** [30-UI] |
+| **TC-ADM-06** | Клик столбец **0** | Нет drill-down (только `generic`, не кнопка) | — | **Passed** [30-UI] |
+| **TC-ADM-07** | Клик KPI (всего / рег. / MAU / отток) | Помесячный тренд под карточкой (`kpiTrend`); повторный клик — свернуть; **подсказки на графике** — [TC-ADM-CHART](#графики-админки--tooltip-и-hover-tc-adm-chart) | — | **Partial** [30-UI] — данные Edge OK; **BUG-ADM-014** tooltip |
+| **TC-ADM-08** | `kpiTrend` без таблицы `006` | Деградация без 500 всей страницы | — | **N/A** на prod (таблица есть) |
+| **TC-ADM-09** | Legacy URL | `/admin/access` → users; `/prototype/admin-dashboard` → summary | — | **Passed** [30-UI] |
+| **TC-ADM-10** | User на `/app` | Ping ≤1/час → `admin_user_activity_daily` | — | **Passed*** [30-UI] — косвенно: столбцы 26–27.05 с DAU=1 |
+| **TC-ADM-11** | Edge без admin JWT | `admin-motivator-roles` → **401** / **403** | TC-SEC | **Not run** |
+
+**Предусловия UI:** миграция **`006`**, Edge задеплоены, УЗ **admin** — `.cursor/test-accounts.local.md`.
+
+### Графики админки — tooltip и hover (TC-ADM-CHART)
+
+**Компонент:** [`AdminKpiChartZone.tsx`](../web/src/components/admin/AdminKpiChartZone.tsx) — SVG line chart, hover через `hoveredIdx`, подсказка: `rect` + `text` над точкой (`tipY = pt.y - tipH - 8`, **без** clamp к `PAD.t` / flip вниз).
+
+**Связанный дефект:** **BUG-ADM-014** — при **максимуме** серии (последняя точка у верхней границы `viewBox`) тултип уходит в **отрицательный Y** и **обрезается** контейнером SVG → видна только полоска рамки, **текст значения не читается** (подтверждено на «Всего пользователей», май 2026, value=8).
+
+| ID | Шаги | Ожидаемый результат | Статус |
+|----|------|---------------------|--------|
+| **TC-ADM-CHART-01** | KPI-тренд открыт; навести на **среднюю** точку (не пик) | Тултип: фон + **число** (или `N%` для Churn); не пустой прямоугольник | **Pending** |
+| **TC-ADM-CHART-02** | Навести на **последнюю** точку (**максимум** Y, часто «май») | Тултип **полностью** внутри области графика; значение читается; **нет** обрезки у кнопок «Обновить»/«Закрыть» | **Failed** — **BUG-ADM-014** |
+| **TC-ADM-CHART-03** | Навести на **первую** точку (минимум / ноль) | Тултип над точкой, значение **0** или `0%` видно | **Pending** |
+| **TC-ADM-CHART-04** | Карточка **Churn 30д** → hover на пик | Тултип с **`%`** (unit из `kpiTrend`); те же правила видимости | **Pending** |
+| **TC-ADM-CHART-05** | `mouseLeave` с SVG | Тултип **исчезает**; точка возвращается к r=3.5 | **Pending** |
+| **TC-ADM-CHART-06** | Узкий viewport (~320px), горизонтальный scroll графика | Тултип остаётся привязан к точке при hover; не «ломается» layout | **Pending** |
+| **TC-ADM-CHART-07** | **a11y:** только клавиатура | Сейчас hover только `onMouseEnter` на `<circle>` — **нет** keyboard focus; зафиксировать как **Known gap** или доработка | **N/A** (mouse-only) |
+
+**График «Активность»** ([`AdminDashboardActivityChart.tsx`](../web/src/components/admin/AdminDashboardActivityChart.tsx)): столбцы — **`title` / `aria-label` на кнопке**, не SVG-tooltip; отдельно: **TC-ADM-05/06** (drill-down). При появлении SVG-тултипов в activity — расширить эту матрицу по тем же правилам.
+
+**Регрессия после фикса BUG-ADM-014:** clamp `tipY` ≥ `PAD.t` **или** flip тултип **под** точку, если `pt.y < PAD.t + tipH + margin`; перепроверить **CHART-01…06** на D 1440.
+
+**Артефакт:** скрин обрезанного тултипа (май, пик) — приложен к отчёту QA 2026-05-28.
 
 ---
 
@@ -182,7 +236,8 @@
 | Меню аккаунта | `/app` | *Устарело:* EOD/сводка перенесены в stat tile и footer sidebar (см. прогон 22) | — |
 | Отчёты | `/app/reports` | KPI 7/30, график, таблицы | Bottom nav |
 | Настройки | `/settings` | Вкладки: Общие / Приватность / Планирование / Уведомления (**без** «Администрирование»); **Общие** — сводка (admin → ссылка на `/admin/roadmap`, иначе модалка) | Bottom nav |
-| Админ — доступы | `/admin/access` | Роли `user` / `beta_tester` / `admin` (`RequireAdmin`) | — |
+| Админ — обзор | `/admin/dashboard` | Вкладки **Сводка** (KPI, активность, trends) / **Пользователи** (роли) | — |
+| Админ — доступы (legacy) | `/admin/access` | Redirect → `/admin/dashboard?tab=users` | — |
 | Краткая сводка (admin) | `/admin/roadmap` | Страница `ProductRoadmapPanel`, не модалка в nav | — |
 | Краткая сводка (не admin) | модалка | Из **Настройки → Общие** | Полноэкранная модалка |
 | Юридика | `/legal/*` | Ссылки из настроек | — |
@@ -1750,4 +1805,51 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 
 ---
 
-*Обновление: 2026-05-26 — прогон 24 Passed на `0ec71a3` + скриншоты `prog24-*`; прогон 25 — чеклист Pending после PR #68 (`ca446db`).*
+---
+
+## Прогон 30 — админ-мониторинг: модель + unit/build + UI
+
+**Дата:** 2026-05-28  
+**Репозиторий:** `b61f972` · **Production:** `0.7.3+6d0c7cd`  
+**Сайт:** [planner-tawny-omega.vercel.app](https://planner-tawny-omega.vercel.app) · **УЗ:** admin + user — `.cursor/test-accounts.local.md`  
+**Скриншот:** `docs/qa-screenshots/prog30-admin-dashboard-1440.png`
+
+### Unit / build
+
+| Команда | Результат |
+|---------|-----------|
+| `npm test` (`@motivator/core`) | **35 passed**, 1 skipped (`qaSeedRemoteVault`) |
+| `npx vitest run` (`web/`) | **8 passed** |
+| `npm run build -w web` | **Passed** |
+
+### UI (MCP, TC-ADM)
+
+| ID | Результат | Факт |
+|----|-----------|------|
+| **TC-ADM-01** | **Passed** | Сводка: KPI, MAU 30д, Churn, график активности |
+| **TC-ADM-02** | **Passed** | `?tab=users`: список, фильтры, роли |
+| **TC-ADM-03** | **Passed** | **user** → `/admin/dashboard` → **`/app`** |
+| **TC-ADM-04** | **Passed** | 7/30/90 дн., фильтр ролей, DAU/WAU |
+| **TC-ADM-05** | **Passed** | Drill-down 2026-05-26: email + Admin |
+| **TC-ADM-06** | **Passed** | День с 0 — без drill-down |
+| **TC-ADM-07** | **Partial** | Edge **200**, график месяцев OK; **TC-ADM-CHART-02 Failed** — **BUG-ADM-014** (тултип на пике обрезан) |
+| **TC-ADM-08** | **N/A** | Таблица `006` на prod |
+| **TC-ADM-09** | **Passed** | Legacy redirects users / summary |
+| **TC-ADM-10** | **Passed*** | Данные на графике (ping) |
+| **TC-ADM-11** | **Not run** | — |
+
+**Edge (2026-05-28):** `cmd /c "npx supabase functions deploy admin-motivator-roles --project-ref ntpkveicqetjjvlnfrwc"` из **`web`** — **Deployed**.
+
+### Вердикт прогона 30
+
+**Passed** с оговоркой **BUG-ADM-014** (unit + build + TC-ADM **01–06, 09–10**; **07** Partial; **CHART-02 Failed**). **TC-ADM-11** — Not run.
+
+### Известный дефект (прогон 30+)
+
+| ID | Симптом | Причина (код) | Приоритет |
+|----|---------|---------------|-----------|
+| **BUG-ADM-014** | Тултип KPI-тренда у **верхней** точки — пустая полоска, число не видно | `tipY = pt.y - tipH - 8` без clamp; SVG `viewBox` обрезает `y < 0` | **P2** UX |
+
+---
+
+*Обновление: 2026-05-28 — TC-ADM-CHART + BUG-ADM-014 (tooltip KPI trend); прогон 30 UI.*
