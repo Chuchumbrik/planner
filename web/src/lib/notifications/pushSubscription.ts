@@ -15,7 +15,7 @@ export function getVapidPublicKey(): string | null {
 }
 
 export async function ensurePushSubscription(): Promise<PushSubscription | null> {
-  if (!import.meta.env.PROD || typeof window === 'undefined') return null
+  if (typeof window === 'undefined') return null
   const vapid = getVapidPublicKey()
   if (!vapid) return null
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null

@@ -93,6 +93,7 @@ type VaultContextValue = {
   saveSeed: (seedB64: string, password: string) => Promise<void>
   lock: () => Promise<void>
   createTask: (input: CreateTaskInput, opts?: { removeDraftId?: string }) => Promise<boolean>
+  createTaskFull: (input: CreateTaskInput, checklistItems?: string[], groupName?: string) => Promise<boolean>
   /** @deprecated используйте createTask */
   addTask: (
     title: string,
@@ -457,6 +458,40 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [mutate, remoteHydrated],
   )
 
+  const createTaskFull = useCallback(
+    async (input: CreateTaskInput, checklistItems?: string[], groupName?: string) => {
+      if (!remoteHydrated) return false
+      if (!input.title.trim()) return false
+      await mutate((v) => {
+        let next = v
+        let resolvedGroupId = input.groupId
+
+        // Resolve or create group by name
+        if (groupName?.trim()) {
+          const trimmed = groupName.trim().toLowerCase()
+          const existing = next.groups.find((g) => g.name.toLowerCase() === trimmed)
+          if (existing) {
+            resolvedGroupId = existing.id
+          } else {
+            next = applyAddGroup(next, groupName.trim(), vaultDepsDefault)
+            resolvedGroupId = next.groups[next.groups.length - 1].id
+          }
+        }
+
+        next = applyCreateTask(next, { ...input, groupId: resolvedGroupId }, vaultDepsDefault)
+        if (checklistItems?.length) {
+          const newTask = next.tasks[0]
+          for (const item of checklistItems) {
+            if (item.trim()) next = applyAddChecklistItem(next, newTask.id, item, vaultDepsDefault)
+          }
+        }
+        return next
+      })
+      return true
+    },
+    [mutate, remoteHydrated],
+  )
+
   const addTask = useCallback(
     async (
       title: string,
@@ -676,8 +711,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   > => {
     if (!supabase || !session?.user?.id) return 'unconfigured'
     if (!getVapidPublicKey()) return 'unconfigured'
-    const reg = await navigator.serviceWorker?.getRegistration()
-    if (!reg?.active) return 'no_sw'
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return 'no_sw'
     const sub = await ensurePushSubscription()
     if (!sub) return 'denied'
     await upsertPushSubscriptionRow(supabase, session.user.id, sub)
@@ -733,6 +767,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       saveSeed,
       lock,
       createTask,
+      createTaskFull,
       addTask,
       upsertDraft,
       deleteDraft,
@@ -776,6 +811,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       saveSeed,
       lock,
       createTask,
+      createTaskFull,
       addTask,
       upsertDraft,
       deleteDraft,
