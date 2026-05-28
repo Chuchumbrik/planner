@@ -142,11 +142,6 @@ function ShellSidebar({
             />
             {showPreviewNav ? (
               <>
-                <AiAssistantTrigger
-                  variant="sidebar"
-                  className="mt-1"
-                  sidebarCollapsed={collapsed}
-                />
                 {!collapsed ? (
                   <p className="mt-4 px-4 pb-1 text-label-sm uppercase tracking-wide text-on-surface-variant/80">
                     {t('shell.navPreviews')}
@@ -221,13 +216,12 @@ function MotivatorShellInner({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readShellSidebarCollapsed)
   const settingsActive = activeNav === 'settings'
   const { canAccessPreviewFeatures, isAdmin } = useAuth()
-  const { open: aiOpen, closeAssistant } = useAiAssistant()
+  const { closeAssistant } = useAiAssistant()
   const isDesktop = useIsDesktopShell()
   const adminMode = isShellAdminMode(location.pathname, location.hash, {
     isAdmin,
     canAccessQaTools: canAccessPreviewFeatures,
   })
-  const aiDocked = aiOpen && isDesktop && canAccessPreviewFeatures
   useEffect(() => {
     if (!canAccessPreviewFeatures) closeAssistant()
   }, [canAccessPreviewFeatures, closeAssistant])
@@ -293,7 +287,7 @@ function MotivatorShellInner({
         className={cn(
           'flex min-h-dvh min-w-0 transition-[margin] duration-200 ease-out',
           shellMainOffsetClass(desktopSidebarCollapsed),
-          aiDocked && 'md:flex-row',
+          canAccessPreviewFeatures && isDesktop && 'md:flex-row',
         )}
       >
         <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
@@ -311,6 +305,9 @@ function MotivatorShellInner({
               <h1 className={SHELL_PAGE_TITLE}>{pageTitle}</h1>
             </div>
             <div className={SHELL_HEADER_ACTIONS}>
+              {canAccessPreviewFeatures && isDesktop ? (
+                <AiAssistantTrigger variant="header" />
+              ) : null}
               <ShellHeaderActions planTier={planTier} />
             </div>
           </header>
@@ -346,10 +343,10 @@ function MotivatorShellInner({
           </nav>
         </div>
 
-        {aiDocked ? <AiAssistantPanel mode="docked" /> : null}
+        {canAccessPreviewFeatures && isDesktop ? <AiAssistantPanel mode="docked" /> : null}
       </div>
 
-      {canAccessPreviewFeatures && aiOpen && !isDesktop ? (
+      {canAccessPreviewFeatures && !isDesktop ? (
         <AiAssistantPanel mode="overlay" />
       ) : null}
     </div>
