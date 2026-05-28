@@ -1,0 +1,29 @@
+{
+  "todayKey": "2026-05-28",
+  "fromKey": "2026-05-21",
+  "toKey": "2026-05-27",
+  "streak": 2,
+  "completionPct": 29,
+  "completionFraction": "2/7",
+  "totalMarks": 2,
+  "recurring": [
+    {
+      "title": "Mark outside window",
+      "misses": 7
+    },
+    {
+      "title": "Daily habit",
+      "misses": 6
+    },
+    {
+      "title": "Weekly Mon/Wed/Fri",
+      "misses": 3
+    }
+  ],
+  "oneOff": [
+    {
+      "title": "One-off overdue",
+      "date": "2026-05-23"
+    }
+  ]
+}

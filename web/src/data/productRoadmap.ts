@@ -334,11 +334,19 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: '**Админ → Сводка:** по клику на KPI (**всего пользователей**, **регистрации**, **MAU 30д**, **отток**) — мини-график тренда по месяцам; Edge **`kpiTrend`**.',
             en: '**Admin → Summary:** click KPI cards (**total users**, **registrations**, **MAU 30d**, **churn**) for a monthly trend mini-chart; Edge **`kpiTrend`**.',
           },
+          {
+            ru: '**AI-ассистент (beta/admin):** панель чата теперь рабочая (Groq) — потоковые ответы, подсказки, подтверждение пакетных действий по задачам (создать/изменить/удалить), голосовой ввод с авто-отправкой.',
+            en: '**AI assistant (beta/admin):** the chat panel is now live (Groq) — streaming replies, suggestions, confirmation for batch task actions (create/edit/delete), and voice input with auto-send.',
+          },
         ],
         plainBullets: [
           {
             ru: 'На обзоре админа можно не только увидеть цифру «сейчас», но и открыть, как она менялась по месяцам — отдельно для регистраций, активной аудитории и оттока.',
             en: 'On the admin overview you can open how a KPI changed month by month — registrations, active users, or churn — not just the current number.',
+          },
+          {
+            ru: 'AI-помощник перестал быть макетом: можно переписываться голосом/текстом и подтверждать предложенные изменения задач в один клик.',
+            en: 'AI assistant is no longer a mock: you can chat by voice/text and confirm proposed task updates in one click.',
           },
         ],
       },

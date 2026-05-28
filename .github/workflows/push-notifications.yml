@@ -1,0 +1,25 @@
+name: Push notifications cron
+
+on:
+  schedule:
+    # every 5 minutes — GitHub Actions minimum granularity
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  send-due:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger send-due edge function
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${SUPABASE_URL}/functions/v1/send-due")
+          echo "HTTP ${STATUS}: $(cat /tmp/resp.json)"
+          [ "$STATUS" = "200" ] || exit 1
