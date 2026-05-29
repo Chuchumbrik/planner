@@ -2,11 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
-import {
-  SETTINGS_TAB_PANEL_INTRO,
-  SETTINGS_TAB_PANEL_TITLE,
-  settingsTabButton,
-} from '@/lib/designClasses'
+import { SETTINGS_TAB_PANEL_INTRO, SETTINGS_TAB_PANEL_TITLE } from '@/lib/designClasses'
 import type { AdminDashboardTabId } from '@/components/admin/useAdminDashboardTab'
 
 type TabDef = {
@@ -45,42 +41,52 @@ export function AdminDashboardTabLayout({ activeTab, onTabChange, children }: Pr
   const activeMeta = TABS.find((tab) => tab.id === activeTab) ?? TABS[0]
 
   return (
-    <div className="flex flex-col gap-lg lg:flex-row">
-      <nav className="w-full shrink-0 lg:w-64" aria-label={t('admin.dashboard.tabs.navAria')}>
-        <div className="scrollbar-site flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
-          {TABS.map((tab) => {
-            const active = tab.id === activeTab
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                aria-controls={`admin-dashboard-panel-${tab.id}`}
-                id={`admin-dashboard-tab-${tab.id}`}
-                className={settingsTabButton(active)}
-                onClick={() => onTabChange(tab.id)}
-              >
-                <MaterialIcon
-                  name={tab.icon}
-                  size={20}
-                  filled={active}
-                  className={cn(active ? 'text-primary' : 'text-on-surface-variant')}
-                />
-                <span className="text-label-md">{t(tab.labelKey)}</span>
-              </button>
-            )
-          })}
-        </div>
+    <div className="flex flex-col">
+      {/* Horizontal tab strip */}
+      <nav
+        role="tablist"
+        aria-label={t('admin.dashboard.tabs.navAria')}
+        className="flex border-b border-surface-variant"
+      >
+        {TABS.map((tab) => {
+          const active = tab.id === activeTab
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              aria-controls={`admin-panel-${tab.id}`}
+              id={`admin-tab-${tab.id}`}
+              className={cn(
+                'flex min-h-[44px] items-center gap-2 border-b-2 px-4 py-2.5 text-label-md transition-colors',
+                active
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-on-surface-variant hover:text-on-surface',
+              )}
+              onClick={() => onTabChange(tab.id)}
+            >
+              <MaterialIcon
+                name={tab.icon}
+                size={18}
+                filled={active}
+                className={active ? 'text-primary' : 'text-on-surface-variant'}
+              />
+              {t(tab.labelKey)}
+            </button>
+          )
+        })}
       </nav>
 
+      {/* Panel */}
       <div
-        className="min-w-0 flex-1 space-y-md"
+        key={activeTab}
+        className="mt-lg animate-admin-tab-in"
         role="tabpanel"
-        id={`admin-dashboard-panel-${activeTab}`}
-        aria-labelledby={`admin-dashboard-tab-${activeTab}`}
+        id={`admin-panel-${activeTab}`}
+        aria-labelledby={`admin-tab-${activeTab}`}
       >
-        <header>
+        <header className="mb-md">
           <h2 className={SETTINGS_TAB_PANEL_TITLE}>{t(activeMeta.titleKey)}</h2>
           <p className={SETTINGS_TAB_PANEL_INTRO}>{t(activeMeta.introKey)}</p>
         </header>

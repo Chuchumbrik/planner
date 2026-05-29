@@ -2,9 +2,9 @@
 
 **Тестовый сайт (canonical):** [https://planner-tawny-omega.vercel.app/app](https://planner-tawny-omega.vercel.app/app)  
 **Base URL:** `https://planner-tawny-omega.vercel.app`  
-**Версия в репозитории:** `0.7.3` · **HEAD:** `b61f972` (merge: activity drill-down + KPI trends)  
-**Версия на production:** уточнять в footer (`0.7.3+<hash>`); последний задокументированный smoke shell — `0ec71a3` (прогон 24)  
-**Дата актуализации модели:** 2026-05-28  
+**Версия в репозитории:** `0.7.4` · **HEAD:** `dfdd1da` (admin dashboard redesign + Recharts)  
+**Версия на production:** `0.7.4+909733f` (прогон 31, 2026-05-29); предыдущий admin smoke — `0.7.3+6d0c7cd` (прогон 30)  
+**Дата актуализации модели:** 2026-05-29  
 **Исполнитель:** QA Automation (Chrome DevTools MCP + unit)  
 **Учётные записи QA:** `.cursor/test-accounts.local.md` (gitignored): **admin** / **beta_tester** / **user**
 
@@ -18,7 +18,7 @@
 |----------|----------|
 | **Entry point QA** | **`/app`** — основной экран планировщика после входа |
 | **Production URL** | `https://planner-tawny-omega.vercel.app` |
-| **Проверка версии** | Footer sidebar: `Мотиватор · v0.7.3+<git-hash>` |
+| **Проверка версии** | Settings → «Версия приложения» или footer sidebar: `0.7.4+<git-hash>` |
 | **Auth** | Supabase; тестовая УЗ admin (см. `.cursor/test-account.local.md`) |
 | **Скриншоты** | `docs/qa-screenshots/prog24-*` (прогон 24); ранее `prog23-*`, `prog21-*` |
 | **Локальный preview** | `npm run build -w web && npx vite preview` — без `VITE_SUPABASE_*` вход невозможен |
@@ -27,13 +27,13 @@
 
 ## Summary
 
-**Общее состояние:** shell/admin UX (прогон 24) — **Passed** на `0ec71a3`; **админ-мониторинг** (`/admin/dashboard`, DAU, KPI trends) — модель и unit в [прогоне 30](#прогон-30--актуализация-модели-b61f972--unitbuild); UI smoke на production — **Pending** до деплоя `b61f972`.
+**Общее состояние:** shell/admin UX (прогон 24) — **Passed** на `0ec71a3`; **админ-мониторинг** — [прогон 30](#прогон-30--админ-мониторинг-модель--unitbuild--ui) на `0.7.3+6d0c7cd`; **редизайн 0.7.4** — [прогон 31](#прогон-31--admin-dashboard-074-recharts--hero-kpi) на production **`0.7.4+909733f`**.
 
-**Вердикт (прогон 30):** **Passed*** — TC-ADM **01–06, 09–10**; **07 Partial** (**BUG-ADM-014** tooltip); Edge задеплоен 2026-05-28.
+**Вердикт (прогон 31):** **Passed** — TC-ADM **01–07, 09–10, 12**; **TC-ADM-CHART-02 Passed** (**BUG-ADM-014 Verified Fixed**); **TC-ADM-11** — Not run.
 
-> **Прогоны:** [24](#прогон-24--smoke-после-shelladmin-ux) shell (**Passed**), [25](#прогон-25--smoke-qa-clock--fab--footer) QA clock (**Pending** deploy), [30](#прогон-30--актуализация-модели-b61f972--unitbuild) admin monitoring model + unit (**2026-05-28**).
+> **Прогоны:** [24](#прогон-24--smoke-после-shelladmin-ux) shell (**Passed**), [25](#прогон-25--smoke-qa-clock--fab--footer) QA clock (**Pending** deploy), [30](#прогон-30--админ-мониторинг-модель--unitbuild--ui) admin monitoring (**2026-05-28**), [31](#прогон-31--admin-dashboard-074-recharts--hero-kpi) admin redesign 0.7.4 (**2026-05-29**).
 
-**В main после `fe38e29` / `b61f972`:** `/admin/dashboard` (вкладки **Сводка** / **Пользователи**), график **активности** (DAU/WAU, drill-down по UTC-дню), **KPI trends** по клику на карточку (`kpiTrend`), Edge `activityChart` / `activityDayUsers` / `kpiTrend`, миграция **`006_admin_user_activity_daily.sql`**.
+**В main после `dfdd1da` (0.7.4):** hero-строка **4 KPI** (`AdminDashboardSummaryTab`), графики **Recharts** (`AdminKpiChartZone` AreaChart, `AdminDashboardActivityChart` BarChart), модал подтверждения смены роли (`AdminMotivatorRolePanel`), **25** unit-тестов метрик (`adminDashboardMetrics.test.ts`, всего **31** в `web/`). Edge **без изменений** — деплой не требуется.
 
 ---
 
@@ -151,9 +151,11 @@
 | UX-05 EOD только День | `AppPage.tsx`, settings copy | UX-05 | D | **Passed** — stat tile, не toolbar |
 | Period stats copy | `PeriodPlannerStatsRow.tsx` | TC-D2-10 | D | **Passed** — прогон 23 |
 | Reports chart scroll | `ReportsPage.tsx`, `scrollbar-slider-h` | TC-D2-11 | D | **Partial** — прогон 23 (нет overflow на данных) |
-| Admin dashboard | `AdminDashboardPage.tsx`, `AdminDashboardSummaryTab.tsx` | TC-ADM-01…03 | D | **Passed** [30-UI] — `0.7.3+6d0c7cd` |
-| Activity chart + drill-down | `AdminDashboardActivityChart.tsx`, Edge `activityChart` / `activityDayUsers` | TC-ADM-04…06 | D | **Passed** [30-UI] |
-| KPI monthly trends | `AdminKpiChartZone.tsx`, `useAdminKpiTrend.ts`, Edge `kpiTrend` | TC-ADM-07, **TC-ADM-CHART** | D/unit | **Partial** [30-UI] — Edge OK; **BUG-ADM-014** tooltip на пике |
+| Admin dashboard (hero KPI) | `AdminDashboardSummaryTab.tsx`, `AdminDashboardPage.tsx` | TC-ADM-01…03 | D | **Passed** [31-UI] — `0.7.4+909733f` |
+| Activity chart + drill-down | `AdminDashboardActivityChart.tsx` (Recharts BarChart), Edge `activityChart` / `activityDayUsers` | TC-ADM-04…06 | D | **Passed** [31-UI] |
+| KPI monthly trends | `AdminKpiChartZone.tsx` (Recharts AreaChart), `useAdminKpiTrend.ts`, Edge `kpiTrend` | TC-ADM-07, **TC-ADM-CHART** | D/unit | **Passed** [31-UI] — **BUG-ADM-014 Verified Fixed** |
+| Role change confirm modal | `AdminMotivatorRolePanel.tsx` | **TC-ADM-12** | D | **Passed** [31-UI] |
+| Admin metrics unit tests | `adminDashboardMetrics.test.ts` | TC-ADM (unit) | unit | **Passed** [31] — **25** + **31** total web vitest |
 | Activity ping | `admin-record-activity`, `006_admin_user_activity_daily.sql` | TC-ADM-10 | D/Edge | **Passed*** [30-UI] |
 | Admin routes | `App.tsx` redirects | TC-ADM-11 | D | **Passed** [30-UI] |
 
@@ -175,51 +177,50 @@
 
 ---
 
-## Тестовая модель — админ-мониторинг (`b61f972`)
+## Тестовая модель — админ-мониторинг (`dfdd1da` / 0.7.4)
 
-**Коммиты:** `fe38e29` — activity chart drill-down (#73); `d6f1b48` / `9c6bdda` — KPI monthly trends (`kpiTrend`); merge **`b61f972`**.  
+**Коммиты:** `fe38e29` — activity chart drill-down (#73); `d6f1b48` / `9c6bdda` — KPI monthly trends (`kpiTrend`); merge **`b61f972`**; **`dfdd1da`** — redesign + Recharts (0.7.4).  
 **Документация продукта:** `web/README.md` → «Админ-мониторинг», миграция **`006_admin_user_activity_daily.sql`**.  
-**Edge:** `admin-motivator-roles` — actions `overview`, `activityChart`, `activityDayUsers`, `kpiTrend`; `admin-record-activity` — ping ≤1/час/пользователь/UTC-день.
+**Edge:** `admin-motivator-roles` — actions `overview`, `activityChart`, `activityDayUsers`, `kpiTrend`; `admin-record-activity` — ping ≤1/час/пользователь/UTC-день. **0.7.4:** Edge без изменений.
 
 ### Реестр TC-ADM (админ-мониторинг)
 
 | ID | Шаги | Ожидаемый результат | Авто | Статус |
 |----|------|---------------------|------|--------|
-| **TC-ADM-01** | **admin**, D 1440: `/admin/dashboard`, вкладка **Сводка** | KPI-карточки (всего, рег. 7д, MAU 30д, отток, вход 7д, vault, push, дефекты 7д); подсказка Auth vs активность | — | **Passed** [30-UI] |
-| **TC-ADM-02** | Вкладка **Пользователи** | Список УЗ, фильтры сегментов; смена роли — только admin | unit + UI | **Passed** [30-UI] |
+| **TC-ADM-01** | **admin**, D 1440: `/admin/dashboard`, вкладка **Сводка** | Hero-строка **4 KPI** (ВСЕГО / РЕГ. 7Д / MAU 30Д / CHURN); вторичные метрики (вход 7д, vault, push, дефекты); подсказка Auth vs активность | — | **Passed** [31-UI] |
+| **TC-ADM-02** | Вкладка **Пользователи** | Список УЗ, фильтры сегментов; смена роли — только admin; см. **TC-ADM-12** | unit + UI | **Passed** [31-UI] |
 | **TC-ADM-03** | **user:** `/admin/dashboard` | Redirect **`/app`** | — | **Passed** [30-UI] |
 | **TC-ADM-04** | Сводка: график **Активность**; **7 / 30 / 90** дн. и фильтр роли | Серия UTC-дней; DAU today / WAU | — | **Passed** [30-UI] |
 | **TC-ADM-05** | Клик столбец с **числом > 0** | Список email + роль за UTC-день (`activityDayUsers`) | — | **Passed** [30-UI] |
 | **TC-ADM-06** | Клик столбец **0** | Нет drill-down (только `generic`, не кнопка) | — | **Passed** [30-UI] |
-| **TC-ADM-07** | Клик KPI (всего / рег. / MAU / отток) | Помесячный тренд под карточкой (`kpiTrend`); повторный клик — свернуть; **подсказки на графике** — [TC-ADM-CHART](#графики-админки--tooltip-и-hover-tc-adm-chart) | — | **Partial** [30-UI] — данные Edge OK; **BUG-ADM-014** tooltip |
+| **TC-ADM-07** | Клик hero KPI (всего / рег. / MAU / отток) | Помесячный **Recharts AreaChart** под карточкой (`kpiTrend`); повторный клик — свернуть; **Tooltip** — [TC-ADM-CHART](#графики-админки--tooltip-и-hover-tc-adm-chart) | — | **Passed** [31-UI] |
 | **TC-ADM-08** | `kpiTrend` без таблицы `006` | Деградация без 500 всей страницы | — | **N/A** на prod (таблица есть) |
 | **TC-ADM-09** | Legacy URL | `/admin/access` → users; `/prototype/admin-dashboard` → summary | — | **Passed** [30-UI] |
 | **TC-ADM-10** | User на `/app` | Ping ≤1/час → `admin_user_activity_daily` | — | **Passed*** [30-UI] — косвенно: столбцы 26–27.05 с DAU=1 |
 | **TC-ADM-11** | Edge без admin JWT | `admin-motivator-roles` → **401** / **403** | TC-SEC | **Not run** |
+| **TC-ADM-12** | **Пользователи:** сменить роль в `<select>` (не текущую) | Модал «Роль»: email, бейджи USER→BETA (или др.); **Отмена** — роль не меняется; **Сохранить** — Edge `setRole` | — | **Passed** [31-UI] — отмена проверена |
 
 **Предусловия UI:** миграция **`006`**, Edge задеплоены, УЗ **admin** — `.cursor/test-accounts.local.md`.
 
 ### Графики админки — tooltip и hover (TC-ADM-CHART)
 
-**Компонент:** [`AdminKpiChartZone.tsx`](../web/src/components/admin/AdminKpiChartZone.tsx) — SVG line chart, hover через `hoveredIdx`, подсказка: `rect` + `text` над точкой (`tipY = pt.y - tipH - 8`, **без** clamp к `PAD.t` / flip вниз).
+**Компонент (0.7.4+):** [`AdminKpiChartZone.tsx`](../web/src/components/admin/AdminKpiChartZone.tsx) — **Recharts** `AreaChart` + встроенный `Tooltip` (`renderTooltip`: месяц + значение / `%`). Старый SVG-код (prog 30) удалён.
 
-**Связанный дефект:** **BUG-ADM-014** — при **максимуме** серии (последняя точка у верхней границы `viewBox`) тултип уходит в **отрицательный Y** и **обрезается** контейнером SVG → видна только полоска рамки, **текст значения не читается** (подтверждено на «Всего пользователей», май 2026, value=8).
+**История:** **BUG-ADM-014** — в SVG-версии (`tipY = pt.y - tipH - 8` без clamp) тултип на **пике** обрезался. **Исправлено в `dfdd1da`** — Recharts Tooltip позиционируется автоматически.
 
 | ID | Шаги | Ожидаемый результат | Статус |
 |----|------|---------------------|--------|
-| **TC-ADM-CHART-01** | KPI-тренд открыт; навести на **среднюю** точку (не пик) | Тултип: фон + **число** (или `N%` для Churn); не пустой прямоугольник | **Pending** |
-| **TC-ADM-CHART-02** | Навести на **последнюю** точку (**максимум** Y, часто «май») | Тултип **полностью** внутри области графика; значение читается; **нет** обрезки у кнопок «Обновить»/«Закрыть» | **Failed** — **BUG-ADM-014** |
+| **TC-ADM-CHART-01** | KPI-тренд открыт; навести на **среднюю** точку (не пик) | Тултип: фон + **число** (или `N%` для Churn); не пустой прямоугольник | **Passed** [31-UI] — косвенно (серия flat cy=114) |
+| **TC-ADM-CHART-02** | Навести на **последнюю** точку (**максимум** Y, часто «май») | Тултип **полностью** виден; значение читается (**«май» / 8** на «Всего пользователей») | **Passed** [31-UI] — **BUG-ADM-014 Verified Fixed** |
 | **TC-ADM-CHART-03** | Навести на **первую** точку (минимум / ноль) | Тултип над точкой, значение **0** или `0%` видно | **Pending** |
-| **TC-ADM-CHART-04** | Карточка **Churn 30д** → hover на пик | Тултип с **`%`** (unit из `kpiTrend`); те же правила видимости | **Pending** |
-| **TC-ADM-CHART-05** | `mouseLeave` с SVG | Тултип **исчезает**; точка возвращается к r=3.5 | **Pending** |
-| **TC-ADM-CHART-06** | Узкий viewport (~320px), горизонтальный scroll графика | Тултип остаётся привязан к точке при hover; не «ломается» layout | **Pending** |
-| **TC-ADM-CHART-07** | **a11y:** только клавиатура | Сейчас hover только `onMouseEnter` на `<circle>` — **нет** keyboard focus; зафиксировать как **Known gap** или доработка | **N/A** (mouse-only) |
+| **TC-ADM-CHART-04** | Карточка **Churn 30д** → hover на пик | Тултип с **`%`**; на prod **«Недостаточно данных»** если серия пуста | **N/A** [31-UI] — нет серии на prod |
+| **TC-ADM-CHART-05** | `mouseLeave` с графика | Тултип **исчезает** | **Pending** |
+| **TC-ADM-CHART-06** | Узкий viewport (~320px) | Тултип не ломает layout | **Pending** |
+| **TC-ADM-CHART-07** | **a11y:** только клавиатура | Recharts hover — mouse-only; hero KPI — `article[role=button]` + Enter/Space | **Known gap** (mouse tooltip) |
 
-**График «Активность»** ([`AdminDashboardActivityChart.tsx`](../web/src/components/admin/AdminDashboardActivityChart.tsx)): столбцы — **`title` / `aria-label` на кнопке**, не SVG-tooltip; отдельно: **TC-ADM-05/06** (drill-down). При появлении SVG-тултипов в activity — расширить эту матрицу по тем же правилам.
+**График «Активность»** ([`AdminDashboardActivityChart.tsx`](../web/src/components/admin/AdminDashboardActivityChart.tsx), **Recharts BarChart**): drill-down — **TC-ADM-05/06** (клик по столбцу); native `title` / кнопка, не SVG-tooltip.
 
-**Регрессия после фикса BUG-ADM-014:** clamp `tipY` ≥ `PAD.t` **или** flip тултип **под** точку, если `pt.y < PAD.t + tipH + margin`; перепроверить **CHART-01…06** на D 1440.
-
-**Артефакт:** скрин обрезанного тултипа (май, пик) — приложен к отчёту QA 2026-05-28.
+**Артефакты:** `docs/qa-screenshots/prog31-kpi-tooltip-peak.png` (май, value=8); prog 30 — обрезанный SVG-тултип.
 
 ---
 
@@ -1844,12 +1845,43 @@ Mobile (393px): select **16px** — ещё сильнее контраст с п
 
 **Passed** с оговоркой **BUG-ADM-014** (unit + build + TC-ADM **01–06, 09–10**; **07** Partial; **CHART-02 Failed**). **TC-ADM-11** — Not run.
 
-### Известный дефект (прогон 30+)
+### Известный дефект (прогон 30; закрыт в 31)
 
-| ID | Симптом | Причина (код) | Приоритет |
-|----|---------|---------------|-----------|
-| **BUG-ADM-014** | Тултип KPI-тренда у **верхней** точки — пустая полоска, число не видно | `tipY = pt.y - tipH - 8` без clamp; SVG `viewBox` обрезает `y < 0` | **P2** UX |
+| ID | Симптом | Причина (код) | Статус |
+|----|---------|---------------|--------|
+| **BUG-ADM-014** | Тултип KPI-тренда у **верхней** точки — пустая полоска, число не видно | SVG `AdminKpiChartZone` (`tipY` без clamp); **исправлено** — Recharts Tooltip в **`dfdd1da`** | **Verified Fixed** [31-UI] на `0.7.4+909733f` |
 
 ---
 
-*Обновление: 2026-05-28 — TC-ADM-CHART + BUG-ADM-014 (tooltip KPI trend); прогон 30 UI.*
+## Прогон 31 — admin dashboard 0.7.4 (Recharts + hero KPI)
+
+**Дата:** 2026-05-29  
+**Репозиторий:** `dfdd1da` · **Production:** `0.7.4+909733f`  
+**Сайт:** [planner-tawny-omega.vercel.app](https://planner-tawny-omega.vercel.app) · **УЗ:** admin `planner-qa-admin-5749d652@qa.motivator.invalid` — активная сессия (vault синхронизирован)  
+**Скриншоты:** `docs/qa-screenshots/prog31-admin-dashboard-1440.png`, `prog31-kpi-tooltip-peak.png`
+
+### Unit
+
+| Команда | Результат |
+|---------|-----------|
+| `npx vitest run` (`web/`) | **31 passed** (в т.ч. **25** `adminDashboardMetrics.test.ts`) |
+
+### UI (MCP, TC-ADM)
+
+| ID | Результат | Факт |
+|----|-----------|------|
+| **TC-ADM-01** | **Passed** | Hero 4 KPI + вторичные метрики; Recharts activity chart |
+| **TC-ADM-02** | **Passed** | `?tab=users`: 8 УЗ, фильтры |
+| **TC-ADM-07** | **Passed** | KPI trend AreaChart; месяцы янв.–май |
+| **TC-ADM-CHART-02** | **Passed** | Hover пик «май» → tooltip **8**, не обрезан |
+| **TC-ADM-12** | **Passed** | Смена роли QA user → модал; **Отмена** — роль USER |
+| **TC-ADM-04…06, 09–10** | **Passed*** | Регрессия не ломалась (краткий smoke сводки) |
+| **TC-ADM-11** | **Not run** | — |
+
+### Вердикт прогона 31
+
+**Passed** — деплой **0.7.4** на production; **BUG-ADM-014 Verified Fixed**; новый **TC-ADM-12** (confirm modal). Остаётся **TC-ADM-CHART-03, 05, 06** (Pending), **TC-ADM-11** (Not run).
+
+---
+
+*Обновление: 2026-05-29 — прогон 31, модель 0.7.4 / `dfdd1da`, BUG-ADM-014 закрыт.*

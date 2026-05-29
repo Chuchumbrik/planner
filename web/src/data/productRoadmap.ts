@@ -328,6 +328,25 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-29', en: '2026-05-29' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.5', en: '0.7.5' },
+        changes: [
+          {
+            ru: '**Админ → Сводка:** bento-сетка hero KPI (высокая «Всего», широкая «Неактивны 30д»), info-подсказки у метрик, группы вторичной статистики (активность / vault / платформа), кнопка «Обновить» и время последней загрузки.',
+            en: '**Admin → Summary:** bento hero KPI grid (tall Total, wide Inactive 30d), info tooltips on metrics, grouped secondary stats (activity / vault / platform), Refresh button and last-loaded timestamp.',
+          },
+          {
+            ru: '**Админ:** горизонтальные вкладки вместо бокового меню; drill-down по дню — role-бейджи и компактная панель; общие компоненты `AdminKpiCard`, `AdminCardSection`, `InfoTooltip`, `RoleBadge`.',
+            en: '**Admin:** horizontal tabs instead of sidebar nav; day drill-down uses role badges and a compact panel; shared `AdminKpiCard`, `AdminCardSection`, `InfoTooltip`, `RoleBadge` components.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Обзор админки стал нагляднее: крупные KPI в bento-сетке, подсказки у цифр, вкладки сверху.',
+            en: 'Admin overview is clearer: large KPIs in a bento layout, tooltips on numbers, tabs along the top.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.4', en: '0.7.4' },
         changes: [
           {

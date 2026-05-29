@@ -2,42 +2,98 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { AdminDashboardActivityChart } from '@/components/admin/AdminDashboardActivityChart'
+import { AdminKpiCard } from '@/components/admin/AdminKpiCard'
 import { AdminKpiChartZone } from '@/components/admin/AdminKpiChartZone'
+import { InfoTooltip } from '@/components/admin/InfoTooltip'
 import { useAdminActivityChart } from '@/components/admin/useAdminActivityChart'
 import { useAdminKpiTrend } from '@/components/admin/useAdminKpiTrend'
 import { cn } from '@/lib/cn'
+import { SETTINGS_BTN_SECONDARY } from '@/lib/designClasses'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import type { AdminKpiMetric, AdminOverview } from '@/types/adminMonitoring'
 
-type HeroCard = {
+// ── secondary stat item ───────────────────────────────────────────────────────
+
+function StatItem({
+  icon,
+  label,
+  value,
+  tooltip,
+  warn = false,
+  loading = false,
+  alignTooltipRight = false,
+}: {
   icon: string
-  labelKey: string
+  label: string
   value: string
-  trendMetric: AdminKpiMetric
-  danger?: boolean
+  tooltip?: string
+  warn?: boolean
+  loading?: boolean
+  alignTooltipRight?: boolean
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <MaterialIcon
+        name={icon}
+        size={18}
+        className={cn('mt-0.5 shrink-0', warn ? 'text-amber-400/60' : 'text-on-surface-variant/40')}
+      />
+      <div className="min-w-0">
+        <div className="flex items-center gap-1">
+          <p className="text-xs text-on-surface-variant">{label}</p>
+          {tooltip ? <InfoTooltip text={tooltip} alignRight={alignTooltipRight} /> : null}
+        </div>
+        {loading ? (
+          <div className="mt-1 h-6 w-10 animate-pulse rounded bg-surface-container-highest" />
+        ) : (
+          <p
+            className={cn(
+              'mt-0.5 font-display text-xl font-semibold tabular-nums',
+              warn ? 'text-amber-400' : 'text-on-surface',
+            )}
+          >
+            {value}
+          </p>
+        )}
+      </div>
+    </div>
+  )
 }
 
-type DetailStat = {
-  icon: string
-  labelKey: string
-  value: string
+// ── stat group with subtle divider ────────────────────────────────────────────
+
+function StatGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="border-b border-surface-variant pb-1 text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant/50">
+        {label}
+      </p>
+      <div className="flex flex-col gap-4">{children}</div>
+    </div>
+  )
 }
+
+// ── main component ────────────────────────────────────────────────────────────
 
 export function AdminDashboardSummaryTab({
   overview,
   loadBusy,
   loadError,
   listDegraded,
+  lastLoaded,
   supabase,
+  onRefresh,
 }: {
   overview: AdminOverview | null
   loadBusy: boolean
   loadError: string | null
   listDegraded: boolean
+  lastLoaded?: Date | null
   supabase: SupabaseClient
+  onRefresh?: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [chartDays, setChartDays] = useState<ActivityChartDays>(30)
   const [chartRole, setChartRole] = useState<ActivityChartRoleFilter>('all')
   const activityChart = useAdminActivityChart(supabase, chartDays, chartRole)
@@ -48,144 +104,130 @@ export function AdminDashboardSummaryTab({
   const o = overview
   const staleDays = o?.stale_vault_days ?? 14
 
-  function fmtNum(val: number | undefined): string {
-    return loadBusy ? '…' : val != null ? String(val) : '—'
+  const inactiveValue =
+    loadBusy ? '…'
+    : o
+      ? o.total_users === 0 ? '—' : `${((1 - o.mau_30d / o.total_users) * 100).toFixed(1)}%`
+      : '—'
+
+  function toggleMetric(metric: AdminKpiMetric) {
+    setActiveMetric((prev) => (prev === metric ? null : metric))
   }
 
-  const heroCards: HeroCard[] = [
-    {
-      icon: 'group',
-      labelKey: 'admin.dashboard.kpiTotal',
-      value: fmtNum(o?.total_users),
-      trendMetric: 'total_users',
-    },
-    {
-      icon: 'person_add',
-      labelKey: 'admin.dashboard.kpiRegistered7d',
-      value: fmtNum(o?.registered_last_7d),
-      trendMetric: 'registrations',
-    },
-    {
-      icon: 'timeline',
-      labelKey: 'admin.dashboard.kpiMau30d',
-      value: fmtNum(o?.mau_30d),
-      trendMetric: 'mau',
-    },
-    {
-      icon: 'trending_down',
-      labelKey: 'admin.dashboard.kpiChurn30d',
-      value: loadBusy ? '…' : o ? (o.total_users === 0 ? '—' : `${((1 - o.mau_30d / o.total_users) * 100).toFixed(1)}%`) : '—',
-      trendMetric: 'churn',
-      danger: true,
-    },
-  ]
-
-  const detailStats: DetailStat[] = [
-    { icon: 'login', labelKey: 'admin.dashboard.kpiSignedIn7d', value: fmtNum(o?.signed_in_last_7d) },
-    { icon: 'lock', labelKey: 'admin.dashboard.kpiWithVault', value: fmtNum(o?.with_vault) },
-    { icon: 'cloud_off', labelKey: 'admin.dashboard.kpiWithoutVault', value: fmtNum(o?.without_vault) },
-    { icon: 'sync_problem', labelKey: 'admin.dashboard.kpiVaultStale', value: fmtNum(o?.vault_stale_14d) },
-    { icon: 'notifications', labelKey: 'admin.dashboard.kpiWithPush', value: fmtNum(o?.with_push) },
-    { icon: 'bug_report', labelKey: 'admin.dashboard.kpiDefects7d', value: fmtNum(o?.defect_submissions_7d) },
-    {
-      icon: 'badge',
-      labelKey: 'admin.dashboard.kpiRoles',
-      value: loadBusy
-        ? '…'
-        : o
-          ? t('admin.dashboard.kpiRolesValue', {
-              admin: o.by_role.admin,
-              beta: o.by_role.beta_tester,
-              user: o.by_role.user,
-            })
-          : '—',
-    },
-  ]
-
-  function handleCardClick(metric: AdminKpiMetric) {
-    setActiveMetric((prev) => (prev === metric ? null : metric))
+  function formatTimestamp(date: Date): string {
+    return date.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
   }
 
   return (
     <div className="space-y-md">
-      <p className="text-body-sm text-on-surface-variant">{t('admin.dashboard.summaryMetricsHint')}</p>
 
-      {loadError ? (
-        <p className="text-xs text-red-400" role="alert">{loadError}</p>
-      ) : null}
-      {listDegraded ? (
-        <p className="text-xs text-amber-400/90" role="status">{t('admin.dashboard.listDegraded')}</p>
-      ) : null}
-
-      {/* Hero KPI row */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {heroCards.map((c) => {
-          const isActive = activeMetric === c.trendMetric
-          return (
-            <article
-              key={c.labelKey}
-              className={cn(
-                'motivator-card relative flex flex-col justify-between gap-4 overflow-hidden p-5 transition-colors',
-                'cursor-pointer hover:bg-surface-container-high',
-                isActive && 'bg-surface-container-high ring-2 ring-primary',
-              )}
-              onClick={() => handleCardClick(c.trendMetric)}
-              role="button"
-              aria-pressed={isActive}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  handleCardClick(c.trendMetric)
-                }
-              }}
-            >
-              {/* accent top bar */}
-              <div
-                className={cn(
-                  'absolute inset-x-0 top-0 h-0.5',
-                  c.danger ? 'bg-red-400/60' : 'bg-primary/60',
-                )}
-              />
-
-              {/* label + icon */}
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
-                  {t(c.labelKey)}
-                </p>
-                <MaterialIcon
-                  name={c.icon}
-                  size={16}
-                  className={cn('shrink-0', c.danger ? 'text-red-400/30' : 'text-primary/30')}
-                />
-              </div>
-
-              {/* value */}
-              <p
-                className={cn(
-                  'font-display text-4xl font-bold leading-none tabular-nums',
-                  c.danger ? 'text-red-400' : 'text-on-surface',
-                )}
-              >
-                {c.value}
-              </p>
-
-              {/* trend hint */}
-              <div
-                className={cn(
-                  'flex items-center gap-1 text-xs transition-colors',
-                  isActive ? 'text-primary' : 'text-on-surface-variant/40',
-                )}
-              >
-                <MaterialIcon name="show_chart" size={12} />
-                <span>{t('admin.dashboard.kpiTrend.clickHint')}</span>
-              </div>
-            </article>
-          )
-        })}
+      {/* ── Toolbar: refresh + timestamp ────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-xs text-on-surface-variant/60">
+          {lastLoaded ? (
+            <>
+              <MaterialIcon name="schedule" size={13} className="shrink-0" />
+              <span>{t('admin.dashboard.lastLoaded', { time: formatTimestamp(lastLoaded) })}</span>
+            </>
+          ) : null}
+        </div>
+        {onRefresh ? (
+          <button
+            type="button"
+            className={cn(SETTINGS_BTN_SECONDARY, 'flex items-center gap-1.5')}
+            disabled={loadBusy}
+            onClick={onRefresh}
+          >
+            <MaterialIcon
+              name="refresh"
+              size={15}
+              className={loadBusy ? 'animate-spin' : undefined}
+            />
+            {loadBusy ? t('common.loading') : t('admin.dashboard.refresh')}
+          </button>
+        ) : null}
       </div>
 
-      {/* Trend chart (expands below hero row on click) */}
+      {/* ── Status banners ──────────────────────────────────────────────── */}
+      {loadError ? (
+        <div className="flex items-start gap-2 rounded-lg border border-red-400/20 bg-red-400/5 px-3 py-2.5 text-xs text-red-400">
+          <MaterialIcon name="error_outline" size={14} className="mt-0.5 shrink-0" />
+          <span>{loadError}</span>
+        </div>
+      ) : null}
+
+      {listDegraded ? (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2.5">
+          <MaterialIcon name="warning" size={14} className="mt-0.5 shrink-0 text-amber-400/70" />
+          <div>
+            <p className="text-xs font-medium text-amber-400/90">{t('admin.dashboard.listDegraded')}</p>
+            <p className="mt-0.5 text-xs text-amber-400/60">{t('admin.dashboard.listDegradedHint')}</p>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── Hero KPI bento grid ─────────────────────────────────────────── */}
+      {/*
+        sm:  2-column
+        xl+: bento — Total spans 2 rows, Inactive spans 2 cols
+          ┌──────────────────┬───────────┬───────────┐
+          │  Всего (tall)    │  Новых 7д │  MAU 30d  │
+          │                  ├───────────┴───────────┤
+          │                  │  Неактивны (wide)      │
+          └──────────────────┴───────────────────────┘
+      */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="xl:row-span-2">
+          <AdminKpiCard
+            icon="group"
+            labelKey="admin.dashboard.kpiTotal"
+            value={loadBusy ? '…' : String(o?.total_users ?? '—')}
+            tooltip={t('admin.dashboard.kpiTooltip.total')}
+            trendMetric="total_users"
+            loading={loadBusy}
+            isActive={activeMetric === 'total_users'}
+            onActivate={() => toggleMetric('total_users')}
+          />
+        </div>
+
+        <AdminKpiCard
+          icon="person_add"
+          labelKey="admin.dashboard.kpiRegistered7d"
+          value={loadBusy ? '…' : String(o?.registered_last_7d ?? '—')}
+          tooltip={t('admin.dashboard.kpiTooltip.registered7d')}
+          trendMetric="registrations"
+          loading={loadBusy}
+          isActive={activeMetric === 'registrations'}
+          onActivate={() => toggleMetric('registrations')}
+        />
+
+        <AdminKpiCard
+          icon="timeline"
+          labelKey="admin.dashboard.kpiMau30d"
+          value={loadBusy ? '…' : String(o?.mau_30d ?? '—')}
+          tooltip={t('admin.dashboard.kpiTooltip.mau')}
+          trendMetric="mau"
+          loading={loadBusy}
+          isActive={activeMetric === 'mau'}
+          onActivate={() => toggleMetric('mau')}
+        />
+
+        <div className="sm:col-span-2 xl:col-span-2">
+          <AdminKpiCard
+            icon="person_off"
+            labelKey="admin.dashboard.kpiInactive30d"
+            value={inactiveValue}
+            tooltip={t('admin.dashboard.kpiTooltip.inactive30d')}
+            trendMetric="churn"
+            danger
+            loading={loadBusy}
+            isActive={activeMetric === 'churn'}
+            onActivate={() => toggleMetric('churn')}
+          />
+        </div>
+      </div>
+
+      {/* ── KPI trend ───────────────────────────────────────────────────── */}
       {activeMetric ? (
         <AdminKpiChartZone
           metric={activeMetric}
@@ -198,32 +240,75 @@ export function AdminDashboardSummaryTab({
         />
       ) : null}
 
-      {/* Secondary stats */}
+      {/* ── Secondary metrics ───────────────────────────────────────────── */}
       <div className="motivator-card p-sm md:p-md">
-        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {detailStats.map((s) => (
-            <div key={s.labelKey} className="flex items-start gap-3">
-              <MaterialIcon
-                name={s.icon}
-                size={18}
-                className="mt-0.5 shrink-0 text-on-surface-variant/40"
-              />
-              <div className="min-w-0">
-                <p className="text-xs text-on-surface-variant">
-                  {s.labelKey === 'admin.dashboard.kpiVaultStale'
-                    ? t(s.labelKey, { days: staleDays })
-                    : t(s.labelKey)}
-                </p>
-                <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-on-surface">
-                  {s.value}
-                </p>
-              </div>
-            </div>
-          ))}
+        <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+          <StatGroup label={t('admin.dashboard.statGroupActivity')}>
+            <StatItem
+              icon="login"
+              label={t('admin.dashboard.kpiSignedIn7d')}
+              value={String(o?.signed_in_last_7d ?? '—')}
+              tooltip={t('admin.dashboard.kpiTooltip.signedIn7d')}
+              loading={loadBusy}
+            />
+          </StatGroup>
+
+          <StatGroup label={t('admin.dashboard.statGroupVault')}>
+            <StatItem
+              icon="lock"
+              label={t('admin.dashboard.kpiWithVault')}
+              value={String(o?.with_vault ?? '—')}
+              tooltip={t('admin.dashboard.kpiTooltip.withVault')}
+              loading={loadBusy}
+            />
+            <StatItem
+              icon="sync_problem"
+              label={t('admin.dashboard.kpiVaultStale', { days: staleDays })}
+              value={String(o?.vault_stale_14d ?? '—')}
+              tooltip={t('admin.dashboard.kpiTooltip.vaultStale', { days: staleDays })}
+              warn={(o?.vault_stale_14d ?? 0) > 0}
+              loading={loadBusy}
+            />
+          </StatGroup>
+
+          <StatGroup label={t('admin.dashboard.statGroupPlatform')}>
+            <StatItem
+              icon="notifications_active"
+              label={t('admin.dashboard.kpiWithPush')}
+              value={String(o?.with_push ?? '—')}
+              tooltip={t('admin.dashboard.kpiTooltip.withPush')}
+              loading={loadBusy}
+            />
+            <StatItem
+              icon="bug_report"
+              label={t('admin.dashboard.kpiDefects7d')}
+              value={String(o?.defect_submissions_7d ?? '—')}
+              tooltip={t('admin.dashboard.kpiTooltip.defects7d')}
+              warn={(o?.defect_submissions_7d ?? 0) > 0}
+              loading={loadBusy}
+            />
+            <StatItem
+              icon="badge"
+              label={t('admin.dashboard.kpiRoles')}
+              value={
+                loadBusy ? '…'
+                : o
+                  ? t('admin.dashboard.kpiRolesValue', {
+                      admin: o.by_role.admin,
+                      beta: o.by_role.beta_tester,
+                      user: o.by_role.user,
+                    })
+                  : '—'
+              }
+              tooltip={t('admin.dashboard.kpiTooltip.roles')}
+              loading={loadBusy}
+              alignTooltipRight
+            />
+          </StatGroup>
         </div>
       </div>
 
-      {/* Activity chart */}
+      {/* ── Activity chart ──────────────────────────────────────────────── */}
       <AdminDashboardActivityChart
         chart={activityChart.chart}
         loadBusy={activityChart.loadBusy}

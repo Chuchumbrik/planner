@@ -11,6 +11,7 @@ import {
 } from '@/components/admin/adminDashboardMetrics'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
+import { RoleBadge } from '@/components/admin/RoleBadge'
 import type { MotivatorRoleRow } from '@/types/adminMonitoring'
 import { ADMIN_ROLES_FN, STALE_VAULT_DAYS } from '@/lib/adminMonitoringConstants'
 import {
@@ -48,26 +49,6 @@ type PendingChange = {
 } | null
 
 // ── helpers ──────────────────────────────────────────────────────────────────
-
-function RoleBadge({ role }: { role: MotivatorRoleRow['motivator_role'] }) {
-  const cls = {
-    admin: 'bg-primary/10 text-primary border-primary/30',
-    beta_tester: 'bg-amber-400/10 text-amber-400 border-amber-400/30',
-    user: 'bg-surface-container-highest text-on-surface-variant border-surface-variant',
-  }[role]
-  const label = { admin: 'Admin', beta_tester: 'Beta', user: 'User' }[role]
-  return (
-    <span
-      className={cn(
-        'inline-flex shrink-0 items-center rounded border px-1.5 py-0.5',
-        'text-[10px] font-semibold uppercase tracking-wide',
-        cls,
-      )}
-    >
-      {label}
-    </span>
-  )
-}
 
 function VaultCell({ user }: { user: MotivatorRoleRow }) {
   if (!user.has_vault) {
@@ -287,9 +268,7 @@ export function AdminMotivatorRolePanel({
 
   return (
     <section>
-      <p className="text-body-sm text-on-surface-variant">{t('settings.adminRolesHelp')}</p>
-
-      <div className={`mt-4 ${SETTINGS_CARD}`}>
+      <div className={SETTINGS_CARD}>
         {/* Search + refresh */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
@@ -335,10 +314,14 @@ export function AdminMotivatorRolePanel({
           </p>
         ) : null}
 
-        <p className="mt-3 text-label-sm text-on-surface-variant">{t('settings.adminRolesSelfHint')}</p>
-        <p className="mt-1 text-label-sm text-on-surface-variant">
-          {t('admin.dashboard.usersMetricsHint', { days: STALE_VAULT_DAYS })}
-        </p>
+        <div className="mt-3 flex items-start gap-1.5 text-xs text-on-surface-variant/70">
+          <MaterialIcon name="info" size={14} className="mt-0.5 shrink-0" />
+          <span>
+            {t('settings.adminRolesSelfHint')}
+            {' · '}
+            {t('admin.dashboard.usersMetricsHint', { days: STALE_VAULT_DAYS })}
+          </span>
+        </div>
 
         {/* Mobile cards */}
         <div className="mt-4 flex flex-col gap-2 md:hidden">

@@ -11,11 +11,12 @@ import {
   XAxis,
 } from 'recharts'
 import type { TooltipProps } from 'recharts'
+import { AdminCardSection } from '@/components/admin/AdminCardSection'
 import { AdminDashboardActivityDayPanel } from '@/components/admin/AdminDashboardActivityDayPanel'
 import { useAdminActivityDayUsers } from '@/components/admin/useAdminActivityDayUsers'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import { ACTIVITY_CHART_DAY_OPTIONS } from '@/lib/adminMonitoringConstants'
-import { SETTINGS_CARD, SCROLLBAR_SLIDER_H, SETTINGS_BTN_SECONDARY, chipActive } from '@/lib/designClasses'
+import { SETTINGS_BTN_SECONDARY, chipActive } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 import type { AdminActivityChart } from '@/types/adminMonitoring'
 
@@ -81,33 +82,27 @@ export function AdminDashboardActivityChart({
   }
 
   const xAxisInterval = days === 7 ? 0 : days === 90 ? 8 : 3
-
   const isEmpty = chart && chart.series.every((b) => b.unique_users === 0)
 
-  return (
-    <section className={SETTINGS_CARD}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="font-display text-sm font-semibold text-on-surface">
-            {t('admin.dashboard.activityChartTitle')}
-          </h3>
-          <p className="mt-1 text-body-sm text-on-surface-variant">
-            {t('admin.dashboard.activityChartHint')}
-          </p>
-          <p className="mt-1 text-xs text-on-surface-variant/70">
-            {t('admin.dashboard.activityChartClickHint')}
-          </p>
-        </div>
-        <button
-          type="button"
-          className={`${SETTINGS_BTN_SECONDARY} shrink-0`}
-          disabled={loadBusy}
-          onClick={onRefresh}
-        >
-          {loadBusy ? t('common.loading') : t('admin.dashboard.activityChartRefresh')}
-        </button>
-      </div>
+  const refreshButton = (
+    <button
+      type="button"
+      className={SETTINGS_BTN_SECONDARY}
+      disabled={loadBusy}
+      onClick={onRefresh}
+    >
+      {loadBusy ? t('common.loading') : t('admin.dashboard.activityChartRefresh')}
+    </button>
+  )
 
+  return (
+    <AdminCardSection
+      title={t('admin.dashboard.activityChartTitle')}
+      hint={t('admin.dashboard.activityChartHint')}
+      hint2={t('admin.dashboard.activityChartClickHint')}
+      action={refreshButton}
+    >
+      {/* period filter */}
       <div
         className="mt-4 flex flex-wrap gap-1.5"
         role="group"
@@ -125,6 +120,7 @@ export function AdminDashboardActivityChart({
         ))}
       </div>
 
+      {/* role filter */}
       <div
         className="mt-2 flex flex-wrap gap-1.5"
         role="group"
@@ -142,83 +138,79 @@ export function AdminDashboardActivityChart({
         ))}
       </div>
 
+      {/* status messages */}
       {tableMissing ? (
         <p className="mt-4 text-xs text-amber-400/90" role="status">
           {t('admin.dashboard.activityTableMissing')}
         </p>
       ) : null}
       {loadError ? (
-        <p className="mt-4 text-xs text-red-400" role="alert">
-          {loadError}
-        </p>
+        <p className="mt-4 text-xs text-red-400" role="alert">{loadError}</p>
       ) : null}
 
+      {/* DAU / WAU summary */}
       {chart && !loadBusy ? (
         <p className="mt-4 text-label-sm text-on-surface-variant">
           {t('admin.dashboard.activityDauWau', { dau: chart.dau_today, wau: chart.wau })}
         </p>
       ) : null}
 
+      {/* bar chart */}
       {loadBusy ? (
         <p className="mt-6 text-sm text-on-surface-variant">{t('common.loading')}</p>
       ) : isEmpty ? (
         <p className="mt-6 text-sm text-on-surface-variant">{t('admin.dashboard.activityChartEmpty')}</p>
       ) : chart ? (
-        <div className={cn('mt-4 overflow-x-auto', SCROLLBAR_SLIDER_H)}>
-          <div style={{ minWidth: `${Math.max(chart.series.length * 20, 300)}px`, height: 192 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chart.series}
-                margin={{ top: 4, right: 4, bottom: 0, left: -24 }}
-                barCategoryGap="25%"
+        <div className="mt-4" style={{ height: 192 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chart.series}
+              margin={{ top: 4, right: 4, bottom: 0, left: -24 }}
+              barCategoryGap="25%"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#353437" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(v: string) => v.slice(5)}
+                tick={{ fill: '#9e9da3', fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                interval={xAxisInterval}
+              />
+              <Tooltip
+                content={<ActivityBarTooltip />}
+                cursor={{ fill: 'rgba(78,222,163,0.06)', radius: 4 }}
+              />
+              <Bar
+                dataKey="unique_users"
+                radius={[3, 3, 0, 0]}
+                maxBarSize={32}
+                isAnimationActive={false}
+                onClick={(data) => {
+                  const entry = data as { date: string; unique_users: number }
+                  handleBarClick(entry.date, entry.unique_users)
+                }}
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#353437"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(v: string) => v.slice(5)}
-                  tick={{ fill: '#9e9da3', fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  interval={xAxisInterval}
-                />
-                <Tooltip
-                  content={<ActivityBarTooltip />}
-                  cursor={{ fill: 'rgba(78,222,163,0.06)', radius: 4 }}
-                />
-                <Bar
-                  dataKey="unique_users"
-                  radius={[3, 3, 0, 0]}
-                  maxBarSize={32}
-                  isAnimationActive={false}
-                  onClick={(data) => {
-                    const entry = data as { date: string; unique_users: number }
-                    handleBarClick(entry.date, entry.unique_users)
-                  }}
-                >
-                  {chart.series.map((entry) => (
-                    <Cell
-                      key={entry.date}
-                      fill={
-                        entry.unique_users === 0
-                          ? 'rgba(78,222,163,0.15)'
-                          : selectedDate === entry.date
-                            ? '#4edea3'
-                            : 'rgba(78,222,163,0.70)'
-                      }
-                      cursor={entry.unique_users > 0 ? 'pointer' : 'default'}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+                {chart.series.map((entry) => (
+                  <Cell
+                    key={entry.date}
+                    fill={
+                      entry.unique_users === 0
+                        ? 'rgba(78,222,163,0.15)'
+                        : selectedDate === entry.date
+                          ? '#4edea3'
+                          : 'rgba(78,222,163,0.70)'
+                    }
+                    cursor={entry.unique_users > 0 ? 'pointer' : 'default'}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       ) : null}
 
+      {/* day detail panel */}
       {selectedDate ? (
         <AdminDashboardActivityDayPanel
           detail={dayUsers.detail}
@@ -228,6 +220,6 @@ export function AdminDashboardActivityChart({
           onRefresh={() => void dayUsers.reload()}
         />
       ) : null}
-    </section>
+    </AdminCardSection>
   )
 }

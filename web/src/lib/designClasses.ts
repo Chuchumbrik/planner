@@ -328,7 +328,7 @@ export const SHELL_HEADER_ACTIONS = 'flex min-w-0 shrink-0 items-center gap-xs s
 
 export function shellMainContent(wide: boolean): string {
   return cn(
-    'mx-auto w-full min-w-0 flex-1 px-margin-mobile py-sm md:px-xl md:py-lg',
+    'mr-auto w-full min-w-0 flex-1 px-margin-mobile py-sm md:px-xl md:py-lg',
     'max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]',
     wide ? 'max-w-desktop' : 'max-w-5xl',
   )
