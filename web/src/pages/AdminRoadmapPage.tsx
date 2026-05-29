@@ -8,7 +8,7 @@ function AdminRoadmapPageInner() {
   const { t } = useTranslation()
 
   return (
-    <MotivatorShell activeNav="prototype-admin" wide title={t('settings.roadmapTitle')}>
+    <MotivatorShell activeNav="prototype-admin" wide align="left" title={t('settings.roadmapTitle')}>
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-md">
           <h2 className={SETTINGS_TAB_PANEL_TITLE}>{t('settings.roadmapTitle')}</h2>

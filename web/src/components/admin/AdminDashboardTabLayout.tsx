@@ -95,7 +95,7 @@ export function AdminDashboardTabLayout({ activeTab, onTabChange, headerActions,
             <p className={SETTINGS_TAB_PANEL_INTRO}>{t(activeMeta.introKey)}</p>
           </div>
           {headerActions ? (
-            <div className="flex shrink-0 flex-col items-stretch gap-1 sm:items-end sm:pt-0.5">
+            <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end sm:pt-0.5">
               {headerActions}
             </div>
           ) : null}

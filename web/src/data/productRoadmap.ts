@@ -328,6 +328,49 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-29', en: '2026-05-29' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.6', en: '0.7.6' },
+        changes: [
+          {
+            ru: '**Шелл:** контейнер `shellMainContent` принимает `align` — обычные страницы остались по центру, админ-страницы (`/admin/*`) прижаты к меню слева. Раньше изменение «прижать влево» применялось ко всем страницам.',
+            en: '**Shell:** `shellMainContent` now takes an `align` prop — regular pages stay centered, admin pages (`/admin/*`) hug the left sidebar. Previously the left-hug applied globally.',
+          },
+          {
+            ru: '**Админ → Доступность:** info-подсказки (ⓘ) стали `<button>` — фокус с клавиатуры, `:focus-visible`-обводка, клик по иконке не открывает тренд KPI; collapse-кнопка карточек получила `aria-label` + `aria-expanded` + `aria-controls`.',
+            en: '**Admin → Accessibility:** info tooltips (ⓘ) are now real `<button>`s — keyboard focusable with `:focus-visible` ring; click on the tooltip no longer toggles the KPI trend zone; collapse buttons gained `aria-label` + `aria-expanded` + `aria-controls`.',
+          },
+          {
+            ru: '**Админ → Хуки:** все 5 admin-хуков убрали `t` из deps через `useLatestRef` — смена языка больше не вызывает refetch overview/activity/kpi/users/dayUsers. Извлечён общий примитив `useAbortableInvoke` для AbortController-паттерна.',
+            en: '**Admin → Hooks:** all 5 admin hooks dropped `t` from deps via `useLatestRef` — switching locale no longer refetches overview/activity/kpi/users/dayUsers. Common AbortController pattern extracted as `useAbortableInvoke`.',
+          },
+          {
+            ru: '**Админ → Корректность:** `Неактивны 30д` зажат в диапазон [0%, 100%] (раньше при MAU > total мог быть отрицательным); `applyRole` получил AbortController + mountedRef-guard от setState-после-unmount; самопонижение admin → user теперь требует включить чекбокс «Я понимаю».',
+            en: '**Admin → Correctness:** `Inactive 30d` is clamped to [0%, 100%] (previously could be negative if MAU > total); `applyRole` got AbortController + mounted-ref guard against setState-after-unmount; self-demote admin→user now requires ticking the "I understand" checkbox.',
+          },
+          {
+            ru: '**Админ → Форматы:** даты в таблицах перешли на полный год (4 цифры) вместо `26` — раньше теряли век. Все timestamps по местному времени админа.',
+            en: '**Admin → Formats:** admin table dates now show full 4-digit year instead of `26` — century is no longer dropped. All timestamps in the admin\'s local time.',
+          },
+          {
+            ru: '**Админ → Полировка:** Bar `onClick` графика активности теперь обращается к `payload` с runtime-guard вместо unchecked-cast; `renderTooltip` тренда обёрнут в `useCallback`; KPI-карточки и вторичные метрики последовательно показывают skeleton, никакого «—» вспышкой на initial-mount.',
+            en: '**Admin → Polish:** activity chart Bar `onClick` reads `payload` with runtime guard (was an unchecked cast); KPI trend `renderTooltip` wrapped in `useCallback`; KPI cards and secondary stats now show skeleton uniformly, no `—` flash on initial mount.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Обычные страницы (Сегодня, Неделя, Настройки) снова по центру экрана — изменение для админки больше не влияет на остальные страницы.',
+            en: 'Regular pages (Today, Week, Settings) are back to being centered — the admin-page tweak no longer leaks to everywhere.',
+          },
+          {
+            ru: 'Подсказки рядом с метриками теперь доступны с клавиатуры, а тап по ним больше не открывает график.',
+            en: 'Info hints next to metrics are now keyboard-accessible, and tapping them no longer opens the chart.',
+          },
+          {
+            ru: 'Снятие с себя роли admin теперь нужно подтвердить отдельной галочкой — случайный клик уже не лишит доступа.',
+            en: 'Removing your own admin role now requires ticking a separate checkbox — an accidental click can no longer lock you out.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.5', en: '0.7.5' },
         changes: [
           {

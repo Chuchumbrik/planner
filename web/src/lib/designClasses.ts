@@ -10,8 +10,8 @@ export const SECTION_GAP = 'space-y-lg'
 
 export const SETTINGS_CARD = 'motivator-card p-sm md:p-md'
 
-/** Admin dashboard: vertical gap between major blocks (24px) */
-export const ADMIN_SECTION_GAP = 'space-y-md'
+/** Admin dashboard: vertical gap between major blocks (24px → 40px at xl) */
+export const ADMIN_SECTION_GAP = 'space-y-md xl:space-y-lg'
 
 /** Admin bento / stat grid gutters */
 export const ADMIN_GRID_GAP = 'gap-sm md:gap-md'
@@ -351,9 +351,18 @@ export const SHELL_HEADER = cn(
 
 export const SHELL_HEADER_ACTIONS = 'flex min-w-0 shrink-0 items-center gap-xs sm:gap-sm'
 
-export function shellMainContent(wide: boolean): string {
+export type ShellMainAlign = 'center' | 'left'
+
+/**
+ * Shell main content container.
+ * - `align: 'center'` (default) — `mx-auto`, classic centered page (today, settings, reports, etc.)
+ * - `align: 'left'` — `mr-auto`, pulls content to the sidebar; used by admin dashboard where
+ *   the page is data-dense and the left-anchor reads more naturally.
+ */
+export function shellMainContent(wide: boolean, align: ShellMainAlign = 'center'): string {
   return cn(
-    'mr-auto w-full min-w-0 flex-1 px-margin-mobile py-sm md:px-xl md:py-lg',
+    'w-full min-w-0 flex-1 px-margin-mobile py-sm md:px-xl md:py-lg',
+    align === 'left' ? 'mr-auto' : 'mx-auto',
     'max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]',
     wide ? 'max-w-desktop' : 'max-w-5xl',
   )

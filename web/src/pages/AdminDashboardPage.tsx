@@ -65,7 +65,7 @@ function AdminDashboardPageInner() {
     ) : null
 
   return (
-    <MotivatorShell activeNav="prototype-admin" wide title={t('admin.dashboard.title')}>
+    <MotivatorShell activeNav="prototype-admin" wide align="left" title={t('admin.dashboard.title')}>
       <AdminDashboardTabLayout
         activeTab={activeTab}
         onTabChange={setActiveTab}

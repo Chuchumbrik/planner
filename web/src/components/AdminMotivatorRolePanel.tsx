@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
@@ -25,7 +25,6 @@ import {
   SETTINGS_BTN_SECONDARY,
   SETTINGS_CARD,
   SETTINGS_SUBHEAD,
-  ADMIN_CARD_BODY,
   chipActive,
 } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
@@ -97,6 +96,12 @@ function ConfirmRoleModal({
     pending.user.motivator_role === 'admin' &&
     pending.newRole !== 'admin'
 
+  // Self-demote requires an explicit checkbox acknowledgement before the Save
+  // button becomes enabled — this enforces the "Confirm again" promise of the
+  // warning text mechanically, not just visually.
+  const [acknowledged, setAcknowledged] = useState(false)
+  const saveDisabled = busy || (isSelfDemote && !acknowledged)
+
   return (
     <div className={MODAL_OVERLAY} onClick={busy ? undefined : onCancel}>
       <div className={cn(MODAL_SHELL, 'max-w-sm')} onClick={(e) => e.stopPropagation()}>
@@ -127,13 +132,23 @@ function ConfirmRoleModal({
 
           {/* Warning or confirmation text */}
           {isSelfDemote ? (
-            <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 space-y-1">
+            <div className="space-y-2 rounded-lg border border-amber-400/30 bg-amber-400/10 p-3">
               <p className="text-sm font-medium text-amber-400">
                 {t('settings.adminRolesConfirmSelfDemote')}
               </p>
               <p className="text-xs text-amber-400/80">
                 {t('settings.adminRolesConfirmSelfDemoteAgain')}
               </p>
+              <label className="mt-2 flex cursor-pointer items-start gap-2 text-xs text-amber-400">
+                <input
+                  type="checkbox"
+                  className="motivator-checkbox mt-0.5 h-3.5 w-3.5 shrink-0"
+                  checked={acknowledged}
+                  onChange={(e) => setAcknowledged(e.target.checked)}
+                  disabled={busy}
+                />
+                <span>{t('settings.adminRolesSelfDemoteAck')}</span>
+              </label>
             </div>
           ) : (
             <p className="text-sm text-on-surface-variant">
@@ -162,10 +177,10 @@ function ConfirmRoleModal({
                 isSelfDemote
                   ? 'border-amber-400/40 text-amber-400 hover:bg-amber-400/10'
                   : 'border-primary/40 text-primary hover:bg-primary/10',
-                busy && 'opacity-50',
+                saveDisabled && 'opacity-50',
               )}
               onClick={onConfirm}
-              disabled={busy}
+              disabled={saveDisabled}
             >
               {busy ? t('common.loading') : t('common.save')}
             </button>
@@ -205,6 +220,11 @@ export function AdminMotivatorRolePanel({
   const [rowBusyId, setRowBusyId] = useState<string | null>(null)
   const [pendingChange, setPendingChange] = useState<PendingChange>(null)
 
+  // mounted guard — prevents setState on unmounted component if the user
+  // navigates away mid-request. The Edge Function still completes server-side.
+  const mountedRef = useRef(true)
+  useEffect(() => () => { mountedRef.current = false }, [])
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     const list = users
@@ -218,31 +238,41 @@ export function AdminMotivatorRolePanel({
     onLoadError(null)
     setRowBusyId(user.id)
     const userId = user.id
+    const ctrl = new AbortController()
     try {
       const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
         body: { action: 'setRole', userId, role },
+        signal: ctrl.signal,
       })
+      if (!mountedRef.current) return
       if (fnErr) {
         await onReload()
+        if (!mountedRef.current) return
         const msg = await formatSupabaseFunctionInvokeError(fnErr)
         onLoadError(mapAdminRolesError(msg, t))
         return
       }
       if (!data || typeof data !== 'object' || !('ok' in data) || !(data as { ok?: unknown }).ok) {
         await onReload()
+        if (!mountedRef.current) return
         onLoadError(t('settings.adminRolesErrors.update_failed'))
         return
       }
       await onReload()
+      if (!mountedRef.current) return
       if (userId === currentUserId) {
         await supabase.auth.refreshSession()
       }
     } catch (e: unknown) {
+      if (!mountedRef.current) return
       await onReload()
+      if (!mountedRef.current) return
       onLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
     } finally {
-      setRowBusyId(null)
-      setPendingChange(null)
+      if (mountedRef.current) {
+        setRowBusyId(null)
+        setPendingChange(null)
+      }
     }
   }
 
@@ -290,7 +320,7 @@ export function AdminMotivatorRolePanel({
           </button>
         </div>
 
-        <div className={ADMIN_CARD_BODY}>
+        <div className="mt-sm flex flex-col gap-sm">
         {/* Segment filters */}
         <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('admin.dashboard.usersFilterAria')}>
           {SEGMENT_FILTERS.map((id) => (
@@ -419,14 +449,13 @@ export function AdminMotivatorRolePanel({
                   t('admin.dashboard.colRegistered'),
                   t('admin.dashboard.colLastSignIn'),
                   t('admin.dashboard.colVault'),
-                  t('admin.dashboard.colVaultSync'),
                   t('admin.dashboard.colPush'),
                   t('admin.dashboard.colDefects'),
                   t('settings.adminRolesColRole'),
                 ].map((label) => (
                   <th
                     key={label}
-                    className="px-3 py-2.5 font-display text-xs font-semibold uppercase tracking-wide text-on-surface-variant"
+                    className="px-2.5 py-2.5 font-display text-xs font-semibold uppercase tracking-wide text-on-surface-variant"
                   >
                     {label}
                   </th>
@@ -436,7 +465,7 @@ export function AdminMotivatorRolePanel({
             <tbody>
               {filtered.length === 0 && !loadBusy ? (
                 <tr>
-                  <td colSpan={8} className="px-3 py-6 text-center text-xs text-on-surface-variant">
+                  <td colSpan={7} className="px-3 py-6 text-center text-xs text-on-surface-variant">
                     {t('settings.adminRolesEmpty')}
                   </td>
                 </tr>
@@ -453,7 +482,7 @@ export function AdminMotivatorRolePanel({
                       stale && 'border-l-2 border-l-amber-400/40',
                     )}
                   >
-                    <td className="max-w-[14rem] px-3 py-2.5 align-middle">
+                    <td className="max-w-[12rem] px-2.5 py-2.5 align-middle">
                       <div className="truncate text-on-surface" title={u.email || u.id}>
                         {u.email || u.id}
                       </div>
@@ -463,34 +492,31 @@ export function AdminMotivatorRolePanel({
                         </div>
                       ) : null}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 align-middle text-on-surface-variant">
+                    <td className="whitespace-nowrap px-2.5 py-2.5 align-middle text-on-surface-variant">
                       {formatDate(u.created_at || null)}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 align-middle text-on-surface-variant">
+                    <td className="whitespace-nowrap px-2.5 py-2.5 align-middle text-on-surface-variant">
                       {formatDate(u.last_sign_in_at)}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 align-middle">
-                      <VaultCell user={u} />
-                    </td>
+                    {/* VAULT + СИНХР. объединены */}
                     <td
-                      className="whitespace-nowrap px-3 py-2.5 align-middle"
+                      className="px-2.5 py-2.5 align-middle"
                       title={t('admin.dashboard.vaultSyncHint', { days: STALE_VAULT_DAYS })}
                     >
-                      {u.has_vault ? (
-                        <span className={cn('inline-flex items-center gap-1', stale ? 'text-amber-400/90' : 'text-on-surface-variant')}>
-                          {stale ? (
-                            <MaterialIcon name="warning" size={13} className="text-amber-400/70" />
-                          ) : null}
-                          {formatDate(u.vault_updated_at)}
-                        </span>
-                      ) : (
-                        <span className="text-on-surface-variant/40">—</span>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        <VaultCell user={u} />
+                        {u.has_vault ? (
+                          <span className={cn('inline-flex items-center gap-1 whitespace-nowrap text-xs', stale ? 'text-amber-400/90' : 'text-on-surface-variant')}>
+                            {stale ? <MaterialIcon name="warning" size={12} className="text-amber-400/70" /> : null}
+                            {formatDate(u.vault_updated_at)}
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 align-middle">
+                    <td className="whitespace-nowrap px-2.5 py-2.5 align-middle">
                       <PushCell count={u.push_device_count} />
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 align-middle">
+                    <td className="whitespace-nowrap px-2.5 py-2.5 align-middle">
                       {u.defect_submission_count > 0 ? (
                         <span className="inline-flex items-center gap-1 text-on-surface-variant">
                           <MaterialIcon name="bug_report" size={13} />
@@ -500,22 +526,19 @@ export function AdminMotivatorRolePanel({
                         <span className="text-on-surface-variant/40">—</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 align-middle">
-                      <div className="flex items-center gap-2">
-                        <RoleBadge role={u.motivator_role} />
-                        <select
-                          className={`${MOTIVATOR_INPUT} max-w-[9rem]`}
-                          value={u.motivator_role}
-                          disabled={busy || loadBusy}
-                          onChange={(e) => {
-                            requestRoleChange(u, e.target.value as MotivatorRoleRow['motivator_role'])
-                          }}
-                        >
-                          <option value="user">{t('settings.adminRolesOptionUser')}</option>
-                          <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
-                          <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
-                        </select>
-                      </div>
+                    <td className="px-2.5 py-2.5 align-middle">
+                      <select
+                        className={`${MOTIVATOR_INPUT} w-[8rem]`}
+                        value={u.motivator_role}
+                        disabled={busy || loadBusy}
+                        onChange={(e) => {
+                          requestRoleChange(u, e.target.value as MotivatorRoleRow['motivator_role'])
+                        }}
+                      >
+                        <option value="user">{t('settings.adminRolesOptionUser')}</option>
+                        <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
+                        <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
+                      </select>
                     </td>
                   </tr>
                 )

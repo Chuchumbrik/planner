@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Area,
@@ -56,26 +57,29 @@ export function AdminKpiChartZone({
   const gradId = `kpi-area-${metric}`
   const titleKey = `admin.dashboard.kpiTrend.title.${metric}`
 
-  function renderTooltip({ active, payload, label }: TooltipProps<number, string>) {
-    if (!active || !payload?.length) return null
-    const val = (payload[0]?.value as number) ?? 0
-    const display = unit === '%' ? `${val.toFixed(1)}%` : String(val)
-    const monthLabel = label ? formatMonthLabel(label, i18n.language) : ''
-    return (
-      <div
-        style={{
-          background: '#201f22',
-          border: `1px solid ${c.stroke}40`,
-          borderRadius: 8,
-          padding: '6px 10px',
-          pointerEvents: 'none',
-        }}
-      >
-        <p style={{ fontSize: 10, color: '#9e9da3', marginBottom: 2 }}>{monthLabel}</p>
-        <p style={{ fontSize: 16, fontWeight: 700, color: c.stroke, lineHeight: 1 }}>{display}</p>
-      </div>
-    )
-  }
+  const renderTooltip = useCallback(
+    ({ active, payload, label }: TooltipProps<number, string>) => {
+      if (!active || !payload?.length) return null
+      const val = (payload[0]?.value as number) ?? 0
+      const display = unit === '%' ? `${val.toFixed(1)}%` : String(val)
+      const monthLabel = label ? formatMonthLabel(label, i18n.language) : ''
+      return (
+        <div
+          style={{
+            background: '#201f22',
+            border: `1px solid ${c.stroke}40`,
+            borderRadius: 8,
+            padding: '6px 10px',
+            pointerEvents: 'none',
+          }}
+        >
+          <p style={{ fontSize: 10, color: '#9e9da3', marginBottom: 2 }}>{monthLabel}</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: c.stroke, lineHeight: 1 }}>{display}</p>
+        </div>
+      )
+    },
+    [unit, c.stroke, i18n.language],
+  )
 
   const closeButtons = (
     <div className="flex shrink-0 items-center gap-1">

@@ -7,6 +7,7 @@ import { parseAdminActivityChartResponse } from '@/lib/adminMotivatorRolesList'
 import type { AdminActivityChart } from '@/types/adminMonitoring'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
+import { useLatestRef } from '@/components/admin/useAbortableInvoke'
 
 export function useAdminActivityChart(
   supabase: SupabaseClient | null,
@@ -14,6 +15,7 @@ export function useAdminActivityChart(
   role: ActivityChartRoleFilter,
 ) {
   const { t } = useTranslation()
+  const tRef = useLatestRef(t)
   const [chart, setChart] = useState<AdminActivityChart | null>(null)
   const [loadBusy, setLoadBusy] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -21,6 +23,7 @@ export function useAdminActivityChart(
 
   const load = useCallback(async (signal?: AbortSignal) => {
     if (!supabase) return
+    const tr = tRef.current
     setLoadError(null)
     setTableMissing(false)
     setLoadBusy(true)
@@ -36,23 +39,23 @@ export function useAdminActivityChart(
           setTableMissing(true)
           return
         }
-        setLoadError(mapAdminRolesError(msg, t))
+        setLoadError(mapAdminRolesError(msg, tr))
         return
       }
       const body = data && typeof data === 'object' ? (data as Record<string, unknown>) : null
       const parsed = parseAdminActivityChartResponse(body?.chart)
       if (!parsed) {
-        setLoadError(t('settings.adminRolesErrors.activity_chart_failed'))
+        setLoadError(tr('settings.adminRolesErrors.activity_chart_failed'))
         return
       }
       setChart(parsed)
     } catch (e: unknown) {
       if (signal?.aborted) return
-      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
+      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), tr))
     } finally {
       if (!signal?.aborted) setLoadBusy(false)
     }
-  }, [supabase, days, role, t])
+  }, [supabase, days, role, tRef])
 
   useEffect(() => {
     if (!supabase) return

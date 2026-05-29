@@ -5,6 +5,7 @@ import { parseMotivatorRoleListResponse } from '@/lib/adminMotivatorRolesList'
 import type { MotivatorRoleRow } from '@/types/adminMonitoring'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
 import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
+import { useLatestRef } from '@/components/admin/useAbortableInvoke'
 
 const ERROR_CODES = [
   'forbidden',
@@ -38,16 +39,19 @@ export function useAdminMotivatorUsers(
   options?: { enabled?: boolean },
 ) {
   const { t } = useTranslation()
+  const tRef = useLatestRef(t)
   const enabled = options?.enabled ?? true
   const [users, setUsers] = useState<MotivatorRoleRow[]>([])
   const [loadBusy, setLoadBusy] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [listDegraded, setListDegraded] = useState(false)
-  // tracks which supabase instance was last successfully loaded
+  // remembers which supabase instance was last successfully loaded — skip
+  // re-fetching on every tab toggle but rebind if the client itself changes.
   const loadedForClient = useRef<SupabaseClient | null>(null)
 
   const load = useCallback(async (signal?: AbortSignal) => {
     if (!supabase) return
+    const tr = tRef.current
     setLoadError(null)
     setLoadBusy(true)
     try {
@@ -58,14 +62,14 @@ export function useAdminMotivatorUsers(
       if (signal?.aborted) return
       if (fnErr) {
         const msg = await formatSupabaseFunctionInvokeError(fnErr)
-        setLoadError(mapAdminRolesError(msg, t))
+        setLoadError(mapAdminRolesError(msg, tr))
         return
       }
       const body = data && typeof data === 'object' ? (data as Record<string, unknown>) : null
       const raw = body?.users
       const next = parseMotivatorRoleListResponse(raw)
       if (!next) {
-        setLoadError(t('settings.adminRolesErrors.list_failed'))
+        setLoadError(tr('settings.adminRolesErrors.list_failed'))
         return
       }
       setUsers(next)
@@ -73,11 +77,11 @@ export function useAdminMotivatorUsers(
       loadedForClient.current = supabase
     } catch (e: unknown) {
       if (signal?.aborted) return
-      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
+      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), tr))
     } finally {
       if (!signal?.aborted) setLoadBusy(false)
     }
-  }, [supabase, t])
+  }, [supabase, tRef])
 
   useEffect(() => {
     if (!enabled || !supabase) return

@@ -54,6 +54,9 @@ export function AdminDashboardActivityChart({
   onDaysChange,
   onRoleChange,
   onRefresh,
+  collapsible,
+  collapsed,
+  onToggleCollapse,
 }: {
   chart: AdminActivityChart | null
   loadBusy: boolean
@@ -65,6 +68,9 @@ export function AdminDashboardActivityChart({
   onDaysChange: (days: ActivityChartDays) => void
   onRoleChange: (role: ActivityChartRoleFilter) => void
   onRefresh: () => void
+  collapsible?: boolean
+  collapsed?: boolean
+  onToggleCollapse?: () => void
 }) {
   const { t } = useTranslation()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -101,6 +107,9 @@ export function AdminDashboardActivityChart({
       hint={t('admin.dashboard.activityChartHint')}
       hint2={t('admin.dashboard.activityChartClickHint')}
       action={refreshButton}
+      collapsible={collapsible}
+      collapsed={collapsed}
+      onToggleCollapse={onToggleCollapse}
     >
       {/* filters */}
       <div className="flex flex-col gap-sm">
@@ -192,8 +201,17 @@ export function AdminDashboardActivityChart({
                 maxBarSize={32}
                 isAnimationActive={false}
                 onClick={(data) => {
-                  const entry = data as { date: string; unique_users: number }
-                  handleBarClick(entry.date, entry.unique_users)
+                  // Recharts 2.x spreads the datum into the callback arg AND
+                  // nests it under `payload`. Prefer `payload` since that's
+                  // the documented contract — falls back to the spread fields
+                  // if `payload` is absent.
+                  const arg = data as
+                    | { payload?: { date?: unknown; unique_users?: unknown }; date?: unknown; unique_users?: unknown }
+                    | null
+                    | undefined
+                  const row = arg?.payload ?? arg
+                  if (!row || typeof row.date !== 'string' || typeof row.unique_users !== 'number') return
+                  handleBarClick(row.date, row.unique_users)
                 }}
               >
                 {chart.series.map((entry) => (
