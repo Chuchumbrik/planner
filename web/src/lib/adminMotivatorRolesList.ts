@@ -71,7 +71,7 @@ export function parseAdminActivityChartResponse(raw: unknown): AdminActivityChar
   return {
     days: o.days,
     role,
-    timezone: o.timezone === 'UTC' ? 'UTC' : 'UTC',
+    timezone: 'UTC',
     series,
     dau_today: typeof o.dau_today === 'number' ? o.dau_today : 0,
     wau: typeof o.wau === 'number' ? o.wau : 0,
@@ -104,7 +104,7 @@ export function parseAdminActivityDayDetailResponse(raw: unknown): AdminActivity
   return {
     date: o.date,
     role,
-    timezone: o.timezone === 'UTC' ? 'UTC' : 'UTC',
+    timezone: 'UTC',
     users,
   }
 }

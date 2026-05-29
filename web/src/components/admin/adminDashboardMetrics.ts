@@ -55,7 +55,7 @@ export function userMatchesSegment(
   if (segment === 'with_push') return user.push_device_count > 0
 
   const sign = parseTime(user.last_sign_in_at)
+  if (sign == null) return false
   const cutoff = segment === 'inactive7' ? daysAgoMs(7, now) : daysAgoMs(30, now)
-  if (sign == null) return true
   return sign < cutoff
 }

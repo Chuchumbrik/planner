@@ -10,11 +10,18 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import type { AdminKpiMetric, AdminOverview } from '@/types/adminMonitoring'
 
-type KpiCard = {
+type HeroCard = {
   icon: string
   labelKey: string
   value: string
-  trendMetric?: AdminKpiMetric
+  trendMetric: AdminKpiMetric
+  danger?: boolean
+}
+
+type DetailStat = {
+  icon: string
+  labelKey: string
+  value: string
 }
 
 export function AdminDashboardSummaryTab({
@@ -45,7 +52,7 @@ export function AdminDashboardSummaryTab({
     return loadBusy ? '…' : val != null ? String(val) : '—'
   }
 
-  const cards: KpiCard[] = [
+  const heroCards: HeroCard[] = [
     {
       icon: 'group',
       labelKey: 'admin.dashboard.kpiTotal',
@@ -67,39 +74,19 @@ export function AdminDashboardSummaryTab({
     {
       icon: 'trending_down',
       labelKey: 'admin.dashboard.kpiChurn30d',
-      value: loadBusy ? '…' : o ? `${((1 - o.mau_30d / Math.max(o.total_users, 1)) * 100).toFixed(1)}%` : '—',
+      value: loadBusy ? '…' : o ? (o.total_users === 0 ? '—' : `${((1 - o.mau_30d / o.total_users) * 100).toFixed(1)}%`) : '—',
       trendMetric: 'churn',
+      danger: true,
     },
-    {
-      icon: 'login',
-      labelKey: 'admin.dashboard.kpiSignedIn7d',
-      value: fmtNum(o?.signed_in_last_7d),
-    },
-    {
-      icon: 'lock',
-      labelKey: 'admin.dashboard.kpiWithVault',
-      value: fmtNum(o?.with_vault),
-    },
-    {
-      icon: 'cloud_off',
-      labelKey: 'admin.dashboard.kpiWithoutVault',
-      value: fmtNum(o?.without_vault),
-    },
-    {
-      icon: 'sync_problem',
-      labelKey: 'admin.dashboard.kpiVaultStale',
-      value: fmtNum(o?.vault_stale_14d),
-    },
-    {
-      icon: 'notifications',
-      labelKey: 'admin.dashboard.kpiWithPush',
-      value: fmtNum(o?.with_push),
-    },
-    {
-      icon: 'bug_report',
-      labelKey: 'admin.dashboard.kpiDefects7d',
-      value: fmtNum(o?.defect_submissions_7d),
-    },
+  ]
+
+  const detailStats: DetailStat[] = [
+    { icon: 'login', labelKey: 'admin.dashboard.kpiSignedIn7d', value: fmtNum(o?.signed_in_last_7d) },
+    { icon: 'lock', labelKey: 'admin.dashboard.kpiWithVault', value: fmtNum(o?.with_vault) },
+    { icon: 'cloud_off', labelKey: 'admin.dashboard.kpiWithoutVault', value: fmtNum(o?.without_vault) },
+    { icon: 'sync_problem', labelKey: 'admin.dashboard.kpiVaultStale', value: fmtNum(o?.vault_stale_14d) },
+    { icon: 'notifications', labelKey: 'admin.dashboard.kpiWithPush', value: fmtNum(o?.with_push) },
+    { icon: 'bug_report', labelKey: 'admin.dashboard.kpiDefects7d', value: fmtNum(o?.defect_submissions_7d) },
     {
       icon: 'badge',
       labelKey: 'admin.dashboard.kpiRoles',
@@ -122,6 +109,7 @@ export function AdminDashboardSummaryTab({
   return (
     <div className="space-y-md">
       <p className="text-body-sm text-on-surface-variant">{t('admin.dashboard.summaryMetricsHint')}</p>
+
       {loadError ? (
         <p className="text-xs text-red-400" role="alert">{loadError}</p>
       ) : null}
@@ -129,64 +117,75 @@ export function AdminDashboardSummaryTab({
         <p className="text-xs text-amber-400/90" role="status">{t('admin.dashboard.listDegraded')}</p>
       ) : null}
 
-      {activeMetric ? null : (
-        <p className="text-xs text-on-surface-variant/60">{t('admin.dashboard.kpiTrend.clickHint')}</p>
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {cards.map((c) => {
+      {/* Hero KPI row */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {heroCards.map((c) => {
           const isActive = activeMetric === c.trendMetric
           return (
             <article
               key={c.labelKey}
               className={cn(
-                'motivator-card flex items-center gap-4 p-5 transition-colors',
-                c.trendMetric && 'cursor-pointer hover:bg-surface-container-high',
-                isActive && 'ring-2 ring-primary bg-surface-container-high',
+                'motivator-card relative flex flex-col justify-between gap-4 overflow-hidden p-5 transition-colors',
+                'cursor-pointer hover:bg-surface-container-high',
+                isActive && 'bg-surface-container-high ring-2 ring-primary',
               )}
-              onClick={c.trendMetric ? () => handleCardClick(c.trendMetric!) : undefined}
-              role={c.trendMetric ? 'button' : undefined}
-              aria-pressed={c.trendMetric ? isActive : undefined}
-              tabIndex={c.trendMetric ? 0 : undefined}
-              onKeyDown={
-                c.trendMetric
-                  ? (e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        handleCardClick(c.trendMetric!)
-                      }
-                    }
-                  : undefined
-              }
+              onClick={() => handleCardClick(c.trendMetric)}
+              role="button"
+              aria-pressed={isActive}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleCardClick(c.trendMetric)
+                }
+              }}
             >
-              <MaterialIcon
-                name={c.icon}
-                className={isActive ? 'text-primary' : 'text-primary/70'}
-                size={28}
+              {/* accent top bar */}
+              <div
+                className={cn(
+                  'absolute inset-x-0 top-0 h-0.5',
+                  c.danger ? 'bg-red-400/60' : 'bg-primary/60',
+                )}
               />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-on-surface-variant">
-                  {c.labelKey === 'admin.dashboard.kpiVaultStale'
-                    ? t(c.labelKey, { days: staleDays })
-                    : t(c.labelKey)}
+
+              {/* label + icon */}
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+                  {t(c.labelKey)}
                 </p>
-                <p className="font-display text-2xl font-bold text-on-surface">{c.value}</p>
-              </div>
-              {c.trendMetric ? (
                 <MaterialIcon
-                  name="trending_up"
+                  name={c.icon}
                   size={16}
-                  className={cn(
-                    'shrink-0',
-                    isActive ? 'text-primary' : 'text-on-surface-variant/40',
-                  )}
+                  className={cn('shrink-0', c.danger ? 'text-red-400/30' : 'text-primary/30')}
                 />
-              ) : null}
+              </div>
+
+              {/* value */}
+              <p
+                className={cn(
+                  'font-display text-4xl font-bold leading-none tabular-nums',
+                  c.danger ? 'text-red-400' : 'text-on-surface',
+                )}
+              >
+                {c.value}
+              </p>
+
+              {/* trend hint */}
+              <div
+                className={cn(
+                  'flex items-center gap-1 text-xs transition-colors',
+                  isActive ? 'text-primary' : 'text-on-surface-variant/40',
+                )}
+              >
+                <MaterialIcon name="show_chart" size={12} />
+                <span>{t('admin.dashboard.kpiTrend.clickHint')}</span>
+              </div>
             </article>
           )
         })}
       </div>
 
+      {/* Trend chart (expands below hero row on click) */}
       {activeMetric ? (
         <AdminKpiChartZone
           metric={activeMetric}
@@ -199,6 +198,32 @@ export function AdminDashboardSummaryTab({
         />
       ) : null}
 
+      {/* Secondary stats */}
+      <div className="motivator-card p-sm md:p-md">
+        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {detailStats.map((s) => (
+            <div key={s.labelKey} className="flex items-start gap-3">
+              <MaterialIcon
+                name={s.icon}
+                size={18}
+                className="mt-0.5 shrink-0 text-on-surface-variant/40"
+              />
+              <div className="min-w-0">
+                <p className="text-xs text-on-surface-variant">
+                  {s.labelKey === 'admin.dashboard.kpiVaultStale'
+                    ? t(s.labelKey, { days: staleDays })
+                    : t(s.labelKey)}
+                </p>
+                <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-on-surface">
+                  {s.value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Activity chart */}
       <AdminDashboardActivityChart
         chart={activityChart.chart}
         loadBusy={activityChart.loadBusy}

@@ -2,12 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
+import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
 import { parseAdminActivityChartResponse } from '@/lib/adminMotivatorRolesList'
 import type { AdminActivityChart } from '@/types/adminMonitoring'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
-
-const ADMIN_ROLES_FN = 'admin-motivator-roles'
 
 export function useAdminActivityChart(
   supabase: SupabaseClient | null,
@@ -20,7 +19,7 @@ export function useAdminActivityChart(
   const [loadError, setLoadError] = useState<string | null>(null)
   const [tableMissing, setTableMissing] = useState(false)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!supabase) return
     setLoadError(null)
     setTableMissing(false)
@@ -28,7 +27,9 @@ export function useAdminActivityChart(
     try {
       const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
         body: { action: 'activityChart', days, role },
+        signal,
       })
+      if (signal?.aborted) return
       if (fnErr) {
         const msg = await formatSupabaseFunctionInvokeError(fnErr)
         if (msg.includes('activity_table_missing')) {
@@ -46,16 +47,18 @@ export function useAdminActivityChart(
       }
       setChart(parsed)
     } catch (e: unknown) {
+      if (signal?.aborted) return
       setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
     } finally {
-      setLoadBusy(false)
+      if (!signal?.aborted) setLoadBusy(false)
     }
   }, [supabase, days, role, t])
 
   useEffect(() => {
     if (!supabase) return
-    const id = window.setTimeout(() => void load(), 0)
-    return () => window.clearTimeout(id)
+    const ctrl = new AbortController()
+    void load(ctrl.signal)
+    return () => ctrl.abort()
   }, [load, supabase])
 
   return { chart, loadBusy, loadError, tableMissing, load }

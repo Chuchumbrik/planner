@@ -508,7 +508,8 @@
       "update_failed": "Could not update the role.",
       "list_failed": "Could not load the user list.",
       "overview_failed": "Could not load the admin overview.",
-      "activity_chart_failed": "Could not load the activity chart.",
+      "kpi_trend_failed": "Could not load the KPI trend.",
+        "activity_chart_failed": "Could not load the activity chart.",
       "activity_day_users_failed": "Could not load the list for the selected day.",
       "activity_table_missing": "Activity table missing — apply migration 006 (see README)."
     },
