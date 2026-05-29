@@ -13,6 +13,7 @@ export function useAdminOverview(supabase: SupabaseClient | null) {
   const [loadBusy, setLoadBusy] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [listDegraded, setListDegraded] = useState(false)
+  const [lastLoaded, setLastLoaded] = useState<Date | null>(null)
 
   const load = useCallback(async (signal?: AbortSignal) => {
     if (!supabase) return
@@ -37,6 +38,7 @@ export function useAdminOverview(supabase: SupabaseClient | null) {
       }
       setOverview(parsed)
       setListDegraded(body?.list_degraded === true)
+      setLastLoaded(new Date())
     } catch (e: unknown) {
       if (signal?.aborted) return
       setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
@@ -52,5 +54,5 @@ export function useAdminOverview(supabase: SupabaseClient | null) {
     return () => ctrl.abort()
   }, [load, supabase])
 
-  return { overview, loadBusy, loadError, listDegraded, load, setLoadError }
+  return { overview, loadBusy, loadError, listDegraded, lastLoaded, load, setLoadError }
 }

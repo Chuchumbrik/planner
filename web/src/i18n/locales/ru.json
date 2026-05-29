@@ -174,7 +174,6 @@
     "filterColorAll": "Все цвета",
     "toggleTaskDone": "Отметить выполненной",
     "taskDoneShort": "Готово",
-    "taskDoneShort": "Готово",
     "completionOnlyToday": "Отметить выполнение можно только при просмотре календарного сегодняшнего дня — переключитесь на «Сегодня».",
     "filterRepeats": "Повторы",
     "filterRepeatsAll": "Все задачи",
@@ -666,7 +665,7 @@
       "kpiWithPush": "С push",
       "kpiDefects7d": "Дефекты за 7д",
       "activityChartTitle": "Активность в приложении",
-      "activityChartHint": "Уникальные пользователи с ≥1 открытием в UTC-день (heartbeat раз в час). Не путать с «Последний вход» в Auth.",
+      "activityChartHint": "Уникальные пользователи с ≥1 открытием за UTC-день (heartbeat раз в час).",
       "activityChartRefresh": "Обновить график",
       "activityChartDaysAria": "Период графика",
       "activityChartRoleAria": "Роль на графике",
@@ -680,7 +679,7 @@
       "activityChartEmpty": "Нет данных за выбранный период (после миграции и визитов пользователей).",
       "activityTableMissing": "График недоступен: примените SQL-миграцию `006_admin_user_activity_daily` и задеплойте Edge `admin-record-activity`.",
       "activityDauWau": "Сегодня (UTC): {{dau}} · за 7 дней (WAU): {{wau}}",
-      "activityChartClickHint": "Клик по столбцу с числом > 0 — список пользователей за этот UTC-день.",
+      "activityChartClickHint": "Клик по бару — список пользователей за тот день.",
       "activityChartBarsAria": "Столбцы активности по дням",
       "activityChartBarAria": "{{date}}: {{count}} пользователей, открыть список",
       "activityDayTitle": "Кто был в приложении · {{date}} (UTC)",
@@ -715,7 +714,9 @@
           "registrations": "Регистрации — по месяцам",
           "mau": "MAU — ежемесячные активные пользователи",
           "churn": "Churn rate — динамика"
-        }
+        },
+        "show": "Тренд",
+        "hide": "Скрыть"
       },
       "filter": {
         "all": "Все",
@@ -732,11 +733,30 @@
         "navAria": "Вкладки обзора админки",
         "summary": "Сводка",
         "summaryTitle": "Сводка",
-        "summaryIntro": "Ключевые показатели по учётным записям Supabase Auth. Подробный список и роли — на вкладке «Пользователи».",
+        "summaryIntro": "Ключевые показатели по учётным записям Supabase Auth.",
         "users": "Пользователи",
         "usersTitle": "Пользователи",
         "usersIntro": "Список учётных записей, даты регистрации и последнего входа, назначение ролей motivator_role."
-      }
+      },
+      "kpiInactive30d": "Неактивны 30д",
+      "kpiTooltip": {
+        "total": "Все учётные записи в Supabase Auth на момент запроса.",
+        "registered7d": "Зарегистрировались за последние 7 дней — по полю created_at в Auth.",
+        "mau": "Monthly Active Users: открывали приложение хотя бы раз за 30 дней. Считается по heartbeat-пингам, не Auth-входу.",
+        "inactive30d": "Доля пользователей без активности 30+ дней: (1 − MAU ÷ всего) × 100. Не классический churn — для него нужны когортные данные.",
+        "signedIn7d": "Поле last_sign_in_at в Auth обновилось за 7 дней. Отличается от MAU: Auth-вход фиксируется реже, чем heartbeat в приложении.",
+        "withVault": "Хотя бы одна запись ciphertext vault на сервер. Содержимое зашифровано и недоступно.",
+        "vaultStale": "Vault не синхронизировался дольше {{days}} дн. Возможно, пользователь перестал пользоваться приложением.",
+        "withPush": "Активная PWA push-подписка с ≥1 устройства.",
+        "defects7d": "Баг-репорты через кнопку «Дефект» за последние 7 дней.",
+        "roles": "Распределение по ролям: admin — полный доступ, beta_tester — preview-функции, user — стандарт."
+      },
+      "statGroupActivity": "Активность",
+      "statGroupVault": "Vault",
+      "statGroupPlatform": "Платформа",
+      "listDegradedHint": "Vault, push и статистика дефектов могут отсутствовать — Edge Function недоступна.",
+      "lastLoaded": "Обновлено в {{time}}",
+      "refresh": "Обновить"
     },
     "roadmapIntro": "Дорожная карта MVP, релиз-ноты по датам, идеи после релиза и открытые вопросы. Источник данных — src/data/productRoadmap.ts; правила сопровождения — web/README.md.",
     "testingTitle": "Тестирование",

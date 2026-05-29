@@ -509,7 +509,7 @@
       "list_failed": "Could not load the user list.",
       "overview_failed": "Could not load the admin overview.",
       "kpi_trend_failed": "Could not load the KPI trend.",
-        "activity_chart_failed": "Could not load the activity chart.",
+      "activity_chart_failed": "Could not load the activity chart.",
       "activity_day_users_failed": "Could not load the list for the selected day.",
       "activity_table_missing": "Activity table missing — apply migration 006 (see README)."
     },
@@ -665,7 +665,7 @@
       "kpiWithPush": "With push",
       "kpiDefects7d": "Defects in 7d",
       "activityChartTitle": "In-app activity",
-      "activityChartHint": "Unique users with ≥1 app open per UTC day (hourly heartbeat). Not the same as Auth “last sign-in”.",
+      "activityChartHint": "Unique users with ≥1 app open per UTC day (heartbeat once per hour).",
       "activityChartRefresh": "Refresh chart",
       "activityChartDaysAria": "Chart period",
       "activityChartRoleAria": "Role filter",
@@ -679,7 +679,7 @@
       "activityChartEmpty": "No data for this period yet (after migration and user visits).",
       "activityTableMissing": "Chart unavailable: apply migration `006_admin_user_activity_daily` and deploy Edge `admin-record-activity`.",
       "activityDauWau": "Today (UTC): {{dau}} · 7-day (WAU): {{wau}}",
-      "activityChartClickHint": "Click a bar with count > 0 to see who was active that UTC day.",
+      "activityChartClickHint": "Click a bar to see who was active that day.",
       "activityChartBarsAria": "Activity bars by day",
       "activityChartBarAria": "{{date}}: {{count}} users, open list",
       "activityDayTitle": "Who used the app · {{date}} (UTC)",
@@ -714,7 +714,9 @@
           "registrations": "Registrations — monthly",
           "mau": "MAU — monthly active users",
           "churn": "Churn rate — trend"
-        }
+        },
+        "show": "Trend",
+        "hide": "Hide"
       },
       "filter": {
         "all": "All",
@@ -731,11 +733,30 @@
         "navAria": "Admin overview tabs",
         "summary": "Summary",
         "summaryTitle": "Summary",
-        "summaryIntro": "Key metrics from Supabase Auth accounts. Full list and roles — Users tab.",
+        "summaryIntro": "Key metrics from Supabase Auth accounts.",
         "users": "Users",
         "usersTitle": "Users",
         "usersIntro": "Account list with registration and last sign-in dates; assign motivator_role."
-      }
+      },
+      "kpiInactive30d": "Inactive 30d",
+      "kpiTooltip": {
+        "total": "All accounts in Supabase Auth at time of request.",
+        "registered7d": "Signed up in the last 7 days — by created_at in Auth.",
+        "mau": "Monthly Active Users: opened the app at least once in 30 days. Based on heartbeat pings, not Auth sign-in.",
+        "inactive30d": "Share of users with no activity in 30+ days: (1 − MAU ÷ total) × 100. Not classic churn — that requires cohort data.",
+        "signedIn7d": "last_sign_in_at in Auth updated within 7 days. Different from MAU: Auth sign-in is recorded less often than heartbeat.",
+        "withVault": "At least one ciphertext write to the server. Vault content is encrypted and inaccessible.",
+        "vaultStale": "Vault not synced for more than {{days}} days — user may have stopped using the app.",
+        "withPush": "Active PWA push subscription from ≥1 device.",
+        "defects7d": "Bug reports via the 'File defect' button in the last 7 days.",
+        "roles": "Role distribution: admin — full access, beta_tester — preview features, user — standard."
+      },
+      "statGroupActivity": "Activity",
+      "statGroupVault": "Vault",
+      "statGroupPlatform": "Platform",
+      "listDegradedHint": "Vault, push and defect stats may be missing — Edge Function unavailable.",
+      "lastLoaded": "Updated at {{time}}",
+      "refresh": "Refresh"
     },
     "roadmapIntro": "MVP roadmap, dated release notes, post-release ideas, and open questions. Data source: src/data/productRoadmap.ts; maintenance rules: web/README.md.",
     "testingTitle": "Testing",

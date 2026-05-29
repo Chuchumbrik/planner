@@ -198,6 +198,28 @@ body {
   }
 }
 
+/* Admin dashboard: плавный вход контента при переключении вкладок */
+@keyframes admin-tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-admin-tab-in {
+  animation: admin-tab-in 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-admin-tab-in {
+    animation: none;
+  }
+}
+
 /* DR-004: мягкое «дыхание» рамки, пока ждём второе подтверждение */
 @keyframes dc-pending-glow {
   0%,
