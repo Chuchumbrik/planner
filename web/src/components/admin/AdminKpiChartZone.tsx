@@ -9,7 +9,8 @@ import {
 } from 'recharts'
 import type { TooltipProps } from 'recharts'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
-import { SETTINGS_BTN_SECONDARY, SETTINGS_CARD } from '@/lib/designClasses'
+import { AdminCardSection } from '@/components/admin/AdminCardSection'
+import { ADMIN_CHART_HEIGHT, SETTINGS_BTN_SECONDARY } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 import type { AdminKpiMetric, AdminKpiTrend } from '@/types/adminMonitoring'
 
@@ -76,55 +77,48 @@ export function AdminKpiChartZone({
     )
   }
 
-  return (
-    <div className={SETTINGS_CARD}>
-      {/* header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4 className="font-display text-sm font-semibold text-on-surface">
-            {t(titleKey, { defaultValue: metric })}
-          </h4>
-          <p className="mt-0.5 text-xs text-on-surface-variant">
-            {t('admin.dashboard.kpiTrend.hint')}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            className={cn(SETTINGS_BTN_SECONDARY, 'text-xs')}
-            disabled={loadBusy}
-            onClick={onRefresh}
-          >
-            {loadBusy ? t('common.loading') : t('admin.dashboard.kpiTrend.refresh')}
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
-            onClick={onClose}
-            aria-label={t('common.close')}
-          >
-            <MaterialIcon name="close" size={18} />
-          </button>
-        </div>
-      </div>
+  const closeButtons = (
+    <div className="flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        className={cn(SETTINGS_BTN_SECONDARY, 'text-xs')}
+        disabled={loadBusy}
+        onClick={onRefresh}
+      >
+        {loadBusy ? t('common.loading') : t('admin.dashboard.kpiTrend.refresh')}
+      </button>
+      <button
+        type="button"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+        onClick={onClose}
+        aria-label={t('common.close')}
+      >
+        <MaterialIcon name="close" size={18} />
+      </button>
+    </div>
+  )
 
-      {/* status */}
+  return (
+    <AdminCardSection
+      title={t(titleKey, { defaultValue: metric })}
+      hint={t('admin.dashboard.kpiTrend.hint')}
+      action={closeButtons}
+    >
       {loadError ? (
-        <p className="mt-3 text-xs text-red-400" role="alert">{loadError}</p>
+        <p className="text-xs text-red-400" role="alert">{loadError}</p>
       ) : null}
       {tableMissing ? (
-        <p className="mt-3 text-xs text-amber-400/90" role="status">
+        <p className="text-xs text-amber-400/90" role="status">
           {t('admin.dashboard.activityTableMissing')}
         </p>
       ) : null}
 
-      {/* chart */}
       {loadBusy && !series.length ? (
-        <p className="mt-4 text-sm text-on-surface-variant">{t('common.loading')}</p>
+        <p className="text-sm text-on-surface-variant">{t('common.loading')}</p>
       ) : series.length < 2 ? (
-        <p className="mt-4 text-sm text-on-surface-variant">{t('admin.dashboard.kpiTrend.noData')}</p>
+        <p className="text-sm text-on-surface-variant">{t('admin.dashboard.kpiTrend.noData')}</p>
       ) : (
-        <div className="mt-4 h-36">
+        <div className={ADMIN_CHART_HEIGHT}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={series} margin={{ top: 6, right: 8, bottom: 0, left: -24 }}>
               <defs>
@@ -161,10 +155,10 @@ export function AdminKpiChartZone({
       )}
 
       {/* UTC note */}
-      <p className="mt-3 flex items-center gap-1.5 text-xs text-on-surface-variant/60">
+      <p className="flex items-center gap-1.5 text-xs text-on-surface-variant/60">
         <MaterialIcon name="info" size={12} className="shrink-0" />
         {t('admin.dashboard.kpiTrend.utcNote')}
       </p>
-    </div>
+    </AdminCardSection>
   )
 }

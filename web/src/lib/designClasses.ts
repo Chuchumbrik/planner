@@ -10,6 +10,31 @@ export const SECTION_GAP = 'space-y-lg'
 
 export const SETTINGS_CARD = 'motivator-card p-sm md:p-md'
 
+/** Admin dashboard: vertical gap between major blocks (24px) */
+export const ADMIN_SECTION_GAP = 'space-y-md'
+
+/** Admin bento / stat grid gutters */
+export const ADMIN_GRID_GAP = 'gap-sm md:gap-md'
+
+/** Space between admin card header and body content */
+export const ADMIN_CARD_BODY = 'mt-md flex flex-col gap-md'
+
+/** Nested panel inside an admin card (drill-down, sub-lists) */
+export const ADMIN_NESTED_PANEL =
+  'rounded-lg border border-surface-variant/60 bg-surface-container-low/50 p-sm md:p-md'
+
+/** Responsive chart height in admin dashboard blocks */
+export const ADMIN_CHART_HEIGHT = 'h-44 md:h-48 xl:h-52'
+
+export function adminTabButton(active: boolean): string {
+  return cn(
+    'flex min-h-[44px] shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 -mb-px text-label-md transition-colors',
+    active
+      ? 'border-primary text-primary'
+      : 'border-transparent text-on-surface-variant hover:text-on-surface',
+  )
+}
+
 export const SETTINGS_SUBHEAD = cn(
   'mt-4 text-label-sm uppercase text-on-surface-variant',
 )

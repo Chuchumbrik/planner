@@ -16,7 +16,7 @@ import { AdminDashboardActivityDayPanel } from '@/components/admin/AdminDashboar
 import { useAdminActivityDayUsers } from '@/components/admin/useAdminActivityDayUsers'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import { ACTIVITY_CHART_DAY_OPTIONS } from '@/lib/adminMonitoringConstants'
-import { SETTINGS_BTN_SECONDARY, chipActive } from '@/lib/designClasses'
+import { ADMIN_CHART_HEIGHT, SCROLLBAR_SLIDER_H, SETTINGS_BTN_SECONDARY, chipActive } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 import type { AdminActivityChart } from '@/types/adminMonitoring'
 
@@ -102,67 +102,72 @@ export function AdminDashboardActivityChart({
       hint2={t('admin.dashboard.activityChartClickHint')}
       action={refreshButton}
     >
-      {/* period filter */}
-      <div
-        className="mt-4 flex flex-wrap gap-1.5"
-        role="group"
-        aria-label={t('admin.dashboard.activityChartDaysAria')}
-      >
-        {ACTIVITY_CHART_DAY_OPTIONS.map((d) => (
-          <button
-            key={d}
-            type="button"
-            className={cn(chipActive(days === d), 'text-label-sm')}
-            onClick={() => onDaysChange(d)}
-          >
-            {t('admin.dashboard.activityChartDays', { count: d })}
-          </button>
-        ))}
-      </div>
+      {/* filters */}
+      <div className="flex flex-col gap-sm">
+        <div
+          className="flex flex-wrap gap-1.5"
+          role="group"
+          aria-label={t('admin.dashboard.activityChartDaysAria')}
+        >
+          {ACTIVITY_CHART_DAY_OPTIONS.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className={cn(chipActive(days === d), 'text-label-sm')}
+              onClick={() => onDaysChange(d)}
+            >
+              {t('admin.dashboard.activityChartDays', { count: d })}
+            </button>
+          ))}
+        </div>
 
-      {/* role filter */}
-      <div
-        className="mt-2 flex flex-wrap gap-1.5"
-        role="group"
-        aria-label={t('admin.dashboard.activityChartRoleAria')}
-      >
-        {roleFilters.map((r) => (
-          <button
-            key={r}
-            type="button"
-            className={cn(chipActive(role === r), 'text-label-sm')}
-            onClick={() => onRoleChange(r)}
-          >
-            {t(`admin.dashboard.activityChartRole.${r}`)}
-          </button>
-        ))}
+        <div
+          className="flex flex-wrap gap-1.5"
+          role="group"
+          aria-label={t('admin.dashboard.activityChartRoleAria')}
+        >
+          {roleFilters.map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={cn(chipActive(role === r), 'text-label-sm')}
+              onClick={() => onRoleChange(r)}
+            >
+              {t(`admin.dashboard.activityChartRole.${r}`)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* status messages */}
       {tableMissing ? (
-        <p className="mt-4 text-xs text-amber-400/90" role="status">
+        <p className="text-xs text-amber-400/90" role="status">
           {t('admin.dashboard.activityTableMissing')}
         </p>
       ) : null}
       {loadError ? (
-        <p className="mt-4 text-xs text-red-400" role="alert">{loadError}</p>
+        <p className="text-xs text-red-400" role="alert">{loadError}</p>
       ) : null}
 
       {/* DAU / WAU summary */}
       {chart && !loadBusy ? (
-        <p className="mt-4 text-label-sm text-on-surface-variant">
+        <p className="text-label-sm text-on-surface-variant">
           {t('admin.dashboard.activityDauWau', { dau: chart.dau_today, wau: chart.wau })}
         </p>
       ) : null}
 
       {/* bar chart */}
       {loadBusy ? (
-        <p className="mt-6 text-sm text-on-surface-variant">{t('common.loading')}</p>
+        <p className="text-sm text-on-surface-variant">{t('common.loading')}</p>
       ) : isEmpty ? (
-        <p className="mt-6 text-sm text-on-surface-variant">{t('admin.dashboard.activityChartEmpty')}</p>
+        <p className="text-sm text-on-surface-variant">{t('admin.dashboard.activityChartEmpty')}</p>
       ) : chart ? (
-        <div className="mt-4" style={{ height: 192 }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <div className={cn('overflow-x-auto', SCROLLBAR_SLIDER_H)}>
+          <div
+            className={ADMIN_CHART_HEIGHT}
+            style={{ minWidth: `${Math.max(chart.series.length * 24, 280)}px` }}
+          >
+            <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chart.series}
               margin={{ top: 4, right: 4, bottom: 0, left: -24 }}
@@ -207,6 +212,7 @@ export function AdminDashboardActivityChart({
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
       ) : null}
 

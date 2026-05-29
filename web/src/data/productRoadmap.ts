@@ -338,6 +338,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: '**Админ:** горизонтальные вкладки вместо бокового меню; drill-down по дню — role-бейджи и компактная панель; общие компоненты `AdminKpiCard`, `AdminCardSection`, `InfoTooltip`, `RoleBadge`.',
             en: '**Admin:** horizontal tabs instead of sidebar nav; day drill-down uses role badges and a compact panel; shared `AdminKpiCard`, `AdminCardSection`, `InfoTooltip`, `RoleBadge` components.',
           },
+          {
+            ru: '**Админ → вёрстка:** единые отступы (`ADMIN_*` токены), «Обновить» в шапке вкладки, KPI по центру в bento-ячейках, адаптивная высота графиков, вложенная панель drill-down без двойной рамки.',
+            en: '**Admin → layout:** unified spacing (`ADMIN_*` tokens), Refresh in tab header, centered KPI values in bento cells, responsive chart heights, nested drill-down panel without double card chrome.',
+          },
         ],
         plainBullets: [
           {

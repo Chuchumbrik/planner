@@ -8,7 +8,7 @@ import { InfoTooltip } from '@/components/admin/InfoTooltip'
 import { useAdminActivityChart } from '@/components/admin/useAdminActivityChart'
 import { useAdminKpiTrend } from '@/components/admin/useAdminKpiTrend'
 import { cn } from '@/lib/cn'
-import { SETTINGS_BTN_SECONDARY } from '@/lib/designClasses'
+import { ADMIN_GRID_GAP, SETTINGS_CARD } from '@/lib/designClasses'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import type { AdminKpiMetric, AdminOverview } from '@/types/adminMonitoring'
@@ -33,7 +33,7 @@ function StatItem({
   alignTooltipRight?: boolean
 }) {
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-sm">
       <MaterialIcon
         name={icon}
         size={18}
@@ -65,11 +65,11 @@ function StatItem({
 
 function StatGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-4">
-      <p className="border-b border-surface-variant pb-1 text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant/50">
+    <div className="flex flex-col gap-sm">
+      <p className="border-b border-surface-variant pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant/50">
         {label}
       </p>
-      <div className="flex flex-col gap-4">{children}</div>
+      <div className="flex flex-col gap-sm">{children}</div>
     </div>
   )
 }
@@ -81,19 +81,15 @@ export function AdminDashboardSummaryTab({
   loadBusy,
   loadError,
   listDegraded,
-  lastLoaded,
   supabase,
-  onRefresh,
 }: {
   overview: AdminOverview | null
   loadBusy: boolean
   loadError: string | null
   listDegraded: boolean
-  lastLoaded?: Date | null
   supabase: SupabaseClient
-  onRefresh?: () => void
 }) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [chartDays, setChartDays] = useState<ActivityChartDays>(30)
   const [chartRole, setChartRole] = useState<ActivityChartRoleFilter>('all')
   const activityChart = useAdminActivityChart(supabase, chartDays, chartRole)
@@ -114,40 +110,8 @@ export function AdminDashboardSummaryTab({
     setActiveMetric((prev) => (prev === metric ? null : metric))
   }
 
-  function formatTimestamp(date: Date): string {
-    return date.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
-  }
-
   return (
-    <div className="space-y-md">
-
-      {/* ── Toolbar: refresh + timestamp ────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-xs text-on-surface-variant/60">
-          {lastLoaded ? (
-            <>
-              <MaterialIcon name="schedule" size={13} className="shrink-0" />
-              <span>{t('admin.dashboard.lastLoaded', { time: formatTimestamp(lastLoaded) })}</span>
-            </>
-          ) : null}
-        </div>
-        {onRefresh ? (
-          <button
-            type="button"
-            className={cn(SETTINGS_BTN_SECONDARY, 'flex items-center gap-1.5')}
-            disabled={loadBusy}
-            onClick={onRefresh}
-          >
-            <MaterialIcon
-              name="refresh"
-              size={15}
-              className={loadBusy ? 'animate-spin' : undefined}
-            />
-            {loadBusy ? t('common.loading') : t('admin.dashboard.refresh')}
-          </button>
-        ) : null}
-      </div>
-
+    <>
       {/* ── Status banners ──────────────────────────────────────────────── */}
       {loadError ? (
         <div className="flex items-start gap-2 rounded-lg border border-red-400/20 bg-red-400/5 px-3 py-2.5 text-xs text-red-400">
@@ -176,8 +140,8 @@ export function AdminDashboardSummaryTab({
           │                  │  Неактивны (wide)      │
           └──────────────────┴───────────────────────┘
       */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <div className="xl:row-span-2">
+      <div className={cn('grid items-stretch', ADMIN_GRID_GAP, 'sm:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2')}>
+        <div className="h-full xl:row-span-2">
           <AdminKpiCard
             icon="group"
             labelKey="admin.dashboard.kpiTotal"
@@ -190,29 +154,33 @@ export function AdminDashboardSummaryTab({
           />
         </div>
 
-        <AdminKpiCard
-          icon="person_add"
-          labelKey="admin.dashboard.kpiRegistered7d"
-          value={loadBusy ? '…' : String(o?.registered_last_7d ?? '—')}
-          tooltip={t('admin.dashboard.kpiTooltip.registered7d')}
-          trendMetric="registrations"
-          loading={loadBusy}
-          isActive={activeMetric === 'registrations'}
-          onActivate={() => toggleMetric('registrations')}
-        />
+        <div className="h-full">
+          <AdminKpiCard
+            icon="person_add"
+            labelKey="admin.dashboard.kpiRegistered7d"
+            value={loadBusy ? '…' : String(o?.registered_last_7d ?? '—')}
+            tooltip={t('admin.dashboard.kpiTooltip.registered7d')}
+            trendMetric="registrations"
+            loading={loadBusy}
+            isActive={activeMetric === 'registrations'}
+            onActivate={() => toggleMetric('registrations')}
+          />
+        </div>
 
-        <AdminKpiCard
-          icon="timeline"
-          labelKey="admin.dashboard.kpiMau30d"
-          value={loadBusy ? '…' : String(o?.mau_30d ?? '—')}
-          tooltip={t('admin.dashboard.kpiTooltip.mau')}
-          trendMetric="mau"
-          loading={loadBusy}
-          isActive={activeMetric === 'mau'}
-          onActivate={() => toggleMetric('mau')}
-        />
+        <div className="h-full">
+          <AdminKpiCard
+            icon="timeline"
+            labelKey="admin.dashboard.kpiMau30d"
+            value={loadBusy ? '…' : String(o?.mau_30d ?? '—')}
+            tooltip={t('admin.dashboard.kpiTooltip.mau')}
+            trendMetric="mau"
+            loading={loadBusy}
+            isActive={activeMetric === 'mau'}
+            onActivate={() => toggleMetric('mau')}
+          />
+        </div>
 
-        <div className="sm:col-span-2 xl:col-span-2">
+        <div className="h-full sm:col-span-2 xl:col-span-2">
           <AdminKpiCard
             icon="person_off"
             labelKey="admin.dashboard.kpiInactive30d"
@@ -241,8 +209,8 @@ export function AdminDashboardSummaryTab({
       ) : null}
 
       {/* ── Secondary metrics ───────────────────────────────────────────── */}
-      <div className="motivator-card p-sm md:p-md">
-        <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={SETTINGS_CARD}>
+        <div className={cn('grid', ADMIN_GRID_GAP, 'sm:grid-cols-2 lg:grid-cols-3')}>
           <StatGroup label={t('admin.dashboard.statGroupActivity')}>
             <StatItem
               icon="login"
@@ -321,6 +289,6 @@ export function AdminDashboardSummaryTab({
         onRoleChange={setChartRole}
         onRefresh={() => void activityChart.load()}
       />
-    </div>
+    </>
   )
 }
