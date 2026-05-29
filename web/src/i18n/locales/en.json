@@ -10,7 +10,9 @@
     "langRu": "Russian",
     "langEn": "English",
     "langRuFlag": "🇷🇺 Russian",
-    "langEnFlag": "🇬🇧 English"
+    "langEnFlag": "🇬🇧 English",
+    "expand": "Expand",
+    "collapse": "Collapse"
   },
   "app": {
     "brand": "Motivator",
@@ -514,7 +516,8 @@
       "activity_table_missing": "Activity table missing — apply migration 006 (see README)."
     },
     "adminSectionTitle": "Administrators",
-    "adminSectionHelp": "Roles live in Supabase Auth → user → **App metadata**: key **motivator_role** (`admin`, `beta_tester`; omit key for a regular user). Bootstrap the first admin in the Dashboard or SQL. After that, admins can change roles on **/settings** (Users & roles block, Edge **admin-motivator-roles**). **Testing** and **File a defect** (**file-defect**) are for **admin** and **beta_tester**; see web/README. **Brief summary** on **/app** is for every signed-in user."
+    "adminSectionHelp": "Roles live in Supabase Auth → user → **App metadata**: key **motivator_role** (`admin`, `beta_tester`; omit key for a regular user). Bootstrap the first admin in the Dashboard or SQL. After that, admins can change roles on **/settings** (Users & roles block, Edge **admin-motivator-roles**). **Testing** and **File a defect** (**file-defect**) are for **admin** and **beta_tester**; see web/README. **Brief summary** on **/app** is for every signed-in user.",
+    "adminRolesSelfDemoteAck": "I understand I will lose administrator access"
   },
   "eod": {
     "title": "End of day",

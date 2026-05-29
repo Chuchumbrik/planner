@@ -10,7 +10,9 @@
     "langRu": "Русский",
     "langEn": "English",
     "langRuFlag": "🇷🇺 Русский",
-    "langEnFlag": "🇬🇧 English"
+    "langEnFlag": "🇬🇧 English",
+    "expand": "Развернуть",
+    "collapse": "Свернуть"
   },
   "app": {
     "brand": "Мотиватор",
@@ -514,7 +516,8 @@
       "activity_table_missing": "Таблица активности не найдена — примените миграцию 006 (см. README)."
     },
     "adminSectionTitle": "Администраторы",
-    "adminSectionHelp": "Роль задаётся в Supabase Auth → пользователь → App metadata: ключ motivator_role (значения admin, beta_tester; без ключа — обычный пользователь). Первый admin — в Dashboard или SQL. Дальше admin может менять роли на экране /settings (блок «Пользователи и роли», Edge admin-motivator-roles). Секция «Тестирование» и «Завести дефект» (file-defect) — для admin и beta_tester; см. web/README. Модалка «Краткая сводка» на /app — у всех залогиненных."
+    "adminSectionHelp": "Роль задаётся в Supabase Auth → пользователь → App metadata: ключ motivator_role (значения admin, beta_tester; без ключа — обычный пользователь). Первый admin — в Dashboard или SQL. Дальше admin может менять роли на экране /settings (блок «Пользователи и роли», Edge admin-motivator-roles). Секция «Тестирование» и «Завести дефект» (file-defect) — для admin и beta_tester; см. web/README. Модалка «Краткая сводка» на /app — у всех залогиненных.",
+    "adminRolesSelfDemoteAck": "Я понимаю, что потеряю доступ администратора"
   },
   "eod": {
     "title": "Завершение дня",

@@ -33,7 +33,7 @@ function StatItem({
   alignTooltipRight?: boolean
 }) {
   return (
-    <div className="flex items-start gap-sm">
+    <div className="flex items-start gap-xs">
       <MaterialIcon
         name={icon}
         size={18}
@@ -74,6 +74,23 @@ function StatGroup({ label, children }: { label: string; children: React.ReactNo
   )
 }
 
+// ── derived values ───────────────────────────────────────────────────────────
+
+/**
+ * Share of users who haven't been active in the last 30 days:
+ *   (1 − MAU ÷ total) × 100, clamped to [0, 100].
+ *
+ * Clamping protects against backend inconsistencies (e.g. MAU > total during a
+ * pipeline race) that would otherwise render a negative percentage.
+ */
+function computeInactivePercent(o: AdminOverview | null, loadBusy: boolean): string {
+  if (loadBusy) return '…'
+  if (!o || o.total_users === 0) return '—'
+  const raw = (1 - o.mau_30d / o.total_users) * 100
+  const clamped = Math.min(100, Math.max(0, raw))
+  return `${clamped.toFixed(1)}%`
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export function AdminDashboardSummaryTab({
@@ -92,6 +109,7 @@ export function AdminDashboardSummaryTab({
   const { t } = useTranslation()
   const [chartDays, setChartDays] = useState<ActivityChartDays>(30)
   const [chartRole, setChartRole] = useState<ActivityChartRoleFilter>('all')
+  const [activityChartCollapsed, setActivityChartCollapsed] = useState(false)
   const activityChart = useAdminActivityChart(supabase, chartDays, chartRole)
 
   const [activeMetric, setActiveMetric] = useState<AdminKpiMetric | null>(null)
@@ -100,11 +118,13 @@ export function AdminDashboardSummaryTab({
   const o = overview
   const staleDays = o?.stale_vault_days ?? 14
 
-  const inactiveValue =
-    loadBusy ? '…'
-    : o
-      ? o.total_users === 0 ? '—' : `${((1 - o.mau_30d / o.total_users) * 100).toFixed(1)}%`
-      : '—'
+  // Show skeletons not only when the request is in flight, but also during the
+  // brief initial-mount window before useEffect fires (loadBusy=false, o=null).
+  // If a load error has surfaced, we stop showing skeletons so the error banner
+  // tells the story instead of an indefinite shimmer.
+  const showSkeleton = (loadBusy || !o) && !loadError
+
+  const inactiveValue = computeInactivePercent(o, showSkeleton)
 
   function toggleMetric(metric: AdminKpiMetric) {
     setActiveMetric((prev) => (prev === metric ? null : metric))
@@ -133,22 +153,26 @@ export function AdminDashboardSummaryTab({
       {/* ── Hero KPI bento grid ─────────────────────────────────────────── */}
       {/*
         sm:  2-column
-        xl+: bento — Total spans 2 rows, Inactive spans 2 cols
+        xl:  bento — Total spans 2 rows, Inactive spans 2 cols
           ┌──────────────────┬───────────┬───────────┐
           │  Всего (tall)    │  Новых 7д │  MAU 30d  │
           │                  ├───────────┴───────────┤
           │                  │  Неактивны (wide)      │
           └──────────────────┴───────────────────────┘
+        2xl: 4 равные колонки в одну строку
+          ┌──────────┬───────────┬───────────┬──────────┐
+          │  Всего   │  Новых 7д │  MAU 30d  │Неактивны │
+          └──────────┴───────────┴───────────┴──────────┘
       */}
-      <div className={cn('grid items-stretch', ADMIN_GRID_GAP, 'sm:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2')}>
-        <div className="h-full xl:row-span-2">
+      <div className={cn('grid items-stretch', ADMIN_GRID_GAP, 'sm:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 2xl:grid-cols-4 2xl:grid-rows-1')}>
+        <div className="h-full xl:row-span-2 2xl:row-span-1">
           <AdminKpiCard
             icon="group"
             labelKey="admin.dashboard.kpiTotal"
             value={loadBusy ? '…' : String(o?.total_users ?? '—')}
             tooltip={t('admin.dashboard.kpiTooltip.total')}
             trendMetric="total_users"
-            loading={loadBusy}
+            loading={showSkeleton}
             isActive={activeMetric === 'total_users'}
             onActivate={() => toggleMetric('total_users')}
           />
@@ -161,7 +185,7 @@ export function AdminDashboardSummaryTab({
             value={loadBusy ? '…' : String(o?.registered_last_7d ?? '—')}
             tooltip={t('admin.dashboard.kpiTooltip.registered7d')}
             trendMetric="registrations"
-            loading={loadBusy}
+            loading={showSkeleton}
             isActive={activeMetric === 'registrations'}
             onActivate={() => toggleMetric('registrations')}
           />
@@ -174,13 +198,13 @@ export function AdminDashboardSummaryTab({
             value={loadBusy ? '…' : String(o?.mau_30d ?? '—')}
             tooltip={t('admin.dashboard.kpiTooltip.mau')}
             trendMetric="mau"
-            loading={loadBusy}
+            loading={showSkeleton}
             isActive={activeMetric === 'mau'}
             onActivate={() => toggleMetric('mau')}
           />
         </div>
 
-        <div className="h-full sm:col-span-2 xl:col-span-2">
+        <div className="h-full sm:col-span-2 xl:col-span-2 2xl:col-span-1">
           <AdminKpiCard
             icon="person_off"
             labelKey="admin.dashboard.kpiInactive30d"
@@ -188,7 +212,7 @@ export function AdminDashboardSummaryTab({
             tooltip={t('admin.dashboard.kpiTooltip.inactive30d')}
             trendMetric="churn"
             danger
-            loading={loadBusy}
+            loading={showSkeleton}
             isActive={activeMetric === 'churn'}
             onActivate={() => toggleMetric('churn')}
           />
@@ -217,7 +241,7 @@ export function AdminDashboardSummaryTab({
               label={t('admin.dashboard.kpiSignedIn7d')}
               value={String(o?.signed_in_last_7d ?? '—')}
               tooltip={t('admin.dashboard.kpiTooltip.signedIn7d')}
-              loading={loadBusy}
+              loading={showSkeleton}
             />
           </StatGroup>
 
@@ -227,7 +251,7 @@ export function AdminDashboardSummaryTab({
               label={t('admin.dashboard.kpiWithVault')}
               value={String(o?.with_vault ?? '—')}
               tooltip={t('admin.dashboard.kpiTooltip.withVault')}
-              loading={loadBusy}
+              loading={showSkeleton}
             />
             <StatItem
               icon="sync_problem"
@@ -235,7 +259,7 @@ export function AdminDashboardSummaryTab({
               value={String(o?.vault_stale_14d ?? '—')}
               tooltip={t('admin.dashboard.kpiTooltip.vaultStale', { days: staleDays })}
               warn={(o?.vault_stale_14d ?? 0) > 0}
-              loading={loadBusy}
+              loading={showSkeleton}
             />
           </StatGroup>
 
@@ -245,7 +269,7 @@ export function AdminDashboardSummaryTab({
               label={t('admin.dashboard.kpiWithPush')}
               value={String(o?.with_push ?? '—')}
               tooltip={t('admin.dashboard.kpiTooltip.withPush')}
-              loading={loadBusy}
+              loading={showSkeleton}
             />
             <StatItem
               icon="bug_report"
@@ -253,7 +277,7 @@ export function AdminDashboardSummaryTab({
               value={String(o?.defect_submissions_7d ?? '—')}
               tooltip={t('admin.dashboard.kpiTooltip.defects7d')}
               warn={(o?.defect_submissions_7d ?? 0) > 0}
-              loading={loadBusy}
+              loading={showSkeleton}
             />
             <StatItem
               icon="badge"
@@ -269,7 +293,7 @@ export function AdminDashboardSummaryTab({
                   : '—'
               }
               tooltip={t('admin.dashboard.kpiTooltip.roles')}
-              loading={loadBusy}
+              loading={showSkeleton}
               alignTooltipRight
             />
           </StatGroup>
@@ -288,6 +312,9 @@ export function AdminDashboardSummaryTab({
         onDaysChange={setChartDays}
         onRoleChange={setChartRole}
         onRefresh={() => void activityChart.load()}
+        collapsible
+        collapsed={activityChartCollapsed}
+        onToggleCollapse={() => setActivityChartCollapsed((v) => !v)}
       />
     </>
   )

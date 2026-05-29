@@ -7,6 +7,7 @@ import { parseAdminActivityDayDetailResponse } from '@/lib/adminMotivatorRolesLi
 import type { AdminActivityDayDetail } from '@/types/adminMonitoring'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
+import { useLatestRef } from '@/components/admin/useAbortableInvoke'
 
 export function useAdminActivityDayUsers(
   supabase: SupabaseClient | null,
@@ -14,6 +15,7 @@ export function useAdminActivityDayUsers(
   role: ActivityChartRoleFilter,
 ) {
   const { t } = useTranslation()
+  const tRef = useLatestRef(t)
   const [detail, setDetail] = useState<AdminActivityDayDetail | null>(null)
   const [loadBusy, setLoadBusy] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -23,6 +25,7 @@ export function useAdminActivityDayUsers(
       setDetail(null)
       return
     }
+    const tr = tRef.current
     setLoadError(null)
     setLoadBusy(true)
     try {
@@ -33,26 +36,26 @@ export function useAdminActivityDayUsers(
       if (signal?.aborted) return
       if (fnErr) {
         const msg = await formatSupabaseFunctionInvokeError(fnErr)
-        setLoadError(mapAdminRolesError(msg, t))
+        setLoadError(mapAdminRolesError(msg, tr))
         setDetail(null)
         return
       }
       const body = data && typeof data === 'object' ? (data as Record<string, unknown>) : null
       const parsed = parseAdminActivityDayDetailResponse(body?.detail)
       if (!parsed) {
-        setLoadError(t('settings.adminRolesErrors.activity_day_users_failed'))
+        setLoadError(tr('settings.adminRolesErrors.activity_day_users_failed'))
         setDetail(null)
         return
       }
       setDetail(parsed)
     } catch (e: unknown) {
       if (signal?.aborted) return
-      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
+      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), tr))
       setDetail(null)
     } finally {
       if (!signal?.aborted) setLoadBusy(false)
     }
-  }, [supabase, date, role, t])
+  }, [supabase, date, role, tRef])
 
   useEffect(() => {
     if (!date) {

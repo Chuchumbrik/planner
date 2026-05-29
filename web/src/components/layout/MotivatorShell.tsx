@@ -18,6 +18,7 @@ import {
   SHELL_HEADER_ACTIONS,
   SHELL_PAGE_TITLE,
   shellMainContent,
+  type ShellMainAlign,
   shellMainOffsetClass,
   shellMobileNavLink,
   shellSidebarClass,
@@ -44,6 +45,8 @@ type MotivatorShellProps = {
   title?: string
   children: ReactNode
   wide?: boolean
+  /** 'center' (default) for regular pages, 'left' for data-dense admin views. */
+  align?: ShellMainAlign
   planTier?: PlanTier
 }
 
@@ -206,6 +209,7 @@ function MotivatorShellInner({
   title,
   children,
   wide = false,
+  align = 'center',
   planTier: planTierProp,
 }: MotivatorShellProps) {
   const { t } = useTranslation()
@@ -312,7 +316,7 @@ function MotivatorShellInner({
             </div>
           </header>
 
-          <main className={shellMainContent(wide)}>
+          <main className={shellMainContent(wide, align)}>
             <QaClockBanner />
             {children}
           </main>
