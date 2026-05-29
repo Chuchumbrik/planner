@@ -2,7 +2,12 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
-import { SETTINGS_TAB_PANEL_INTRO, SETTINGS_TAB_PANEL_TITLE } from '@/lib/designClasses'
+import {
+  ADMIN_SECTION_GAP,
+  SETTINGS_TAB_PANEL_INTRO,
+  SETTINGS_TAB_PANEL_TITLE,
+  adminTabButton,
+} from '@/lib/designClasses'
 import type { AdminDashboardTabId } from '@/components/admin/useAdminDashboardTab'
 
 type TabDef = {
@@ -33,64 +38,70 @@ const TABS: TabDef[] = [
 type Props = {
   activeTab: AdminDashboardTabId
   onTabChange: (tab: AdminDashboardTabId) => void
+  headerActions?: ReactNode
   children: ReactNode
 }
 
-export function AdminDashboardTabLayout({ activeTab, onTabChange, children }: Props) {
+export function AdminDashboardTabLayout({ activeTab, onTabChange, headerActions, children }: Props) {
   const { t } = useTranslation()
   const activeMeta = TABS.find((tab) => tab.id === activeTab) ?? TABS[0]
 
   return (
-    <div className="flex flex-col">
-      {/* Horizontal tab strip */}
+    <div className="flex min-w-0 flex-col">
+      {/* Horizontal tab strip — scroll on narrow viewports */}
       <nav
         role="tablist"
         aria-label={t('admin.dashboard.tabs.navAria')}
-        className="flex border-b border-surface-variant"
+        className="scrollbar-site overflow-x-auto border-b border-surface-variant"
       >
-        {TABS.map((tab) => {
-          const active = tab.id === activeTab
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              aria-controls={`admin-panel-${tab.id}`}
-              id={`admin-tab-${tab.id}`}
-              className={cn(
-                'flex min-h-[44px] items-center gap-2 border-b-2 px-4 py-2.5 text-label-md transition-colors',
-                active
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-on-surface-variant hover:text-on-surface',
-              )}
-              onClick={() => onTabChange(tab.id)}
-            >
-              <MaterialIcon
-                name={tab.icon}
-                size={18}
-                filled={active}
-                className={active ? 'text-primary' : 'text-on-surface-variant'}
-              />
-              {t(tab.labelKey)}
-            </button>
-          )
-        })}
+        <div className="flex min-w-min">
+          {TABS.map((tab) => {
+            const active = tab.id === activeTab
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                aria-controls={`admin-panel-${tab.id}`}
+                id={`admin-tab-${tab.id}`}
+                className={adminTabButton(active)}
+                onClick={() => onTabChange(tab.id)}
+              >
+                <MaterialIcon
+                  name={tab.icon}
+                  size={18}
+                  filled={active}
+                  className={cn(active ? 'text-primary' : 'text-on-surface-variant')}
+                />
+                {t(tab.labelKey)}
+              </button>
+            )
+          })}
+        </div>
       </nav>
 
       {/* Panel */}
       <div
         key={activeTab}
-        className="mt-lg animate-admin-tab-in"
+        className="mt-md min-w-0 animate-admin-tab-in"
         role="tabpanel"
         id={`admin-panel-${activeTab}`}
         aria-labelledby={`admin-tab-${activeTab}`}
       >
-        <header className="mb-md">
-          <h2 className={SETTINGS_TAB_PANEL_TITLE}>{t(activeMeta.titleKey)}</h2>
-          <p className={SETTINGS_TAB_PANEL_INTRO}>{t(activeMeta.introKey)}</p>
+        <header className="mb-sm flex flex-col gap-sm sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <h2 className={SETTINGS_TAB_PANEL_TITLE}>{t(activeMeta.titleKey)}</h2>
+            <p className={SETTINGS_TAB_PANEL_INTRO}>{t(activeMeta.introKey)}</p>
+          </div>
+          {headerActions ? (
+            <div className="flex shrink-0 flex-col items-stretch gap-1 sm:items-end sm:pt-0.5">
+              {headerActions}
+            </div>
+          ) : null}
         </header>
-        {children}
+
+        <div className={ADMIN_SECTION_GAP}>{children}</div>
       </div>
     </div>
   )

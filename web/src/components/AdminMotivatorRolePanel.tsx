@@ -25,6 +25,7 @@ import {
   SETTINGS_BTN_SECONDARY,
   SETTINGS_CARD,
   SETTINGS_SUBHEAD,
+  ADMIN_CARD_BODY,
   chipActive,
 } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
@@ -270,7 +271,7 @@ export function AdminMotivatorRolePanel({
     <section>
       <div className={SETTINGS_CARD}>
         {/* Search + refresh */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-sm sm:flex-row sm:items-center">
           <input
             type="search"
             autoComplete="off"
@@ -289,8 +290,9 @@ export function AdminMotivatorRolePanel({
           </button>
         </div>
 
+        <div className={ADMIN_CARD_BODY}>
         {/* Segment filters */}
-        <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={t('admin.dashboard.usersFilterAria')}>
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('admin.dashboard.usersFilterAria')}>
           {SEGMENT_FILTERS.map((id) => (
             <button
               key={id}
@@ -306,15 +308,15 @@ export function AdminMotivatorRolePanel({
         </div>
 
         {loadError ? (
-          <p className="mt-3 text-xs text-red-400" role="alert">{loadError}</p>
+          <p className="text-xs text-red-400" role="alert">{loadError}</p>
         ) : null}
         {listDegraded ? (
-          <p className="mt-3 text-xs text-amber-400/90" role="status">
+          <p className="text-xs text-amber-400/90" role="status">
             {t('admin.dashboard.listDegraded')}
           </p>
         ) : null}
 
-        <div className="mt-3 flex items-start gap-1.5 text-xs text-on-surface-variant/70">
+        <div className="flex items-start gap-1.5 text-xs text-on-surface-variant/70">
           <MaterialIcon name="info" size={14} className="mt-0.5 shrink-0" />
           <span>
             {t('settings.adminRolesSelfHint')}
@@ -324,7 +326,7 @@ export function AdminMotivatorRolePanel({
         </div>
 
         {/* Mobile cards */}
-        <div className="mt-4 flex flex-col gap-2 md:hidden">
+        <div className="flex flex-col gap-sm md:hidden">
           {filtered.length === 0 && !loadBusy ? (
             <p className="rounded-xl border border-surface-variant px-3 py-6 text-center text-xs text-on-surface-variant">
               {t('settings.adminRolesEmpty')}
@@ -408,7 +410,7 @@ export function AdminMotivatorRolePanel({
         </div>
 
         {/* Desktop table */}
-        <div className="motivator-card mt-4 hidden overflow-x-auto p-0 md:block">
+        <div className="motivator-card hidden overflow-x-auto p-0 md:block">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-surface-variant bg-surface-container-low">
@@ -520,6 +522,7 @@ export function AdminMotivatorRolePanel({
               })}
             </tbody>
           </table>
+        </div>
         </div>
       </div>
 
