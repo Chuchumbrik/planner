@@ -2,12 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
+import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
 import { parseAdminActivityDayDetailResponse } from '@/lib/adminMotivatorRolesList'
 import type { AdminActivityDayDetail } from '@/types/adminMonitoring'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
-
-const ADMIN_ROLES_FN = 'admin-motivator-roles'
 
 export function useAdminActivityDayUsers(
   supabase: SupabaseClient | null,
@@ -19,7 +18,7 @@ export function useAdminActivityDayUsers(
   const [loadBusy, setLoadBusy] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!supabase || !date) {
       setDetail(null)
       return
@@ -29,7 +28,9 @@ export function useAdminActivityDayUsers(
     try {
       const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
         body: { action: 'activityDayUsers', date, role },
+        signal,
       })
+      if (signal?.aborted) return
       if (fnErr) {
         const msg = await formatSupabaseFunctionInvokeError(fnErr)
         setLoadError(mapAdminRolesError(msg, t))
@@ -45,10 +46,11 @@ export function useAdminActivityDayUsers(
       }
       setDetail(parsed)
     } catch (e: unknown) {
+      if (signal?.aborted) return
       setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
       setDetail(null)
     } finally {
-      setLoadBusy(false)
+      if (!signal?.aborted) setLoadBusy(false)
     }
   }, [supabase, date, role, t])
 
@@ -58,8 +60,9 @@ export function useAdminActivityDayUsers(
       setLoadError(null)
       return
     }
-    const id = window.setTimeout(() => void load(), 0)
-    return () => window.clearTimeout(id)
+    const ctrl = new AbortController()
+    void load(ctrl.signal)
+    return () => ctrl.abort()
   }, [load, date])
 
   return { detail, loadBusy, loadError, reload: load }

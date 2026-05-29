@@ -10,9 +10,16 @@ import {
   userMatchesSegment,
 } from '@/components/admin/adminDashboardMetrics'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
+import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import type { MotivatorRoleRow } from '@/types/adminMonitoring'
-import { STALE_VAULT_DAYS } from '@/lib/adminMonitoringConstants'
+import { ADMIN_ROLES_FN, STALE_VAULT_DAYS } from '@/lib/adminMonitoringConstants'
 import {
+  MODAL_CLOSE_BTN,
+  MODAL_FOOTER,
+  MODAL_HEADER,
+  MODAL_OVERLAY,
+  MODAL_SHELL,
+  MODAL_TITLE,
   MOTIVATOR_INPUT,
   SETTINGS_BTN_SECONDARY,
   SETTINGS_CARD,
@@ -22,8 +29,6 @@ import {
 import { cn } from '@/lib/cn'
 
 export type { MotivatorRoleRow } from '@/types/adminMonitoring'
-
-const ADMIN_ROLES_FN = 'admin-motivator-roles'
 
 const SEGMENT_FILTERS: AdminUsersSegmentFilter[] = [
   'all',
@@ -36,6 +41,160 @@ const SEGMENT_FILTERS: AdminUsersSegmentFilter[] = [
   'role_beta',
   'role_user',
 ]
+
+type PendingChange = {
+  user: MotivatorRoleRow
+  newRole: MotivatorRoleRow['motivator_role']
+} | null
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function RoleBadge({ role }: { role: MotivatorRoleRow['motivator_role'] }) {
+  const cls = {
+    admin: 'bg-primary/10 text-primary border-primary/30',
+    beta_tester: 'bg-amber-400/10 text-amber-400 border-amber-400/30',
+    user: 'bg-surface-container-highest text-on-surface-variant border-surface-variant',
+  }[role]
+  const label = { admin: 'Admin', beta_tester: 'Beta', user: 'User' }[role]
+  return (
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center rounded border px-1.5 py-0.5',
+        'text-[10px] font-semibold uppercase tracking-wide',
+        cls,
+      )}
+    >
+      {label}
+    </span>
+  )
+}
+
+function VaultCell({ user }: { user: MotivatorRoleRow }) {
+  if (!user.has_vault) {
+    return <MaterialIcon name="lock_open" size={15} className="text-on-surface-variant/35" />
+  }
+  return <MaterialIcon name="lock" size={15} className="text-primary/60" filled />
+}
+
+function PushCell({ count }: { count: number }) {
+  if (count === 0) {
+    return <MaterialIcon name="notifications_off" size={15} className="text-on-surface-variant/30" />
+  }
+  return (
+    <span className="inline-flex items-center gap-1">
+      <MaterialIcon name="notifications_active" size={15} className="text-primary/60" filled />
+      <span className="text-on-surface">{count}</span>
+    </span>
+  )
+}
+
+function roleLabelKey(role: MotivatorRoleRow['motivator_role']): string {
+  if (role === 'admin') return 'settings.adminRolesOptionAdmin'
+  if (role === 'beta_tester') return 'settings.adminRolesOptionBeta'
+  return 'settings.adminRolesOptionUser'
+}
+
+// ── confirmation modal ────────────────────────────────────────────────────────
+
+function ConfirmRoleModal({
+  pending,
+  currentUserId,
+  busy,
+  onConfirm,
+  onCancel,
+}: {
+  pending: NonNullable<PendingChange>
+  currentUserId: string | undefined
+  busy: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const { t } = useTranslation()
+  const isSelfDemote =
+    pending.user.id === currentUserId &&
+    pending.user.motivator_role === 'admin' &&
+    pending.newRole !== 'admin'
+
+  return (
+    <div className={MODAL_OVERLAY} onClick={busy ? undefined : onCancel}>
+      <div className={cn(MODAL_SHELL, 'max-w-sm')} onClick={(e) => e.stopPropagation()}>
+        <div className={MODAL_HEADER}>
+          <h2 className={MODAL_TITLE}>{t('settings.adminRolesColRole')}</h2>
+          <button
+            type="button"
+            className={MODAL_CLOSE_BTN}
+            onClick={onCancel}
+            disabled={busy}
+          >
+            <MaterialIcon name="close" size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 space-y-4 overflow-y-auto p-sm md:p-md">
+          {/* User */}
+          <p className="break-all text-sm text-on-surface">
+            {pending.user.email || pending.user.id}
+          </p>
+
+          {/* Role arrow */}
+          <div className="flex items-center gap-3">
+            <RoleBadge role={pending.user.motivator_role} />
+            <MaterialIcon name="arrow_forward" size={16} className="text-on-surface-variant/50" />
+            <RoleBadge role={pending.newRole} />
+          </div>
+
+          {/* Warning or confirmation text */}
+          {isSelfDemote ? (
+            <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 space-y-1">
+              <p className="text-sm font-medium text-amber-400">
+                {t('settings.adminRolesConfirmSelfDemote')}
+              </p>
+              <p className="text-xs text-amber-400/80">
+                {t('settings.adminRolesConfirmSelfDemoteAgain')}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-on-surface-variant">
+              {t('settings.adminRolesConfirmChange', {
+                email: pending.user.email || pending.user.id,
+                role: t(roleLabelKey(pending.newRole)),
+              })}
+            </p>
+          )}
+        </div>
+
+        <div className={MODAL_FOOTER}>
+          <div className="flex justify-end gap-2 py-1">
+            <button
+              type="button"
+              className={SETTINGS_BTN_SECONDARY}
+              onClick={onCancel}
+              disabled={busy}
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              type="button"
+              className={cn(
+                SETTINGS_BTN_SECONDARY,
+                isSelfDemote
+                  ? 'border-amber-400/40 text-amber-400 hover:bg-amber-400/10'
+                  : 'border-primary/40 text-primary hover:bg-primary/10',
+                busy && 'opacity-50',
+              )}
+              onClick={onConfirm}
+              disabled={busy}
+            >
+              {busy ? t('common.loading') : t('common.save')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── main component ────────────────────────────────────────────────────────────
 
 export function AdminMotivatorRolePanel({
   supabase,
@@ -62,6 +221,7 @@ export function AdminMotivatorRolePanel({
   const [search, setSearch] = useState('')
   const [segment, setSegment] = useState<AdminUsersSegmentFilter>('all')
   const [rowBusyId, setRowBusyId] = useState<string | null>(null)
+  const [pendingChange, setPendingChange] = useState<PendingChange>(null)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -71,20 +231,8 @@ export function AdminMotivatorRolePanel({
     return [...list].sort(compareUsersByLastSignIn)
   }, [users, search, segment])
 
-  async function applyRole(
-    user: MotivatorRoleRow,
-    role: MotivatorRoleRow['motivator_role'],
-  ) {
+  async function applyRole(user: MotivatorRoleRow, role: MotivatorRoleRow['motivator_role']) {
     if (role === user.motivator_role) return
-    if (user.id === currentUserId && user.motivator_role === 'admin' && role !== 'admin') {
-      if (!window.confirm(t('settings.adminRolesConfirmSelfDemote'))) return
-      if (!window.confirm(t('settings.adminRolesConfirmSelfDemoteAgain'))) return
-    } else if (user.id !== currentUserId) {
-      const label = t(`settings.adminRolesOption${role === 'admin' ? 'Admin' : role === 'beta_tester' ? 'Beta' : 'User'}`)
-      if (!window.confirm(t('settings.adminRolesConfirmChange', { email: user.email || user.id, role: label }))) {
-        return
-      }
-    }
     onLoadError(null)
     setRowBusyId(user.id)
     const userId = user.id
@@ -112,18 +260,37 @@ export function AdminMotivatorRolePanel({
       onLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
     } finally {
       setRowBusyId(null)
+      setPendingChange(null)
     }
+  }
+
+  function requestRoleChange(user: MotivatorRoleRow, newRole: MotivatorRoleRow['motivator_role']) {
+    if (newRole === user.motivator_role) return
+    setPendingChange({ user, newRole })
+  }
+
+  function confirmChange() {
+    if (!pendingChange) return
+    void applyRole(pendingChange.user, pendingChange.newRole)
+  }
+
+  function cancelChange() {
+    if (rowBusyId) return
+    setPendingChange(null)
   }
 
   function formatDate(iso: string | null) {
     return formatAdminDateTime(iso, i18n.language)
   }
 
+  const modalBusy = pendingChange ? rowBusyId === pendingChange.user.id : false
+
   return (
     <section>
       <p className="text-body-sm text-on-surface-variant">{t('settings.adminRolesHelp')}</p>
 
       <div className={`mt-4 ${SETTINGS_CARD}`}>
+        {/* Search + refresh */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
             type="search"
@@ -143,6 +310,7 @@ export function AdminMotivatorRolePanel({
           </button>
         </div>
 
+        {/* Segment filters */}
         <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={t('admin.dashboard.usersFilterAria')}>
           {SEGMENT_FILTERS.map((id) => (
             <button
@@ -159,9 +327,7 @@ export function AdminMotivatorRolePanel({
         </div>
 
         {loadError ? (
-          <p className="mt-3 text-xs text-red-400" role="alert">
-            {loadError}
-          </p>
+          <p className="mt-3 text-xs text-red-400" role="alert">{loadError}</p>
         ) : null}
         {listDegraded ? (
           <p className="mt-3 text-xs text-amber-400/90" role="status">
@@ -174,6 +340,7 @@ export function AdminMotivatorRolePanel({
           {t('admin.dashboard.usersMetricsHint', { days: STALE_VAULT_DAYS })}
         </p>
 
+        {/* Mobile cards */}
         <div className="mt-4 flex flex-col gap-2 md:hidden">
           {filtered.length === 0 && !loadBusy ? (
             <p className="rounded-xl border border-surface-variant px-3 py-6 text-center text-xs text-on-surface-variant">
@@ -182,37 +349,60 @@ export function AdminMotivatorRolePanel({
           ) : null}
           {filtered.map((u) => {
             const busy = rowBusyId === u.id
+            const stale = isVaultStale(u)
             return (
-              <div key={u.id} className="motivator-card px-3 py-3">
-                <div className="min-w-0 break-all text-sm text-on-surface">{u.email || u.id}</div>
-                {u.id === currentUserId ? (
-                  <div className="mt-0.5 text-[10px] text-on-surface-variant">{t('settings.adminRolesYou')}</div>
-                ) : null}
-                <dl className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-on-surface-variant">
-                  <dt>{t('admin.dashboard.colRegistered')}</dt>
-                  <dd className="text-on-surface">{formatDate(u.created_at || null)}</dd>
-                  <dt>{t('admin.dashboard.colLastSignIn')}</dt>
-                  <dd className="text-on-surface">{formatDate(u.last_sign_in_at)}</dd>
-                  <dt>{t('admin.dashboard.colVault')}</dt>
-                  <dd className="text-on-surface">
-                    {u.has_vault ? t('admin.dashboard.vaultYes') : t('admin.dashboard.vaultNo')}
-                  </dd>
-                  <dt>{t('admin.dashboard.colVaultSync')}</dt>
-                  <dd className={isVaultStale(u) ? 'text-amber-400/90' : 'text-on-surface'}>
-                    {u.has_vault ? formatDate(u.vault_updated_at) : '—'}
-                  </dd>
-                  <dt>{t('admin.dashboard.colPush')}</dt>
-                  <dd className="text-on-surface">
-                    {u.push_device_count > 0
-                      ? t('admin.dashboard.pushDevices', { count: u.push_device_count })
-                      : '—'}
-                  </dd>
-                  <dt>{t('admin.dashboard.colDefects')}</dt>
-                  <dd className="text-on-surface">
-                    {u.defect_submission_count > 0 ? String(u.defect_submission_count) : '—'}
-                  </dd>
-                </dl>
-                <label className="mt-2 flex flex-col gap-1">
+              <div
+                key={u.id}
+                className={cn(
+                  'motivator-card px-3 py-3',
+                  stale && 'border-l-2 border-l-amber-400/50',
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="break-all text-sm text-on-surface">{u.email || u.id}</div>
+                    {u.id === currentUserId ? (
+                      <div className="mt-0.5 text-[10px] text-on-surface-variant">
+                        {t('settings.adminRolesYou')}
+                      </div>
+                    ) : null}
+                  </div>
+                  <RoleBadge role={u.motivator_role} />
+                </div>
+
+                <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                  <div className="flex items-center gap-1.5 text-on-surface-variant">
+                    <MaterialIcon name="calendar_today" size={12} className="shrink-0" />
+                    <span>{formatDate(u.created_at || null)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-on-surface-variant">
+                    <MaterialIcon name="login" size={12} className="shrink-0" />
+                    <span>{formatDate(u.last_sign_in_at)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-on-surface-variant">
+                    <VaultCell user={u} />
+                    <span className={stale ? 'text-amber-400/90' : undefined}>
+                      {u.has_vault ? formatDate(u.vault_updated_at) : '—'}
+                    </span>
+                    {stale ? (
+                      <MaterialIcon name="warning" size={12} className="text-amber-400/70" />
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-on-surface-variant">
+                    <PushCell count={u.push_device_count} />
+                    {u.push_device_count > 0 ? (
+                      <span>{t('admin.dashboard.pushDevices', { count: u.push_device_count })}</span>
+                    ) : null}
+                  </div>
+                  {u.defect_submission_count > 0 ? (
+                    <div className="col-span-2 flex items-center gap-1.5 text-on-surface-variant">
+                      <MaterialIcon name="bug_report" size={12} className="shrink-0" />
+                      <span>{u.defect_submission_count}</span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <label className="mt-3 flex flex-col gap-1">
                   <span className={`${SETTINGS_SUBHEAD} mt-0 text-[10px]`}>
                     {t('settings.adminRolesColRole')}
                   </span>
@@ -221,9 +411,7 @@ export function AdminMotivatorRolePanel({
                     value={u.motivator_role}
                     disabled={busy || loadBusy}
                     onChange={(e) => {
-                      const v = e.target.value as MotivatorRoleRow['motivator_role']
-                      if (v === u.motivator_role) return
-                      void applyRole(u, v)
+                      requestRoleChange(u, e.target.value as MotivatorRoleRow['motivator_role'])
                     }}
                   >
                     <option value="user">{t('settings.adminRolesOptionUser')}</option>
@@ -236,18 +424,28 @@ export function AdminMotivatorRolePanel({
           })}
         </div>
 
+        {/* Desktop table */}
         <div className="motivator-card mt-4 hidden overflow-x-auto p-0 md:block">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-surface-variant bg-surface-container-low font-display text-xs uppercase tracking-wide text-on-surface-variant">
-                <th className="px-3 py-2 font-medium">{t('settings.adminRolesColEmail')}</th>
-                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colRegistered')}</th>
-                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colLastSignIn')}</th>
-                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colVault')}</th>
-                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colVaultSync')}</th>
-                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colPush')}</th>
-                <th className="px-3 py-2 font-medium">{t('admin.dashboard.colDefects')}</th>
-                <th className="px-3 py-2 font-medium">{t('settings.adminRolesColRole')}</th>
+              <tr className="border-b border-surface-variant bg-surface-container-low">
+                {[
+                  t('settings.adminRolesColEmail'),
+                  t('admin.dashboard.colRegistered'),
+                  t('admin.dashboard.colLastSignIn'),
+                  t('admin.dashboard.colVault'),
+                  t('admin.dashboard.colVaultSync'),
+                  t('admin.dashboard.colPush'),
+                  t('admin.dashboard.colDefects'),
+                  t('settings.adminRolesColRole'),
+                ].map((label) => (
+                  <th
+                    key={label}
+                    className="px-3 py-2.5 font-display text-xs font-semibold uppercase tracking-wide text-on-surface-variant"
+                  >
+                    {label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -260,54 +458,79 @@ export function AdminMotivatorRolePanel({
               ) : null}
               {filtered.map((u) => {
                 const busy = rowBusyId === u.id
+                const stale = isVaultStale(u)
                 return (
-                  <tr key={u.id} className="border-b border-surface-variant/80 last:border-0">
-                    <td className="max-w-[14rem] px-3 py-2 align-middle">
+                  <tr
+                    key={u.id}
+                    className={cn(
+                      'border-b border-surface-variant/60 transition-colors last:border-0',
+                      'hover:bg-surface-container-high/50',
+                      stale && 'border-l-2 border-l-amber-400/40',
+                    )}
+                  >
+                    <td className="max-w-[14rem] px-3 py-2.5 align-middle">
                       <div className="truncate text-on-surface" title={u.email || u.id}>
                         {u.email || u.id}
                       </div>
                       {u.id === currentUserId ? (
-                        <div className="text-[10px] text-on-surface-variant">{t('settings.adminRolesYou')}</div>
+                        <div className="text-[10px] text-on-surface-variant">
+                          {t('settings.adminRolesYou')}
+                        </div>
                       ) : null}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
+                    <td className="whitespace-nowrap px-3 py-2.5 align-middle text-on-surface-variant">
                       {formatDate(u.created_at || null)}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
+                    <td className="whitespace-nowrap px-3 py-2.5 align-middle text-on-surface-variant">
                       {formatDate(u.last_sign_in_at)}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
-                      {u.has_vault ? t('admin.dashboard.vaultYes') : t('admin.dashboard.vaultNo')}
+                    <td className="whitespace-nowrap px-3 py-2.5 align-middle">
+                      <VaultCell user={u} />
                     </td>
                     <td
-                      className={`whitespace-nowrap px-3 py-2 align-middle ${isVaultStale(u) ? 'text-amber-400/90' : 'text-on-surface'}`}
+                      className="whitespace-nowrap px-3 py-2.5 align-middle"
                       title={t('admin.dashboard.vaultSyncHint', { days: STALE_VAULT_DAYS })}
                     >
-                      {u.has_vault ? formatDate(u.vault_updated_at) : '—'}
+                      {u.has_vault ? (
+                        <span className={cn('inline-flex items-center gap-1', stale ? 'text-amber-400/90' : 'text-on-surface-variant')}>
+                          {stale ? (
+                            <MaterialIcon name="warning" size={13} className="text-amber-400/70" />
+                          ) : null}
+                          {formatDate(u.vault_updated_at)}
+                        </span>
+                      ) : (
+                        <span className="text-on-surface-variant/40">—</span>
+                      )}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
-                      {u.push_device_count > 0
-                        ? t('admin.dashboard.pushDevices', { count: u.push_device_count })
-                        : '—'}
+                    <td className="whitespace-nowrap px-3 py-2.5 align-middle">
+                      <PushCell count={u.push_device_count} />
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 align-middle text-on-surface">
-                      {u.defect_submission_count > 0 ? u.defect_submission_count : '—'}
+                    <td className="whitespace-nowrap px-3 py-2.5 align-middle">
+                      {u.defect_submission_count > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-on-surface-variant">
+                          <MaterialIcon name="bug_report" size={13} />
+                          {u.defect_submission_count}
+                        </span>
+                      ) : (
+                        <span className="text-on-surface-variant/40">—</span>
+                      )}
                     </td>
-                    <td className="px-3 py-2 align-middle">
-                      <select
-                        className={`${MOTIVATOR_INPUT} max-w-[11rem]`}
-                        value={u.motivator_role}
-                        disabled={busy || loadBusy}
-                        onChange={(e) => {
-                          const v = e.target.value as MotivatorRoleRow['motivator_role']
-                          if (v === u.motivator_role) return
-                          void applyRole(u, v)
-                        }}
-                      >
-                        <option value="user">{t('settings.adminRolesOptionUser')}</option>
-                        <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
-                        <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
-                      </select>
+                    <td className="px-3 py-2.5 align-middle">
+                      <div className="flex items-center gap-2">
+                        <RoleBadge role={u.motivator_role} />
+                        <select
+                          className={`${MOTIVATOR_INPUT} max-w-[9rem]`}
+                          value={u.motivator_role}
+                          disabled={busy || loadBusy}
+                          onChange={(e) => {
+                            requestRoleChange(u, e.target.value as MotivatorRoleRow['motivator_role'])
+                          }}
+                        >
+                          <option value="user">{t('settings.adminRolesOptionUser')}</option>
+                          <option value="beta_tester">{t('settings.adminRolesOptionBeta')}</option>
+                          <option value="admin">{t('settings.adminRolesOptionAdmin')}</option>
+                        </select>
+                      </div>
                     </td>
                   </tr>
                 )
@@ -316,6 +539,17 @@ export function AdminMotivatorRolePanel({
           </table>
         </div>
       </div>
+
+      {/* Role change confirmation modal */}
+      {pendingChange ? (
+        <ConfirmRoleModal
+          pending={pendingChange}
+          currentUserId={currentUserId}
+          busy={modalBusy}
+          onConfirm={confirmChange}
+          onCancel={cancelChange}
+        />
+      ) : null}
     </section>
   )
 }

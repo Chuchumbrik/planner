@@ -4,9 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { parseAdminOverviewResponse } from '@/lib/adminMotivatorRolesList'
 import type { AdminOverview } from '@/types/adminMonitoring'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
+import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
-
-const ADMIN_ROLES_FN = 'admin-motivator-roles'
 
 export function useAdminOverview(supabase: SupabaseClient | null) {
   const { t } = useTranslation()
@@ -15,14 +14,16 @@ export function useAdminOverview(supabase: SupabaseClient | null) {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [listDegraded, setListDegraded] = useState(false)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!supabase) return
     setLoadError(null)
     setLoadBusy(true)
     try {
       const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
         body: { action: 'overview' },
+        signal,
       })
+      if (signal?.aborted) return
       if (fnErr) {
         const msg = await formatSupabaseFunctionInvokeError(fnErr)
         setLoadError(mapAdminRolesError(msg, t))
@@ -37,16 +38,18 @@ export function useAdminOverview(supabase: SupabaseClient | null) {
       setOverview(parsed)
       setListDegraded(body?.list_degraded === true)
     } catch (e: unknown) {
+      if (signal?.aborted) return
       setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
     } finally {
-      setLoadBusy(false)
+      if (!signal?.aborted) setLoadBusy(false)
     }
   }, [supabase, t])
 
   useEffect(() => {
     if (!supabase) return
-    const id = window.setTimeout(() => void load(), 0)
-    return () => window.clearTimeout(id)
+    const ctrl = new AbortController()
+    void load(ctrl.signal)
+    return () => ctrl.abort()
   }, [load, supabase])
 
   return { overview, loadBusy, loadError, listDegraded, load, setLoadError }

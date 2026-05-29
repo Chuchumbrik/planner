@@ -325,6 +325,38 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-29', en: '2026-05-29' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.4', en: '0.7.4' },
+        changes: [
+          {
+            ru: '**Админ → Обзор:** редизайн дашборда — hero-строка 4 KPI (text-4xl, цветные акценты), компактные вторичные метрики, графики активности и KPI-тренда переведены на Recharts (BarChart / AreaChart).',
+            en: '**Admin → Overview:** dashboard redesign — hero KPI row (text-4xl, colored accents), compact secondary stats, activity and KPI trend charts migrated to Recharts (BarChart / AreaChart).',
+          },
+          {
+            ru: '**Админ → Пользователи:** цветные role-бейджи (admin/beta/user), иконки vault/push/stale в таблице, hover-подсветка строк, модалка подтверждения смены роли вместо window.confirm.',
+            en: '**Admin → Users:** colored role badges (admin/beta/user), vault/push/stale icons in table, row hover highlight, role-change confirmation modal replacing window.confirm.',
+          },
+          {
+            ru: '**Качество:** AbortController во всех 5 admin-хуках (race condition), ADMIN_ROLES_FN вынесена в константы, inactive-сегменты не включают null, тесты adminDashboardMetrics расширены, vitest подключён к web-пакету.',
+            en: '**Quality:** AbortController in all 5 admin hooks (race condition fix), ADMIN_ROLES_FN extracted to constants, inactive segments exclude null sign-in, adminDashboardMetrics tests extended, vitest wired to web package.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Страница обзора в админке переработана: главные показатели крупно, графики на нормальной библиотеке.',
+            en: 'Admin overview page redesigned: key metrics are big and bold, charts use a proper library.',
+          },
+          {
+            ru: 'Смена роли пользователя — теперь через красивую модалку с подтверждением.',
+            en: 'Changing a user role now shows a clean confirmation modal.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-28', en: '2026-05-28' },
     items: [
       {

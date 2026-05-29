@@ -4,8 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { parseMotivatorRoleListResponse } from '@/lib/adminMotivatorRolesList'
 import type { MotivatorRoleRow } from '@/types/adminMonitoring'
 import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
-
-const ADMIN_ROLES_FN = 'admin-motivator-roles'
+import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
 
 const ERROR_CODES = [
   'forbidden',
@@ -19,6 +18,7 @@ const ERROR_CODES = [
   'update_failed',
   'list_failed',
   'overview_failed',
+  'kpi_trend_failed',
   'activity_chart_failed',
   'activity_day_users_failed',
   'activity_table_missing',
@@ -43,16 +43,19 @@ export function useAdminMotivatorUsers(
   const [loadBusy, setLoadBusy] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [listDegraded, setListDegraded] = useState(false)
-  const loadedOnce = useRef(false)
+  // tracks which supabase instance was last successfully loaded
+  const loadedForClient = useRef<SupabaseClient | null>(null)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!supabase) return
     setLoadError(null)
     setLoadBusy(true)
     try {
       const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
-        body: { action: 'list', search: '' },
+        body: { action: 'list' },
+        signal,
       })
+      if (signal?.aborted) return
       if (fnErr) {
         const msg = await formatSupabaseFunctionInvokeError(fnErr)
         setLoadError(mapAdminRolesError(msg, t))
@@ -67,20 +70,22 @@ export function useAdminMotivatorUsers(
       }
       setUsers(next)
       setListDegraded(body?.list_degraded === true)
-      loadedOnce.current = true
+      loadedForClient.current = supabase
     } catch (e: unknown) {
+      if (signal?.aborted) return
       setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), t))
     } finally {
-      setLoadBusy(false)
+      if (!signal?.aborted) setLoadBusy(false)
     }
   }, [supabase, t])
 
   useEffect(() => {
     if (!enabled || !supabase) return
-    if (loadedOnce.current) return
-    const id = window.setTimeout(() => void load(), 0)
-    return () => window.clearTimeout(id)
+    if (loadedForClient.current === supabase) return
+    const ctrl = new AbortController()
+    void load(ctrl.signal)
+    return () => ctrl.abort()
   }, [load, supabase, enabled])
 
-  return { users, setUsers, loadBusy, loadError, listDegraded, load, setLoadError, loadedOnce }
+  return { users, setUsers, loadBusy, loadError, listDegraded, load, setLoadError }
 }
