@@ -325,6 +325,20 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-30', en: '2026-05-30' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.7', en: '0.7.7' },
+        changes: [
+          {
+            ru: '**CSS-токены:** добавлены утилиты `.gap-md` и `.md\\:gap-md` (24px) — раньше класс `md:gap-md` был no-op и сетки не масштабировались на md+. Добавлены `.xl\\:space-y-lg` и `.xl\\:p-lg` для xl-брейкпоинта — разделители и отступы в админ-панели теперь увеличиваются на широких экранах.',
+            en: '**CSS tokens:** added `.gap-md` and `.md\\:gap-md` (24px) — previously `md:gap-md` was a no-op so grids never scaled up at md+. Added `.xl\\:space-y-lg` and `.xl\\:p-lg` for the xl breakpoint — admin panel section spacing now grows on wide screens.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-29', en: '2026-05-29' },
     items: [
       {

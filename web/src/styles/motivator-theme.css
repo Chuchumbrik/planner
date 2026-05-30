@@ -501,6 +501,9 @@
   .gap-sm {
     gap: var(--spacing-pad-sm);
   }
+  .gap-md {
+    gap: var(--spacing-pad-md);
+  }
   .gap-lg {
     gap: var(--spacing-pad-lg);
   }
@@ -553,6 +556,18 @@
     }
     .md\:py-lg {
       padding-block: var(--spacing-pad-lg);
+    }
+    .md\:gap-md {
+      gap: var(--spacing-pad-md);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .xl\:space-y-lg > :not(:last-child) {
+      margin-bottom: var(--spacing-pad-lg);
+    }
+    .xl\:p-lg {
+      padding: var(--spacing-pad-lg);
     }
   }
 }
