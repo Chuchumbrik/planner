@@ -52,7 +52,7 @@ export function AdminDashboardTabLayout({ activeTab, onTabChange, headerActions,
       <nav
         role="tablist"
         aria-label={t('admin.dashboard.tabs.navAria')}
-        className="scrollbar-site overflow-x-auto border-b border-surface-variant"
+        className="overflow-x-auto border-b border-surface-variant [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <div className="flex min-w-min">
           {TABS.map((tab) => {
