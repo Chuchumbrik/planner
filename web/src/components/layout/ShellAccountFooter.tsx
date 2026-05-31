@@ -125,7 +125,13 @@ export function ShellAccountFooter({ collapsed = false }: ShellAccountFooterProp
 
         {menuOpen ? (
           <div
-            className="absolute inset-x-0 bottom-full z-50 mb-1 overflow-hidden rounded-lg border border-surface-variant bg-surface-container-low py-1 shadow-xl"
+            // Popup is adaptive — minimum 14rem so content always fits even
+            // when the sidebar is collapsed (w-16). Doesn't grow past the
+            // viewport: `max-w-[calc(100vw-2rem)]` caps width on small screens.
+            // In collapsed mode the menu visually overflows the rail to the
+            // right; that's intentional and matches user expectations for an
+            // account dropdown.
+            className="absolute bottom-full left-0 z-50 mb-1 min-w-[14rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-surface-variant bg-surface-container-low py-1 shadow-xl animate-admin-tab-in"
             role="menu"
             aria-label={t('app.accountMenuAria')}
           >
@@ -138,7 +144,9 @@ export function ShellAccountFooter({ collapsed = false }: ShellAccountFooterProp
               {t('settings.signOut')}
             </button>
 
-            {/* Version info — admin/beta only, below sign-out divider */}
+            {/* Version info — admin/beta only, below sign-out divider.
+                APP_VERSION is `<semver>+<git-sha>`; we split on `+` so the
+                build SHA wraps onto its own line for readability. */}
             {showVersion ? (
               <div
                 className="border-t border-surface-variant/60 px-3 py-2 text-[11px] leading-tight text-on-surface-variant/70"
@@ -147,7 +155,12 @@ export function ShellAccountFooter({ collapsed = false }: ShellAccountFooterProp
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/50">
                   {t('shell.accountMenuVersionLabel')}
                 </p>
-                <p className="mt-0.5 break-all font-mono">{APP_VERSION}</p>
+                <p className="mt-0.5 font-mono">{APP_VERSION.split('+')[0]}</p>
+                {APP_VERSION.includes('+') ? (
+                  <p className="font-mono text-on-surface-variant/50">
+                    +{APP_VERSION.split('+').slice(1).join('+')}
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>

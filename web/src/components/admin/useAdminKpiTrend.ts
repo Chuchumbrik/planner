@@ -3,10 +3,8 @@ import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AdminKpiMetric, AdminKpiTrend } from '@/types/adminMonitoring'
 import { parseAdminKpiTrendResponse } from '@/lib/adminMotivatorRolesList'
-import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
-import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
-import { useLatestRef } from '@/components/admin/useAbortableInvoke'
+import { invokeAdminFn, useLatestRef } from '@/components/admin/useAbortableInvoke'
 
 export function useAdminKpiTrend(supabase: SupabaseClient | null, metric: AdminKpiMetric | null) {
   const { t } = useTranslation()
@@ -23,29 +21,19 @@ export function useAdminKpiTrend(supabase: SupabaseClient | null, metric: AdminK
     setTableMissing(false)
     setLoadBusy(true)
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
-        body: { action: 'kpiTrend', metric },
-        signal,
-      })
-      if (signal?.aborted) return
-      if (fnErr) {
-        const msg = await formatSupabaseFunctionInvokeError(fnErr)
-        setLoadError(mapAdminRolesError(msg, tr))
+      const result = await invokeAdminFn(supabase, { action: 'kpiTrend', metric }, signal)
+      if (!result) return
+      if ('error' in result) {
+        setLoadError(mapAdminRolesError(result.error, tr))
         return
       }
-      const body = data && typeof data === 'object' ? (data as Record<string, unknown>) : null
-      const parsed = parseAdminKpiTrendResponse(body?.trend)
+      const parsed = parseAdminKpiTrendResponse(result.raw.trend)
       if (!parsed) {
         setLoadError(tr('settings.adminRolesErrors.kpi_trend_failed'))
         return
       }
-      if (parsed.table_missing) {
-        setTableMissing(true)
-      }
+      if (parsed.table_missing) setTableMissing(true)
       setTrend(parsed)
-    } catch (e: unknown) {
-      if (signal?.aborted) return
-      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), tr))
     } finally {
       if (!signal?.aborted) setLoadBusy(false)
     }

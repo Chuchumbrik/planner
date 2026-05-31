@@ -14,7 +14,8 @@ const corsHeaders: Record<string, string> = {
 const MAX_SEARCH_LEN = 200
 const LIST_PER_PAGE = 100
 const MAX_LIST_PAGES = 40
-/** Keep in sync with `web/src/lib/adminMonitoringConstants.ts`. */
+const LIST_PARALLEL = 5   // pages fetched in parallel per batch
+/** Must match `STALE_VAULT_DAYS` in `web/src/lib/adminMonitoringConstants.ts`. Value: 14. */
 const STALE_VAULT_DAYS = 14
 const MS_PER_DAY = 86_400_000
 const MAX_ACTIVITY_CHART_DAYS = 90
@@ -107,33 +108,48 @@ async function listAuthUsers(
 ): Promise<{ ok: true; users: AuthUserRow[] } | { ok: false; response: Response }> {
   const users: AuthUserRow[] = []
 
-  for (let page = 1; page <= MAX_LIST_PAGES; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: LIST_PER_PAGE })
-    if (error) {
-      return { ok: false, response: json(500, { error: 'list_failed', detail: String(error.message).slice(0, 300) }) }
-    }
-    const batch = data?.users ?? []
-    if (batch.length === 0) break
+  // Fetch LIST_PARALLEL pages at a time instead of one-by-one.
+  // With 4 000 users (40 pages of 100) this cuts round-trips from 40 to 8.
+  for (let startPage = 1; startPage <= MAX_LIST_PAGES; startPage += LIST_PARALLEL) {
+    const pageNums = Array.from(
+      { length: Math.min(LIST_PARALLEL, MAX_LIST_PAGES - startPage + 1) },
+      (_, i) => startPage + i,
+    )
 
-    for (const u of batch) {
-      const meta = u.app_metadata as Record<string, unknown> | undefined
-      const email = (u.email ?? '').trim()
-      const row: AuthUserRow = {
-        id: u.id,
-        email,
-        created_at: u.created_at,
-        last_sign_in_at: u.last_sign_in_at ?? null,
-        motivator_role: wireRoleFromUser(meta),
+    const results = await Promise.all(
+      pageNums.map((page) => admin.auth.admin.listUsers({ page, perPage: LIST_PER_PAGE })),
+    )
+
+    let done = false
+    for (const { data, error } of results) {
+      if (error) {
+        return { ok: false, response: json(500, { error: 'list_failed', detail: String(error.message).slice(0, 300) }) }
       }
-      if (!search) {
-        users.push(row)
-        continue
+      const batch = data?.users ?? []
+      if (batch.length === 0) { done = true; break }
+
+      for (const u of batch) {
+        const meta = u.app_metadata as Record<string, unknown> | undefined
+        const email = (u.email ?? '').trim()
+        const row: AuthUserRow = {
+          id: u.id,
+          email,
+          created_at: u.created_at,
+          last_sign_in_at: u.last_sign_in_at ?? null,
+          motivator_role: wireRoleFromUser(meta),
+        }
+        if (!search) {
+          users.push(row)
+        } else {
+          const hay = `${email} ${u.id}`.toLowerCase()
+          if (hay.includes(search)) users.push(row)
+        }
       }
-      const hay = `${email} ${u.id}`.toLowerCase()
-      if (hay.includes(search)) users.push(row)
+
+      if (batch.length < LIST_PER_PAGE) { done = true; break }
     }
 
-    if (batch.length < LIST_PER_PAGE) break
+    if (done) break
   }
 
   users.sort((a, b) => {
@@ -150,14 +166,14 @@ type MonitoringMaps = {
   vaultUpdatedAt: Map<string, string>
   push: Map<string, { count: number; lastSeen: string | null }>
   defects: Map<string, { count: number; lastAt: string | null }>
-  degraded: boolean
+  degradedTables: string[]
 }
 
 async function loadMonitoringMaps(admin: SupabaseClient): Promise<MonitoringMaps> {
   const vaultUpdatedAt = new Map<string, string>()
   const push = new Map<string, { count: number; lastSeen: string | null }>()
   const defects = new Map<string, { count: number; lastAt: string | null }>()
-  let degraded = false
+  const degradedTables: string[] = []
 
   const [vaultRes, pushRes, defectRes] = await Promise.all([
     admin.from('user_vault').select('user_id, updated_at'),
@@ -165,7 +181,7 @@ async function loadMonitoringMaps(admin: SupabaseClient): Promise<MonitoringMaps
     admin.from('defect_submissions').select('user_id, created_at'),
   ])
 
-  if (vaultRes.error) degraded = true
+  if (vaultRes.error) degradedTables.push('user_vault')
   else {
     for (const row of vaultRes.data ?? []) {
       const uid = row.user_id as string
@@ -174,7 +190,7 @@ async function loadMonitoringMaps(admin: SupabaseClient): Promise<MonitoringMaps
     }
   }
 
-  if (pushRes.error) degraded = true
+  if (pushRes.error) degradedTables.push('push_subscriptions')
   else {
     for (const row of pushRes.data ?? []) {
       const uid = row.user_id as string
@@ -191,7 +207,7 @@ async function loadMonitoringMaps(admin: SupabaseClient): Promise<MonitoringMaps
     }
   }
 
-  if (defectRes.error) degraded = true
+  if (defectRes.error) degradedTables.push('defect_submissions')
   else {
     for (const row of defectRes.data ?? []) {
       const uid = row.user_id as string
@@ -208,7 +224,7 @@ async function loadMonitoringMaps(admin: SupabaseClient): Promise<MonitoringMaps
     }
   }
 
-  return { vaultUpdatedAt, push, defects, degraded }
+  return { vaultUpdatedAt, push, defects, degradedTables }
 }
 
 function enrichmentForUser(userId: string, maps: MonitoringMaps): MonitoringEnrichment {
@@ -309,6 +325,13 @@ async function buildActivityChart(
     unique_users: set.size,
   }))
 
+  let peak: { date: string; count: number } | null = null
+  for (const row of series) {
+    if (row.unique_users > 0 && (!peak || row.unique_users >= peak.count)) {
+      peak = { date: row.date, count: row.unique_users }
+    }
+  }
+
   return {
     ok: true,
     chart: {
@@ -316,6 +339,7 @@ async function buildActivityChart(
       role: roleFilter,
       timezone: 'UTC',
       series,
+      peak,
       dau_today: dauTodaySet.size,
       wau: wauSet.size,
     },
@@ -323,12 +347,12 @@ async function buildActivityChart(
 }
 
 const ACTIVITY_DAY_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
-const ACTIVITY_DAY_USER_BATCH = 25
 
 async function buildActivityDayUsers(
   admin: SupabaseClient,
   date: string,
   roleFilter: ActivityChartRoleFilter,
+  emailMap: Map<string, string>,
 ): Promise<
   | {
       ok: true
@@ -372,35 +396,19 @@ async function buildActivityDayUsers(
     return row.motivator_role === roleFilter
   })
 
-  const users: Array<{
-    user_id: string
-    email: string
-    motivator_role: MotivatorRoleWire
-    first_seen_at: string
-    last_seen_at: string
-  }> = []
-
-  for (let i = 0; i < rows.length; i += ACTIVITY_DAY_USER_BATCH) {
-    const chunk = rows.slice(i, i + ACTIVITY_DAY_USER_BATCH)
-    const chunkUsers = await Promise.all(
-      chunk.map(async (row) => {
-        const user_id = String(row.user_id)
-        const { data: authData } = await admin.auth.admin.getUserById(user_id)
-        const email = (authData?.user?.email ?? '').trim()
-        const role = row.motivator_role
-        const motivator_role: MotivatorRoleWire =
-          role === 'admin' || role === 'beta_tester' || role === 'user' ? role : 'user'
-        return {
-          user_id,
-          email,
-          motivator_role,
-          first_seen_at: String(row.first_seen_at),
-          last_seen_at: String(row.last_seen_at),
-        }
-      }),
-    )
-    users.push(...chunkUsers)
-  }
+  const users = rows.map((row) => {
+    const user_id = String(row.user_id)
+    const role = row.motivator_role
+    const motivator_role: MotivatorRoleWire =
+      role === 'admin' || role === 'beta_tester' || role === 'user' ? role : 'user'
+    return {
+      user_id,
+      email: emailMap.get(user_id) ?? '',
+      motivator_role,
+      first_seen_at: String(row.first_seen_at),
+      last_seen_at: String(row.last_seen_at),
+    }
+  })
 
   users.sort((a, b) => b.last_seen_at.localeCompare(a.last_seen_at))
 
@@ -583,6 +591,8 @@ Deno.serve(async (req) => {
   const gate = await assertCallerIsAdmin(supabaseUrl, anon, service, jwt)
   if (!gate.ok) return gate.response
 
+  const t0 = Date.now()
+
   const admin = createClient(supabaseUrl, service, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
@@ -617,6 +627,11 @@ Deno.serve(async (req) => {
     return json(400, { error: 'invalid_body' })
   }
 
+  const apiVersion = typeof b.v === 'number' ? b.v : 1
+  if (apiVersion > 1) {
+    console.warn(`[admin] unexpected API version: ${apiVersion}, action: ${action}`)
+  }
+
   if (action === 'activityChart') {
     const daysRaw = typeof b.days === 'number' ? b.days : 30
     const roleRaw = b.role === 'admin' || b.role === 'beta_tester' || b.role === 'user' || b.role === 'all'
@@ -632,7 +647,10 @@ Deno.serve(async (req) => {
     const roleRaw = b.role === 'admin' || b.role === 'beta_tester' || b.role === 'user' || b.role === 'all'
       ? b.role
       : 'all'
-    const dayResult = await buildActivityDayUsers(admin, dateRaw, roleRaw)
+    const authResult = await listAuthUsers(admin, '')
+    if (!authResult.ok) return authResult.response
+    const emailMap = new Map(authResult.users.map((u) => [u.id, u.email]))
+    const dayResult = await buildActivityDayUsers(admin, dateRaw, roleRaw, emailMap)
     if (!dayResult.ok) return dayResult.response
     return json(200, { detail: dayResult.detail })
   }
@@ -641,10 +659,17 @@ Deno.serve(async (req) => {
     const searchRaw = typeof b.search === 'string' ? b.search : ''
     const search = searchRaw.trim().slice(0, MAX_SEARCH_LEN).toLowerCase()
 
+    const t1 = Date.now()
     const authResult = await listAuthUsers(admin, search)
     if (!authResult.ok) return authResult.response
+    const tAuth = Date.now() - t1
+    if (tAuth > 1000) console.warn(`[admin] listAuthUsers slow: ${tAuth}ms (${authResult.users.length} users)`)
 
+    const t2 = Date.now()
     const maps = await loadMonitoringMaps(admin)
+    const tMaps = Date.now() - t2
+    if (tMaps > 500) console.warn(`[admin] loadMonitoringMaps slow: ${tMaps}ms`)
+
     const enriched: ListUserRow[] = authResult.users.map((u) => ({
       ...u,
       ...enrichmentForUser(u.id, maps),
@@ -653,13 +678,20 @@ Deno.serve(async (req) => {
     if (action === 'overview') {
       const nowMs = Date.now()
       const mau30d = await computeMau30d(admin, nowMs)
-      return json(200, {
+      const res = json(200, {
         overview: buildOverview(enriched, nowMs, mau30d),
-        list_degraded: maps.degraded,
+        list_degraded: maps.degradedTables.length > 0,
+        degraded_tables: maps.degradedTables,
       })
+      const total = Date.now() - t0
+      if (total > 2000) console.warn(`[admin] overview total: ${total}ms`)
+      return res
     }
 
-    return json(200, { users: enriched, list_degraded: maps.degraded })
+    const res = json(200, { users: enriched, list_degraded: maps.degradedTables.length > 0, degraded_tables: maps.degradedTables })
+    const total = Date.now() - t0
+    if (total > 2000) console.warn(`[admin] list total: ${total}ms`)
+    return res
   }
 
   if (action === 'kpiTrend') {
@@ -690,10 +722,20 @@ Deno.serve(async (req) => {
   if (!role) {
     return json(400, { error: 'invalid_role' })
   }
+  const expectedRoleRaw = b.expectedRole
+  const expectedRole =
+    expectedRoleRaw === 'admin' || expectedRoleRaw === 'beta_tester' || expectedRoleRaw === 'user'
+      ? expectedRoleRaw
+      : null
 
   const { data: target, error: gErr } = await admin.auth.admin.getUserById(userId)
   if (gErr || !target?.user) {
     return json(404, { error: 'user_not_found' })
+  }
+
+  const currentRole = wireRoleFromUser(target.user.app_metadata as Record<string, unknown> | undefined)
+  if (expectedRole !== null && currentRole !== expectedRole) {
+    return json(409, { error: 'role_conflict', current_role: currentRole })
   }
 
   const prevMeta = { ...(target.user.app_metadata as Record<string, unknown>) }
@@ -708,6 +750,16 @@ Deno.serve(async (req) => {
   if (uErr) {
     return json(500, { error: 'update_failed', detail: String(uErr.message).slice(0, 300) })
   }
+
+  // Fire-and-forget audit log — never fail the request if the insert fails.
+  void admin.from('admin_role_audit_log').insert({
+    changed_by: gate.uid,
+    target_user_id: userId,
+    old_role: currentRole,
+    new_role: role,
+  }).then(({ error: auditErr }) => {
+    if (auditErr) console.warn('[admin] audit log insert failed:', auditErr.message)
+  })
 
   return json(200, {
     ok: true,

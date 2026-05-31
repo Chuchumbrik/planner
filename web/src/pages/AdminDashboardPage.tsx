@@ -87,6 +87,7 @@ function AdminDashboardPageInner() {
             loadBusy={usersState.loadBusy}
             loadError={usersState.loadError}
             listDegraded={usersState.listDegraded}
+            degradedTables={usersState.degradedTables}
             onRefresh={() => void usersState.load()}
             onReload={reloadUsersAndOverview}
             onLoadError={usersState.setLoadError}

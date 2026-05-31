@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
+import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
 
 /**
  * Stable ref to a value that may change identity often (e.g. i18next's `t`
@@ -12,6 +15,24 @@ export function useLatestRef<T>(value: T) {
     ref.current = value
   }, [value])
   return ref
+}
+
+/** Shared invocation helper — eliminates try/catch/signal boilerplate in admin hooks. */
+export async function invokeAdminFn(
+  supabase: SupabaseClient,
+  body: Record<string, unknown>,
+  signal?: AbortSignal,
+): Promise<{ raw: Record<string, unknown> } | { error: string } | null> {
+  try {
+    const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, { body: { v: 1, ...body }, signal })
+    if (signal?.aborted) return null
+    if (fnErr) return { error: await formatSupabaseFunctionInvokeError(fnErr) }
+    const raw = data && typeof data === 'object' ? (data as Record<string, unknown>) : {}
+    return { raw }
+  } catch (e: unknown) {
+    if (signal?.aborted) return null
+    return { error: e instanceof Error ? e.message : String(e) }
+  }
 }
 
 type AbortableLoader = (signal: AbortSignal) => Promise<void>

@@ -68,11 +68,23 @@ export function parseAdminActivityChartResponse(raw: unknown): AdminActivityChar
     }
   }
   if (series.length === 0 && seriesRaw.length > 0) return null
+  const peakRaw = o.peak
+  const peak: AdminActivityChart['peak'] =
+    peakRaw && typeof peakRaw === 'object'
+      ? (() => {
+          const p = peakRaw as Record<string, unknown>
+          return typeof p.date === 'string' && typeof p.count === 'number'
+            ? { date: p.date, count: p.count }
+            : null
+        })()
+      : null
+
   return {
     days: o.days,
     role,
     timezone: 'UTC',
     series,
+    peak,
     dau_today: typeof o.dau_today === 'number' ? o.dau_today : 0,
     wau: typeof o.wau === 'number' ? o.wau : 0,
   }

@@ -152,10 +152,10 @@ export function AdminDashboardSummaryTab({
   const o = overview
 
   // Show skeletons not only when the request is in flight, but also during the
-  // brief initial-mount window before useEffect fires (loadBusy=false, o=null).
-  // If a load error has surfaced, we stop showing skeletons so the error banner
-  // tells the story instead of an indefinite shimmer.
-  const showSkeleton = (loadBusy || !o) && !loadError
+  // Show skeletons only on initial load (no data yet). During refresh (o already
+  // populated) keep showing stale values — avoids shimmer over existing content.
+  // On error, hide skeletons so the error banner tells the story.
+  const showSkeleton = !o && !loadError
 
   const inactiveValue = computeInactivePercent(o, showSkeleton)
 
@@ -164,7 +164,10 @@ export function AdminDashboardSummaryTab({
   }
 
   return (
-    <>
+    // Each direct child gets a cascading fade-in (admin-summary-stagger CSS
+    // class in index.css). flex-col + gap to preserve layout; the class only
+    // adds the animation, no positioning side-effects.
+    <div className="admin-summary-stagger flex flex-col gap-md">
       {/* ── Status banners ──────────────────────────────────────────────── */}
       {loadError ? (
         <div className="flex items-start gap-2 rounded-lg border border-red-400/20 bg-red-400/5 px-3 py-2.5 text-xs text-red-400">
@@ -340,6 +343,6 @@ export function AdminDashboardSummaryTab({
         collapsed={activityChartCollapsed}
         onToggleCollapse={() => setActivityChartCollapsed((v) => !v)}
       />
-    </>
+    </div>
   )
 }

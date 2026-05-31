@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
@@ -15,41 +15,13 @@ import { AdminCardSection } from '@/components/admin/AdminCardSection'
 import { AdminDashboardActivityDayPanel } from '@/components/admin/AdminDashboardActivityDayPanel'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { useAdminActivityDayUsers } from '@/components/admin/useAdminActivityDayUsers'
+import { useActivityChartRange, todayIsoUtc, isoDateNDaysAgoUtc } from '@/components/admin/useActivityChartRange'
+import { useActivityChartDisplay } from '@/components/admin/useActivityChartDisplay'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import { ACTIVITY_CHART_DAY_OPTIONS } from '@/lib/adminMonitoringConstants'
 import { ADMIN_CHART_HEIGHT, SETTINGS_BTN_SECONDARY, chipActive } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 import type { AdminActivityChart } from '@/types/adminMonitoring'
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-type Series = AdminActivityChart['series']
-type Peak = { date: string; count: number } | null
-
-/**
- * Find the activity peak in a series. When multiple days tie at the max, the
- * *latest* one wins — feels more like "current best record" than archeology.
- */
-function findPeak(series: Series): Peak {
-  let best: Peak = null
-  for (const row of series) {
-    if (row.unique_users <= 0) continue
-    if (!best || row.unique_users >= best.count) {
-      best = { date: row.date, count: row.unique_users }
-    }
-  }
-  return best
-}
-
-function isoDateNDaysAgoUtc(n: number): string {
-  const d = new Date()
-  d.setUTCDate(d.getUTCDate() - n)
-  return d.toISOString().slice(0, 10)
-}
-
-function todayIsoUtc(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 function formatLongDate(iso: string, lang: string): string {
   const [y, m, day] = iso.split('-').map(Number)
@@ -140,70 +112,29 @@ export function AdminDashboardActivityChart({
   const { t, i18n } = useTranslation()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const dayUsers = useAdminActivityDayUsers(supabase, selectedDate, role)
-
-  // Custom from/to range. `null` means "use the quick-preset days window".
-  const [dateFrom, setDateFrom] = useState<string | null>(null)
-  const [dateTo, setDateTo] = useState<string | null>(null)
-  const customRangeActive = dateFrom !== null || dateTo !== null
-
-  // Custom-range editor visible. Auto-opens if a custom range is active,
-  // closes again on reset. Hidden by default — keeps the filter strip compact.
-  const [rangeOpen, setRangeOpen] = useState(false)
-  useEffect(() => {
-    if (customRangeActive) setRangeOpen(true)
-  }, [customRangeActive])
-
-  // Peak banner dismissal. Keyed by `<date>|<count>`, so a new peak (after
-  // filter change or fresh data) re-shows the banner. State is in-memory, so
-  // reload or chart-section remount also resets it — matches user's
-  // "informer that reappears after page/chart reload" expectation.
   const [dismissedPeakKey, setDismissedPeakKey] = useState<string | null>(null)
 
-  useEffect(() => {
-    setSelectedDate(null)
-  }, [days, role, dateFrom, dateTo])
+  const {
+    dateFrom, setDateFrom, dateTo, setDateTo,
+    rangeOpen, setRangeOpen,
+    customRangeActive, effectiveFrom, effectiveTo,
+    resetCustomRange, setQuickRange,
+  } = useActivityChartRange(days, onDaysChange)
 
-  // Resetting filters also re-arms the peak banner (treat as "new context").
-  useEffect(() => {
-    setDismissedPeakKey(null)
-  }, [days, role, dateFrom, dateTo])
+  const { displaySeries, peak, insufficientKey, xAxisInterval } =
+    useActivityChartDisplay(chart, effectiveFrom, effectiveTo, loadBusy, tableMissing)
 
   const roleFilters: ActivityChartRoleFilter[] = ['all', 'admin', 'beta_tester', 'user']
+  const peakKey = peak ? `${peak.date}|${peak.count}` : null
+  const showPeakBanner = peak !== null && peakKey !== dismissedPeakKey && !loadBusy
+
+  // Reset selected bar when filters change.
+  useEffect(() => { setSelectedDate(null) }, [days, role, dateFrom, dateTo])
 
   function handleBarClick(date: string, uniqueUsers: number) {
     if (uniqueUsers <= 0) return
     setSelectedDate((prev) => (prev === date ? null : date))
   }
-
-  // Resolve the effective range: custom range wins, otherwise preset N days.
-  const effectiveFrom = dateFrom ?? isoDateNDaysAgoUtc(days - 1)
-  const effectiveTo = dateTo ?? todayIsoUtc()
-
-  // Filter server series to the effective range, mark peak.
-  const { displaySeries, peak } = useMemo(() => {
-    if (!chart) return { displaySeries: [] as Array<Series[number] & { isPeak: boolean }>, peak: null }
-    const filtered = chart.series.filter((row) => {
-      return row.date >= effectiveFrom && row.date <= effectiveTo
-    })
-    const p = findPeak(filtered)
-    return {
-      displaySeries: filtered.map((row) => ({
-        ...row,
-        isPeak: p !== null && row.date === p.date,
-      })),
-      peak: p,
-    }
-  }, [chart, effectiveFrom, effectiveTo])
-
-  // Recharts auto-thins X-axis ticks at small widths; pick interval by series
-  // length so labels stay legible without horizontal scroll.
-  const xAxisCount = displaySeries.length
-  const xAxisInterval =
-    xAxisCount <= 14 ? 0 : xAxisCount <= 30 ? 2 : xAxisCount <= 60 ? 5 : 10
-  const isEmpty = displaySeries.length > 0 && displaySeries.every((b) => b.unique_users === 0)
-  const isOutOfRange = displaySeries.length === 0 && chart !== null && !loadBusy
-  const peakKey = peak ? `${peak.date}|${peak.count}` : null
-  const showPeakBanner = peak !== null && peakKey !== dismissedPeakKey && !loadBusy
 
   const refreshButton = (
     <button
@@ -216,22 +147,10 @@ export function AdminDashboardActivityChart({
     </button>
   )
 
-  const resetCustomRange = useCallback(() => {
-    setDateFrom(null)
-    setDateTo(null)
-    setRangeOpen(false)
-  }, [])
-
-  function setQuickRange(d: ActivityChartDays) {
-    resetCustomRange()
-    onDaysChange(d)
-  }
-
   return (
     <AdminCardSection
       title={t('admin.dashboard.activityChartTitle')}
-      hint={t('admin.dashboard.activityChartHint')}
-      hint2={t('admin.dashboard.activityChartClickHint')}
+      titleTooltip={t('admin.dashboard.activityChartHelp')}
       action={refreshButton}
       collapsible={collapsible}
       collapsed={collapsed}
@@ -327,13 +246,19 @@ export function AdminDashboardActivityChart({
       </div>
 
       {/* ── Status messages ─────────────────────────────────────────────── */}
-      {tableMissing ? (
-        <p className="text-xs text-amber-400/90" role="status">
-          {t('admin.dashboard.activityTableMissing')}
-        </p>
-      ) : null}
       {loadError ? (
         <p className="text-xs text-red-400" role="alert">{loadError}</p>
+      ) : null}
+
+      {/* ── Insufficient-data banner (yellow) — explains why no chart ───── */}
+      {insufficientKey ? (
+        <div
+          role="status"
+          className="flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-xs text-amber-400"
+        >
+          <MaterialIcon name="warning" size={14} className="mt-0.5 shrink-0" />
+          <span>{t(insufficientKey)}</span>
+        </div>
       ) : null}
 
       {/* ── Achievement banner: peak ─ dismissable, re-arms on reload/filter ─ */}
@@ -372,14 +297,10 @@ export function AdminDashboardActivityChart({
         </p>
       ) : null}
 
-      {/* ── Bar chart ───────────────────────────────────────────────────── */}
+      {/* ── Bar chart — rendered when we have ≥3 non-empty days ───────── */}
       {loadBusy ? (
         <p className="text-sm text-on-surface-variant">{t('common.loading')}</p>
-      ) : isOutOfRange ? (
-        <p className="text-sm text-on-surface-variant">{t('admin.dashboard.activityChartOutOfRange')}</p>
-      ) : isEmpty ? (
-        <p className="text-sm text-on-surface-variant">{t('admin.dashboard.activityChartEmpty')}</p>
-      ) : displaySeries.length > 0 ? (
+      ) : insufficientKey ? null : displaySeries.length > 0 ? (
         // No horizontal scroll — bars compress to fit the container width.
         // X-axis interval auto-thins labels at small widths.
         <div className={cn('w-full overflow-hidden', ADMIN_CHART_HEIGHT)}>

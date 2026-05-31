@@ -1,11 +1,15 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { InfoTooltip } from '@/components/admin/InfoTooltip'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { SETTINGS_CARD, ADMIN_CARD_BODY } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 
 type Props = {
   title: string
+  /** Optional info tooltip next to the title (replaces the older `hint` /
+   *  `hint2` body text for consistency with KPI cards). */
+  titleTooltip?: string
   hint?: string
   hint2?: string
   action?: ReactNode
@@ -20,6 +24,7 @@ type Props = {
 
 export function AdminCardSection({
   title,
+  titleTooltip,
   hint,
   hint2,
   action,
@@ -35,7 +40,10 @@ export function AdminCardSection({
     <section className={cn(SETTINGS_CARD, className)}>
       <div className="flex flex-col gap-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-sm font-semibold text-on-surface">{title}</h3>
+          <h3 className="font-display flex items-center gap-1.5 text-sm font-semibold text-on-surface">
+            <span>{title}</span>
+            {titleTooltip ? <InfoTooltip text={titleTooltip} /> : null}
+          </h3>
           {!collapsed && hint ? (
             <p className="mt-1 text-body-sm text-on-surface-variant">{hint}</p>
           ) : null}

@@ -328,6 +328,84 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.13', en: '0.7.13' },
+        changes: [
+          {
+            ru: '**Админ-панель (бэкенд):** устранены N+1 запросы в `activityDayUsers` — email теперь берётся из предзагруженного списка пользователей вместо N отдельных вызовов `getUserById`. Добавлена защита от race condition при смене роли: поле `expectedRole` позволяет бэку вернуть 409 если роль была изменена другим администратором.',
+            en: '**Admin panel (backend):** eliminated N+1 queries in `activityDayUsers` — email is now sourced from a pre-loaded user list instead of N separate `getUserById` calls. Added race condition guard for role changes: `expectedRole` field lets the backend return 409 if another admin changed the role concurrently.',
+          },
+          {
+            ru: '**Админ-панель (UI):** исправлен баг — скелеты больше не перекрывают данные при повторной загрузке (только при первоначальной). Добавлен debounce 300ms на поиск пользователей. Рефакторинг 5 хуков через общую утилиту `invokeAdminFn` — устранено дублирование try/catch/signal-логики.',
+            en: '**Admin panel (UI):** fixed bug — skeletons no longer overlay data during refresh (initial load only). Added 300ms debounce to user search. Refactored 5 hooks via shared `invokeAdminFn` utility — eliminated duplicated try/catch/signal boilerplate.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.12', en: '0.7.12' },
+        changes: [
+          {
+            ru: '**Меню пользователя — адаптивный popup:** дроп-меню теперь `min-w-[14rem]` и `max-w-[calc(100vw-2rem)]` — содержимое не плющится даже когда сайдбар свёрнут. Версия приложения для admin/beta рендерится в **2 строки**: semver сверху (`0.7.12`), build-sha (`+abc1234`) — отдельной строкой моноширинно.',
+            en: '**User menu — adaptive popup:** the dropdown is now `min-w-[14rem]` and `max-w-[calc(100vw-2rem)]` — content stays readable even when the sidebar is collapsed. The version string for admin/beta renders in **2 lines**: semver on top (`0.7.12`), build SHA (`+abc1234`) on its own monospace line.',
+          },
+          {
+            ru: '**Сводка — анимации появления:** добавлен общий keyframe `admin-fade-in` (opacity + translateY 4px, 240ms). Верхне-уровневые блоки страницы анимируются каскадно (0/60/120/180/240ms между блоками) через CSS-класс `.admin-summary-stagger`. Уважает `prefers-reduced-motion`.',
+            en: '**Summary — entrance animations:** new shared keyframe `admin-fade-in` (opacity + translateY 4px, 240ms). Top-level page blocks animate in a cascade (0/60/120/180/240ms stagger) via `.admin-summary-stagger`. Respects `prefers-reduced-motion`.',
+          },
+          {
+            ru: '**Рекорд активности — dismiss персистит:** закрытая плашка больше **не возвращается** при смене периода/роли/диапазона. Она вернётся только при перезагрузке страницы или при появлении нового рекорда (другая дата/число).',
+            en: '**Activity record — dismiss persists:** the dismissed banner **no longer reappears** when filters change (period/role/range). It only returns on page reload or when a new record appears (different date/count).',
+          },
+          {
+            ru: '**Активность — описание в подсказку:** длинный текст под заголовком «Активность в приложении» убран — теперь он живёт в info-подсказке (ⓘ) рядом с заголовком, как у остальных метрик. Карточка стала компактнее.',
+            en: '**Activity — description in tooltip:** the long subtitle under "App activity" is gone — it now lives in an info tooltip (ⓘ) next to the title, like other metrics. The card is more compact.',
+          },
+          {
+            ru: '**Подсказки — явные временные окна:** в каждой подсказке метрики добавлено явное время в скобках: `(период: последние 7 дней)`, `(на момент запроса)`, `(порог: 14+ дней)` и т.д. Не нужно гадать что значит «за неделю» — точно понятно.',
+            en: '**Tooltips — explicit time windows:** every metric tooltip now ends with an explicit window in parentheses: `(window: last 7 days)`, `(at request time)`, `(threshold: 14+ days)`, etc. No guesswork about what "this week" means.',
+          },
+          {
+            ru: '**Подсказки — не уходят за край экрана:** добавлено runtime-измерение позиции bubble. Если правый или левый край вылетает за viewport — подсказка сдвигается обратно через `transform: translateX(...)` так чтобы целиком умещаться. Работает на ресайз и скролл.',
+            en: '**Tooltips — no off-screen clipping:** added runtime measurement of the bubble position. If either edge would clip the viewport, the bubble is shifted back into view via `transform: translateX(...)`. Recomputes on resize and scroll.',
+          },
+          {
+            ru: '**Активность — «недостаточно данных» с причиной:** вместо одного серого «нет данных» теперь жёлтая плашка с конкретной причиной: (а) серия пуста (`нет активности в периоде`), (б) меньше 3 точек (`расширьте диапазон`), (в) диапазон уходит за 90-дневный retention (`сервер не хранит дольше`), (г) серверная таблица не настроена (`миграция 006`). Метрика не строится — теперь видно почему.',
+            en: '**Activity — "insufficient data" with reason:** instead of a single grey "no data" message, a yellow banner explains exactly why: (a) empty series in the range, (b) fewer than 3 points, (c) range goes beyond 90-day retention, (d) server table not set up (migration 006). When the chart is empty, you now see WHY.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Меню пользователя теперь нормально влезает даже со свёрнутым сайдбаром, версия — на две строки.',
+            en: 'The user menu now fits even with the sidebar collapsed; version is on two lines.',
+          },
+          {
+            ru: 'Страница сводки оживилась — блоки плавно появляются каскадом при открытии.',
+            en: 'The summary page now animates in a smooth cascade when opened.',
+          },
+          {
+            ru: 'Закрытая плашка «Рекорд активности» не появляется снова при каждом клике на фильтр.',
+            en: 'A dismissed "Activity record" banner no longer keeps popping back on every filter click.',
+          },
+          {
+            ru: 'Подсказки у метрик не обрезаются у края экрана и всегда явно указывают за какой период считается метрика.',
+            en: 'Metric tooltips never clip at the screen edge and always state the exact time window.',
+          },
+          {
+            ru: 'Если у графика активности нет данных — жёлтая плашка точно объясняет почему (нет визитов, мало точек, истёк retention или таблица не настроена).',
+            en: 'When the activity chart has no data, a yellow banner explains the exact reason (no visits, too few points, retention exceeded, or table not configured).',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.11', en: '0.7.11' },
         changes: [
           {
