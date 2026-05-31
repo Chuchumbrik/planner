@@ -328,6 +328,62 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.10', en: '0.7.10' },
+        changes: [
+          {
+            ru: '**Админ → Сводка:** все подсказки на карточках метрик переписаны человеческим языком — без переменных и технических терминов, просто что значит метрика и почему она важна.',
+            en: '**Admin → Summary:** all KPI tooltips rewritten in plain language — no variables or technical jargon, just what the metric means and why it matters.',
+          },
+          {
+            ru: '**Админ → Сводка:** названия метрик стали проще и короче: «MAU 30д» → «Активные за месяц», «Vault без синхр. 14д+» → «Давно не сохраняли», «С vault» → «Сохранили данные», и т.д.',
+            en: '**Admin → Summary:** metric labels are shorter and friendlier: "MAU 30d" → "Active this month", "Vault stale 14d+" → "Not saved recently", "With vault" → "Saved data", etc.',
+          },
+          {
+            ru: '**Подсказки:** ширина подсказок стала адаптивной (`min(20rem, viewport-2rem)` на мобиле, `min(22rem)` на десктопе) — текст не сплющивается, читать комфортнее.',
+            en: '**Tooltips:** info tooltip width is adaptive now (`min(20rem, viewport-2rem)` mobile, `min(22rem)` desktop) — text no longer feels cramped.',
+          },
+          {
+            ru: '**Метрика «По ролям»:** добавлены пунктирные разделители между строками для удобного чтения «лейбл → число», цифры уменьшены до 13px чтобы не давить визуально на текст ролей.',
+            en: '**"By role" metric:** dashed dividers between rows for easy label-to-count tracking; counts reduced to 13px so they don\'t visually dominate the role labels.',
+          },
+          {
+            ru: '**Активность в приложении:** добавлен **полноценный диапазон дат** (input type=date «с — по») рядом с быстрыми пресетами 7/30/90 дней. Можно выбрать произвольный период внутри последних 90 дней.',
+            en: '**App activity:** **full date-range picker** (from / to inputs) added alongside the 7/30/90-day quick presets. Pick any custom window within the last 90 days.',
+          },
+          {
+            ru: '**Активность → Рекорд:** график автоматически находит пик активности за выбранный период, подсвечивает столбец золотым и показывает плашку «Рекорд активности: N человек · 14 мая 2026». Дефолтный период — 90 дней, чтобы рекорд гарантированно попал в обзор.',
+            en: '**Activity → Record:** the chart automatically finds the activity peak in the selected range, highlights that bar in gold and shows a "Activity record: N people · May 14, 2026" badge. Default range is 90 days so the record is always visible.',
+          },
+          {
+            ru: '**Меню пользователя:** для admin и beta_tester в дропдауне меню (под кнопкой «Выйти из аккаунта») теперь видна версия приложения `APP_VERSION` (`semver+git-short-sha`) — удобно цеплять в баг-репортах. Обычным пользователям не показывается.',
+            en: '**User menu:** admin and beta_tester users now see the app version `APP_VERSION` (`semver+git-short-sha`) in the account dropdown (below the sign-out button) — handy for attaching to bug reports. Hidden from regular users.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Все подсказки на карточках админ-сводки переписаны простым языком — теперь понятно даже без знания кода.',
+            en: 'All admin-summary tooltips rewritten in plain language — understandable without knowing the code.',
+          },
+          {
+            ru: 'Названия метрик стали короче и яснее: «Активные за месяц», «Заходили за неделю», «Давно не сохраняли».',
+            en: 'Metric names are shorter and clearer: "Active this month", "Visited this week", "Not saved recently".',
+          },
+          {
+            ru: 'На графике активности можно выбрать произвольный диапазон дат, а пиковый день автоматически подсвечивается как достижение с золотой плашкой.',
+            en: 'On the activity chart you can pick any date range, and the peak day is automatically highlighted as an achievement with a gold badge.',
+          },
+          {
+            ru: 'Если у вас роль admin или beta-тестер — версия приложения теперь видна в меню под кнопкой выхода (полезно для баг-репортов).',
+            en: 'If you are an admin or beta tester, the app version is now visible in the menu below the sign-out button (handy for bug reports).',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.9', en: '0.7.9' },
         changes: [
           {

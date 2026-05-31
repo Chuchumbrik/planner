@@ -14,7 +14,6 @@ type Props = {
   danger?: boolean
   isActive?: boolean
   loading?: boolean
-  staleDays?: number
   onActivate?: () => void
   className?: string
 }
@@ -28,16 +27,11 @@ export function AdminKpiCard({
   danger = false,
   isActive = false,
   loading = false,
-  staleDays,
   onActivate,
   className,
 }: Props) {
   const { t } = useTranslation()
-
-  const label =
-    labelKey === 'admin.dashboard.kpiVaultStale' && staleDays != null
-      ? t(labelKey, { days: staleDays })
-      : t(labelKey)
+  const label = t(labelKey)
 
   return (
     <article

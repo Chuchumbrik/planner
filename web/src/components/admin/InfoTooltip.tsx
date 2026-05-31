@@ -2,7 +2,9 @@ import { cn } from '@/lib/cn'
 
 type Props = {
   text: string
-  /** Tailwind max-w-* class for the bubble. */
+  /** Optional custom max-width class. Default is adaptive: comfortable on
+   *  desktop (max-w-xs ≈ 320px), narrower on mobile (max-w-[14rem]) so it
+   *  doesn't overflow the viewport. */
   width?: string
   /** Pin tooltip to the right edge of the trigger (use near viewport edge). */
   alignRight?: boolean
@@ -11,24 +13,28 @@ type Props = {
 /**
  * Inline info tooltip.
  *
- * Trigger is a real `<button>` so it:
- *   - shows on `:hover` and `:focus-visible` (keyboard accessible)
- *   - is reachable in tab order
- *   - stops click propagation (won't trigger parent card's onClick)
+ * Trigger is a real `<button>`:
+ *   - hover and `:focus-visible` show the bubble (keyboard accessible)
+ *   - reachable in tab order
+ *   - stops click propagation (won't toggle parent card's onClick)
  *
- * CSS-only; no JS state. The bubble is rendered as the button's sibling and
- * positioned absolutely relative to the named-group wrapper.
+ * The bubble is a sibling of the button positioned `absolute` relative to the
+ * named-group wrapper. CSS-only — no JS state.
+ *
+ * Width is adaptive: longer copy gets more room on wide viewports (xs/sm) and
+ * caps on mobile so it doesn't get cropped. Comfortable reading width sits
+ * around 60–80 characters per line, so `max-w-xs` (320px) at body font is
+ * about right. Line-height generous for breathing room.
  */
-export function InfoTooltip({ text, width = 'max-w-[13rem]', alignRight = false }: Props) {
+export function InfoTooltip({ text, width, alignRight = false }: Props) {
+  const widthClass = width ?? 'w-[min(20rem,calc(100vw-2rem))] sm:w-[min(22rem,calc(100vw-3rem))]'
   return (
     <span className="group/tip relative inline-flex shrink-0 items-center align-middle">
       <button
         type="button"
         aria-label={text}
-        // Tooltip text duplicates the content for screen readers — both work
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
-          // Prevent space/enter from activating parent interactive elements
           if (e.key === ' ' || e.key === 'Enter') e.stopPropagation()
         }}
         className={cn(
@@ -53,11 +59,11 @@ export function InfoTooltip({ text, width = 'max-w-[13rem]', alignRight = false 
       <span
         role="tooltip"
         className={cn(
-          'pointer-events-none absolute bottom-[calc(100%+6px)] z-[70]',
+          'pointer-events-none absolute bottom-[calc(100%+8px)] z-[70]',
           alignRight ? 'right-0' : 'left-0',
-          width,
-          'rounded-lg border border-surface-variant bg-surface-container-high px-3 py-2 shadow-xl',
-          'text-[11px] font-normal leading-relaxed text-on-surface',
+          widthClass,
+          'rounded-lg border border-surface-variant bg-surface-container-high px-3 py-2.5 shadow-xl',
+          'text-xs font-normal leading-relaxed text-on-surface',
           'opacity-0 transition-opacity duration-150',
           'group-hover/tip:opacity-100 group-focus-within/tip:opacity-100',
         )}
