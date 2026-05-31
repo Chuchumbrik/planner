@@ -7,6 +7,7 @@ import { AdminKpiChartZone } from '@/components/admin/AdminKpiChartZone'
 import { InfoTooltip } from '@/components/admin/InfoTooltip'
 import { useAdminActivityChart } from '@/components/admin/useAdminActivityChart'
 import { useAdminKpiTrend } from '@/components/admin/useAdminKpiTrend'
+import { computeInactivePercent } from '@/components/admin/adminOverviewComputations'
 import { cn } from '@/lib/cn'
 import { ADMIN_GRID_GAP, SETTINGS_CARD } from '@/lib/designClasses'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -89,13 +90,20 @@ function RolesBreakdownTable({
     { key: 'user', count: counts.user, tone: 'text-on-surface-variant' },
   ]
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
-      {rows.map((r) => (
-        <div key={r.key} className="contents">
+    <dl className="flex flex-col">
+      {rows.map((r, i) => (
+        <div
+          key={r.key}
+          className={cn(
+            'flex items-baseline justify-between gap-3 py-1',
+            // Dotted leader between label and count + subtle row divider
+            i > 0 && 'border-t border-dashed border-surface-variant/40',
+          )}
+        >
           <dt className={cn('text-[10px] font-semibold uppercase tracking-wider', r.tone)}>
             {t(`admin.dashboard.activityChartRole.${r.key}`)}
           </dt>
-          <dd className="text-right font-mono tabular-nums text-on-surface">{r.count}</dd>
+          <dd className="font-mono text-[13px] tabular-nums text-on-surface">{r.count}</dd>
         </div>
       ))}
     </dl>
@@ -115,23 +123,6 @@ function StatGroup({ label, children }: { label: string; children: React.ReactNo
   )
 }
 
-// ── derived values ───────────────────────────────────────────────────────────
-
-/**
- * Share of users who haven't been active in the last 30 days:
- *   (1 − MAU ÷ total) × 100, clamped to [0, 100].
- *
- * Clamping protects against backend inconsistencies (e.g. MAU > total during a
- * pipeline race) that would otherwise render a negative percentage.
- */
-function computeInactivePercent(o: AdminOverview | null, loadBusy: boolean): string {
-  if (loadBusy) return '…'
-  if (!o || o.total_users === 0) return '—'
-  const raw = (1 - o.mau_30d / o.total_users) * 100
-  const clamped = Math.min(100, Math.max(0, raw))
-  return `${clamped.toFixed(1)}%`
-}
-
 // ── main component ────────────────────────────────────────────────────────────
 
 export function AdminDashboardSummaryTab({
@@ -148,7 +139,9 @@ export function AdminDashboardSummaryTab({
   supabase: SupabaseClient
 }) {
   const { t } = useTranslation()
-  const [chartDays, setChartDays] = useState<ActivityChartDays>(30)
+  // Default is 90d (server retention max) so the activity peak is always
+  // included in the initial view — that's the achievement we want to surface.
+  const [chartDays, setChartDays] = useState<ActivityChartDays>(90)
   const [chartRole, setChartRole] = useState<ActivityChartRoleFilter>('all')
   const [activityChartCollapsed, setActivityChartCollapsed] = useState(false)
   const activityChart = useAdminActivityChart(supabase, chartDays, chartRole)
@@ -157,7 +150,6 @@ export function AdminDashboardSummaryTab({
   const kpiTrend = useAdminKpiTrend(supabase, activeMetric)
 
   const o = overview
-  const staleDays = o?.stale_vault_days ?? 14
 
   // Show skeletons not only when the request is in flight, but also during the
   // brief initial-mount window before useEffect fires (loadBusy=false, o=null).
@@ -296,9 +288,9 @@ export function AdminDashboardSummaryTab({
             />
             <StatItem
               icon="sync_problem"
-              label={t('admin.dashboard.kpiVaultStale', { days: staleDays })}
+              label={t('admin.dashboard.kpiVaultStale')}
               value={String(o?.vault_stale_14d ?? '—')}
-              tooltip={t('admin.dashboard.kpiTooltip.vaultStale', { days: staleDays })}
+              tooltip={t('admin.dashboard.kpiTooltip.vaultStale')}
               warn={(o?.vault_stale_14d ?? 0) > 0}
               loading={showSkeleton}
             />
