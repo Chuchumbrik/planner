@@ -828,7 +828,8 @@
       "planner": "Планировщик",
       "reports": "Отчёты",
       "settings": "Настройки"
-    }
+    },
+    "accountMenuVersionLabel": "Версия приложения"
   },
   "aiAssistant": {
     "title": "AI-помощник",

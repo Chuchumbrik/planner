@@ -829,7 +829,8 @@
       "planner": "Planner",
       "reports": "Reports",
       "settings": "Settings"
-    }
+    },
+    "accountMenuVersionLabel": "App version"
   },
   "aiAssistant": {
     "title": "AI assistant",

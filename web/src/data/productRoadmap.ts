@@ -354,6 +354,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: '**Активность → Рекорд:** график автоматически находит пик активности за выбранный период, подсвечивает столбец золотым и показывает плашку «Рекорд активности: N человек · 14 мая 2026». Дефолтный период — 90 дней, чтобы рекорд гарантированно попал в обзор.',
             en: '**Activity → Record:** the chart automatically finds the activity peak in the selected range, highlights that bar in gold and shows a "Activity record: N people · May 14, 2026" badge. Default range is 90 days so the record is always visible.',
           },
+          {
+            ru: '**Меню пользователя:** для admin и beta_tester в дропдауне меню (под кнопкой «Выйти из аккаунта») теперь видна версия приложения `APP_VERSION` (`semver+git-short-sha`) — удобно цеплять в баг-репортах. Обычным пользователям не показывается.',
+            en: '**User menu:** admin and beta_tester users now see the app version `APP_VERSION` (`semver+git-short-sha`) in the account dropdown (below the sign-out button) — handy for attaching to bug reports. Hidden from regular users.',
+          },
         ],
         plainBullets: [
           {
@@ -367,6 +371,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           {
             ru: 'На графике активности можно выбрать произвольный диапазон дат, а пиковый день автоматически подсвечивается как достижение с золотой плашкой.',
             en: 'On the activity chart you can pick any date range, and the peak day is automatically highlighted as an achievement with a gold badge.',
+          },
+          {
+            ru: 'Если у вас роль admin или beta-тестер — версия приложения теперь видна в меню под кнопкой выхода (полезно для баг-репортов).',
+            en: 'If you are an admin or beta tester, the app version is now visible in the menu below the sign-out button (handy for bug reports).',
           },
         ],
       },

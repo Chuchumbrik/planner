@@ -5,6 +5,7 @@ import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
 import { motivatorAppRole } from '@/lib/motivatorRole'
 import { useVault } from '@/vault/VaultProvider'
+import { APP_VERSION } from '@/version'
 
 type ShellAccountFooterProps = {
   /** Desktop sidebar icon-only mode. */
@@ -19,12 +20,15 @@ export function ShellAccountFooter({ collapsed = false }: ShellAccountFooterProp
   const menuRef = useRef<HTMLDivElement>(null)
 
   const accountEmail = session?.user?.email?.trim() ?? ''
+  const role = useMemo(() => motivatorAppRole(session), [session])
   const accountRoleLabel = useMemo(() => {
-    const r = motivatorAppRole(session)
-    if (r === 'admin') return t('shell.roleLabelAdmin')
-    if (r === 'beta_tester') return t('shell.roleLabelBetaTester')
+    if (role === 'admin') return t('shell.roleLabelAdmin')
+    if (role === 'beta_tester') return t('shell.roleLabelBetaTester')
     return t('shell.roleLabelUser')
-  }, [session, t])
+  }, [role, t])
+  // Version is shown only to admin and beta — surfaces build SHA for bug
+  // reports without exposing it to regular users.
+  const showVersion = role === 'admin' || role === 'beta_tester'
 
   useEffect(() => {
     if (!menuOpen) return
@@ -133,6 +137,19 @@ export function ShellAccountFooter({ collapsed = false }: ShellAccountFooterProp
             >
               {t('settings.signOut')}
             </button>
+
+            {/* Version info — admin/beta only, below sign-out divider */}
+            {showVersion ? (
+              <div
+                className="border-t border-surface-variant/60 px-3 py-2 text-[11px] leading-tight text-on-surface-variant/70"
+                role="presentation"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/50">
+                  {t('shell.accountMenuVersionLabel')}
+                </p>
+                <p className="mt-0.5 break-all font-mono">{APP_VERSION}</p>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
