@@ -328,6 +328,30 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.14', en: '0.7.14' },
+        changes: [
+          {
+            ru: '**Задачи:** добавлено подтверждение перед удалением обычной задачи (без чек-листа и без повторения) — ранее удаление происходило немедленно.',
+            en: '**Tasks:** added confirmation before deleting a plain task (no checklist, no recurrence) — previously the task was deleted immediately.',
+          },
+          {
+            ru: '**Безопасность:** модал подачи дефекта (`FileDefectModal`) больше не монтируется для обычных пользователей — только для admin и beta_tester.',
+            en: '**Security:** the defect report modal (`FileDefectModal`) is no longer mounted for regular users — admin and beta_tester only.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Теперь при удалении задачи из бэклога всегда появляется подтверждение.',
+            en: 'Deleting any backlog task now always shows a confirmation dialog.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.13', en: '0.7.13' },
         changes: [
           {
