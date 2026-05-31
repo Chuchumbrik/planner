@@ -19,6 +19,7 @@ function StatItem({
   icon,
   label,
   value,
+  valueNode,
   tooltip,
   warn = false,
   loading = false,
@@ -26,7 +27,11 @@ function StatItem({
 }: {
   icon: string
   label: string
-  value: string
+  /** Plain string value for the standard headline-style render. */
+  value?: string
+  /** Custom node for non-scalar metrics (e.g. role breakdown mini-table).
+   *  Takes precedence over `value`. */
+  valueNode?: React.ReactNode
   tooltip?: string
   warn?: boolean
   loading?: boolean
@@ -39,13 +44,15 @@ function StatItem({
         size={18}
         className={cn('mt-0.5 shrink-0', warn ? 'text-amber-400/60' : 'text-on-surface-variant/40')}
       />
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1">
           <p className="text-xs text-on-surface-variant">{label}</p>
           {tooltip ? <InfoTooltip text={tooltip} alignRight={alignTooltipRight} /> : null}
         </div>
         {loading ? (
           <div className="mt-1 h-6 w-10 animate-pulse rounded bg-surface-container-highest" />
+        ) : valueNode ? (
+          <div className="mt-1">{valueNode}</div>
         ) : (
           <p
             className={cn(
@@ -53,11 +60,45 @@ function StatItem({
               warn ? 'text-amber-400' : 'text-on-surface',
             )}
           >
-            {value}
+            {value ?? '—'}
           </p>
         )}
       </div>
     </div>
+  )
+}
+
+// ── role breakdown mini-table ────────────────────────────────────────────────
+
+/**
+ * Compact role × count table for the "По ролям" StatItem.
+ *
+ * Each role is a row: small uppercase label (matches the role-badge palette)
+ * + right-aligned count. No bold, since this isn't a single headline number —
+ * it's three values that should read as grouped data.
+ */
+function RolesBreakdownTable({
+  counts,
+}: {
+  counts: { admin: number; beta_tester: number; user: number }
+}) {
+  const { t } = useTranslation()
+  const rows: Array<{ key: 'admin' | 'beta_tester' | 'user'; count: number; tone: string }> = [
+    { key: 'admin', count: counts.admin, tone: 'text-primary' },
+    { key: 'beta_tester', count: counts.beta_tester, tone: 'text-amber-400' },
+    { key: 'user', count: counts.user, tone: 'text-on-surface-variant' },
+  ]
+  return (
+    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
+      {rows.map((r) => (
+        <div key={r.key} className="contents">
+          <dt className={cn('text-[10px] font-semibold uppercase tracking-wider', r.tone)}>
+            {t(`admin.dashboard.activityChartRole.${r.key}`)}
+          </dt>
+          <dd className="text-right font-mono tabular-nums text-on-surface">{r.count}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 
@@ -282,16 +323,7 @@ export function AdminDashboardSummaryTab({
             <StatItem
               icon="badge"
               label={t('admin.dashboard.kpiRoles')}
-              value={
-                loadBusy ? '…'
-                : o
-                  ? t('admin.dashboard.kpiRolesValue', {
-                      admin: o.by_role.admin,
-                      beta: o.by_role.beta_tester,
-                      user: o.by_role.user,
-                    })
-                  : '—'
-              }
+              valueNode={o ? <RolesBreakdownTable counts={o.by_role} /> : undefined}
               tooltip={t('admin.dashboard.kpiTooltip.roles')}
               loading={showSkeleton}
               alignTooltipRight
