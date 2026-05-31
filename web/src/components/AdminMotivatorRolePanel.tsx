@@ -236,7 +236,10 @@ export function AdminMotivatorRolePanel({
   )
 
   return (
-    <>
+    // Page wrapper applies the shared cascade fade-in to every top-level
+    // block on the Users tab — same pattern the Summary tab uses, so the
+    // two tabs feel consistent.
+    <div className="admin-summary-stagger">
       <AdminCardSection
         title={t('admin.dashboard.tabs.usersTitle')}
         titleTooltip={t('admin.dashboard.usersMetricsHint', { days: STALE_VAULT_DAYS })}
@@ -493,6 +496,6 @@ export function AdminMotivatorRolePanel({
           onCancel={cancelChange}
         />
       ) : null}
-    </>
+    </div>
   )
 }

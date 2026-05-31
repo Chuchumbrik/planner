@@ -328,6 +328,26 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.15', en: '0.7.15' },
+        changes: [
+          {
+            ru: '**Вкладка «Пользователи» — каскадные анимации:** контент вкладки обёрнут в `.admin-summary-stagger` — тот же CSS-каскад fade-in, что использует «Сводка». Обе вкладки админки теперь оживают одинаково при открытии.',
+            en: '**Users tab — cascading animations:** the tab content is wrapped in `.admin-summary-stagger` — the same fade-in cascade used by Summary. Both admin tabs now feel consistent on entrance.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Вкладка «Пользователи» оживилась так же, как «Сводка» — блоки плавно появляются при открытии.',
+            en: 'The Users tab now animates in just like Summary — blocks fade in smoothly on open.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.14', en: '0.7.14' },
         changes: [
           {
