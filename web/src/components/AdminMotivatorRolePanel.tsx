@@ -14,7 +14,6 @@ import { AdminCardSection } from '@/components/admin/AdminCardSection'
 import { AdminConfirmRoleModal, type PendingRoleChange } from '@/components/admin/AdminConfirmRoleModal'
 import { UserMobileCard, UserDesktopRow } from '@/components/admin/AdminUserListRow'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
-import { RoleBadge } from '@/components/admin/RoleBadge'
 import type { MotivatorRoleRow } from '@/types/adminMonitoring'
 import { ADMIN_ROLES_FN, STALE_VAULT_DAYS } from '@/lib/adminMonitoringConstants'
 import {

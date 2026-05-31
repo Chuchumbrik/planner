@@ -1,5 +1,4 @@
 import { render, screen, fireEvent, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { AdminMotivatorRolePanel } from './AdminMotivatorRolePanel'

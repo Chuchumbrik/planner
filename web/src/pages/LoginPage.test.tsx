@@ -36,7 +36,6 @@ const mockSignIn = vi.fn()
 const mockSignUp = vi.fn()
 const mockRequestPasswordReset = vi.fn()
 
-const flushPromises = () => act(() => Promise.resolve())
 
 function renderPage() {
   return render(

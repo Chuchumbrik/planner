@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { parseAdminOverviewResponse } from '@/lib/adminMotivatorRolesList'
 import type { AdminOverview } from '@/types/adminMonitoring'
-import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
 import { mapAdminRolesError } from '@/components/admin/useAdminMotivatorUsers'
 import { invokeAdminFn, useLatestRef } from '@/components/admin/useAbortableInvoke'
 

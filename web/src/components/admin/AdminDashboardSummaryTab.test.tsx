@@ -198,7 +198,7 @@ describe('AdminDashboardSummaryTab — vault stale label', () => {
     // key is called without options — no interpolation in current implementation
     const calls = mockT.mock.calls.filter(([key]) => key === 'admin.dashboard.kpiVaultStale')
     expect(calls.length).toBeGreaterThan(0)
-    calls.forEach(([, opts]) => expect(opts).toBeUndefined())
+    calls.forEach((callArgs) => expect(callArgs.at(1)).toBeUndefined())
   })
 
   it('vault_stale_14d value is shown regardless of stale_vault_days field', () => {

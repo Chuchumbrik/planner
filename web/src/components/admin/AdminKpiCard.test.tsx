@@ -6,7 +6,7 @@ import { AdminKpiCard } from './AdminKpiCard'
 // ── i18n mock ─────────────────────────────────────────────────────────────────
 // vi.fn() at module scope is accessible inside vi.mock() factory (Vitest hoisting)
 
-const mockT = vi.fn((key: string, opts?: unknown) => key)
+const mockT = vi.fn((key: string, _opts?: unknown) => key)
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: mockT }),
