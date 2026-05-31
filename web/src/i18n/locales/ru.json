@@ -705,7 +705,6 @@
       "kpiMau30d": "MAU 30д",
       "kpiChurn30d": "Churn 30д",
       "kpiRoles": "По ролям",
-      "kpiRolesValue": "admin {{admin}} · beta {{beta}} · user {{user}}",
       "kpiTrend": {
         "clickHint": "Нажмите на карточку с иконкой ↗ чтобы увидеть динамику",
         "hint": "Данные из таблицы активности (UTC). Период ограничен историей за 90 дней.",

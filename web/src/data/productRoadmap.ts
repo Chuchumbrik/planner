@@ -334,11 +334,19 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
             ru: '**Мобильная версия:** кнопка «Создать задачу» и кнопка «Завести дефект» больше не перекрываются нижним меню — оба FAB сдвинуты вверх над bottom-nav (5rem от низа экрана с учётом safe-area-inset). На десктопе расположение прежнее.',
             en: '**Mobile:** Create task and File defect FAB buttons no longer hide behind the bottom navigation — both moved up above the bottom-nav (5rem from viewport bottom with safe-area inset). Desktop position unchanged.',
           },
+          {
+            ru: '**Админ → Сводка:** метрика «По ролям» переехала с однострочного текста (`admin 1 · beta 5 · user 42`, жирный) на компактную мини-таблицу из 3 строк — каждая роль с цветным лейблом (admin → emerald, beta → amber, user → muted) и числом справа в моноширинном шрифте. Жирность убрана — это не одно число, а группа значений.',
+            en: '**Admin → Summary:** the "By role" metric switched from a single bold line (`admin 1 · beta 5 · user 42`) to a 3-row compact mini-table — each role with a coloured label (admin → emerald, beta → amber, user → muted) and right-aligned monospace count. Removed the bold weight since this is a grouped breakdown, not a single headline number.',
+          },
         ],
         plainBullets: [
           {
             ru: 'На телефоне круглые кнопки внизу экрана теперь видны полностью и не залезают под меню.',
             en: 'On mobile, the round bottom-screen buttons are fully visible and no longer hide under the menu.',
+          },
+          {
+            ru: 'В админ-сводке «По ролям» теперь показывается мини-таблицей с цветными метками для каждой роли — легче читать чем длинная строка.',
+            en: 'The admin "By role" metric is now a small table with coloured per-role labels — easier to scan than the long single line.',
           },
         ],
       },
