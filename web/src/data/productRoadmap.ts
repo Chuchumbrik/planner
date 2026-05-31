@@ -328,6 +328,33 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.15', en: '0.7.15' },
+        changes: [
+          {
+            ru: '**Активность — анимация баров:** включён Recharts `isAnimationActive` на BarChart — столбцы растут от базовой линии при первом появлении и плавно перетекают к новым высотам при смене фильтра (период / роль / диапазон). 360ms ease-out — быстро, не лагает на rapid clicks.',
+            en: '**Activity — bar animations:** Recharts `isAnimationActive` enabled on the BarChart — bars grow from the baseline on first paint and morph smoothly when filters change (period / role / range). 360ms ease-out — fast, no lag on rapid clicks.',
+          },
+          {
+            ru: '**KPI-тренд — анимация Area-кривой:** Area-chart `isAnimationActive` тоже включён, 500ms ease-out. Кривая рисуется от первой точки к последней при появлении и плавно меняет форму при обновлении данных.',
+            en: '**KPI trend — Area animation:** Area chart `isAnimationActive` enabled, 500ms ease-out. The curve draws from first to last point on appearance and morphs smoothly when data updates.',
+          },
+          {
+            ru: '**KPI-тренд — cross-fade при смене метрики:** клик по другой KPI-карточке (Всего → MAU → Неактивны) теперь даёт fade-in нового графика вместо мгновенной замены. Реализовано через `key={activeMetric}` + `animate-admin-fade-in` на обёртке — React перемонтирует Area-chart и Recharts проигрывает свою анимацию рисования.',
+            en: '**KPI trend — cross-fade on metric switch:** clicking a different KPI card (Total → MAU → Inactive) now fades the new chart in instead of swapping in place. Implemented via `key={activeMetric}` + `animate-admin-fade-in` on the wrapper — React remounts the Area chart and Recharts plays its own draw animation.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Бары графика активности теперь плавно вырастают при появлении и красиво перетекают, когда меняешь период или роль.',
+            en: 'Activity chart bars now grow smoothly on appearance and morph fluidly when you change the period or role.',
+          },
+          {
+            ru: 'Графики тренда KPI анимируются при рисовании и плавно сменяют друг друга при переключении между метриками.',
+            en: 'KPI trend charts animate as they draw and fade smoothly between metrics when you switch.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.14', en: '0.7.14' },
         changes: [
           {
