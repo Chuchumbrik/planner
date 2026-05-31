@@ -17,7 +17,7 @@ import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { useAdminActivityDayUsers } from '@/components/admin/useAdminActivityDayUsers'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import { ACTIVITY_CHART_DAY_OPTIONS } from '@/lib/adminMonitoringConstants'
-import { ADMIN_CHART_HEIGHT, SCROLLBAR_SLIDER_H, SETTINGS_BTN_SECONDARY, chipActive } from '@/lib/designClasses'
+import { ADMIN_CHART_HEIGHT, SETTINGS_BTN_SECONDARY, chipActive } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 import type { AdminActivityChart } from '@/types/adminMonitoring'
 
@@ -146,8 +146,26 @@ export function AdminDashboardActivityChart({
   const [dateTo, setDateTo] = useState<string | null>(null)
   const customRangeActive = dateFrom !== null || dateTo !== null
 
+  // Custom-range editor visible. Auto-opens if a custom range is active,
+  // closes again on reset. Hidden by default — keeps the filter strip compact.
+  const [rangeOpen, setRangeOpen] = useState(false)
+  useEffect(() => {
+    if (customRangeActive) setRangeOpen(true)
+  }, [customRangeActive])
+
+  // Peak banner dismissal. Keyed by `<date>|<count>`, so a new peak (after
+  // filter change or fresh data) re-shows the banner. State is in-memory, so
+  // reload or chart-section remount also resets it — matches user's
+  // "informer that reappears after page/chart reload" expectation.
+  const [dismissedPeakKey, setDismissedPeakKey] = useState<string | null>(null)
+
   useEffect(() => {
     setSelectedDate(null)
+  }, [days, role, dateFrom, dateTo])
+
+  // Resetting filters also re-arms the peak banner (treat as "new context").
+  useEffect(() => {
+    setDismissedPeakKey(null)
   }, [days, role, dateFrom, dateTo])
 
   const roleFilters: ActivityChartRoleFilter[] = ['all', 'admin', 'beta_tester', 'user']
@@ -177,10 +195,15 @@ export function AdminDashboardActivityChart({
     }
   }, [chart, effectiveFrom, effectiveTo])
 
+  // Recharts auto-thins X-axis ticks at small widths; pick interval by series
+  // length so labels stay legible without horizontal scroll.
   const xAxisCount = displaySeries.length
-  const xAxisInterval = xAxisCount <= 14 ? 0 : xAxisCount <= 30 ? 3 : 8
+  const xAxisInterval =
+    xAxisCount <= 14 ? 0 : xAxisCount <= 30 ? 2 : xAxisCount <= 60 ? 5 : 10
   const isEmpty = displaySeries.length > 0 && displaySeries.every((b) => b.unique_users === 0)
   const isOutOfRange = displaySeries.length === 0 && chart !== null && !loadBusy
+  const peakKey = peak ? `${peak.date}|${peak.count}` : null
+  const showPeakBanner = peak !== null && peakKey !== dismissedPeakKey && !loadBusy
 
   const refreshButton = (
     <button
@@ -196,6 +219,7 @@ export function AdminDashboardActivityChart({
   const resetCustomRange = useCallback(() => {
     setDateFrom(null)
     setDateTo(null)
+    setRangeOpen(false)
   }, [])
 
   function setQuickRange(d: ActivityChartDays) {
@@ -213,13 +237,10 @@ export function AdminDashboardActivityChart({
       collapsed={collapsed}
       onToggleCollapse={onToggleCollapse}
     >
-      {/* ── Filters ─────────────────────────────────────────────────────── */}
+      {/* ── Filters — single compact row, custom range collapsed by default ─ */}
       <div className="flex flex-col gap-sm">
-        {/* Quick presets row */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60">
-            {t('admin.dashboard.activityFilterPeriod')}
-          </span>
+          {/* Period quick presets */}
           {ACTIVITY_CHART_DAY_OPTIONS.map((d) => {
             const isActive = !customRangeActive && days === d
             return (
@@ -233,33 +254,66 @@ export function AdminDashboardActivityChart({
               </button>
             )
           })}
+
+          {/* Custom range toggle — chip-shaped, expands the pickers below */}
+          <button
+            type="button"
+            onClick={() => setRangeOpen((v) => !v)}
+            aria-expanded={rangeOpen}
+            aria-controls="activity-chart-range-pickers"
+            className={cn(
+              chipActive(customRangeActive),
+              'inline-flex items-center gap-1 text-label-sm',
+            )}
+          >
+            <MaterialIcon name="calendar_month" size={14} />
+            {customRangeActive
+              ? `${dateFrom ?? '…'} — ${dateTo ?? '…'}`
+              : t('admin.dashboard.activityFilterCustomRangeToggle')}
+          </button>
+
+          {/* Separator + role chips, same row */}
+          <span className="mx-1 hidden h-4 w-px bg-surface-variant/60 sm:inline-block" aria-hidden />
+          {roleFilters.map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={cn(chipActive(role === r), 'text-label-sm')}
+              onClick={() => onRoleChange(r)}
+              aria-label={t('admin.dashboard.activityChartRoleAria')}
+            >
+              {t(`admin.dashboard.activityChartRole.${r}`)}
+            </button>
+          ))}
         </div>
 
-        {/* Custom date range row */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60">
-            {t('admin.dashboard.activityFilterRange')}
-          </span>
-          <input
-            type="date"
-            value={dateFrom ?? ''}
-            max={dateTo ?? todayIsoUtc()}
-            min={isoDateNDaysAgoUtc(89)}
-            onChange={(e) => setDateFrom(e.target.value || null)}
-            className="rounded-lg border border-surface-variant bg-surface-container-low px-2 py-1 text-xs text-on-surface focus:border-primary/60 focus:outline-none"
-            aria-label={t('admin.dashboard.activityFilterFrom')}
-          />
-          <span className="text-on-surface-variant/50">—</span>
-          <input
-            type="date"
-            value={dateTo ?? ''}
-            min={dateFrom ?? isoDateNDaysAgoUtc(89)}
-            max={todayIsoUtc()}
-            onChange={(e) => setDateTo(e.target.value || null)}
-            className="rounded-lg border border-surface-variant bg-surface-container-low px-2 py-1 text-xs text-on-surface focus:border-primary/60 focus:outline-none"
-            aria-label={t('admin.dashboard.activityFilterTo')}
-          />
-          {customRangeActive ? (
+        {/* Custom range pickers — only when toggle is open OR custom range set */}
+        {rangeOpen ? (
+          <div
+            id="activity-chart-range-pickers"
+            className="flex flex-wrap items-center gap-2 rounded-lg border border-surface-variant/60 bg-surface-container-low/50 px-2 py-1.5"
+          >
+            <input
+              type="date"
+              value={dateFrom ?? ''}
+              max={dateTo ?? todayIsoUtc()}
+              min={isoDateNDaysAgoUtc(89)}
+              onChange={(e) => setDateFrom(e.target.value || null)}
+              // `color-scheme: dark` makes the browser-native calendar popup
+              // use the dark palette to match the app theme.
+              className="rounded-md border border-surface-variant bg-surface-container px-2 py-1 text-xs text-on-surface [color-scheme:dark] focus:border-primary/60 focus:outline-none"
+              aria-label={t('admin.dashboard.activityFilterFrom')}
+            />
+            <span className="text-on-surface-variant/50">—</span>
+            <input
+              type="date"
+              value={dateTo ?? ''}
+              min={dateFrom ?? isoDateNDaysAgoUtc(89)}
+              max={todayIsoUtc()}
+              onChange={(e) => setDateTo(e.target.value || null)}
+              className="rounded-md border border-surface-variant bg-surface-container px-2 py-1 text-xs text-on-surface [color-scheme:dark] focus:border-primary/60 focus:outline-none"
+              aria-label={t('admin.dashboard.activityFilterTo')}
+            />
             <button
               type="button"
               onClick={resetCustomRange}
@@ -268,29 +322,8 @@ export function AdminDashboardActivityChart({
               <MaterialIcon name="close" size={12} />
               {t('admin.dashboard.activityFilterRangeReset')}
             </button>
-          ) : null}
-        </div>
-
-        {/* Role row */}
-        <div
-          className="flex flex-wrap items-center gap-1.5"
-          role="group"
-          aria-label={t('admin.dashboard.activityChartRoleAria')}
-        >
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/60">
-            {t('admin.dashboard.activityFilterRole')}
-          </span>
-          {roleFilters.map((r) => (
-            <button
-              key={r}
-              type="button"
-              className={cn(chipActive(role === r), 'text-label-sm')}
-              onClick={() => onRoleChange(r)}
-            >
-              {t(`admin.dashboard.activityChartRole.${r}`)}
-            </button>
-          ))}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       {/* ── Status messages ─────────────────────────────────────────────── */}
@@ -303,8 +336,8 @@ export function AdminDashboardActivityChart({
         <p className="text-xs text-red-400" role="alert">{loadError}</p>
       ) : null}
 
-      {/* ── Achievement banner: peak ────────────────────────────────────── */}
-      {peak && !loadBusy ? (
+      {/* ── Achievement banner: peak ─ dismissable, re-arms on reload/filter ─ */}
+      {showPeakBanner && peak ? (
         <div className="flex items-center gap-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400/20">
             <MaterialIcon name="emoji_events" size={18} className="text-amber-400" filled />
@@ -320,6 +353,15 @@ export function AdminDashboardActivityChart({
               })}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setDismissedPeakKey(peakKey)}
+            aria-label={t('admin.dashboard.activityPeakDismiss')}
+            title={t('admin.dashboard.activityPeakDismiss')}
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-amber-400/60 transition-colors hover:bg-amber-400/15 hover:text-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400/60"
+          >
+            <MaterialIcon name="close" size={16} />
+          </button>
         </div>
       ) : null}
 
@@ -338,16 +380,14 @@ export function AdminDashboardActivityChart({
       ) : isEmpty ? (
         <p className="text-sm text-on-surface-variant">{t('admin.dashboard.activityChartEmpty')}</p>
       ) : displaySeries.length > 0 ? (
-        <div className={cn('overflow-x-auto', SCROLLBAR_SLIDER_H)}>
-          <div
-            className={ADMIN_CHART_HEIGHT}
-            style={{ minWidth: `${Math.max(displaySeries.length * 24, 280)}px` }}
-          >
+        // No horizontal scroll — bars compress to fit the container width.
+        // X-axis interval auto-thins labels at small widths.
+        <div className={cn('w-full overflow-hidden', ADMIN_CHART_HEIGHT)}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={displaySeries}
                 margin={{ top: 4, right: 4, bottom: 0, left: -24 }}
-                barCategoryGap="25%"
+                barCategoryGap="15%"
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#353437" vertical={false} />
                 <XAxis
@@ -364,8 +404,8 @@ export function AdminDashboardActivityChart({
                 />
                 <Bar
                   dataKey="unique_users"
-                  radius={[3, 3, 0, 0]}
-                  maxBarSize={32}
+                  radius={[2, 2, 0, 0]}
+                  maxBarSize={28}
                   isAnimationActive={false}
                   onClick={(data: unknown) => {
                     const arg = data as
@@ -397,7 +437,6 @@ export function AdminDashboardActivityChart({
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
         </div>
       ) : null}
 

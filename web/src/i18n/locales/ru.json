@@ -767,7 +767,9 @@
       "activityFilterRole": "Роль:",
       "activityChartOutOfRange": "В выбранном диапазоне нет данных. Возможно, статистика за эти дни не сохранилась (хранится до 90 дней).",
       "activityPeakTitle": "Рекорд активности",
-      "activityPeakValue": "{{count}} человек · {{date}}"
+      "activityPeakValue": "{{count}} человек · {{date}}",
+      "activityFilterCustomRangeToggle": "Свой период",
+      "activityPeakDismiss": "Скрыть рекорд"
     },
     "roadmapIntro": "Дорожная карта MVP, релиз-ноты по датам, идеи после релиза и открытые вопросы. Источник данных — src/data/productRoadmap.ts; правила сопровождения — web/README.md.",
     "testingTitle": "Тестирование",

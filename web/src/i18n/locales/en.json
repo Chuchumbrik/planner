@@ -767,7 +767,9 @@
       "activityFilterRole": "Role:",
       "activityChartOutOfRange": "No data in the selected range. Daily stats are kept for up to 90 days.",
       "activityPeakTitle": "Activity record",
-      "activityPeakValue": "{{count}} people · {{date}}"
+      "activityPeakValue": "{{count}} people · {{date}}",
+      "activityFilterCustomRangeToggle": "Custom range",
+      "activityPeakDismiss": "Dismiss record"
     },
     "roadmapIntro": "MVP roadmap, dated release notes, post-release ideas, and open questions. Data source: src/data/productRoadmap.ts; maintenance rules: web/README.md.",
     "testingTitle": "Testing",

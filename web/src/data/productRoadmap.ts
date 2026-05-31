@@ -328,6 +328,50 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.11', en: '0.7.11' },
+        changes: [
+          {
+            ru: '**График активности — нет больше горизонтального скролла:** удалена обёртка `overflow-x-auto` с `minWidth` по числу столбцов. Recharts сам адаптирует ширину баров под доступное место, лейблы оси X прорежаются автоматически (`xAxisInterval` 0 / 2 / 5 / 10 в зависимости от числа дней).',
+            en: '**Activity chart — no more horizontal scroll:** removed the `overflow-x-auto` wrapper with `minWidth` based on bar count. Recharts adapts bar width to the available space; X-axis labels thin out automatically (`xAxisInterval` 0 / 2 / 5 / 10 depending on day count).',
+          },
+          {
+            ru: '**Поля выбора даты — стиль соответствует тёмной теме:** добавлен `[color-scheme:dark]` на оба `<input type="date">` — браузер открывает календарь в тёмной палитре. Сами инпуты переоформлены под surface-container с акцентом emerald при фокусе.',
+            en: '**Date pickers — match the dark theme:** added `[color-scheme:dark]` to both `<input type="date">` so the browser-native calendar popup uses the dark palette. The inputs themselves are styled with surface-container and emerald focus accent.',
+          },
+          {
+            ru: '**Плашка «Рекорд активности» — можно закрыть:** добавлена кнопка-крестик. Состояние «закрыто» хранится в памяти страницы (по ключу `дата|число`) и **сбрасывается** при смене любого фильтра (период, роль, диапазон дат) или перезагрузке. Закрытая плашка снова всплывает если рекорд обновился.',
+            en: '**Activity record banner — dismissible:** added a close (×) button. Dismissed state is in-memory (keyed by `date|count`) and **resets** on any filter change (period, role, date range) or page reload. The dismissed banner re-appears when the record updates.',
+          },
+          {
+            ru: '**Фильтры графика — компактнее:** три ряда (Период / Свой диапазон / Роль) свёрнуты в один. Кнопка «📅 Свой период» включается по клику, открывая инлайн-блок с двумя полями дат. Когда диапазон активен, кнопка превращается в чип с текущими датами; «×» рядом — сброс.',
+            en: '**Chart filters — compacted:** the three rows (Period / Custom range / Role) folded into one. A "📅 Custom range" toggle button reveals the inline date pickers; when a range is active, the button becomes a chip with the current dates; × beside it resets.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'График активности больше не уезжает за край экрана — все столбцы влезают в видимую область.',
+            en: 'The activity chart no longer scrolls horizontally — all bars fit on screen.',
+          },
+          {
+            ru: 'Календарь для выбора даты теперь тёмный, в одной палитре с сайтом.',
+            en: 'The date-picker calendar is now dark, matching the site palette.',
+          },
+          {
+            ru: 'Плашку «Рекорд активности» можно закрыть крестиком; она вернётся при следующем обновлении страницы или изменении фильтров.',
+            en: 'You can dismiss the "Activity record" banner with the ×; it reappears on next page reload or when filters change.',
+          },
+          {
+            ru: 'Фильтры графика стали в один ряд — выбор периода, диапазона и роли больше не занимает три строки.',
+            en: 'Chart filters are on a single row now — period, range and role selectors no longer take three lines.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.10', en: '0.7.10' },
         changes: [
           {
