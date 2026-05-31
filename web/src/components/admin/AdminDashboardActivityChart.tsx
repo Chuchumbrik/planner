@@ -305,7 +305,7 @@ export function AdminDashboardActivityChart({
 
       {/* ── Achievement banner: peak ────────────────────────────────────── */}
       {peak && !loadBusy ? (
-        <div className="flex items-center gap-3 rounded-lg border border-amber-400/30 bg-gradient-to-r from-amber-400/10 to-amber-400/0 px-3 py-2">
+        <div className="flex items-center gap-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400/20">
             <MaterialIcon name="emoji_events" size={18} className="text-amber-400" filled />
           </div>
