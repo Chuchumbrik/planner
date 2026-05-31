@@ -327,7 +327,12 @@ export function AdminDashboardActivityChart({
                   dataKey="unique_users"
                   radius={[2, 2, 0, 0]}
                   maxBarSize={28}
-                  isAnimationActive={false}
+                  // Bars grow from baseline on first render and re-tween to
+                  // new heights when the filter changes. 360ms is fast enough
+                  // not to feel laggy on rapid filter taps.
+                  isAnimationActive
+                  animationDuration={360}
+                  animationEasing="ease-out"
                   onClick={(data: unknown) => {
                     const arg = data as
                       | { payload?: { date?: unknown; unique_users?: unknown }; date?: unknown; unique_users?: unknown }

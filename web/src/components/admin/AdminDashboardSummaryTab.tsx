@@ -255,17 +255,23 @@ export function AdminDashboardSummaryTab({
         </div>
       </div>
 
-      {/* ── KPI trend ───────────────────────────────────────────────────── */}
+      {/* ── KPI trend ───────────────────────────────────────────────────
+          `key={activeMetric}` remounts the chart when the user clicks a
+          different KPI card — combined with `animate-admin-fade-in` on
+          the wrapper, that gives a cross-fade between metrics instead
+          of an in-place jump. */}
       {activeMetric ? (
-        <AdminKpiChartZone
-          metric={activeMetric}
-          trend={kpiTrend.trend}
-          loadBusy={kpiTrend.loadBusy}
-          loadError={kpiTrend.loadError}
-          tableMissing={kpiTrend.tableMissing}
-          onClose={() => setActiveMetric(null)}
-          onRefresh={() => void kpiTrend.reload()}
-        />
+        <div key={activeMetric} className="animate-admin-fade-in">
+          <AdminKpiChartZone
+            metric={activeMetric}
+            trend={kpiTrend.trend}
+            loadBusy={kpiTrend.loadBusy}
+            loadError={kpiTrend.loadError}
+            tableMissing={kpiTrend.tableMissing}
+            onClose={() => setActiveMetric(null)}
+            onRefresh={() => void kpiTrend.reload()}
+          />
+        </div>
       ) : null}
 
       {/* ── Secondary metrics ───────────────────────────────────────────── */}

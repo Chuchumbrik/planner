@@ -151,7 +151,12 @@ export function AdminKpiChartZone({
                 fill={`url(#${gradId})`}
                 dot={{ fill: '#1c1b1d', stroke: c.stroke, strokeWidth: 2, r: 3 }}
                 activeDot={{ fill: c.stroke, stroke: c.stroke, r: 5 }}
-                isAnimationActive={false}
+                // Area draws on mount and morphs smoothly when a different
+                // KPI metric is picked (the parent wrapper also re-keys for
+                // a cross-fade of the entire chart).
+                isAnimationActive
+                animationDuration={500}
+                animationEasing="ease-out"
               />
             </AreaChart>
           </ResponsiveContainer>
