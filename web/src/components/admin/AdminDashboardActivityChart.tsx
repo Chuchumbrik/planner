@@ -153,19 +153,15 @@ export function AdminDashboardActivityChart({
     if (customRangeActive) setRangeOpen(true)
   }, [customRangeActive])
 
-  // Peak banner dismissal. Keyed by `<date>|<count>`, so a new peak (after
-  // filter change or fresh data) re-shows the banner. State is in-memory, so
-  // reload or chart-section remount also resets it — matches user's
-  // "informer that reappears after page/chart reload" expectation.
+  // Peak banner dismissal. Keyed by `<date>|<count>`, so a NEW peak (different
+  // date or higher count, e.g. fresh data after refresh) re-arms the banner.
+  // Dismissed state persists across filter changes within the session — only a
+  // page reload / chart-section remount resets it. Per UX: "обновление фильтра
+  // не должно снова показывать информер".
   const [dismissedPeakKey, setDismissedPeakKey] = useState<string | null>(null)
 
   useEffect(() => {
     setSelectedDate(null)
-  }, [days, role, dateFrom, dateTo])
-
-  // Resetting filters also re-arms the peak banner (treat as "new context").
-  useEffect(() => {
-    setDismissedPeakKey(null)
   }, [days, role, dateFrom, dateTo])
 
   const roleFilters: ActivityChartRoleFilter[] = ['all', 'admin', 'beta_tester', 'user']
@@ -200,10 +196,27 @@ export function AdminDashboardActivityChart({
   const xAxisCount = displaySeries.length
   const xAxisInterval =
     xAxisCount <= 14 ? 0 : xAxisCount <= 30 ? 2 : xAxisCount <= 60 ? 5 : 10
-  const isEmpty = displaySeries.length > 0 && displaySeries.every((b) => b.unique_users === 0)
-  const isOutOfRange = displaySeries.length === 0 && chart !== null && !loadBusy
   const peakKey = peak ? `${peak.date}|${peak.count}` : null
   const showPeakBanner = peak !== null && peakKey !== dismissedPeakKey && !loadBusy
+
+  // Insufficient-data state — categorise so the message can explain WHY
+  // the chart is empty. Order matters: backend issues (table_missing) > range
+  // hitting retention edge > range too narrow > no activity in range.
+  type Insufficient = null | 'tableMissing' | 'retention' | 'few' | 'empty'
+  const insufficient: Insufficient = ((): Insufficient => {
+    if (loadBusy) return null
+    if (tableMissing) return 'tableMissing'
+    if (!chart) return null
+    // Retention: requested range starts before what the server holds.
+    if (effectiveFrom < isoDateNDaysAgoUtc(89) && displaySeries.length === 0) return 'retention'
+    if (displaySeries.length === 0) return 'empty'
+    if (displaySeries.every((b) => b.unique_users === 0)) return 'empty'
+    if (displaySeries.length < 3) return 'few'
+    return null
+  })()
+  const insufficientKey = insufficient
+    ? `admin.dashboard.activityChartInsufficient${insufficient.charAt(0).toUpperCase()}${insufficient.slice(1)}`
+    : null
 
   const refreshButton = (
     <button
@@ -230,8 +243,7 @@ export function AdminDashboardActivityChart({
   return (
     <AdminCardSection
       title={t('admin.dashboard.activityChartTitle')}
-      hint={t('admin.dashboard.activityChartHint')}
-      hint2={t('admin.dashboard.activityChartClickHint')}
+      titleTooltip={t('admin.dashboard.activityChartHelp')}
       action={refreshButton}
       collapsible={collapsible}
       collapsed={collapsed}
@@ -327,13 +339,19 @@ export function AdminDashboardActivityChart({
       </div>
 
       {/* ── Status messages ─────────────────────────────────────────────── */}
-      {tableMissing ? (
-        <p className="text-xs text-amber-400/90" role="status">
-          {t('admin.dashboard.activityTableMissing')}
-        </p>
-      ) : null}
       {loadError ? (
         <p className="text-xs text-red-400" role="alert">{loadError}</p>
+      ) : null}
+
+      {/* ── Insufficient-data banner (yellow) — explains why no chart ───── */}
+      {insufficientKey ? (
+        <div
+          role="status"
+          className="flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-xs text-amber-400"
+        >
+          <MaterialIcon name="warning" size={14} className="mt-0.5 shrink-0" />
+          <span>{t(insufficientKey)}</span>
+        </div>
       ) : null}
 
       {/* ── Achievement banner: peak ─ dismissable, re-arms on reload/filter ─ */}
@@ -372,14 +390,10 @@ export function AdminDashboardActivityChart({
         </p>
       ) : null}
 
-      {/* ── Bar chart ───────────────────────────────────────────────────── */}
+      {/* ── Bar chart — rendered when we have ≥3 non-empty days ───────── */}
       {loadBusy ? (
         <p className="text-sm text-on-surface-variant">{t('common.loading')}</p>
-      ) : isOutOfRange ? (
-        <p className="text-sm text-on-surface-variant">{t('admin.dashboard.activityChartOutOfRange')}</p>
-      ) : isEmpty ? (
-        <p className="text-sm text-on-surface-variant">{t('admin.dashboard.activityChartEmpty')}</p>
-      ) : displaySeries.length > 0 ? (
+      ) : insufficientKey ? null : displaySeries.length > 0 ? (
         // No horizontal scroll — bars compress to fit the container width.
         // X-axis interval auto-thins labels at small widths.
         <div className={cn('w-full overflow-hidden', ADMIN_CHART_HEIGHT)}>

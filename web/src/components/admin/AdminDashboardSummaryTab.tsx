@@ -164,7 +164,10 @@ export function AdminDashboardSummaryTab({
   }
 
   return (
-    <>
+    // Each direct child gets a cascading fade-in (admin-summary-stagger CSS
+    // class in index.css). flex-col + gap to preserve layout; the class only
+    // adds the animation, no positioning side-effects.
+    <div className="admin-summary-stagger flex flex-col gap-md">
       {/* ── Status banners ──────────────────────────────────────────────── */}
       {loadError ? (
         <div className="flex items-start gap-2 rounded-lg border border-red-400/20 bg-red-400/5 px-3 py-2.5 text-xs text-red-400">
@@ -340,6 +343,6 @@ export function AdminDashboardSummaryTab({
         collapsed={activityChartCollapsed}
         onToggleCollapse={() => setActivityChartCollapsed((v) => !v)}
       />
-    </>
+    </div>
   )
 }

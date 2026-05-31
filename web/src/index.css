@@ -199,6 +199,71 @@ body {
 }
 
 /* Admin dashboard: плавный вход контента при переключении вкладок */
+/* Admin Summary page — block fade-in with subtle upward translate. Apply
+   `animate-admin-fade-in` on direct children of the page; an optional inline
+   `animation-delay` cascades the entrance. Use `animate-admin-fade-out` for
+   informer dismiss. Respects prefers-reduced-motion. */
+@keyframes admin-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+    margin-top: 0;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+    max-height: 0;
+    margin-top: 0;
+  }
+}
+
+.animate-admin-fade-in {
+  animation: admin-fade-in 220ms ease-out both;
+}
+
+/* Cascading fade-in for direct children of the Summary tab.
+   Each subsequent block waits a little longer so the page paints in waves
+   instead of flashing all at once. */
+.admin-summary-stagger > * {
+  animation: admin-fade-in 240ms ease-out both;
+}
+.admin-summary-stagger > *:nth-child(1)  { animation-delay: 0ms; }
+.admin-summary-stagger > *:nth-child(2)  { animation-delay: 60ms; }
+.admin-summary-stagger > *:nth-child(3)  { animation-delay: 120ms; }
+.admin-summary-stagger > *:nth-child(4)  { animation-delay: 180ms; }
+.admin-summary-stagger > *:nth-child(5)  { animation-delay: 240ms; }
+.admin-summary-stagger > *:nth-child(n+6) { animation-delay: 300ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-summary-stagger > * {
+    animation: none;
+  }
+}
+
+.animate-admin-fade-out {
+  animation: admin-fade-out 200ms ease-in forwards;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-admin-fade-in,
+  .animate-admin-fade-out {
+    animation: none;
+  }
+}
+
 @keyframes admin-tab-in {
   from {
     opacity: 0;
