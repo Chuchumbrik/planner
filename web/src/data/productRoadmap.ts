@@ -328,6 +328,26 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.9', en: '0.7.9' },
+        changes: [
+          {
+            ru: '**Мобильная версия:** кнопка «Создать задачу» и кнопка «Завести дефект» больше не перекрываются нижним меню — оба FAB сдвинуты вверх над bottom-nav (5rem от низа экрана с учётом safe-area-inset). На десктопе расположение прежнее.',
+            en: '**Mobile:** Create task and File defect FAB buttons no longer hide behind the bottom navigation — both moved up above the bottom-nav (5rem from viewport bottom with safe-area inset). Desktop position unchanged.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На телефоне круглые кнопки внизу экрана теперь видны полностью и не залезают под меню.',
+            en: 'On mobile, the round bottom-screen buttons are fully visible and no longer hide under the menu.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.8', en: '0.7.8' },
         changes: [
           {
