@@ -2731,6 +2731,36 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   },
   {
     ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 25,
+    title: {
+      ru: 'EOD: чек-ап состояния (вопросы самопроверки)',
+      en: 'EOD: state check-up (self-reflection prompts)',
+    },
+    summary: {
+      ru: 'После MVP: в ритуал **End-of-Day** добавить блок **вопросов для самопроверки** состояния (ежедневный чек-ап) — рядом со сводкой по задачам, без обязательной «диагностики»; ответы только для пользователя (vault / локально).',
+      en: 'Post-MVP: extend the **End-of-Day** ritual with **self-check prompts** for how you feel (a daily check-up) — alongside the task summary, optional and private (vault / on-device).',
+    },
+    detailBullets: [
+      {
+        ru: '**Наборы вопросов:** готовые **шаблоны** для ориентировочной самодиагностики состояния — на основе **классической психологической базы** (в т.ч. привязка к известным **клиническим рамкам/«диагнозам»** как к **темам чек-листа**, не как к постановке диагноза в приложении); плюс **персональный набор**, который пользователь собирает или выбирает в **настройках**.',
+        en: '**Question sets:** curated **templates** for rough self-assessment — grounded in **established clinical/psychological frameworks** (including well-known **diagnostic labels** as **checklist themes only**, not in-app diagnosis); plus a **personal set** the user composes or picks in **settings**.',
+      },
+      {
+        ru: '**Настройки:** включение блока в EOD, выбор активного набора (шаблон / свой), порядок вопросов; опционально — напоминание пройти чек-ап, если ритуал открыт без ответов (продуктово уточнить).',
+        en: '**Settings:** toggle the EOD block, pick the active set (template / custom), question order; optionally nudge if the ritual is opened but prompts are skipped (TBD).',
+      },
+      {
+        ru: '**Границы:** не медицинский сервис; дисклеймер, приватность (шифрованный vault), без обязательной отправки ответов на сервер; связь с отчётами и AI — только после явного согласия пользователя.',
+        en: '**Guardrails:** not a medical device; disclaimer, privacy (encrypted vault), no required server upload of answers; ties to reports or AI only with explicit opt-in.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §19; пересечение с **«Привычки»**, однодневными пунктами и push EOD — отдельные продуктовые решения.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §19; overlap with **Habits**, daily check-ins, and EOD push — separate product decisions.',
+      },
+    ],
+  },
+  {
+    ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 30,
     title: {
       ru: 'Однодневные «пункты дня» (лёгкие привычки)',
