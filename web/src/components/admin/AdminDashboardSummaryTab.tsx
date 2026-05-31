@@ -152,10 +152,10 @@ export function AdminDashboardSummaryTab({
   const o = overview
 
   // Show skeletons not only when the request is in flight, but also during the
-  // brief initial-mount window before useEffect fires (loadBusy=false, o=null).
-  // If a load error has surfaced, we stop showing skeletons so the error banner
-  // tells the story instead of an indefinite shimmer.
-  const showSkeleton = (loadBusy || !o) && !loadError
+  // Show skeletons only on initial load (no data yet). During refresh (o already
+  // populated) keep showing stale values — avoids shimmer over existing content.
+  // On error, hide skeletons so the error banner tells the story.
+  const showSkeleton = !o && !loadError
 
   const inactiveValue = computeInactivePercent(o, showSkeleton)
 

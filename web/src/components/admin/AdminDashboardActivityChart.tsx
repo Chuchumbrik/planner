@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
@@ -15,41 +15,13 @@ import { AdminCardSection } from '@/components/admin/AdminCardSection'
 import { AdminDashboardActivityDayPanel } from '@/components/admin/AdminDashboardActivityDayPanel'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { useAdminActivityDayUsers } from '@/components/admin/useAdminActivityDayUsers'
+import { useActivityChartRange, todayIsoUtc, isoDateNDaysAgoUtc } from '@/components/admin/useActivityChartRange'
+import { useActivityChartDisplay } from '@/components/admin/useActivityChartDisplay'
 import type { ActivityChartDays, ActivityChartRoleFilter } from '@/lib/adminMonitoringConstants'
 import { ACTIVITY_CHART_DAY_OPTIONS } from '@/lib/adminMonitoringConstants'
 import { ADMIN_CHART_HEIGHT, SETTINGS_BTN_SECONDARY, chipActive } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 import type { AdminActivityChart } from '@/types/adminMonitoring'
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-type Series = AdminActivityChart['series']
-type Peak = { date: string; count: number } | null
-
-/**
- * Find the activity peak in a series. When multiple days tie at the max, the
- * *latest* one wins — feels more like "current best record" than archeology.
- */
-function findPeak(series: Series): Peak {
-  let best: Peak = null
-  for (const row of series) {
-    if (row.unique_users <= 0) continue
-    if (!best || row.unique_users >= best.count) {
-      best = { date: row.date, count: row.unique_users }
-    }
-  }
-  return best
-}
-
-function isoDateNDaysAgoUtc(n: number): string {
-  const d = new Date()
-  d.setUTCDate(d.getUTCDate() - n)
-  return d.toISOString().slice(0, 10)
-}
-
-function todayIsoUtc(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 function formatLongDate(iso: string, lang: string): string {
   const [y, m, day] = iso.split('-').map(Number)
@@ -140,83 +112,29 @@ export function AdminDashboardActivityChart({
   const { t, i18n } = useTranslation()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const dayUsers = useAdminActivityDayUsers(supabase, selectedDate, role)
-
-  // Custom from/to range. `null` means "use the quick-preset days window".
-  const [dateFrom, setDateFrom] = useState<string | null>(null)
-  const [dateTo, setDateTo] = useState<string | null>(null)
-  const customRangeActive = dateFrom !== null || dateTo !== null
-
-  // Custom-range editor visible. Auto-opens if a custom range is active,
-  // closes again on reset. Hidden by default — keeps the filter strip compact.
-  const [rangeOpen, setRangeOpen] = useState(false)
-  useEffect(() => {
-    if (customRangeActive) setRangeOpen(true)
-  }, [customRangeActive])
-
-  // Peak banner dismissal. Keyed by `<date>|<count>`, so a NEW peak (different
-  // date or higher count, e.g. fresh data after refresh) re-arms the banner.
-  // Dismissed state persists across filter changes within the session — only a
-  // page reload / chart-section remount resets it. Per UX: "обновление фильтра
-  // не должно снова показывать информер".
   const [dismissedPeakKey, setDismissedPeakKey] = useState<string | null>(null)
 
-  useEffect(() => {
-    setSelectedDate(null)
-  }, [days, role, dateFrom, dateTo])
+  const {
+    dateFrom, setDateFrom, dateTo, setDateTo,
+    rangeOpen, setRangeOpen,
+    customRangeActive, effectiveFrom, effectiveTo,
+    resetCustomRange, setQuickRange,
+  } = useActivityChartRange(days, onDaysChange)
+
+  const { displaySeries, peak, insufficientKey, xAxisInterval } =
+    useActivityChartDisplay(chart, effectiveFrom, effectiveTo, loadBusy, tableMissing)
 
   const roleFilters: ActivityChartRoleFilter[] = ['all', 'admin', 'beta_tester', 'user']
+  const peakKey = peak ? `${peak.date}|${peak.count}` : null
+  const showPeakBanner = peak !== null && peakKey !== dismissedPeakKey && !loadBusy
+
+  // Reset selected bar when filters change.
+  useEffect(() => { setSelectedDate(null) }, [days, role, dateFrom, dateTo])
 
   function handleBarClick(date: string, uniqueUsers: number) {
     if (uniqueUsers <= 0) return
     setSelectedDate((prev) => (prev === date ? null : date))
   }
-
-  // Resolve the effective range: custom range wins, otherwise preset N days.
-  const effectiveFrom = dateFrom ?? isoDateNDaysAgoUtc(days - 1)
-  const effectiveTo = dateTo ?? todayIsoUtc()
-
-  // Filter server series to the effective range, mark peak.
-  const { displaySeries, peak } = useMemo(() => {
-    if (!chart) return { displaySeries: [] as Array<Series[number] & { isPeak: boolean }>, peak: null }
-    const filtered = chart.series.filter((row) => {
-      return row.date >= effectiveFrom && row.date <= effectiveTo
-    })
-    const p = findPeak(filtered)
-    return {
-      displaySeries: filtered.map((row) => ({
-        ...row,
-        isPeak: p !== null && row.date === p.date,
-      })),
-      peak: p,
-    }
-  }, [chart, effectiveFrom, effectiveTo])
-
-  // Recharts auto-thins X-axis ticks at small widths; pick interval by series
-  // length so labels stay legible without horizontal scroll.
-  const xAxisCount = displaySeries.length
-  const xAxisInterval =
-    xAxisCount <= 14 ? 0 : xAxisCount <= 30 ? 2 : xAxisCount <= 60 ? 5 : 10
-  const peakKey = peak ? `${peak.date}|${peak.count}` : null
-  const showPeakBanner = peak !== null && peakKey !== dismissedPeakKey && !loadBusy
-
-  // Insufficient-data state — categorise so the message can explain WHY
-  // the chart is empty. Order matters: backend issues (table_missing) > range
-  // hitting retention edge > range too narrow > no activity in range.
-  type Insufficient = null | 'tableMissing' | 'retention' | 'few' | 'empty'
-  const insufficient: Insufficient = ((): Insufficient => {
-    if (loadBusy) return null
-    if (tableMissing) return 'tableMissing'
-    if (!chart) return null
-    // Retention: requested range starts before what the server holds.
-    if (effectiveFrom < isoDateNDaysAgoUtc(89) && displaySeries.length === 0) return 'retention'
-    if (displaySeries.length === 0) return 'empty'
-    if (displaySeries.every((b) => b.unique_users === 0)) return 'empty'
-    if (displaySeries.length < 3) return 'few'
-    return null
-  })()
-  const insufficientKey = insufficient
-    ? `admin.dashboard.activityChartInsufficient${insufficient.charAt(0).toUpperCase()}${insufficient.slice(1)}`
-    : null
 
   const refreshButton = (
     <button
@@ -228,17 +146,6 @@ export function AdminDashboardActivityChart({
       {loadBusy ? t('common.loading') : t('admin.dashboard.activityChartRefresh')}
     </button>
   )
-
-  const resetCustomRange = useCallback(() => {
-    setDateFrom(null)
-    setDateTo(null)
-    setRangeOpen(false)
-  }, [])
-
-  function setQuickRange(d: ActivityChartDays) {
-    resetCustomRange()
-    onDaysChange(d)
-  }
 
   return (
     <AdminCardSection

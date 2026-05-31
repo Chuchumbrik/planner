@@ -328,6 +328,24 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.13', en: '0.7.13' },
+        changes: [
+          {
+            ru: '**Админ-панель (бэкенд):** устранены N+1 запросы в `activityDayUsers` — email теперь берётся из предзагруженного списка пользователей вместо N отдельных вызовов `getUserById`. Добавлена защита от race condition при смене роли: поле `expectedRole` позволяет бэку вернуть 409 если роль была изменена другим администратором.',
+            en: '**Admin panel (backend):** eliminated N+1 queries in `activityDayUsers` — email is now sourced from a pre-loaded user list instead of N separate `getUserById` calls. Added race condition guard for role changes: `expectedRole` field lets the backend return 409 if another admin changed the role concurrently.',
+          },
+          {
+            ru: '**Админ-панель (UI):** исправлен баг — скелеты больше не перекрывают данные при повторной загрузке (только при первоначальной). Добавлен debounce 300ms на поиск пользователей. Рефакторинг 5 хуков через общую утилиту `invokeAdminFn` — устранено дублирование try/catch/signal-логики.',
+            en: '**Admin panel (UI):** fixed bug — skeletons no longer overlay data during refresh (initial load only). Added 300ms debounce to user search. Refactored 5 hooks via shared `invokeAdminFn` utility — eliminated duplicated try/catch/signal boilerplate.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.12', en: '0.7.12' },
         changes: [
           {

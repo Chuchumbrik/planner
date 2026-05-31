@@ -3,9 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { parseMotivatorRoleListResponse } from '@/lib/adminMotivatorRolesList'
 import type { MotivatorRoleRow } from '@/types/adminMonitoring'
-import { formatSupabaseFunctionInvokeError } from '@/lib/supabaseFunctionError'
-import { ADMIN_ROLES_FN } from '@/lib/adminMonitoringConstants'
-import { useLatestRef } from '@/components/admin/useAbortableInvoke'
+import { invokeAdminFn, useLatestRef } from '@/components/admin/useAbortableInvoke'
 
 const ERROR_CODES = [
   'forbidden',
@@ -15,6 +13,7 @@ const ERROR_CODES = [
   'role_lookup_failed',
   'invalid_body',
   'invalid_role',
+  'role_conflict',
   'user_not_found',
   'update_failed',
   'list_failed',
@@ -45,9 +44,10 @@ export function useAdminMotivatorUsers(
   const [loadBusy, setLoadBusy] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [listDegraded, setListDegraded] = useState(false)
-  // remembers which supabase instance was last successfully loaded — skip
-  // re-fetching on every tab toggle but rebind if the client itself changes.
+  const [degradedTables, setDegradedTables] = useState<string[]>([])
   const loadedForClient = useRef<SupabaseClient | null>(null)
+  const loadedAt = useRef<number>(0)
+  const STALE_MS = 5 * 60 * 1000
 
   const load = useCallback(async (signal?: AbortSignal) => {
     if (!supabase) return
@@ -55,29 +55,22 @@ export function useAdminMotivatorUsers(
     setLoadError(null)
     setLoadBusy(true)
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke(ADMIN_ROLES_FN, {
-        body: { action: 'list' },
-        signal,
-      })
-      if (signal?.aborted) return
-      if (fnErr) {
-        const msg = await formatSupabaseFunctionInvokeError(fnErr)
-        setLoadError(mapAdminRolesError(msg, tr))
+      const result = await invokeAdminFn(supabase, { action: 'list' }, signal)
+      if (!result) return
+      if ('error' in result) {
+        setLoadError(mapAdminRolesError(result.error, tr))
         return
       }
-      const body = data && typeof data === 'object' ? (data as Record<string, unknown>) : null
-      const raw = body?.users
-      const next = parseMotivatorRoleListResponse(raw)
+      const next = parseMotivatorRoleListResponse(result.raw.users)
       if (!next) {
         setLoadError(tr('settings.adminRolesErrors.list_failed'))
         return
       }
       setUsers(next)
-      setListDegraded(body?.list_degraded === true)
+      setListDegraded(result.raw.list_degraded === true)
+      setDegradedTables(Array.isArray(result.raw.degraded_tables) ? (result.raw.degraded_tables as string[]) : [])
       loadedForClient.current = supabase
-    } catch (e: unknown) {
-      if (signal?.aborted) return
-      setLoadError(mapAdminRolesError(e instanceof Error ? e.message : String(e), tr))
+      loadedAt.current = Date.now()
     } finally {
       if (!signal?.aborted) setLoadBusy(false)
     }
@@ -85,11 +78,12 @@ export function useAdminMotivatorUsers(
 
   useEffect(() => {
     if (!enabled || !supabase) return
-    if (loadedForClient.current === supabase) return
+    const isStale = Date.now() - loadedAt.current > STALE_MS
+    if (loadedForClient.current === supabase && !isStale) return
     const ctrl = new AbortController()
     void load(ctrl.signal)
     return () => ctrl.abort()
-  }, [load, supabase, enabled])
+  }, [load, supabase, enabled, STALE_MS])
 
-  return { users, setUsers, loadBusy, loadError, listDegraded, load, setLoadError }
+  return { users, setUsers, loadBusy, loadError, listDegraded, degradedTables, load, setLoadError }
 }
