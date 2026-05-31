@@ -325,6 +325,34 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.8', en: '0.7.8' },
+        changes: [
+          {
+            ru: '**Шелл:** «Настройки» теперь всегда видны в боковом меню — раньше скрывались в admin-режиме. Глобальная навигация одинакова на любой странице.',
+            en: '**Shell:** Settings link is now always visible in the sidebar — previously hidden in admin mode. Global nav stays consistent on every page.',
+          },
+          {
+            ru: '**Шелл:** кнопка свернуть/развернуть меню переехала из нижней части сайдбара на правую границу — небольшая круглая иконка со стрелкой между логотипом и первым пунктом меню. Освободилось место внизу, кнопка не выглядит как лишний пункт меню.',
+            en: '**Shell:** sidebar collapse/expand button moved from the bottom into a small circular arrow handle sitting on the sidebar/content border, vertically between the logo and the first nav item. Frees space at the bottom and stops looking like a stray menu item.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Ссылка «Настройки» теперь всегда на месте — даже когда вы в админ-панели.',
+            en: 'The Settings link is always there now — even when you are inside the admin panel.',
+          },
+          {
+            ru: 'Свернуть боковое меню можно маленькой стрелочкой на его правой границе, прямо под логотипом.',
+            en: 'Collapse the sidebar via a small arrow handle on its right edge, right under the logo.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-30', en: '2026-05-30' },
     items: [
       {
