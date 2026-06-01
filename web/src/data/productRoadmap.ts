@@ -364,6 +364,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-01', en: '2026-06-01' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.18', en: '0.7.18' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Краткая сводка (`/admin/roadmap`) — редизайн, этап 2 (Phase 7.5):** блок «План + Идеи» снизу страницы в **две колонки** (на `xl+`). Слева — **План MVP** (фазы 7–13 карточками; текущая фаза с emerald-подсветкой и бейджем «Сейчас», клик раскрывает детали). Справа — **Идеи на потом** тематическими группами со счётчиками и **status-чипами** (предложено/принято/обсуждается/выпущено/отклонено); идея со статусом «выпущено» ведёт на якорь версии в Timeline, «обсуждается» — на тред.',
+            en: '**Quick Summary (`/admin/roadmap`) — redesign, stage 2 (Phase 7.5):** the bottom «Plan + Ideas» block is now **two columns** (on `xl+`). Left — **MVP plan** (phases 7–13 as cards; the current phase has an emerald glow and a «Now» badge, click expands details). Right — **Ideas for later** in thematic groups with counters and **status chips** (proposed/accepted/in-discussion/shipped/rejected); a «shipped» idea links to the version anchor in the Timeline, «in-discussion» to its thread.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Внизу «Краткой сводки» план и идеи теперь стоят рядом в две колонки: видно, над какой фазой работаем сейчас, и в каком статусе каждая идея.',
+            en: 'At the bottom of the Quick Summary, the plan and ideas now sit side by side in two columns: you can see which phase is in progress and the status of each idea.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.17', en: '0.7.17' },
         tag: 'fix',
         changes: [
