@@ -204,10 +204,12 @@ function IdeaRow({ idea, lang }: { idea: RoadmapIdeaEntry; lang: string }) {
 
 type ProductRoadmapPanelProps = {
   className?: string
+  /** Показывать аккордеон релиз-нот. На `/admin/roadmap` их рендерит `RoadmapTimeline` (7.3), поэтому `false`. */
+  showReleaseNotes?: boolean
 }
 
 /** Содержимое «Краткой сводки» — страница админки или тело модалки в настройках. */
-export function ProductRoadmapPanel({ className }: ProductRoadmapPanelProps) {
+export function ProductRoadmapPanel({ className, showReleaseNotes = true }: ProductRoadmapPanelProps) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language === 'en' ? 'en' : 'ru'
 
@@ -279,6 +281,7 @@ export function ProductRoadmapPanel({ className }: ProductRoadmapPanelProps) {
           </div>
         </details>
 
+        {showReleaseNotes ? (
         <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-primary/95 hover:bg-surface-container-low/80">
             <span>{t('settings.roadmapReleaseNotes')}</span>
@@ -357,6 +360,7 @@ export function ProductRoadmapPanel({ className }: ProductRoadmapPanelProps) {
             </div>
           </div>
         </details>
+        ) : null}
 
         <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80">
