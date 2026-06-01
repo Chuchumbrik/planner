@@ -364,6 +364,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-01', en: '2026-06-01' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.19', en: '0.7.19' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Краткая сводка (`/admin/roadmap`) — редизайн, этап 3 (Phase 7.6):** футер-статистика внизу страницы — релизы (всего / за 7 / за 30 дней), идеи по статусам, обсуждения (заглушка до 7.8), и **sparkline скорости релизов** за 12 недель (Recharts) с переходом на Timeline по клику. Агрегации — `lib/roadmapStats.ts` (покрыты тестами).',
+            en: '**Quick Summary (`/admin/roadmap`) — redesign, stage 3 (Phase 7.6):** footer stats at the bottom — releases (total / last 7 / last 30 days), ideas by status, discussions (stub until 7.8), and a **release-velocity sparkline** over 12 weeks (Recharts) that jumps to the Timeline on click. Aggregations in `lib/roadmapStats.ts` (unit-tested).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Внизу «Краткой сводки» появились цифры: сколько релизов и идей, и маленький график темпа выпусков за последние недели.',
+            en: 'The Quick Summary now has a footer with numbers — how many releases and ideas — and a tiny chart of release pace over recent weeks.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.18', en: '0.7.18' },
         tag: 'feat',
         changes: [
