@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { AdminRoadmapHero } from '@/components/admin/AdminRoadmapHero'
+import { RoadmapPlanIdeas } from '@/components/admin/RoadmapPlanIdeas'
 import { RoadmapSearchBar } from '@/components/admin/RoadmapSearchBar'
 import { RoadmapTimeline } from '@/components/admin/RoadmapTimeline'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
@@ -86,7 +87,8 @@ function AdminRoadmapPageInner() {
         <div ref={timelineRef} className="mb-6 mt-4 scroll-mt-4">
           <RoadmapTimeline groups={filteredGroups} filterActive={filterActive} />
         </div>
-        <ProductRoadmapPanel showReleaseNotes={false} />
+        <RoadmapPlanIdeas className="mb-6" />
+        <ProductRoadmapPanel showReleaseNotes={false} showPlanIdeas={false} />
       </div>
     </MotivatorShell>
   )

@@ -446,7 +446,7 @@ create table admin_discussion_subscribers (
 - [x] **7.2** Hero block (Status/What's new/Current focus + Quick-links + ✨Свежее; `relativeTime.ts` + `RoadmapTagChip`; 15 тестов)
 - [x] **7.3** Timeline (лента по дням, tag-чипы §8.2, anchor `#v0.7.15` + copy + подсветка 800ms, «Показать ещё»; глобальный мерж версий; `roadmapTimeline.ts`; 10 тестов)
 - [x] **7.4** Search/filter (sticky-бар, `?q=` debounce 250ms по changes+plainBullets, tag-чипы `?tag=`, range `?from=&to=` через from/to-селекты, reset, счётчик, авто-раскрытие, empty-state; `roadmapFilter.ts`; 12 тестов)
-- [ ] **7.5** 2-col Plan+Ideas
+- [x] **7.5** 2-col Plan+Ideas (xl 2 колонки; План MVP с current-glow/«Сейчас», Идеи со status-чипами §8.3, кликабельные shipped→anchor/discussion; `roadmapIdeaStatusMeta.ts`; 7 тестов)
 - [ ] **7.6** Footer stats + sparkline
 - [ ] **7.7** Reminder 24h
 - [ ] **7.8** Discussions backend

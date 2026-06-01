@@ -206,10 +206,16 @@ type ProductRoadmapPanelProps = {
   className?: string
   /** Показывать аккордеон релиз-нот. На `/admin/roadmap` их рендерит `RoadmapTimeline` (7.3), поэтому `false`. */
   showReleaseNotes?: boolean
+  /** Показывать прогресс-кольцо MVP + аккордеоны «План» и «Идеи». На `/admin/roadmap` — `RoadmapPlanIdeas` (7.5) + Hero, поэтому `false`. */
+  showPlanIdeas?: boolean
 }
 
 /** Содержимое «Краткой сводки» — страница админки или тело модалки в настройках. */
-export function ProductRoadmapPanel({ className, showReleaseNotes = true }: ProductRoadmapPanelProps) {
+export function ProductRoadmapPanel({
+  className,
+  showReleaseNotes = true,
+  showPlanIdeas = true,
+}: ProductRoadmapPanelProps) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language === 'en' ? 'en' : 'ru'
 
@@ -226,31 +232,33 @@ export function ProductRoadmapPanel({ className, showReleaseNotes = true }: Prod
 
   return (
     <div className={cn(className)}>
-      <div
-        className="rounded-lg border border-surface-variant/80 bg-surface-container-low/40 px-4 py-4"
-        role="img"
-        aria-label={t('settings.roadmapMvpProgressCaption', {
-          pct: mvpPct,
-          done: phasesShipped,
-          total: phasesTotal,
-        })}
-      >
-        <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
-          {t('settings.roadmapMvpProgressTitle')}
-        </p>
-        <div className="mt-3 flex flex-col items-center gap-2">
-          <MvpProgressRing shipped={phasesShipped} total={phasesTotal} />
-          <p className="max-w-sm text-center text-sm leading-snug text-on-surface-variant">
-            {t('settings.roadmapMvpProgressCaption', {
-              pct: mvpPct,
-              done: phasesShipped,
-              total: phasesTotal,
-            })}
+      {showPlanIdeas ? (
+        <div
+          className="rounded-lg border border-surface-variant/80 bg-surface-container-low/40 px-4 py-4"
+          role="img"
+          aria-label={t('settings.roadmapMvpProgressCaption', {
+            pct: mvpPct,
+            done: phasesShipped,
+            total: phasesTotal,
+          })}
+        >
+          <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
+            {t('settings.roadmapMvpProgressTitle')}
           </p>
+          <div className="mt-3 flex flex-col items-center gap-2">
+            <MvpProgressRing shipped={phasesShipped} total={phasesTotal} />
+            <p className="max-w-sm text-center text-sm leading-snug text-on-surface-variant">
+              {t('settings.roadmapMvpProgressCaption', {
+                pct: mvpPct,
+                done: phasesShipped,
+                total: phasesTotal,
+              })}
+            </p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className={cn('flex flex-col gap-3', showPlanIdeas && 'mt-6')}>
         <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-primary/95 hover:bg-surface-container-low/80">
             <span>{t('settings.roadmapImplemented')}</span>
@@ -266,6 +274,7 @@ export function ProductRoadmapPanel({ className, showReleaseNotes = true }: Prod
           </div>
         </details>
 
+        {showPlanIdeas ? (
         <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80">
             <span>{t('settings.roadmapMvp')}</span>
@@ -280,6 +289,7 @@ export function ProductRoadmapPanel({ className, showReleaseNotes = true }: Prod
             </ol>
           </div>
         </details>
+        ) : null}
 
         {showReleaseNotes ? (
         <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
@@ -362,6 +372,7 @@ export function ProductRoadmapPanel({ className, showReleaseNotes = true }: Prod
         </details>
         ) : null}
 
+        {showPlanIdeas ? (
         <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low/80">
             <span>
@@ -403,6 +414,7 @@ export function ProductRoadmapPanel({ className, showReleaseNotes = true }: Prod
             </div>
           </div>
         </details>
+        ) : null}
 
         <details className="group rounded-lg border border-surface-variant bg-surface-container-low/50 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-orange-400/95 hover:bg-surface-container-low/80">
