@@ -18,6 +18,7 @@ import {
   SHELL_HEADER_ACTIONS,
   SHELL_PAGE_TITLE,
   shellMainContent,
+  type ShellMainAlign,
   shellMainOffsetClass,
   shellMobileNavLink,
   shellSidebarClass,
@@ -44,6 +45,8 @@ type MotivatorShellProps = {
   title?: string
   children: ReactNode
   wide?: boolean
+  /** 'center' (default) for regular pages, 'left' for data-dense admin views. */
+  align?: ShellMainAlign
   planTier?: PlanTier
 }
 
@@ -126,6 +129,28 @@ function ShellSidebar({
           <BrandMark size="sm" showSubtitle />
         )}
       </div>
+
+      {/* Collapse handle — small floating arrow button sitting ON the right
+          border of the sidebar, between brand title and first nav item.
+          Centered on the border line via `translate-x-1/2`. Hidden on mobile. */}
+      {showCollapseToggle && onToggleCollapsed ? (
+        <button
+          type="button"
+          className={cn(
+            'absolute right-0 top-14 z-[55] hidden translate-x-1/2 md:flex',
+            'h-6 w-6 items-center justify-center rounded-full border border-surface-variant',
+            'bg-surface text-on-surface-variant shadow-sm transition-colors',
+            'hover:border-primary/50 hover:text-primary',
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+          )}
+          aria-label={collapsed ? t('shell.sidebarExpand') : t('shell.sidebarCollapse')}
+          title={collapsed ? t('shell.sidebarExpand') : t('shell.sidebarCollapse')}
+          onClick={onToggleCollapsed}
+        >
+          <MaterialIcon name={collapsed ? 'chevron_right' : 'chevron_left'} size={16} />
+        </button>
+      ) : null}
+
       <nav
         className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-sm"
         aria-label={adminMode ? t('shell.adminNavAria') : t('shell.sideNavAria')}
@@ -157,44 +182,24 @@ function ShellSidebar({
             ) : null}
           </>
         )}
-        {!adminMode ? (
-          <div className="mt-auto border-t border-surface-variant/60 py-3">
-            <NavLink
-              to={SHELL_SETTINGS_NAV.to}
-              className={({ isActive }) =>
-                shellSideNavLink(isActive || settingsActive, collapsed)
-              }
-              title={collapsed ? settingsLabel : undefined}
-              aria-label={collapsed ? settingsLabel : undefined}
-              onClick={onNavigate}
-            >
-              <MaterialIcon name={SHELL_SETTINGS_NAV.icon} size={22} />
-              <span className={collapsed ? 'sr-only' : undefined}>{settingsLabel}</span>
-            </NavLink>
-          </div>
-        ) : null}
-      </nav>
 
-      {showCollapseToggle && onToggleCollapsed ? (
-        <div className={cn('border-t border-surface-variant/60 py-2', collapsed ? 'px-1' : 'px-sm')}>
-          <button
-            type="button"
-            className={cn(
-              'flex min-h-[44px] w-full items-center rounded text-on-surface-variant transition-colors',
-              'hover:bg-surface-container-high hover:text-on-surface',
-              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-              collapsed ? 'justify-center px-2' : 'gap-3 px-md',
-            )}
-            aria-label={collapsed ? t('shell.sidebarExpand') : t('shell.sidebarCollapse')}
-            onClick={onToggleCollapsed}
+        {/* Settings — always visible at the bottom, regardless of nav mode
+            (main / admin / preview). Globally available shortcut. */}
+        <div className="mt-auto border-t border-surface-variant/60 py-3">
+          <NavLink
+            to={SHELL_SETTINGS_NAV.to}
+            className={({ isActive }) =>
+              shellSideNavLink(isActive || settingsActive, collapsed)
+            }
+            title={collapsed ? settingsLabel : undefined}
+            aria-label={collapsed ? settingsLabel : undefined}
+            onClick={onNavigate}
           >
-            <MaterialIcon name={collapsed ? 'chevron_right' : 'chevron_left'} size={22} />
-            <span className={collapsed ? 'sr-only' : 'text-label-md'}>
-              {collapsed ? t('shell.sidebarExpand') : t('shell.sidebarCollapse')}
-            </span>
-          </button>
+            <MaterialIcon name={SHELL_SETTINGS_NAV.icon} size={22} />
+            <span className={collapsed ? 'sr-only' : undefined}>{settingsLabel}</span>
+          </NavLink>
         </div>
-      ) : null}
+      </nav>
 
       <ShellAccountFooter collapsed={collapsed} />
     </aside>
@@ -206,6 +211,7 @@ function MotivatorShellInner({
   title,
   children,
   wide = false,
+  align = 'center',
   planTier: planTierProp,
 }: MotivatorShellProps) {
   const { t } = useTranslation()
@@ -312,7 +318,7 @@ function MotivatorShellInner({
             </div>
           </header>
 
-          <main className={shellMainContent(wide)}>
+          <main className={shellMainContent(wide, align)}>
             <QaClockBanner />
             {children}
           </main>

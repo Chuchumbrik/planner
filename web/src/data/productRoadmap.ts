@@ -18,6 +18,8 @@ export type RoadmapMvpPhase = {
   /** Опционально: то же простым языком (как в релиз-нотах). */
   plain?: LocalizedString
   detailBullets: LocalizedString[]
+  /** Текущая фаза в работе — ровно одна фаза среди плановых имеет `current: true`. */
+  current?: boolean
 }
 
 /** Порядок тематических групп в блоке «Идеи на потом» (см. локали `settings.roadmapIdeaGroup*`). */
@@ -31,6 +33,14 @@ export const ROADMAP_IDEAS_LATER_GROUP_ORDER = [
 
 export type RoadmapIdeaLaterGroupId = (typeof ROADMAP_IDEAS_LATER_GROUP_ORDER)[number]
 
+/** Жизненный цикл идеи на странице «Краткая сводка». */
+export type RoadmapIdeaStatus =
+  | 'proposed'
+  | 'accepted'
+  | 'rejected'
+  | 'in-discussion'
+  | 'shipped'
+
 /** Идея после MVP: заголовок + кратко + список под раскрывашкой */
 export type RoadmapIdeaEntry = {
   title: LocalizedString
@@ -40,7 +50,29 @@ export type RoadmapIdeaEntry = {
   ideaLaterGroup?: RoadmapIdeaLaterGroupId
   /** Порядок внутри группы (меньше — выше). По умолчанию `500`. */
   ideaLaterOrder?: number
+  /** Статус идеи; по умолчанию при сборке UI — `proposed`. */
+  status?: RoadmapIdeaStatus
+  /** Если `shipped` — версия выпуска (`0.7.15`); ведёт на anchor `#v0.7.15` в Timeline. */
+  linkedVersion?: string
+  /** Если `in-discussion` — id треда в `/admin/discussions`. */
+  linkedDiscussion?: string
 }
+
+/**
+ * Категория выпуска (conventional-commit-стиль) — для tag-чипа и фильтра в Timeline.
+ * Цвета/иконки — см. `obsidian-motivator/20-Phase-7-План-краткой-сводки.md` §8.2.
+ */
+export type RoadmapReleaseTag =
+  | 'feat'
+  | 'fix'
+  | 'refactor'
+  | 'docs'
+  | 'chore'
+  | 'test'
+  | 'build'
+  | 'ci'
+  | 'perf'
+  | 'style'
 
 /**
  * Один выпуск за календарный день (отдельный блок в UI под датой): список правок +
@@ -49,6 +81,10 @@ export type RoadmapIdeaEntry = {
 export type RoadmapReleaseNoteItem = {
   /** Версия приложения (`package.json` на момент выпуска), в которой вышли перечисленные изменения; без суффикса +git. */
   releasedInVersion: LocalizedString
+  /** Категория выпуска для tag-чипа/фильтра. Backfill — `scripts/migrate-release-tags.mjs`. */
+  tag?: RoadmapReleaseTag
+  /** Anchor для прямой ссылки (`v0.7.10`). Если не указан — авто-derive `v${semver}` при сборке UI. */
+  anchor?: string
   /** Пункты изменений (технические допустимы); несколько правок — несколько элементов массива. */
   changes: LocalizedString[]
   /** Суть для пользователя без погружения в код; в модалке — отдельная раскрывашка. */
@@ -325,10 +361,383 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-06-01', en: '2026-06-01' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.16', en: '0.7.16' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Краткая сводка (`/admin/roadmap`) — редизайн, этап 1 (Phase 7.1–7.4):** **Hero** (`AdminRoadmapHero`) — прогресс MVP, карточка свежего релиза с tag-чипом и значком «✨ Свежее» (<24ч), текущая фаза в работе, quick-links со счётчиками. **Timeline** (`RoadmapTimeline`) заменил аккордеон релиз-нот: лента по календарным датам, версии с цветными tag-чипами, anchor `#v0.7.16` с copy-в-буфер и подсветкой при переходе, «Показать ещё».',
+            en: '**Quick Summary (`/admin/roadmap`) — redesign, stage 1 (Phase 7.1–7.4):** **Hero** (`AdminRoadmapHero`) — MVP progress, latest-release card with a tag chip and «✨ Fresh» badge (<24h), current phase, quick-links with counters. **Timeline** (`RoadmapTimeline`) replaced the release-notes accordion: a date-grouped feed, versions with colored tag chips, `#v0.7.16` anchors with copy-to-clipboard and highlight on navigation, «Show more».',
+          },
+          {
+            ru: '**Поиск/фильтр** (`RoadmapSearchBar`): sticky-бар — поиск по тексту изменений (`?q=`, debounce 250ms), мультивыбор тегов (`?tag=feat,fix`), диапазон версий (`?from=&to=`), счётчик «Найдено X из Y», сброс; совпадения раскрываются автоматически, состояние — в URL.',
+            en: '**Search/filter** (`RoadmapSearchBar`): sticky bar — full-text search over changes (`?q=`, 250ms debounce), tag multi-select (`?tag=feat,fix`), version range (`?from=&to=`), «Found X of Y» counter, reset; matches auto-expand, state lives in the URL.',
+          },
+          {
+            ru: '**Модель данных:** у выпусков — поля `tag`/`anchor`, у идей — `status`, у текущей фазы — `current` (бэкфилл скриптом `scripts/migrate-release-tags.mjs`: 110 выпусков размечены тегами). Чистая логика — `lib/relativeTime.ts`, `lib/roadmapTimeline.ts`, `lib/roadmapFilter.ts`, покрыта юнит-тестами.',
+            en: '**Data model:** releases gained `tag`/`anchor`, ideas gained `status`, the current phase gained `current` (backfilled by `scripts/migrate-release-tags.mjs`: 110 releases tagged). Pure logic in `lib/relativeTime.ts`, `lib/roadmapTimeline.ts`, `lib/roadmapFilter.ts` with unit tests.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Страница «Краткая сводка» переделана: сверху видно прогресс и свежий релиз, есть поиск по изменениям и фильтр по типу/версии, история релизов — удобной лентой по датам со ссылками на конкретную версию.',
+            en: 'The Quick Summary page was reworked: progress and the latest release up top, search over changes and a type/version filter, and release history as a tidy date feed with links to a specific version.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.7.15', en: '0.7.15' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Активность — анимация баров:** включён Recharts `isAnimationActive` на BarChart — столбцы растут от базовой линии при первом появлении и плавно перетекают к новым высотам при смене фильтра (период / роль / диапазон). 360ms ease-out — быстро, не лагает на rapid clicks.',
+            en: '**Activity — bar animations:** Recharts `isAnimationActive` enabled on the BarChart — bars grow from the baseline on first paint and morph smoothly when filters change (period / role / range). 360ms ease-out — fast, no lag on rapid clicks.',
+          },
+          {
+            ru: '**KPI-тренд — анимация Area-кривой:** Area-chart `isAnimationActive` тоже включён, 500ms ease-out. Кривая рисуется от первой точки к последней при появлении и плавно меняет форму при обновлении данных.',
+            en: '**KPI trend — Area animation:** Area chart `isAnimationActive` enabled, 500ms ease-out. The curve draws from first to last point on appearance and morphs smoothly when data updates.',
+          },
+          {
+            ru: '**KPI-тренд — cross-fade при смене метрики:** клик по другой KPI-карточке (Всего → MAU → Неактивны) теперь даёт fade-in нового графика вместо мгновенной замены. Реализовано через `key={activeMetric}` + `animate-admin-fade-in` на обёртке — React перемонтирует Area-chart и Recharts проигрывает свою анимацию рисования.',
+            en: '**KPI trend — cross-fade on metric switch:** clicking a different KPI card (Total → MAU → Inactive) now fades the new chart in instead of swapping in place. Implemented via `key={activeMetric}` + `animate-admin-fade-in` on the wrapper — React remounts the Area chart and Recharts plays its own draw animation.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Бары графика активности теперь плавно вырастают при появлении и красиво перетекают, когда меняешь период или роль.',
+            en: 'Activity chart bars now grow smoothly on appearance and morph fluidly when you change the period or role.',
+          },
+          {
+            ru: 'Графики тренда KPI анимируются при рисовании и плавно сменяют друг друга при переключении между метриками.',
+            en: 'KPI trend charts animate as they draw and fade smoothly between metrics when you switch.',
+          },
+        ],
+      },
+      {
+        releasedInVersion: { ru: '0.7.14', en: '0.7.14' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Вкладка «Пользователи» — каскадные анимации:** контент вкладки обёрнут в `.admin-summary-stagger` — тот же CSS-каскад fade-in, что использует «Сводка». Обе вкладки админки теперь оживают одинаково при открытии.',
+            en: '**Users tab — cascading animations:** the tab content is wrapped in `.admin-summary-stagger` — the same fade-in cascade used by Summary. Both admin tabs now feel consistent on entrance.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Вкладка «Пользователи» оживилась так же, как «Сводка» — блоки плавно появляются при открытии.',
+            en: 'The Users tab now animates in just like Summary — blocks fade in smoothly on open.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.13', en: '0.7.13' },
+        tag: 'perf',
+        changes: [
+          {
+            ru: '**Админ-панель (бэкенд):** устранены N+1 запросы в `activityDayUsers` — email теперь берётся из предзагруженного списка пользователей вместо N отдельных вызовов `getUserById`. Добавлена защита от race condition при смене роли: поле `expectedRole` позволяет бэку вернуть 409 если роль была изменена другим администратором.',
+            en: '**Admin panel (backend):** eliminated N+1 queries in `activityDayUsers` — email is now sourced from a pre-loaded user list instead of N separate `getUserById` calls. Added race condition guard for role changes: `expectedRole` field lets the backend return 409 if another admin changed the role concurrently.',
+          },
+          {
+            ru: '**Админ-панель (UI):** исправлен баг — скелеты больше не перекрывают данные при повторной загрузке (только при первоначальной). Добавлен debounce 300ms на поиск пользователей. Рефакторинг 5 хуков через общую утилиту `invokeAdminFn` — устранено дублирование try/catch/signal-логики.',
+            en: '**Admin panel (UI):** fixed bug — skeletons no longer overlay data during refresh (initial load only). Added 300ms debounce to user search. Refactored 5 hooks via shared `invokeAdminFn` utility — eliminated duplicated try/catch/signal boilerplate.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.12', en: '0.7.12' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Меню пользователя — адаптивный popup:** дроп-меню теперь `min-w-[14rem]` и `max-w-[calc(100vw-2rem)]` — содержимое не плющится даже когда сайдбар свёрнут. Версия приложения для admin/beta рендерится в **2 строки**: semver сверху (`0.7.12`), build-sha (`+abc1234`) — отдельной строкой моноширинно.',
+            en: '**User menu — adaptive popup:** the dropdown is now `min-w-[14rem]` and `max-w-[calc(100vw-2rem)]` — content stays readable even when the sidebar is collapsed. The version string for admin/beta renders in **2 lines**: semver on top (`0.7.12`), build SHA (`+abc1234`) on its own monospace line.',
+          },
+          {
+            ru: '**Сводка — анимации появления:** добавлен общий keyframe `admin-fade-in` (opacity + translateY 4px, 240ms). Верхне-уровневые блоки страницы анимируются каскадно (0/60/120/180/240ms между блоками) через CSS-класс `.admin-summary-stagger`. Уважает `prefers-reduced-motion`.',
+            en: '**Summary — entrance animations:** new shared keyframe `admin-fade-in` (opacity + translateY 4px, 240ms). Top-level page blocks animate in a cascade (0/60/120/180/240ms stagger) via `.admin-summary-stagger`. Respects `prefers-reduced-motion`.',
+          },
+          {
+            ru: '**Рекорд активности — dismiss персистит:** закрытая плашка больше **не возвращается** при смене периода/роли/диапазона. Она вернётся только при перезагрузке страницы или при появлении нового рекорда (другая дата/число).',
+            en: '**Activity record — dismiss persists:** the dismissed banner **no longer reappears** when filters change (period/role/range). It only returns on page reload or when a new record appears (different date/count).',
+          },
+          {
+            ru: '**Активность — описание в подсказку:** длинный текст под заголовком «Активность в приложении» убран — теперь он живёт в info-подсказке (ⓘ) рядом с заголовком, как у остальных метрик. Карточка стала компактнее.',
+            en: '**Activity — description in tooltip:** the long subtitle under "App activity" is gone — it now lives in an info tooltip (ⓘ) next to the title, like other metrics. The card is more compact.',
+          },
+          {
+            ru: '**Подсказки — явные временные окна:** в каждой подсказке метрики добавлено явное время в скобках: `(период: последние 7 дней)`, `(на момент запроса)`, `(порог: 14+ дней)` и т.д. Не нужно гадать что значит «за неделю» — точно понятно.',
+            en: '**Tooltips — explicit time windows:** every metric tooltip now ends with an explicit window in parentheses: `(window: last 7 days)`, `(at request time)`, `(threshold: 14+ days)`, etc. No guesswork about what "this week" means.',
+          },
+          {
+            ru: '**Подсказки — не уходят за край экрана:** добавлено runtime-измерение позиции bubble. Если правый или левый край вылетает за viewport — подсказка сдвигается обратно через `transform: translateX(...)` так чтобы целиком умещаться. Работает на ресайз и скролл.',
+            en: '**Tooltips — no off-screen clipping:** added runtime measurement of the bubble position. If either edge would clip the viewport, the bubble is shifted back into view via `transform: translateX(...)`. Recomputes on resize and scroll.',
+          },
+          {
+            ru: '**Активность — «недостаточно данных» с причиной:** вместо одного серого «нет данных» теперь жёлтая плашка с конкретной причиной: (а) серия пуста (`нет активности в периоде`), (б) меньше 3 точек (`расширьте диапазон`), (в) диапазон уходит за 90-дневный retention (`сервер не хранит дольше`), (г) серверная таблица не настроена (`миграция 006`). Метрика не строится — теперь видно почему.',
+            en: '**Activity — "insufficient data" with reason:** instead of a single grey "no data" message, a yellow banner explains exactly why: (a) empty series in the range, (b) fewer than 3 points, (c) range goes beyond 90-day retention, (d) server table not set up (migration 006). When the chart is empty, you now see WHY.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Меню пользователя теперь нормально влезает даже со свёрнутым сайдбаром, версия — на две строки.',
+            en: 'The user menu now fits even with the sidebar collapsed; version is on two lines.',
+          },
+          {
+            ru: 'Страница сводки оживилась — блоки плавно появляются каскадом при открытии.',
+            en: 'The summary page now animates in a smooth cascade when opened.',
+          },
+          {
+            ru: 'Закрытая плашка «Рекорд активности» не появляется снова при каждом клике на фильтр.',
+            en: 'A dismissed "Activity record" banner no longer keeps popping back on every filter click.',
+          },
+          {
+            ru: 'Подсказки у метрик не обрезаются у края экрана и всегда явно указывают за какой период считается метрика.',
+            en: 'Metric tooltips never clip at the screen edge and always state the exact time window.',
+          },
+          {
+            ru: 'Если у графика активности нет данных — жёлтая плашка точно объясняет почему (нет визитов, мало точек, истёк retention или таблица не настроена).',
+            en: 'When the activity chart has no data, a yellow banner explains the exact reason (no visits, too few points, retention exceeded, or table not configured).',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.11', en: '0.7.11' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**График активности — нет больше горизонтального скролла:** удалена обёртка `overflow-x-auto` с `minWidth` по числу столбцов. Recharts сам адаптирует ширину баров под доступное место, лейблы оси X прорежаются автоматически (`xAxisInterval` 0 / 2 / 5 / 10 в зависимости от числа дней).',
+            en: '**Activity chart — no more horizontal scroll:** removed the `overflow-x-auto` wrapper with `minWidth` based on bar count. Recharts adapts bar width to the available space; X-axis labels thin out automatically (`xAxisInterval` 0 / 2 / 5 / 10 depending on day count).',
+          },
+          {
+            ru: '**Поля выбора даты — стиль соответствует тёмной теме:** добавлен `[color-scheme:dark]` на оба `<input type="date">` — браузер открывает календарь в тёмной палитре. Сами инпуты переоформлены под surface-container с акцентом emerald при фокусе.',
+            en: '**Date pickers — match the dark theme:** added `[color-scheme:dark]` to both `<input type="date">` so the browser-native calendar popup uses the dark palette. The inputs themselves are styled with surface-container and emerald focus accent.',
+          },
+          {
+            ru: '**Плашка «Рекорд активности» — можно закрыть:** добавлена кнопка-крестик. Состояние «закрыто» хранится в памяти страницы (по ключу `дата|число`) и **сбрасывается** при смене любого фильтра (период, роль, диапазон дат) или перезагрузке. Закрытая плашка снова всплывает если рекорд обновился.',
+            en: '**Activity record banner — dismissible:** added a close (×) button. Dismissed state is in-memory (keyed by `date|count`) and **resets** on any filter change (period, role, date range) or page reload. The dismissed banner re-appears when the record updates.',
+          },
+          {
+            ru: '**Фильтры графика — компактнее:** три ряда (Период / Свой диапазон / Роль) свёрнуты в один. Кнопка «📅 Свой период» включается по клику, открывая инлайн-блок с двумя полями дат. Когда диапазон активен, кнопка превращается в чип с текущими датами; «×» рядом — сброс.',
+            en: '**Chart filters — compacted:** the three rows (Period / Custom range / Role) folded into one. A "📅 Custom range" toggle button reveals the inline date pickers; when a range is active, the button becomes a chip with the current dates; × beside it resets.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'График активности больше не уезжает за край экрана — все столбцы влезают в видимую область.',
+            en: 'The activity chart no longer scrolls horizontally — all bars fit on screen.',
+          },
+          {
+            ru: 'Календарь для выбора даты теперь тёмный, в одной палитре с сайтом.',
+            en: 'The date-picker calendar is now dark, matching the site palette.',
+          },
+          {
+            ru: 'Плашку «Рекорд активности» можно закрыть крестиком; она вернётся при следующем обновлении страницы или изменении фильтров.',
+            en: 'You can dismiss the "Activity record" banner with the ×; it reappears on next page reload or when filters change.',
+          },
+          {
+            ru: 'Фильтры графика стали в один ряд — выбор периода, диапазона и роли больше не занимает три строки.',
+            en: 'Chart filters are on a single row now — period, range and role selectors no longer take three lines.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.10', en: '0.7.10' },
+        tag: 'docs',
+        changes: [
+          {
+            ru: '**Админ → Сводка:** все подсказки на карточках метрик переписаны человеческим языком — без переменных и технических терминов, просто что значит метрика и почему она важна.',
+            en: '**Admin → Summary:** all KPI tooltips rewritten in plain language — no variables or technical jargon, just what the metric means and why it matters.',
+          },
+          {
+            ru: '**Админ → Сводка:** названия метрик стали проще и короче: «MAU 30д» → «Активные за месяц», «Vault без синхр. 14д+» → «Давно не сохраняли», «С vault» → «Сохранили данные», и т.д.',
+            en: '**Admin → Summary:** metric labels are shorter and friendlier: "MAU 30d" → "Active this month", "Vault stale 14d+" → "Not saved recently", "With vault" → "Saved data", etc.',
+          },
+          {
+            ru: '**Подсказки:** ширина подсказок стала адаптивной (`min(20rem, viewport-2rem)` на мобиле, `min(22rem)` на десктопе) — текст не сплющивается, читать комфортнее.',
+            en: '**Tooltips:** info tooltip width is adaptive now (`min(20rem, viewport-2rem)` mobile, `min(22rem)` desktop) — text no longer feels cramped.',
+          },
+          {
+            ru: '**Метрика «По ролям»:** добавлены пунктирные разделители между строками для удобного чтения «лейбл → число», цифры уменьшены до 13px чтобы не давить визуально на текст ролей.',
+            en: '**"By role" metric:** dashed dividers between rows for easy label-to-count tracking; counts reduced to 13px so they don\'t visually dominate the role labels.',
+          },
+          {
+            ru: '**Активность в приложении:** добавлен **полноценный диапазон дат** (input type=date «с — по») рядом с быстрыми пресетами 7/30/90 дней. Можно выбрать произвольный период внутри последних 90 дней.',
+            en: '**App activity:** **full date-range picker** (from / to inputs) added alongside the 7/30/90-day quick presets. Pick any custom window within the last 90 days.',
+          },
+          {
+            ru: '**Активность → Рекорд:** график автоматически находит пик активности за выбранный период, подсвечивает столбец золотым и показывает плашку «Рекорд активности: N человек · 14 мая 2026». Дефолтный период — 90 дней, чтобы рекорд гарантированно попал в обзор.',
+            en: '**Activity → Record:** the chart automatically finds the activity peak in the selected range, highlights that bar in gold and shows a "Activity record: N people · May 14, 2026" badge. Default range is 90 days so the record is always visible.',
+          },
+          {
+            ru: '**Меню пользователя:** для admin и beta_tester в дропдауне меню (под кнопкой «Выйти из аккаунта») теперь видна версия приложения `APP_VERSION` (`semver+git-short-sha`) — удобно цеплять в баг-репортах. Обычным пользователям не показывается.',
+            en: '**User menu:** admin and beta_tester users now see the app version `APP_VERSION` (`semver+git-short-sha`) in the account dropdown (below the sign-out button) — handy for attaching to bug reports. Hidden from regular users.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Все подсказки на карточках админ-сводки переписаны простым языком — теперь понятно даже без знания кода.',
+            en: 'All admin-summary tooltips rewritten in plain language — understandable without knowing the code.',
+          },
+          {
+            ru: 'Названия метрик стали короче и яснее: «Активные за месяц», «Заходили за неделю», «Давно не сохраняли».',
+            en: 'Metric names are shorter and clearer: "Active this month", "Visited this week", "Not saved recently".',
+          },
+          {
+            ru: 'На графике активности можно выбрать произвольный диапазон дат, а пиковый день автоматически подсвечивается как достижение с золотой плашкой.',
+            en: 'On the activity chart you can pick any date range, and the peak day is automatically highlighted as an achievement with a gold badge.',
+          },
+          {
+            ru: 'Если у вас роль admin или beta-тестер — версия приложения теперь видна в меню под кнопкой выхода (полезно для баг-репортов).',
+            en: 'If you are an admin or beta tester, the app version is now visible in the menu below the sign-out button (handy for bug reports).',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.9', en: '0.7.9' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**Мобильная версия:** кнопка «Создать задачу» и кнопка «Завести дефект» больше не перекрываются нижним меню — оба FAB сдвинуты вверх над bottom-nav (5rem от низа экрана с учётом safe-area-inset). На десктопе расположение прежнее.',
+            en: '**Mobile:** Create task and File defect FAB buttons no longer hide behind the bottom navigation — both moved up above the bottom-nav (5rem from viewport bottom with safe-area inset). Desktop position unchanged.',
+          },
+          {
+            ru: '**Админ → Сводка:** метрика «По ролям» переехала с однострочного текста (`admin 1 · beta 5 · user 42`, жирный) на компактную мини-таблицу из 3 строк — каждая роль с цветным лейблом (admin → emerald, beta → amber, user → muted) и числом справа в моноширинном шрифте. Жирность убрана — это не одно число, а группа значений.',
+            en: '**Admin → Summary:** the "By role" metric switched from a single bold line (`admin 1 · beta 5 · user 42`) to a 3-row compact mini-table — each role with a coloured label (admin → emerald, beta → amber, user → muted) and right-aligned monospace count. Removed the bold weight since this is a grouped breakdown, not a single headline number.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На телефоне круглые кнопки внизу экрана теперь видны полностью и не залезают под меню.',
+            en: 'On mobile, the round bottom-screen buttons are fully visible and no longer hide under the menu.',
+          },
+          {
+            ru: 'В админ-сводке «По ролям» теперь показывается мини-таблицей с цветными метками для каждой роли — легче читать чем длинная строка.',
+            en: 'The admin "By role" metric is now a small table with coloured per-role labels — easier to scan than the long single line.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-31', en: '2026-05-31' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.8', en: '0.7.8' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Шелл:** «Настройки» теперь всегда видны в боковом меню — раньше скрывались в admin-режиме. Глобальная навигация одинакова на любой странице.',
+            en: '**Shell:** Settings link is now always visible in the sidebar — previously hidden in admin mode. Global nav stays consistent on every page.',
+          },
+          {
+            ru: '**Шелл:** кнопка свернуть/развернуть меню переехала из нижней части сайдбара на правую границу — небольшая круглая иконка со стрелкой между логотипом и первым пунктом меню. Освободилось место внизу, кнопка не выглядит как лишний пункт меню.',
+            en: '**Shell:** sidebar collapse/expand button moved from the bottom into a small circular arrow handle sitting on the sidebar/content border, vertically between the logo and the first nav item. Frees space at the bottom and stops looking like a stray menu item.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Ссылка «Настройки» теперь всегда на месте — даже когда вы в админ-панели.',
+            en: 'The Settings link is always there now — even when you are inside the admin panel.',
+          },
+          {
+            ru: 'Свернуть боковое меню можно маленькой стрелочкой на его правой границе, прямо под логотипом.',
+            en: 'Collapse the sidebar via a small arrow handle on its right edge, right under the logo.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-05-30', en: '2026-05-30' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.7', en: '0.7.7' },
+        tag: 'style',
+        changes: [
+          {
+            ru: '**CSS-токены:** добавлены утилиты `.gap-md` и `.md\\:gap-md` (24px) — раньше класс `md:gap-md` был no-op и сетки не масштабировались на md+. Добавлены `.xl\\:space-y-lg` и `.xl\\:p-lg` для xl-брейкпоинта — разделители и отступы в админ-панели теперь увеличиваются на широких экранах.',
+            en: '**CSS tokens:** added `.gap-md` and `.md\\:gap-md` (24px) — previously `md:gap-md` was a no-op so grids never scaled up at md+. Added `.xl\\:space-y-lg` and `.xl\\:p-lg` for the xl breakpoint — admin panel section spacing now grows on wide screens.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-05-29', en: '2026-05-29' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.6', en: '0.7.6' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Шелл:** контейнер `shellMainContent` принимает `align` — обычные страницы остались по центру, админ-страницы (`/admin/*`) прижаты к меню слева. Раньше изменение «прижать влево» применялось ко всем страницам.',
+            en: '**Shell:** `shellMainContent` now takes an `align` prop — regular pages stay centered, admin pages (`/admin/*`) hug the left sidebar. Previously the left-hug applied globally.',
+          },
+          {
+            ru: '**Админ → Доступность:** info-подсказки (ⓘ) стали `<button>` — фокус с клавиатуры, `:focus-visible`-обводка, клик по иконке не открывает тренд KPI; collapse-кнопка карточек получила `aria-label` + `aria-expanded` + `aria-controls`.',
+            en: '**Admin → Accessibility:** info tooltips (ⓘ) are now real `<button>`s — keyboard focusable with `:focus-visible` ring; click on the tooltip no longer toggles the KPI trend zone; collapse buttons gained `aria-label` + `aria-expanded` + `aria-controls`.',
+          },
+          {
+            ru: '**Админ → Хуки:** все 5 admin-хуков убрали `t` из deps через `useLatestRef` — смена языка больше не вызывает refetch overview/activity/kpi/users/dayUsers. Извлечён общий примитив `useAbortableInvoke` для AbortController-паттерна.',
+            en: '**Admin → Hooks:** all 5 admin hooks dropped `t` from deps via `useLatestRef` — switching locale no longer refetches overview/activity/kpi/users/dayUsers. Common AbortController pattern extracted as `useAbortableInvoke`.',
+          },
+          {
+            ru: '**Админ → Корректность:** `Неактивны 30д` зажат в диапазон [0%, 100%] (раньше при MAU > total мог быть отрицательным); `applyRole` получил AbortController + mountedRef-guard от setState-после-unmount; самопонижение admin → user теперь требует включить чекбокс «Я понимаю».',
+            en: '**Admin → Correctness:** `Inactive 30d` is clamped to [0%, 100%] (previously could be negative if MAU > total); `applyRole` got AbortController + mounted-ref guard against setState-after-unmount; self-demote admin→user now requires ticking the "I understand" checkbox.',
+          },
+          {
+            ru: '**Админ → Форматы:** даты в таблицах перешли на полный год (4 цифры) вместо `26` — раньше теряли век. Все timestamps по местному времени админа.',
+            en: '**Admin → Formats:** admin table dates now show full 4-digit year instead of `26` — century is no longer dropped. All timestamps in the admin\'s local time.',
+          },
+          {
+            ru: '**Админ → Полировка:** Bar `onClick` графика активности теперь обращается к `payload` с runtime-guard вместо unchecked-cast; `renderTooltip` тренда обёрнут в `useCallback`; KPI-карточки и вторичные метрики последовательно показывают skeleton, никакого «—» вспышкой на initial-mount.',
+            en: '**Admin → Polish:** activity chart Bar `onClick` reads `payload` with runtime guard (was an unchecked cast); KPI trend `renderTooltip` wrapped in `useCallback`; KPI cards and secondary stats now show skeleton uniformly, no `—` flash on initial mount.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Обычные страницы (Сегодня, Неделя, Настройки) снова по центру экрана — изменение для админки больше не влияет на остальные страницы.',
+            en: 'Regular pages (Today, Week, Settings) are back to being centered — the admin-page tweak no longer leaks to everywhere.',
+          },
+          {
+            ru: 'Подсказки рядом с метриками теперь доступны с клавиатуры, а тап по ним больше не открывает график.',
+            en: 'Info hints next to metrics are now keyboard-accessible, and tapping them no longer opens the chart.',
+          },
+          {
+            ru: 'Снятие с себя роли admin теперь нужно подтвердить отдельной галочкой — случайный клик уже не лишит доступа.',
+            en: 'Removing your own admin role now requires ticking a separate checkbox — an accidental click can no longer lock you out.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.5', en: '0.7.5' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Админ → Сводка:** bento-сетка hero KPI (высокая «Всего», широкая «Неактивны 30д»), info-подсказки у метрик, группы вторичной статистики (активность / vault / платформа), кнопка «Обновить» и время последней загрузки.',
@@ -337,6 +746,10 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
           {
             ru: '**Админ:** горизонтальные вкладки вместо бокового меню; drill-down по дню — role-бейджи и компактная панель; общие компоненты `AdminKpiCard`, `AdminCardSection`, `InfoTooltip`, `RoleBadge`.',
             en: '**Admin:** horizontal tabs instead of sidebar nav; day drill-down uses role badges and a compact panel; shared `AdminKpiCard`, `AdminCardSection`, `InfoTooltip`, `RoleBadge` components.',
+          },
+          {
+            ru: '**Админ → вёрстка:** единые отступы (`ADMIN_*` токены), «Обновить» в шапке вкладки, KPI по центру в bento-ячейках, адаптивная высота графиков, вложенная панель drill-down без двойной рамки.',
+            en: '**Admin → layout:** unified spacing (`ADMIN_*` tokens), Refresh in tab header, centered KPI values in bento cells, responsive chart heights, nested drill-down panel without double card chrome.',
           },
         ],
         plainBullets: [
@@ -348,6 +761,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.7.4', en: '0.7.4' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Админ → Обзор:** редизайн дашборда — hero-строка 4 KPI (text-4xl, цветные акценты), компактные вторичные метрики, графики активности и KPI-тренда переведены на Recharts (BarChart / AreaChart).',
@@ -380,6 +794,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Админ → Сводка:** по клику на KPI (**всего пользователей**, **регистрации**, **MAU 30д**, **отток**) — мини-график тренда по месяцам; Edge **`kpiTrend`**.',
@@ -412,6 +827,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Shell / планировщик:** сворачиваемый **sidebar** (иконки ↔ подписи, состояние в **localStorage**); единые отступы на **`/app`**; переключатель **диаграмм** рядом с **Фильтры**; бейдж **черновиков** на FAB — непрозрачный круг; **версия сборки** только в **Настройках** (убрана из footer sidebar).',
@@ -476,6 +892,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Планировщик — полировка UX:** виджет **End of Day** открывает ритуал/отчёт (кнопки EOD убраны из toolbar); **FAB «+»** на всех вкладках — на desktop компактный у правого края, черновики на бейдже; чекбоксы задач — **`motivator-checkbox`**; фильтры — отступы и сетка; неделя/месяц — «Закрыто по плану» вместо дубля %; отчёты — тонкий горизонтальный скролл графика.',
@@ -544,6 +961,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'fix',
         changes: [
           {
             ru: '**QA MVP 1.0.0 — критичные фиксы:** восстановлена ширина **`max-w-sm/md/lg`** (login, модалки, onboarding); **«Продолжить черновик → Сохранить»** снова создаёт задачу; **неделя** — ось времени скроллится вместе с колонками; **«Повторить»** при ошибке sync повторяет **upload**, а не перезагрузку vault; push **`?highlightTask=`** — scroll и подсветка карточки; EOD ждёт отправку на сервер; битый seed в localStorage — экран восстановления вместо вечной «Инициализации…».',
@@ -559,6 +977,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Design 2.0 — навигация и настройки:** вкладки Stitch на **`/settings`** (`SettingsTabLayout`); прототипы **`/prototype/*`** и **AI-ассистент** (stub) — в sidebar / bottom nav для **admin** / **beta_tester**; глобальная кнопка AI → правая панель; **Настройки** внизу sidebar; hash **`#privacy`** для seed; **`RequireTesterPreview`**.',
@@ -574,6 +993,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'style',
         changes: [
           {
             ru: '**Design 2.0 — дизайн-система и планировщик:** подключён **Geist**, шкала типографики и **`designClasses`**; **MotivatorShell** — safe-area, крупные зоны нажатия, версия внизу sidebar; **День** — stat-карточки, mobile **FAB «+»**, chips групп на карточках, подсветка **просрочки**; **Неделя** и **Месяц** — stat-ряд, колонка «сегодня», просрочка в сетке/ячейках, подсказка **«скрыто фильтром»**, ширина контента до **1200px**.',
@@ -589,6 +1009,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Design 2.0 — модалки и вторичные экраны:** единые **`MODAL_*`** и **`ALERT_WARNING_*`** вместо янтарных плашек; обновлены создание/редактирование задачи, EOD, «Краткая сводка», дефект, cookie; вход, онбординг, настройки (seed/vault), баннеры синхронизации; прототипы **`/prototype/*`** на **`rounded-card`**.',
@@ -609,6 +1030,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Админ-панель и shell:** роли — **«Доступы»** (`/admin/access`); **«Краткая сводка»** для admin — `/admin/roadmap`; `/settings#admin` → redirect; вкладка «Администрирование» убрана из **Настроек**. Footer: выход по клику на блок аккаунта. Desktop: **FAB «+»** в строке фильтров; бейдж черновиков **над** «+».',
@@ -624,6 +1046,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'style',
         changes: [
           {
             ru: '**Design 2.0 (ветка `design-2.0`):** единая тёмная тема по Stitch — primary `#4edea3`, шрифты Inter/Geist, карточки и поля **`motivator-*`**; оболочка **`MotivatorShell`** (навигация, план **Free**); обновлены лендинг, вход, онбординг, планировщик (день/неделя/месяц), модалки задач и EOD, настройки, отчёты, «Краткая сводка», дефекты, cookie-баннер; статические прототипы **`/prototype/*`**.',
@@ -644,6 +1067,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.7.3', en: '0.7.3' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Неделя / #60:** вертикальный скролл только у **семи колонок дней** — заголовки и «без времени» остаются на одной сетке с телом, колонки не «уезжают» из‑за полосы прокрутки.',
@@ -661,6 +1085,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.7.2', en: '0.7.2' },
+        tag: 'fix',
         changes: [
           {
             ru: '**Vault / #46, #48:** при ошибке **первой** загрузки с сервера **`remoteHydrated`** остаётся **false** (раньше ставился **true** — можно было править без сохранённой строки на сервере); при первом **создании** пустого vault без успешного **upsert** — тоже **false**. Пока гидрация не завершена — **полноэкранный** оверлей с текстом и кнопкой **«Повторить»** при ошибке.',
@@ -693,6 +1118,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.7.1', en: '0.7.1' },
+        tag: 'fix',
         changes: [
           {
             ru: '**Фаза 7 (7a.1), `0.7.1` (DR-014):** онбординг по наличию vault на сервере (новый — только генерация + подтверждение сохранения seed; возврат — только импорт); восстановление ключа на `/app` без выхода; предупреждение при выходе; сброс пароля аккаунта; согласие на ПД при регистрации; после входа — `/app`.',
@@ -708,6 +1134,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.7.0', en: '0.7.0' },
+        tag: 'fix',
         changes: [
           {
             ru: '**Фаза 7 (7a), `0.7.0`:** `/settings` — резервная копия **seed** (копия, файл, QR, предупреждения DR-006), группы разделов; юридика (заглушки `/legal/*`, cookie-баннер); обратная связь — **`VITE_FEEDBACK_URL`**; подсказка при ошибке расшифровки vault.',
@@ -723,6 +1150,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.64', en: '0.6.64' },
+        tag: 'docs',
         changes: [
           {
             ru: '**План до 1.0.0** (`MVP_PHASES_PLANNED`, `17-План-реализации-MVP.md`): **«Дизайн и адаптивность»** — **фаза 13** (после offline-first, чеклиста, домена и веток); **фаза 12** — **`dev` → `main`** непосредственно перед дизайном; **7–9** — настройки, монетизация, offline-first.',
@@ -738,6 +1166,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.64', en: '0.6.64' },
+        tag: 'fix',
         changes: [
           {
             ru: '**Настройки / #39:** смена роли на **обычный пользователь** снова сохраняется — Edge **`admin-motivator-roles`** пишет **`motivator_role: null`** (мерж Supabase не удалял ключ при `delete`); карточки секций и блок ролей на телефоне — в стиле `/app`.',
@@ -753,6 +1182,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.63', en: '0.6.63' },
+        tag: 'fix',
         changes: [
           {
             ru: '**Доступ из РФ / #37:** в **`web/README.md`** — раздел **«Доступ из РФ (без VPN)»** (таблица контуров Vercel/Supabase, варианты 1–5); при сетевых ошибках на **`/app`** и входе — подсказка про VPN/хостинг (`connectivityHints.ts`, **`app.syncErrorRegionalHint`**, **`login.networkRegionalHint`**).',
@@ -768,6 +1198,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.62', en: '0.6.62' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Планировщик / #19–#20:** на мобилке **кольцо и столбчатая диаграмма** делят ширину поровну; **скрытие диаграмм** на всех вкладках (localStorage, кнопка у переключателя вида).',
@@ -791,6 +1222,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.61', en: '0.6.61' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Планировщик `/app` / #21:** переключатель **День · Неделя · Месяц** — **сегментированные вкладки**, не отдельные кнопки.',
@@ -810,6 +1242,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.60', en: '0.6.60' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Краткая сводка» / #16, #17:** блок **«Идеи на потом»** — **раскрываемые группы**; в заголовке секции и группы — **число идей**.',
@@ -833,6 +1266,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.59', en: '0.6.59' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Web Push / #31:** расписание срабатываний для **повторяющихся** задач — те же правила, что на вкладке «День» (`taskOccursOnDate` в **`computeScheduledFireRequests`**), а не только `scheduledLocalDate`.',
@@ -848,6 +1282,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.58', en: '0.6.58' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Планировщик `/app`, вкладка «День» / #30, #21:** список плана на день сортируется по **времени начала/окончания** слота (`getTaskSlotMinutes`), а не только по приоритету; задачи без времени — после задач со временем.',
@@ -868,6 +1303,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.6.56', en: '0.6.56' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Краткая сводка» / #14:** блок **«Идеи на потом»** — **тематические группы** и порядок внутри (`ideaLaterGroup`, `ideaLaterOrder`, `groupIdeasLaterForDisplay`); подписи групп в **i18n** (`settings.roadmapIdeaGroup_*`); тексты карточек **не** удалялись.',
@@ -883,6 +1319,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.55', en: '0.6.55' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Web Push / #12:** в **hybrid** — **разные** обезличенные тексты для **`task_start`** и **`task_end`**; в **full** — слегка уточнён англ. текст конца окна; новый вид **`eod_reminder`** — **одно** напоминание в локальный день по **`eodPreferences.pushReminderMinutesFromMidnight`** (если ритуал EOD включён, день ещё не в **`eodCompletedLocalDates`**, режим не **`off`**); настройки на **`/settings`** (чекбокс + время); миграция Supabase **`004_notification_fire_kind_eod.sql`**; ядро — **`applySetEodPushReminderMinutes`**, **`computeScheduledFires`**, **`buildPushPayload`**.',
@@ -902,6 +1339,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.54', en: '0.6.54' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Планировщик `/app`:** счётчик **черновиков** перенесён с кнопки **«Фильтры»** на кнопку **«Создать задачу»** — открытие списка черновиков по бейджу (**`AppPage`**).',
@@ -917,6 +1355,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.53', en: '0.6.53' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Завести дефект»** (`FileDefectModal`): в **зоне скриншотов** при фокусе (**клик** или **Tab**) — **вставка изображения из буфера** (**Ctrl+V** / **⌘V**); те же лимиты (**до 2**, **PNG / JPEG / WebP**, **до 3 МБ**), что у кнопки и drag-and-drop; хелпер **`collectImageFilesFromClipboard`** (`defectClipboardFiles.ts`).',
@@ -937,6 +1376,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.6.52', en: '0.6.52' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Завести дефект»** (`FileDefectModal`): после успешной отправки **скрывается** верхняя панель формы (шаблоны, вкладки «форма / предпросмотр»); у **`role="dialog"`** **`aria-labelledby`** ведёт на заголовок успеха (**`…-success-title`**).',
@@ -956,6 +1396,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.51', en: '0.6.51' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Планировщик `/app`:** навигация **День** и **Месяц** — та же строка, что **Неделя**: **шевроны** (`PlannerChevronLeft` / `PlannerChevronRight`), **`aria-label`** + **`sr-only`**, ключи **`app.dayPrev`** / **`app.dayNext`**.',
@@ -971,6 +1412,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.48', en: '0.6.48' },
+        tag: 'fix',
         changes: [
           {
             ru: '**Документация Supabase:** в **`web/README.md`** зафиксирован **project ref** **`ntpkveicqetjjvlnfrwc`**, URL API и примеры деплоя Edge через **`npx supabase functions deploy`** (глобальный **`npm install -g supabase`** не поддерживается; PowerShell / Docker — пояснения в README); в **`web/.env.example`** — ссылка на тот же проект; скилл **`github-defect-workflow`** — краткая отсылка.',
@@ -986,6 +1428,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.47', en: '0.6.47' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Завести дефект»:** поля **Ожидалось** / **Фактически**, подсказки, плейсхолдеры, счётчики символов, превью версии и маршрута; опционально **User-Agent** в issue; Edge **`file-defect`** — в **Environment** добавлены **`motivator_role`** и разбор **`expected`** / **`actual`** / **`userAgent`**.',
@@ -1001,6 +1444,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.46', en: '0.6.46' },
+        tag: 'feat',
         changes: [
           {
             ru: '**`/app` — меню аккаунта:** в выпадающем списке сверху показывается **текущая роль** (`motivator_role`, подписи как в **`shell.roleLabel*`**).',
@@ -1021,6 +1465,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.6.50', en: '0.6.50' },
+        tag: 'docs',
         changes: [
           {
             ru: '**README:** чеклист **«Статус внедрения „Завести дефект“»**; явный разбор **`PSSecurityException` / `npx.ps1`** и пример **`cmd /c "npx supabase functions deploy …"`**; команды деплоя Edge в примере с **`cmd /c`** для Windows.',
@@ -1040,6 +1485,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.49', en: '0.6.49' },
+        tag: 'docs',
         changes: [
           {
             ru: '**Vercel:** serverless **`api/defect-attachments-cleanup-cron.js`** (корень репозитория) — прокси на Edge **`defect-attachments-cleanup`** (**`SUPABASE_DEFECT_ATTACHMENTS_CLEANUP_URL`**, **`apikey`** из **`SUPABASE_CRON_ANON_KEY`**, **`Authorization: Bearer <CRON_SECRET>`** на входе и к Edge — секрет на Vercel и в секретах Edge должен **совпадать**); **`web/README.md`** — раздел «Прокси defect-attachments-cleanup», прод-URL, таблица «Возможности».',
@@ -1055,6 +1501,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.48', en: '0.6.48' },
+        tag: 'docs',
         changes: [
           {
             ru: '**README (cron):** в **`web/README.md`** зафиксирован прод-URL Vercel **`https://planner-tawny-omega.vercel.app/api/send-due-cron`** для минутного тика **`send-due`**; отдельно описан вызов Edge **`defect-attachments-cleanup`** (прямой URL Supabase).',
@@ -1070,6 +1517,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.48', en: '0.6.48' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Завести дефект»:** плавающая кнопка (**FAB**) на **`/app*`** и **`/settings`** для **admin** / **beta_tester**; единая модалка (**шаблоны**, тип дефекта → метки GitHub, **Markdown-предпросмотр**, аккордеон «Дополнительная информация», до **2** скриншотов в **Supabase Storage** `defect-attachments` с **signed URL** в issue; Edge **`file-defect`** — валидация вложений и меток, **`defect-attachments-cleanup`** — очистка черновиков; миграция **`003_defect_reports`**.',
@@ -1085,6 +1533,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.45', en: '0.6.45' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Настройки / admin:** блок **«Пользователи и роли»** — список пользователей Supabase Auth, **поиск** по email или UUID, смена **`motivator_role`** (Edge **`admin-motivator-roles`**, JWT + Service Role); после смены **своей** роли — **`refreshSession()`**.',
@@ -1108,6 +1557,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.43', en: '0.6.43' },
+        tag: 'fix',
         changes: [
           {
             ru: '**Vercel (монорепо):** в корневом **`vercel.json`** — **`installCommand`**, **`buildCommand`**, **`outputDirectory`**: **`web/dist`** (и **`$schema`**), чтобы деплой не требовал папки **`dist`** в корне и не падал с *No Output Directory named "dist"* при настройке панели по умолчанию; **`README`** — уточнение в шагах Vercel.',
@@ -1123,6 +1573,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.42', en: '0.6.42' },
+        tag: 'docs',
         changes: [
           {
             ru: '**Уведомления / Vercel Hobby:** из **`vercel.json`** убран блок **`crons`** (минутное расписание на Hobby недоступно или ломает деплой); **`README`** — раздел **«Минутный вызов send-due»**: по умолчанию внешний HTTP-cron (**cron-job.org** и аналоги) на **`/api/send-due-cron`** с **`Authorization: Bearer <CRON_SECRET>`**; на **Pro** можно снова добавить **`crons`** в `vercel.json` самостоятельно.',
@@ -1138,6 +1589,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.41', en: '0.6.41' },
+        tag: 'docs',
         changes: [
           {
             ru: '**Уведомления / Vercel:** в корне репозитория — serverless **`api/send-due-cron.js`** и **`vercel.json`** с **`crons`** на **`GET /api/send-due-cron`** раз в минуту; переменные **`CRON_SECRET`**, **`SUPABASE_SEND_DUE_URL`**, **`SUPABASE_CRON_ANON_KEY`**; README — раздел **«Минутный вызов send-due на Vercel»** и оговорка про **Hobby vs Pro**.',
@@ -1153,6 +1605,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.39', en: '0.6.39' },
+        tag: 'docs',
         changes: [
           {
             ru: '**«Идеи на потом»:** раздел **«Тестирование»** и карточка **«Дефекты из приложения»** — **форма «Завести дефект»** с **GitHub Issue** как основным каналом (Edge Function + REST API, токен только на сервере, ссылка на issue в UI); **план этапов** в **`15-Идеи-для-развития.md`**, §14.',
@@ -1168,6 +1621,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.39', en: '0.6.39' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Уведомления (Web Push):** vault **`schemaVersion: 8`** — **`notificationPreferences.deliveryMode`**: `off` | `hybrid` | `full`; настройки в **`/settings`**; синхронизация **`notification_fire_requests`** в Supabase (debounce); подписка **`push_subscriptions`**; **`injectManifest`** + **`src/sw.ts`** (push + click); Edge Functions **`send-due`**, **`notifications-test`** (`web/supabase/functions/`); миграция **`002_notifications.sql`**; env **`VITE_VAPID_PUBLIC_KEY`**.',
@@ -1187,6 +1641,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.38', en: '0.6.38' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Вкладка «День» / EOD:** при выборе **прошлой** даты в календаре вместо **«Завершить день»** показывается **«Отчёт за день»** — та же модалка **`EndOfDayModal`**, но только просмотр сводки по плану на эту дату (без кнопки завершения ритуала); для **сегодня** поведение без изменений; для **будущей** даты кнопка скрыта. Новые строки i18n: **`app.dayReportNav`**, **`eod.reportTitle`**, **`eod.reportIntro`**, **`eod.reportAlreadyDone`**.',
@@ -1207,6 +1662,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.6.37', en: '0.6.37' },
+        tag: 'fix',
         changes: [
           {
             ru: '**Сборка (fix):** **`PeriodPlanBreakdownChart`** — в тип **`Props`** добавлен опциональный **`compact`** (в **0.6.36** **`AppPage`** уже передавал проп; без него **`tsc -b`** падал на Vercel).',
@@ -1222,6 +1678,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.36', en: '0.6.36' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Краткая сводка»:** пункт в **меню аккаунта** на **`/app`** (рядом с переходом в настройки и выходом); отдельная кнопка в шапке **`/settings`** убрана; модалка монтируется в **`AppPage`**.',
@@ -1237,6 +1694,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.35', en: '0.6.35' },
+        tag: 'build',
         changes: [
           {
             ru: '**PWA / обновления:** явная регистрация SW (`virtual:pwa-register`, **`initPwaServiceWorker`**, **`injectRegister: null`** в `vite.config`); периодический **`registration.update()`** при фокусе окна, **`visibilitychange` → visible** и раз в час; в **`vercel.json`** — **`Cache-Control`** без долгого кэша для **`/sw.js`**, **`/manifest.webmanifest`**, **`/workbox-*.js`**.',
@@ -1252,6 +1710,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.33', en: '0.6.33' },
+        tag: 'docs',
         changes: [
           {
             ru: '**Релиз-ноты (данные):** блок с **`dateLabel` 2026-05-12** объединён с **2026-05-11** — коммиты с перечисленными ранее под «12 мая» изменениями относились к **11 мая**; отдельный заголовок «12» вводил в заблуждение.',
@@ -1267,6 +1726,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.32', en: '0.6.32' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Идеи на потом»:** режим **«Напоминание»** — запись без учёта как полноценной задачи (без «долга» по плану, отчётам, стрику); простое **напоминание о чём-либо**; черновик в **`15-Идеи-для-развития.md`**, §17.',
@@ -1282,6 +1742,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.32', en: '0.6.32' },
+        tag: 'docs',
         changes: [
           {
             ru: '**«Идеи на потом»:** **документация / руководство пользователя** — отдельная страница или раздел справки в приложении или по ссылке (структура, ru/en, без дублирования лендинга); черновик в **`15-Идеи-для-развития.md`**, §16.',
@@ -1297,6 +1758,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.32', en: '0.6.32' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Планировщик / модалки задачи:** **`LocalDatePickerField`** — опция **`minLocalDateKey`**: в календаре **нельзя выбрать** дату **раньше сегодня** (план и якорь повтора); кнопка **«назад по месяцам»** отключена, если предыдущий месяц целиком в прошлом; **«Запланировать на выбранный день»** в **`TaskEditModal`** неактивна для **прошлого** выбранного дня на `/app`; **`CreateTaskModal`** — **`clampPlanDateKey`** при старте формы, снятии бэклога и в **`onChange`**. **Время на сегодня:** **`TaskTimeAccordion`** — **`earliestClockMinutesFromMidnight`** (селекты часов/минут и кламп; тик раз в минуту).',
@@ -1312,6 +1774,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.31', en: '0.6.31' },
+        tag: 'fix',
         changes: [
           {
             ru: '**`CreateTaskModal`:** после первой попытки **«Сохранить»** блокирующие сообщения только в янтарном списке **«Чтобы сохранить»**; убрана вторая красная строка с тем же смыслом; для плана на день без оценки в списке — **`estimateRequiredWhenPlanned`**.',
@@ -1327,6 +1790,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.30', en: '0.6.30' },
+        tag: 'feat',
         changes: [
           {
             ru: '**EOD:** в настройках — **`eodPreferences.autoCloseAtDayEnd`** (автоматически добавлять в `eodCompletedLocalDates` прошлые локальные дни, в которых был план на день); применение в **`VaultProvider`** (`applyAutoCompleteEodForElapsedPlannerDays` в **`@motivator/core`**). **`applySetEodEnabled`** сохраняет второй флаг.',
@@ -1346,6 +1810,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.29', en: '0.6.29' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Идеи на потом»:** **страница первичной настройки** при первом входе (мастер после разблокировки vault — язык, приоритеты, EOD, тур); черновик в **`15-Идеи-для-развития.md`**, §15.',
@@ -1361,6 +1826,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.31', en: '0.6.31' },
+        tag: 'docs',
         changes: [
           {
             ru: '**Процесс / документация (техн.):** добавлен проектный Cursor-скилл **`.cursor/skills/pre-commit-docs-roadmap/`** (`SKILL.md`, `reference.md`) — пошаговый чеклист перед коммитом (README, `productRoadmap.ts`, i18n); правило **`.cursor/rules/pre-commit-docs-roadmap.mdc`** дополнено: скилл **обязателен**, краткий текст правила его **не заменяет**; **`web/README.md`** — ссылки на скилл в разделах «Краткая сводка» и «Перед коммитом».',
@@ -1376,6 +1842,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.28', en: '0.6.28' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Открытые вопросы»:** добавлен пункт про **EOD** — нужно ли **автоматически** завершать ритуал «Завершение дня», если пользователь не отметил его вручную (`settings.roadmapOpenQuestionEodAuto`, `ProductRoadmapModal`).',
@@ -1391,6 +1858,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.27', en: '0.6.27' },
+        tag: 'docs',
         changes: [
           {
             ru: '**Документация:** в **`web/README.md`** — отдельный раздел **«Краткая сводка»** (состав модалки, константы `productRoadmap.ts`, i18n, ссылки на Obsidian и правило перед коммитом); строка таблицы «Настройки» ссылается на раздел вместо длинного дубля.',
@@ -1406,6 +1874,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.26', en: '0.6.26' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Чек-лист:** отметки «выполнено» по пунктам — только в **календарный сегодня** (как главная галочка); **`applyToggleChecklistItem`** принимает контекстный день и отклоняет переключение, если это не «сегодня»; UI — **`TaskMiniCard`**, **`TaskEditModal`**.',
@@ -1426,6 +1895,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.6.40', en: '0.6.40' },
+        tag: 'feat',
         changes: [
           {
             ru: '**Настройки → Тестирование:** для **`admin`** и **`beta_tester`** — форма **«Завести дефект»** → GitHub Issue через Edge **`file-defect`** (JWT, проверка роли через **Service Role**, токен GitHub только в секретах Edge); после отправки в UI — ссылка на issue.',
@@ -1441,6 +1911,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        tag: 'fix',
         changes: [
           {
             ru: '**«Идеи на потом»:** **форма дефекта в приложении** для **бета-тестеров** и **админов** (описание, шаги, контекст версии/экрана — без утечки vault); черновик в **`15-Идеи-для-развития.md`**, §14.',
@@ -1456,6 +1927,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        tag: 'docs',
         changes: [
           {
             ru: '**Задокументирован дефект MVP:** в прошлые календарные дни **отметки «выполнено» по пунктам чек-листа** в модалке оставались доступны вопреки правилу «как главная галочка — только сегодня».',
@@ -1471,6 +1943,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        tag: 'fix',
         changes: [
           {
             ru: '**«Идеи на потом»:** **перенос незакрытой задачи** с **частично выполненным чек-листом** — сохранять отмеченные пункты; текст выполненных строк **можно править**; черновик в **`15-Идеи-для-развития.md`**, §13.',
@@ -1486,6 +1959,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Идеи на потом»:** карточка **«Достижения»** (значки и вехи за паттерны использования планировщика — после MVP, без давления); черновик в **`15-Идеи-для-развития.md`**, §12.',
@@ -1501,6 +1975,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Идеи на потом»:** после выхода новой версии приложения — **появляющаяся кнопка** «Обновить» с **перезагрузкой и сбросом кэша** статики / **service worker**; черновик в **`15-Идеи-для-развития.md`**, §11.',
@@ -1516,6 +1991,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.25', en: '0.6.25' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Дорожная карта (**фаза 7** плана до **1.0.0**): в объём **проработки недели и календаря месяца** включены правила **отображения задач**, решение по **таймлайну**, поведение для **прошедшего времени / невыполненных и выполненных**.',
@@ -1539,6 +2015,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.24', en: '0.6.24' },
+        tag: 'feat',
         changes: [
           {
             ru: '**`/app`:** иконка синхронизации визуально слабее рядом с меню аккаунта.',
@@ -1578,6 +2055,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Идеи на потом»:** вход через **сторонние провайдеры** (**Яндекс**, **Google** и др., OAuth / federated login — типично через Supabase Auth); черновик в **`15-Идеи-для-развития.md`**, §10.',
@@ -1593,6 +2071,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
+        tag: 'feat',
         changes: [
           {
             ru: '**«Идеи на потом»:** добавлена карточка **тестовые аккаунты с простым seed** (выделенные QA-учётки, предсказуемый seed для регрессии — только пост-MVP и не как норма безопасности); черновик в **`15-Идеи-для-развития.md`**, §9.',
@@ -1608,6 +2087,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
+        tag: 'docs',
         changes: [
           {
             ru: 'Дорожная карта (**`MVP_PHASES_PLANNED`**): в план до **1.0.0** добавлены фазы **12** (домен: выбор, покупка, DNS, привязка к деплою) и **13** (ветка **`dev`** → тесты → слияние в **`main`**); счётчик фаз и документация приведены к диапазону **0–13**.',
@@ -1623,6 +2103,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.22', en: '0.6.22' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Редактор задачи (**`TaskEditModal`**): на телефонах (WebKit) касания не «проваливаются» в список задач под модалкой — оверлей через **`createPortal` → `document.body`**, на время открытия **`overflow: hidden`** у **`body`**, затемнение закрывает по **`onPointerDown`**, слой **`z-[80]`**, у прокрутки формы — **`overscroll-y-contain`**.',
@@ -1632,6 +2113,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.21', en: '0.6.21' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Модалка «Краткая сводка»: подблоки внутри одной календарной даты выводятся по **убыванию semver** (`releasedInVersion`). Выпуски **0.6.5** и **0.6.6** перенесены с **`dateLabel` 2026-05-10** на **2026-05-09**; под **10.05** остаются выпуски **0.6.18** и новее.',
@@ -1641,6 +2123,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.20', en: '0.6.20' },
+        tag: 'fix',
         changes: [
           {
             ru: 'Исправлена **хронология** релиз-нотов в данных: свежие пункты перенесены на календарный день **2026-05-10**, чтобы при сортировке дат в модалке они шли **выше** более раннего **2026-05-09**.',
@@ -1650,6 +2133,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.19', en: '0.6.19' },
+        tag: 'docs',
         changes: [
           {
             ru: 'Документация и «Краткая сводка»: обновлены **README**, правило **pre-commit** и тексты модалки; релиз-ноты — обязательное **`releasedInVersion`** на подблок и строка **«Версия выпуска»** в UI.',
@@ -1659,6 +2143,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.18', en: '0.6.18' },
+        tag: 'fix',
         changes: [
           {
             ru: 'Релиз-ноты: у каждого подблока выпуска — поле **`releasedInVersion`**: semver той **сборки продукта**, в которой изменения попали к пользователю (значение как в `package.json` **до** `vite build`, без суффикса `+git`); в модалке — строка **«Версия выпуска»**.',
@@ -1673,6 +2158,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.6.34', en: '0.6.34' },
+        tag: 'feat',
         changes: [
           {
             ru: '**`@motivator/core` / план и EOD:** задача с чек-листом без главной галочки дня **не** считается полностью закрытой — вклад в доли кольца **ограничен** (до **0,99** слота), пока не выполнено **`isPlannedTaskFullyCompleteForDay`**; добавлены **`plannedPeriodSlotsByGroupId`** / **`plannedPeriodSlotsByColorKey`** для разбивки периода.',
@@ -1704,6 +2190,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.23', en: '0.6.23' },
+        tag: 'fix',
         changes: [
           {
             ru: '**`/app`**: шапка — иконка синхронизации и меню аккаунта (отчёты, EOD при вкладке «День», настройки, выход); ошибки удалённого vault — человекочитаемый текст и кнопка **«Повторить»**; фильтры — мобильная панель на весь экран, чипы активных условий и **«Сбросить всё»**; кнопка **«Завершить день»** в одной строке с созданием задачи на вкладке «День». Модалка создания: порядок полей как в договорённостях, **липкий подвал** с динамическим списком недостающего и прокруткой к полям; цвет и двойное подтверждение — в **«Дополнительные настройки»**. Редактирование задачи — тот же порядок секций и `<details>` доп. настроек. **«День»**: под кольцом прогресса только **процент** (без второй строки про доли задач). **«Неделя»**: выше слоты часов (`HOUR_HEIGHT_PX` **42**), контрастнее подписи часов.',
@@ -1719,6 +2206,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.15', en: '0.6.15' },
+        tag: 'docs',
         changes: [
           {
             ru: 'Правила релиз-нотов: **дата в данных = календарный день изменений**; если блока с этой датой ещё нет — добавить объект с `dateLabel` (новые даты обычно **первыми в массиве**). За один день несколько выпусков — несколько элементов **`items`**; в одном выпуске несколько правок — массив **`changes`**; суть без кода — **`plainBullets`** (в модалке под раскрывашкой «Подробности простым языком»). Записи **не скрываются** по дате относительно «сегодня».',
@@ -1734,6 +2222,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.14', en: '0.6.14' },
+        tag: 'docs',
         changes: [
           {
             ru: 'Релиз-ноты: в данных заведена отдельная календарная секция **2026-05-10** для записей того периода (раньше ошибочно сливали с 09.05).',
@@ -1743,6 +2232,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.13', en: '0.6.13' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Фильтры вида: **информер** скрыт, пока все фильтры в состоянии по умолчанию (все группы, все приоритеты, любой цвет, любые повторы).',
@@ -1752,6 +2242,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.12', en: '0.6.12' },
+        tag: 'fix',
         changes: [
           {
             ru: '«Неделя»: вертикальный скролл сетки часов — **тёмная** полоса (класс `week-grid-v-scroll`), резерв под трек (`scrollbar-gutter: stable`), правый отступ у колонок дней — чтобы полоса не перекрывала последний день недели.',
@@ -1761,6 +2252,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.11', en: '0.6.11' },
+        tag: 'docs',
         changes: [
           {
             ru: 'Процесс: зафиксировано **обязательное** обновление `web/README.md` и модалки «Краткая сводка» (`productRoadmap.ts`) перед **любым** коммитом — правило в `.cursor/rules/pre-commit-docs-roadmap.mdc` и в README.',
@@ -1770,6 +2262,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.11', en: '0.6.11' },
+        tag: 'fix',
         changes: [
           {
             ru: '«Неделя»: таблица таймблокинга **без горизонтального скролла** — убраны фиксированная минимальная ширина и обёртка `overflow-x-auto`; колонки сжимаются в доступной ширине.',
@@ -1783,6 +2276,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.10', en: '0.6.10' },
+        tag: 'feat',
         changes: [
           {
             ru: '«Неделя» и «Месяц»: кольцо прогресса плана за период — та же логика долей, что у «Дня» (**`plannedPeriodProgress`** в `@motivator/core`); в сумму входят только календарные дни **до сегодня включительно**; фильтры вида как у списков; блок скрыт, если в охвате нет задач в плане.',
@@ -1796,6 +2290,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.10', en: '0.6.10' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Кольцо «План на день» и EOD: прогресс по **задачам** (чек-лист как доля внутри задачи); подпись — процент и «выполнено по долям / число задач».',
@@ -1805,6 +2300,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.9', en: '0.6.9' },
+        tag: 'feat',
         changes: [
           {
             ru: '«Идеи на потом» в краткой сводке: добавлены темы из `15-Идеи-для-развития` — feature discovery, привычки, поиск, тамагочи; обновлена карточка про диаграммы на «День».',
@@ -1814,6 +2310,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.9', en: '0.6.9' },
+        tag: 'feat',
         changes: [
           {
             ru: '«День»: кольцо прогресса учитывает **чек-листы** (пункты как отдельные единицы); совпадает со списком после фильтров; диаграмма по центру свободной области справа.',
@@ -1827,6 +2324,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.8', en: '0.6.8' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Вкладка «День»: кольцо прогресса выполнения плана на день (логика как в ритуале «Завершение дня»); на широком экране список слева, диаграмма справа.',
@@ -1848,6 +2346,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.7', en: '0.6.7' },
+        tag: 'docs',
         changes: [
           {
             ru: 'Релиз-ноты в «Краткая сводка» переведены на формат списка изменений (пункты по датам вместо длинных абзацев).',
@@ -1869,6 +2368,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.6', en: '0.6.6' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Настройки: в «Краткая сводка» добавлен пятый блок «Открытые вопросы» (перенесено из модалки завершения дня).',
@@ -1900,6 +2400,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.12', en: '0.6.12' },
+        tag: 'style',
         changes: [
           {
             ru: '«Неделя»: выравнивание заголовков дней и сетки слотов — **одна сетка + subgrid**, без смещения колонок из‑за скролла.',
@@ -1909,6 +2410,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.15', en: '0.6.15' },
+        tag: 'docs',
         changes: [
           {
             ru: '«Краткая сводка» — релиз-ноты: **одна раскрывашка на календарную дату**; за день несколько выпусков — **несколько блоков** (`items`); у блока — **`releasedInVersion`** (semver выпуска); в блоке несколько правок — **список** (`changes`); подробности простым языком — **`plainBullets`** под раскрывашкой; по календарю **не фильтруем**.',
@@ -1918,6 +2420,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
+        tag: 'build',
         changes: [
           {
             ru: 'Версия продукта 0.6.1 в package.json; схема 0·x·y и суффикс +git для сборки.',
@@ -1937,6 +2440,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
+        tag: 'feat',
         changes: [
           {
             ru: 'DR-004 и схема vault v7: двойное подтверждение «сделано» в создании/редактировании и на мини-карточке.',
@@ -1960,6 +2464,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Дорожная карта в настройках: до 1.0.0 остаются фазы 7–13 (включая фазу 7 — дизайн и адаптивность).',
@@ -1979,6 +2484,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.1', en: '0.6.1' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Модалка дорожной карты: фазы 0–6 в блоке «Уже реализовано».',
@@ -1998,6 +2504,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.2', en: '0.6.2' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Страница /app/reports: график отметок, KPI, стрик DR-013 с EOD.',
@@ -2017,6 +2524,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.3', en: '0.6.3' },
+        tag: 'fix',
         changes: [
           {
             ru: 'Создание задачи: янтарная подсказка обязательных полей для сохранения.',
@@ -2040,6 +2548,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.4', en: '0.6.4' },
+        tag: 'style',
         changes: [
           {
             ru: 'Неделя и карточки: полоска цвета через HEX палитры.',
@@ -2063,6 +2572,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.6', en: '0.6.6' },
+        tag: 'docs',
         changes: [
           {
             ru: 'Синхронизированы web/README.md, тексты в productRoadmap.ts и релиз-ноты для тестеров.',
@@ -2082,6 +2592,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
+        tag: 'docs',
         changes: [
           {
             ru: 'В дорожной карте обновлены «Идеи на потом»: внешние календари (черновик в Obsidian §4).',
@@ -2105,6 +2616,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
       },
       {
         releasedInVersion: { ru: '0.6.5', en: '0.6.5' },
+        tag: 'feat',
         changes: [
           {
             ru: 'Ритуал «Завершение дня»: списки строятся только по задачам, запланированным на этот календарный день.',
@@ -2145,6 +2657,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
 export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   {
     id: 7,
+    current: true,
     title: { ru: 'Настройки, аккаунт, юридика', en: 'Settings, account, legal' },
     summary: {
       ru: 'Настройки по блокам; пароль; seed; удаление и 30 дней; тексты; feedback; cookie. Роли и ограничения UI по permissions — отдельная доработка (см. буллеты ниже).',
@@ -2178,6 +2691,10 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
       {
         ru: '**Permissions (отложено в текущей сборке):** роли **пользователь / бета-тестер / администратор**, источник на сервере (`app_metadata.motivator_role`, RLS). Задел в коде — `motivatorRole.ts`, контекст Auth; включение ограничений UI (например дорожной карты только админам) — при отдельной задаче.',
         en: '**Permissions (deferred in current build):** **user / beta tester / admin**, server-side (`app_metadata.motivator_role`, RLS). Hooks exist (`motivatorRole.ts`, Auth context); UI gating (e.g. roadmap admins-only) — separate task.',
+      },
+      {
+        ru: '**🚧 Sub-track «Редизайн Краткой сводки» (`/admin/roadmap`):** 13 sub-фаз × ~15.5 рабочих дней. Hero + Timeline + Search + полный data model + ~80 идей со статусами + Reminder 24h + новая страница `/admin/discussions` с тредами и push-уведомлениями + sync workflow «К журналу» в `12-Журнал-решений.md`. Источник истины плана — `obsidian-motivator/20-Phase-7-План-краткой-сводки.md`; решения — BR-D-004 + BR-D-005 в `19-Business-требования.md`. Текущий статус: MCP setup завершён, ждём restart Claude Code перед Phase 7.1.',
+        en: '**🚧 Sub-track "Quick Summary redesign" (`/admin/roadmap`):** 13 sub-phases × ~15.5 working days. Hero + Timeline + Search + full data model + ~80 ideas with statuses + 24h reminder + new `/admin/discussions` page with threads and push notifications + sync workflow "К журналу" into `12-Журнал-решений.md`. Plan source of truth — `obsidian-motivator/20-Phase-7-План-краткой-сводки.md`; decisions — BR-D-004 + BR-D-005 in `19-Business-требования.md`. Current status: MCP setup completed, awaiting Claude Code restart before Phase 7.1.',
       },
     ],
   },
@@ -2356,6 +2873,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 10,
+    status: 'proposed',
     title: {
       ru: 'Первичный вход: страница настройки приложения',
       en: 'First launch: app setup screen',
@@ -2378,6 +2896,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'collaboration_integrations',
     ideaLaterOrder: 10,
+    status: 'proposed',
     title: {
       ru: 'Командные задачи и группы совместной работы',
       en: 'Team tasks and collaborative groups',
@@ -2404,6 +2923,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 20,
+    status: 'proposed',
     title: {
       ru: 'Напоминания о неиспользованных функциях (feature discovery)',
       en: 'Unused-feature hints (feature discovery)',
@@ -2422,6 +2942,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 20,
+    status: 'proposed',
     title: { ru: 'Область «Привычки»', en: 'A dedicated «Habits» area' },
     summary: {
       ru: 'Сущность отличная от разовых задач: повторы с собственным потоком и, возможно, моделью в vault; вопросы про идентичность, частоту и лимит времени на день.',
@@ -2436,7 +2957,39 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   },
   {
     ideaLaterGroup: 'everyday_core',
+    ideaLaterOrder: 25,
+    status: 'proposed',
+    title: {
+      ru: 'EOD: чек-ап состояния (вопросы самопроверки)',
+      en: 'EOD: state check-up (self-reflection prompts)',
+    },
+    summary: {
+      ru: 'После MVP: в ритуал **End-of-Day** добавить блок **вопросов для самопроверки** состояния (ежедневный чек-ап) — рядом со сводкой по задачам, без обязательной «диагностики»; ответы только для пользователя (vault / локально).',
+      en: 'Post-MVP: extend the **End-of-Day** ritual with **self-check prompts** for how you feel (a daily check-up) — alongside the task summary, optional and private (vault / on-device).',
+    },
+    detailBullets: [
+      {
+        ru: '**Наборы вопросов:** готовые **шаблоны** для ориентировочной самодиагностики состояния — на основе **классической психологической базы** (в т.ч. привязка к известным **клиническим рамкам/«диагнозам»** как к **темам чек-листа**, не как к постановке диагноза в приложении); плюс **персональный набор**, который пользователь собирает или выбирает в **настройках**.',
+        en: '**Question sets:** curated **templates** for rough self-assessment — grounded in **established clinical/psychological frameworks** (including well-known **diagnostic labels** as **checklist themes only**, not in-app diagnosis); plus a **personal set** the user composes or picks in **settings**.',
+      },
+      {
+        ru: '**Настройки:** включение блока в EOD, выбор активного набора (шаблон / свой), порядок вопросов; опционально — напоминание пройти чек-ап, если ритуал открыт без ответов (продуктово уточнить).',
+        en: '**Settings:** toggle the EOD block, pick the active set (template / custom), question order; optionally nudge if the ritual is opened but prompts are skipped (TBD).',
+      },
+      {
+        ru: '**Границы:** не медицинский сервис; дисклеймер, приватность (шифрованный vault), без обязательной отправки ответов на сервер; связь с отчётами и AI — только после явного согласия пользователя.',
+        en: '**Guardrails:** not a medical device; disclaimer, privacy (encrypted vault), no required server upload of answers; ties to reports or AI only with explicit opt-in.',
+      },
+      {
+        ru: 'Черновик — **`obsidian-motivator/15-Идеи-для-развития.md`**, §19; пересечение с **«Привычки»**, однодневными пунктами и push EOD — отдельные продуктовые решения.',
+        en: 'Draft — **`obsidian-motivator/15-Идеи-для-развития.md`**, §19; overlap with **Habits**, daily check-ins, and EOD push — separate product decisions.',
+      },
+    ],
+  },
+  {
+    ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 30,
+    status: 'proposed',
     title: {
       ru: 'Однодневные «пункты дня» (лёгкие привычки)',
       en: 'Daily one-off check-ins (lightweight habits)',
@@ -2455,6 +3008,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 35,
+    status: 'proposed',
     title: { ru: 'Настройки: drag-and-drop приоритетов и групп', en: 'Settings: drag-and-drop priorities and groups' },
     summary: {
       ru: 'Перетаскивание для смены порядка групп и «критичности» приоритетов (1–5) без ручного ввода номеров — GitHub **#27**.',
@@ -2464,6 +3018,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 40,
+    status: 'proposed',
     title: { ru: 'Поиск по задачам', en: 'Task search' },
     summary: {
       ru: 'Поле поиска по загруженному vault: заголовок, при необходимости группа, теги, текст чек-листа — только на клиенте, без отправки запросов на сервер в явном виде.',
@@ -2483,6 +3038,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 45,
+    status: 'proposed',
     title: {
       ru: 'Неделя: сетка по фактическим задачам и метка EOD',
       en: 'Week: grid from earliest task and EOD reminder marker',
@@ -2495,6 +3051,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 5,
+    status: 'proposed',
     title: {
       ru: 'Доступность для РФ: деплой и API без VPN',
       en: 'Russia availability: deploy and API without VPN',
@@ -2513,6 +3070,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 6,
+    status: 'proposed',
     title: {
       ru: 'Доступы: режим custom помимо ролей',
       en: 'Access: custom mode beyond fixed roles',
@@ -2531,6 +3089,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 7,
+    status: 'proposed',
     title: {
       ru: 'Админ: мониторинг посещений',
       en: 'Admin: visit analytics',
@@ -2543,6 +3102,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 10,
+    status: 'proposed',
     title: {
       ru: '«Мои дефекты»: история обращений в настройках',
       en: '“My defects”: in-app submission history in settings',
@@ -2561,6 +3121,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'collaboration_integrations',
     ideaLaterOrder: 52,
+    status: 'proposed',
     title: { ru: 'Интеграция с будильником телефона', en: 'OS alarm integration' },
     summary: {
       ru: 'GitHub **#51**: опционально использовать **системные будильники** как канал напоминаний рядом с Web Push — отдельная настройка и ограничения платформ.',
@@ -2570,6 +3131,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 52,
+    status: 'proposed',
     title: { ru: 'Конструктор виджетов вкладок', en: 'Per-view widget layout' },
     summary: {
       ru: 'GitHub **#52**: на **День / Неделя / Месяц** — настраиваемые блоки и кнопка **«Настройка вида»** для каждой вкладки.',
@@ -2579,6 +3141,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 53,
+    status: 'proposed',
     title: { ru: 'День: горизонтальный таймлайн', en: 'Day: landscape timeline' },
     summary: {
       ru: 'GitHub **#53**: просмотр **дня** в **альбомной** ориентации с **таймлайном** (см. скрин в issue).',
@@ -2588,6 +3151,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 8,
+    status: 'proposed',
     title: { ru: 'Админ: единый трекер задач и обращений', en: 'Admin: unified work tracker' },
     summary: {
       ru: 'GitHub **#54**: админ-раздел — задачи, планы, обращения, дефекты, мониторинг в одном контуре (связь с **#49**).',
@@ -2597,6 +3161,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 54,
+    status: 'proposed',
     title: { ru: 'Слайдеры с фактами и статистикой', en: 'Insight carousels' },
     summary: {
       ru: 'GitHub **#55**: карусели с **полезными фактами** по аккаунту и приложению (не баг UI — продуктовый контент).',
@@ -2606,6 +3171,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 55,
+    status: 'proposed',
     title: { ru: '«Тайм-щит»: занятость и свободные окна', en: 'Time shield: busy vs free windows' },
     summary: {
       ru: 'GitHub **#56**: для пользователя — **тайм-щит** и статистика: когда чаще задачи, когда свободное время (на базе vault, клиент/отчёты).',
@@ -2615,6 +3181,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 56,
+    status: 'proposed',
     title: { ru: 'Неделя/месяц: инфоблоки вместо диаграмм', en: 'Week/month: info blocks vs charts' },
     summary: {
       ru: 'GitHub **#57**: альтернатива столбчатым диаграммам — **компактные информативные блоки** по задачам за период (см. скрин).',
@@ -2624,6 +3191,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'collaboration_integrations',
     ideaLaterOrder: 55,
+    status: 'proposed',
     title: { ru: 'Режимы «команда» и «наставник»', en: 'Team and mentor modes' },
     summary: {
       ru: 'GitHub **#58**: **команда** — общий таск-трекер; **наставник** — помощник, который может заводить задачи в ваш план (политики доступа, vault).',
@@ -2633,6 +3201,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 10,
+    status: 'proposed',
     title: { ru: 'Темы и цветовая гамма', en: 'Themes and color schemes' },
     summary: {
       ru: 'GitHub **#59**: авто-подстройка **темы** под устройство и ручная настройка **палитры** интерфейса.',
@@ -2642,6 +3211,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 50,
+    status: 'proposed',
     title: { ru: 'Перенос незакрытой задачи и чек-листа', en: 'Moving an open task with checklist progress' },
     summary: {
       ru: 'После MVP: при **переносе** (или аналоге «переложить на другой день») **незакрытой** задачи, если **часть пунктов чек-листа уже выполнена**, переносить их как **отмеченные**; текст **выполненных** пунктов остаётся **доступен для правки** в модалке — чтобы можно было уточнить формулировку, не теряя факт «уже сделано».',
@@ -2665,6 +3235,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 20,
+    status: 'proposed',
     title: { ru: 'Раздел «Тестирование» в настройках', en: 'Settings: testing / QA tools' },
     summary: {
       ru: 'Отдельная секция **только для администраторов и бета-тестеров**: переключатели и вспомогательные режимы, которые упрощают проверку приложения и сценариев; обычный пользователь раздел не видит. В той же зоне — **поле / кнопка «Завести дефект»**: форма отправки в **GitHub Issue** (основной целевой канал), см. отдельную карточку ниже и **§14** в Obsidian.',
@@ -2696,6 +3267,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 30,
+    status: 'proposed',
     title: { ru: 'Дефекты из приложения (тестеры и админы)', en: 'In-app defect filing (testers & admins)' },
     summary: {
       ru: 'После MVP: для ролей **бета-тестер** и **администратор** — **форма «Завести дефект»** в интерфейсе (заголовок, описание, шаги воспроизведения, опционально скриншот/контекст экрана). **Основной канал назначения** — создание **GitHub Issue** в выбранном репозитории через **серверный** вызов API (токен не в клиенте); после отправки — **прямая ссылка** на issue.',
@@ -2727,6 +3299,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 40,
+    status: 'proposed',
     title: { ru: 'Тестовые аккаунты с простым seed', en: 'Test accounts with a simple seed' },
     summary: {
       ru: 'После MVP: выделенные учётки для ручных прогонов и регрессии, где **seed шифрования vault намеренно простой** (короткая известная фраза) — чтобы быстро воспроизводить один и тот же расшифрованный контекст без роли как «боевого» пользователя.',
@@ -2750,6 +3323,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 50,
+    status: 'proposed',
     title: { ru: 'Вход через сторонние сервисы (OAuth)', en: 'Sign-in via third-party providers (OAuth)' },
     summary: {
       ru: 'После MVP: авторизация не только по email и паролю, но и через **провайдеров** — например **Яндекс** и **Google** (типовой путь **OAuth** / federated login в **Supabase Auth**).',
@@ -2777,6 +3351,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 60,
+    status: 'proposed',
     title: { ru: 'Обновить после новой версии (сброс кэша)', en: 'Refresh after new version (cache bust)' },
     summary: {
       ru: 'После MVP: если клиент видит, что **версия приложения на сервере новее**, чем у уже загруженной вкладки — показать **аккуратную кнопку** (или баннер) **«Обновить»**, по нажатию — **перезагрузка страницы со сбросом кэша** статики и актуализацией **service worker**, чтобы пользователь не застревал на старом бандле после деплоя.',
@@ -2800,6 +3375,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 60,
+    status: 'proposed',
     title: { ru: 'Ритуал «Завершение дня»: поля рефлексии', en: 'End-of-day ritual: reflection inputs' },
     summary: {
       ru: 'После MVP: ответы на мягкие вопросы прямо в модалке, хранение в vault или отдельном слое, сводки за неделю/месяц для ретроспективы без самобичевания.',
@@ -2815,6 +3391,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 70,
+    status: 'proposed',
     title: { ru: 'Диаграммы: отчёты и вкладка «День»', en: 'Charts: reports vs Day tab' },
     summary: {
       ru: '**`/app/reports`** — столбчатая диаграмма по дням; вкладки **«День»**, **«Неделя»**, **«Месяц»** — кольца прогресса плана (**реализовано**). Дальнейшие визуализации (тренды, сравнение периодов) — по приоритету после 1.0.',
@@ -2824,6 +3401,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 80,
+    status: 'proposed',
     title: { ru: 'Цвет метки — как мини-группа (название и описание)', en: 'Label color as a mini-group (name & description)' },
     summary: {
       ru: 'После MVP: настройка **цветовых меток** не только как оттенок на карточке, а как сущность со **своим названием и описанием** (по смыслу близко к группе проектов, но привязка к цвету): одна точка настроек, текст в подсказках и при фильтрации.',
@@ -2843,6 +3421,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'collaboration_integrations',
     ideaLaterOrder: 20,
+    status: 'proposed',
     title: { ru: 'Интеграция с внешними календарями', en: 'External calendar integration' },
     summary: {
       ru: 'После MVP: связка с **Google Calendar**, **Outlook / Microsoft 365**, **Apple/iCloud** и системными календарями — один временной контур; варианты **ICS** (файл / подписка по защищённой ссылке).',
@@ -2862,6 +3441,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 30,
+    status: 'proposed',
     title: { ru: 'Презентационная страница (лендинг)', en: 'Marketing / landing page' },
     summary: {
       ru: 'Публичная страница о приложении: зачем оно, базовые возможности, новости — и вход в регистрацию без открытия планировщика.',
@@ -2885,6 +3465,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 40,
+    status: 'proposed',
     title: { ru: 'Документация и руководство пользователя', en: 'In-app docs & user guide' },
     summary: {
       ru: 'После MVP: отдельная **страница или раздел «Справка / Руководство»** внутри приложения (или по публичной ссылке с тем же брендингом) — структурированное описание экранов, планирования, повторов, отчётов, seed и безопасности **простым языком**, с поиском по разделам и ссылками из подсказок в UI.',
@@ -2908,6 +3489,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 90,
+    status: 'proposed',
     title: { ru: 'Режим «Напоминание» (не задача)', en: '“Reminder” mode (not a tracked task)' },
     summary: {
       ru: 'После MVP: отдельный **режим записи** рядом с обычной задачей — **напоминание о чём-либо**: не ведёт себя как полноценная задача (без обязательной оценки, без «выполнено» как долга, **не участвует** в отчётах/стрике/EOD как невыполненный план), но может **показываться в дне** или в списке как лёгкая **записка** с датой/временем.',
@@ -2931,6 +3513,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 50,
+    status: 'proposed',
     title: { ru: 'Опросник приоритетов', en: 'Priority survey' },
     summary: {
       ru: 'Узнать у пользователей, что иметь в виду в первую очередь, а что можно отложить.',
@@ -2950,6 +3533,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 100,
+    status: 'proposed',
     title: { ru: 'Цели и шаблоны', en: 'Goals and templates' },
     summary: {
       ru: 'Два разных направления планирования «над» отдельными задачами.',
@@ -2981,6 +3565,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 15,
+    status: 'proposed',
     title: { ru: 'Жесты: long-press', en: 'Gestures: long-press' },
     summary: {
       ru: 'Дополнительные действия или контекстное меню по долгому нажатию на карточки и элементы.',
@@ -2990,6 +3575,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 60,
+    status: 'proposed',
     title: { ru: 'Геймификация', en: 'Gamification' },
     summary: {
       ru: 'Очки, уровни, награды — только после отдельной продуктовой проработки.',
@@ -2999,6 +3585,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 70,
+    status: 'proposed',
     title: { ru: 'Достижения', en: 'Achievements' },
     summary: {
       ru: 'После MVP: **достижения** — значки или вехи за осмысленные паттерны работы с планировщиком (первая неделя со стриком, закрытие давней задачи и т.п.), без давления и с возможностью **не показывать** блок в интерфейсе.',
@@ -3022,6 +3609,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 80,
+    status: 'proposed',
     title: { ru: 'Персонаж-тамагочи и группы', en: 'Tamagotchi-style character & groups' },
     summary: {
       ru: 'Мягкая геймификация **без давления**: персонаж, потребности (настроение, «кормление» и т.д.), привязка к **группам задач** — что усиливает персонажа при выполнении; опционально отключить в настройках.',
@@ -3037,6 +3625,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 110,
+    status: 'proposed',
     title: { ru: 'Нагрузка и рабочее время', en: 'Workload and working hours' },
     summary: {
       ru: 'Мягкие подсказки, чтобы не перегружать день, без жёстких запретов.',
@@ -3056,6 +3645,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'reliability_accounts',
     ideaLaterOrder: 70,
+    status: 'proposed',
     title: { ru: 'Нативные клиенты', en: 'Native clients' },
     summary: {
       ru: 'Отдельные приложения iOS/Android при наличии ресурсов; крипто — паритет с VAULT_CRYPTO_CONTRACT.',
@@ -3065,6 +3655,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'everyday_core',
     ideaLaterOrder: 120,
+    status: 'proposed',
     title: { ru: 'Экран «День»: другие виды', en: 'Day screen: alternate views' },
     summary: {
       ru: 'Помимо списка — таймлайн по часам, компактные режимы, переключатель вида.',
@@ -3084,6 +3675,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 90,
+    status: 'proposed',
     title: { ru: 'Подсказки через LLM (API)', en: 'LLM hints (API)' },
     summary: {
       ru: 'Внешние модели по API, свой ключ и провайдер — только после продуктовой и privacy-оценки.',
@@ -3099,6 +3691,7 @@ export const IDEAS_LATER_ENTRIES: RoadmapIdeaEntry[] = [
   {
     ideaLaterGroup: 'surface_ai_fun',
     ideaLaterOrder: 100,
+    status: 'proposed',
     title: { ru: 'MCP и контекстные ассистенты', en: 'MCP & contextual assistants' },
     summary: {
       ru: 'Интеграции через Model Context Protocol или аналоги — отдельный слой от «сырого» HTTP API к LLM.',

@@ -17,6 +17,7 @@ export type AdminActivityChart = {
   role: 'all' | 'admin' | 'beta_tester' | 'user'
   timezone: 'UTC'
   series: Array<{ date: string; unique_users: number }>
+  peak: { date: string; count: number } | null
   dau_today: number
   wau: number
 }

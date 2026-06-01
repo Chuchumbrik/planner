@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Area,
@@ -9,7 +10,8 @@ import {
 } from 'recharts'
 import type { TooltipProps } from 'recharts'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
-import { SETTINGS_BTN_SECONDARY, SETTINGS_CARD } from '@/lib/designClasses'
+import { AdminCardSection } from '@/components/admin/AdminCardSection'
+import { ADMIN_CHART_HEIGHT, SETTINGS_BTN_SECONDARY } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 import type { AdminKpiMetric, AdminKpiTrend } from '@/types/adminMonitoring'
 
@@ -55,76 +57,72 @@ export function AdminKpiChartZone({
   const gradId = `kpi-area-${metric}`
   const titleKey = `admin.dashboard.kpiTrend.title.${metric}`
 
-  function renderTooltip({ active, payload, label }: TooltipProps<number, string>) {
-    if (!active || !payload?.length) return null
-    const val = (payload[0]?.value as number) ?? 0
-    const display = unit === '%' ? `${val.toFixed(1)}%` : String(val)
-    const monthLabel = label ? formatMonthLabel(label, i18n.language) : ''
-    return (
-      <div
-        style={{
-          background: '#201f22',
-          border: `1px solid ${c.stroke}40`,
-          borderRadius: 8,
-          padding: '6px 10px',
-          pointerEvents: 'none',
-        }}
+  const renderTooltip = useCallback(
+    ({ active, payload, label }: TooltipProps<number, string>) => {
+      if (!active || !payload?.length) return null
+      const val = (payload[0]?.value as number) ?? 0
+      const display = unit === '%' ? `${val.toFixed(1)}%` : String(val)
+      const monthLabel = label ? formatMonthLabel(label, i18n.language) : ''
+      return (
+        <div
+          style={{
+            background: '#201f22',
+            border: `1px solid ${c.stroke}40`,
+            borderRadius: 8,
+            padding: '6px 10px',
+            pointerEvents: 'none',
+          }}
+        >
+          <p style={{ fontSize: 10, color: '#9e9da3', marginBottom: 2 }}>{monthLabel}</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: c.stroke, lineHeight: 1 }}>{display}</p>
+        </div>
+      )
+    },
+    [unit, c.stroke, i18n.language],
+  )
+
+  const closeButtons = (
+    <div className="flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        className={cn(SETTINGS_BTN_SECONDARY, 'text-xs')}
+        disabled={loadBusy}
+        onClick={onRefresh}
       >
-        <p style={{ fontSize: 10, color: '#9e9da3', marginBottom: 2 }}>{monthLabel}</p>
-        <p style={{ fontSize: 16, fontWeight: 700, color: c.stroke, lineHeight: 1 }}>{display}</p>
-      </div>
-    )
-  }
+        {loadBusy ? t('common.loading') : t('admin.dashboard.kpiTrend.refresh')}
+      </button>
+      <button
+        type="button"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+        onClick={onClose}
+        aria-label={t('common.close')}
+      >
+        <MaterialIcon name="close" size={18} />
+      </button>
+    </div>
+  )
 
   return (
-    <div className={SETTINGS_CARD}>
-      {/* header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4 className="font-display text-sm font-semibold text-on-surface">
-            {t(titleKey, { defaultValue: metric })}
-          </h4>
-          <p className="mt-0.5 text-xs text-on-surface-variant">
-            {t('admin.dashboard.kpiTrend.hint')}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            className={cn(SETTINGS_BTN_SECONDARY, 'text-xs')}
-            disabled={loadBusy}
-            onClick={onRefresh}
-          >
-            {loadBusy ? t('common.loading') : t('admin.dashboard.kpiTrend.refresh')}
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
-            onClick={onClose}
-            aria-label={t('common.close')}
-          >
-            <MaterialIcon name="close" size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* status */}
+    <AdminCardSection
+      title={t(titleKey, { defaultValue: metric })}
+      hint={t('admin.dashboard.kpiTrend.hint')}
+      action={closeButtons}
+    >
       {loadError ? (
-        <p className="mt-3 text-xs text-red-400" role="alert">{loadError}</p>
+        <p className="text-xs text-red-400" role="alert">{loadError}</p>
       ) : null}
       {tableMissing ? (
-        <p className="mt-3 text-xs text-amber-400/90" role="status">
+        <p className="text-xs text-amber-400/90" role="status">
           {t('admin.dashboard.activityTableMissing')}
         </p>
       ) : null}
 
-      {/* chart */}
       {loadBusy && !series.length ? (
-        <p className="mt-4 text-sm text-on-surface-variant">{t('common.loading')}</p>
+        <p className="text-sm text-on-surface-variant">{t('common.loading')}</p>
       ) : series.length < 2 ? (
-        <p className="mt-4 text-sm text-on-surface-variant">{t('admin.dashboard.kpiTrend.noData')}</p>
+        <p className="text-sm text-on-surface-variant">{t('admin.dashboard.kpiTrend.noData')}</p>
       ) : (
-        <div className="mt-4 h-36">
+        <div className={ADMIN_CHART_HEIGHT}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={series} margin={{ top: 6, right: 8, bottom: 0, left: -24 }}>
               <defs>
@@ -153,7 +151,12 @@ export function AdminKpiChartZone({
                 fill={`url(#${gradId})`}
                 dot={{ fill: '#1c1b1d', stroke: c.stroke, strokeWidth: 2, r: 3 }}
                 activeDot={{ fill: c.stroke, stroke: c.stroke, r: 5 }}
-                isAnimationActive={false}
+                // Area draws on mount and morphs smoothly when a different
+                // KPI metric is picked (the parent wrapper also re-keys for
+                // a cross-fade of the entire chart).
+                isAnimationActive
+                animationDuration={500}
+                animationEasing="ease-out"
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -161,10 +164,10 @@ export function AdminKpiChartZone({
       )}
 
       {/* UTC note */}
-      <p className="mt-3 flex items-center gap-1.5 text-xs text-on-surface-variant/60">
+      <p className="flex items-center gap-1.5 text-xs text-on-surface-variant/60">
         <MaterialIcon name="info" size={12} className="shrink-0" />
         {t('admin.dashboard.kpiTrend.utcNote')}
       </p>
-    </div>
+    </AdminCardSection>
   )
 }

@@ -1,35 +1,79 @@
 import type { ReactNode } from 'react'
-import { SETTINGS_CARD } from '@/lib/designClasses'
+import { useTranslation } from 'react-i18next'
+import { InfoTooltip } from '@/components/admin/InfoTooltip'
+import { MaterialIcon } from '@/components/ui/MaterialIcon'
+import { SETTINGS_CARD, ADMIN_CARD_BODY } from '@/lib/designClasses'
+import { cn } from '@/lib/cn'
 
 type Props = {
   title: string
+  /** Optional info tooltip next to the title (replaces the older `hint` /
+   *  `hint2` body text for consistency with KPI cards). */
+  titleTooltip?: string
   hint?: string
   hint2?: string
   action?: ReactNode
   children: ReactNode
   className?: string
+  collapsible?: boolean
+  collapsed?: boolean
+  onToggleCollapse?: () => void
+  /** Optional id for the collapsible body — used for `aria-controls`. */
+  bodyId?: string
 }
 
-/**
- * Reusable admin card with title / subtitle / optional action button.
- * Consolidates the repeated header pattern across admin chart components.
- */
-export function AdminCardSection({ title, hint, hint2, action, children, className }: Props) {
+export function AdminCardSection({
+  title,
+  titleTooltip,
+  hint,
+  hint2,
+  action,
+  children,
+  className,
+  collapsible,
+  collapsed,
+  onToggleCollapse,
+  bodyId,
+}: Props) {
+  const { t } = useTranslation()
   return (
-    <section className={`${SETTINGS_CARD}${className ? ` ${className}` : ''}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h3 className="font-display text-sm font-semibold text-on-surface">{title}</h3>
-          {hint ? (
+    <section className={cn(SETTINGS_CARD, className)}>
+      <div className="flex flex-col gap-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display flex items-center gap-1.5 text-sm font-semibold text-on-surface">
+            <span>{title}</span>
+            {titleTooltip ? <InfoTooltip text={titleTooltip} /> : null}
+          </h3>
+          {!collapsed && hint ? (
             <p className="mt-1 text-body-sm text-on-surface-variant">{hint}</p>
           ) : null}
-          {hint2 ? (
+          {!collapsed && hint2 ? (
             <p className="mt-1 text-xs text-on-surface-variant/70">{hint2}</p>
           ) : null}
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {(!collapsed && action) || collapsible ? (
+          <div className="flex shrink-0 items-center gap-1">
+            {!collapsed && action ? <div className="shrink-0">{action}</div> : null}
+            {collapsible ? (
+              <button
+                type="button"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+                onClick={onToggleCollapse}
+                aria-expanded={!collapsed}
+                aria-controls={bodyId}
+                aria-label={collapsed ? t('common.expand') : t('common.collapse')}
+              >
+                <MaterialIcon name={collapsed ? 'expand_more' : 'expand_less'} size={18} />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
-      {children}
+      {!collapsed ? (
+        <div id={bodyId} className={ADMIN_CARD_BODY}>
+          {children}
+        </div>
+      ) : null}
     </section>
   )
 }

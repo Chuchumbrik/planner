@@ -267,18 +267,34 @@
     border-radius: var(--radius-card);
   }
 
+  /*
+   * Mobile bottom-nav (.SHELL_BOTTOM_NAV) is `h-20` (80px / 5rem) tall plus
+   * a safe-area-inset-bottom padding. Both floating FABs (Create task /
+   * File defect) must clear it on mobile — at the previous bottom of
+   * `max(1rem, safe-area)` they were rendering BEHIND the nav and were
+   * effectively invisible. We add 5rem on viewports < 768px (where the nav
+   * is shown via `md:hidden`); on desktop (>= 768px) the bottom-nav is
+   * hidden, so we keep the FABs anchored at the viewport bottom edge.
+   */
   .motivator-fab-shell--fixed {
     position: fixed;
     right: max(1rem, env(safe-area-inset-right, 0px));
-    bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    bottom: calc(5rem + max(0.75rem, env(safe-area-inset-bottom, 0px)));
     z-index: 55;
   }
 
   .motivator-defect-fab {
     position: fixed;
     right: max(1rem, env(safe-area-inset-right, 0px));
-    bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    bottom: calc(5rem + max(0.75rem, env(safe-area-inset-bottom, 0px)));
     z-index: 40;
+  }
+
+  @media (min-width: 768px) {
+    .motivator-fab-shell--fixed,
+    .motivator-defect-fab {
+      bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    }
   }
 
   @media (max-width: 767px) {
@@ -501,6 +517,9 @@
   .gap-sm {
     gap: var(--spacing-pad-sm);
   }
+  .gap-md {
+    gap: var(--spacing-pad-md);
+  }
   .gap-lg {
     gap: var(--spacing-pad-lg);
   }
@@ -553,6 +572,18 @@
     }
     .md\:py-lg {
       padding-block: var(--spacing-pad-lg);
+    }
+    .md\:gap-md {
+      gap: var(--spacing-pad-md);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .xl\:space-y-lg > :not(:last-child) {
+      margin-bottom: var(--spacing-pad-lg);
+    }
+    .xl\:p-lg {
+      padding: var(--spacing-pad-lg);
     }
   }
 }

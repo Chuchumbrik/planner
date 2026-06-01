@@ -73,7 +73,7 @@ function AdminTestingPageInner() {
   const effectiveNow = activeOverride ? getAppNow() : null
 
   return (
-    <MotivatorShell activeNav="prototype-admin" wide title={t('admin.testingTitle')}>
+    <MotivatorShell activeNav="prototype-admin" wide align="left" title={t('admin.testingTitle')}>
       <header className="mb-md">
         <h2 className={SETTINGS_TAB_PANEL_TITLE}>{t('admin.testingTitle')}</h2>
         <p className={SETTINGS_TAB_PANEL_INTRO}>{t('admin.testingIntro')}</p>

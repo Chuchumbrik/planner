@@ -59,3 +59,47 @@ export function userMatchesSegment(
   const cutoff = segment === 'inactive7' ? daysAgoMs(7, now) : daysAgoMs(30, now)
   return sign < cutoff
 }
+
+export function isInactiveForDays(user: MotivatorRoleRow, days: number, now = Date.now()): boolean {
+  const sign = parseTime(user.last_sign_in_at)
+  if (sign == null) return true
+  return sign < daysAgoMs(days, now)
+}
+
+export type UserSortField = 'last_sign_in' | 'created' | 'email' | 'role'
+
+const ROLE_ORDER: Record<MotivatorRoleRow['motivator_role'], number> = {
+  admin: 0,
+  beta_tester: 1,
+  user: 2,
+}
+
+export function buildUserComparator(
+  field: UserSortField,
+  dir: 'asc' | 'desc',
+): (a: MotivatorRoleRow, b: MotivatorRoleRow) => number {
+  const sign = dir === 'asc' ? 1 : -1
+  return (a, b) => {
+    let cmp = 0
+    if (field === 'last_sign_in') {
+      const ta = parseTime(a.last_sign_in_at)
+      const tb = parseTime(b.last_sign_in_at)
+      if (ta == null && tb == null) cmp = 0
+      else if (ta == null) cmp = 1
+      else if (tb == null) cmp = -1
+      else cmp = ta - tb
+    } else if (field === 'created') {
+      const ta = parseTime(a.created_at)
+      const tb = parseTime(b.created_at)
+      if (ta == null && tb == null) cmp = 0
+      else if (ta == null) cmp = 1
+      else if (tb == null) cmp = -1
+      else cmp = ta - tb
+    } else if (field === 'email') {
+      cmp = a.email.localeCompare(b.email)
+    } else if (field === 'role') {
+      cmp = ROLE_ORDER[a.motivator_role] - ROLE_ORDER[b.motivator_role]
+    }
+    return cmp * sign || a.email.localeCompare(b.email)
+  }
+}
