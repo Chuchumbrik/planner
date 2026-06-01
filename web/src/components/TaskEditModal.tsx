@@ -337,7 +337,9 @@ export function TaskEditModal({
     if (task.checklist.length > 0) {
       if (!window.confirm(t('app.confirmDeleteTaskWithChecklist'))) return
     }
-    if (task.recurrence && !window.confirm(t('app.confirmDeleteTaskEntire'))) return
+    if (task.recurrence || task.checklist.length === 0) {
+      if (!window.confirm(t('app.confirmDeleteTaskEntire'))) return
+    }
     onRemove()
     onClose()
   }

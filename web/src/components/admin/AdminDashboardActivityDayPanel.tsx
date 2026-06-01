@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
+import { AdminCardSection } from '@/components/admin/AdminCardSection'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { RoleBadge } from '@/components/admin/RoleBadge'
-import { ADMIN_CARD_BODY, ADMIN_NESTED_PANEL, SETTINGS_BTN_SECONDARY } from '@/lib/designClasses'
+import { SETTINGS_BTN_SECONDARY } from '@/lib/designClasses'
 import { cn } from '@/lib/cn'
 import { formatAdminDateTime } from '@/lib/formatAdminDate'
 import type { AdminActivityDayDetail } from '@/types/adminMonitoring'
@@ -24,51 +25,42 @@ export function AdminDashboardActivityDayPanel({
 
   const dateLabel = detail?.date ?? '—'
   const count = detail?.users.length ?? 0
+  const roleSuffix = detail && detail.role !== 'all'
+    ? ` · ${t(`admin.dashboard.activityChartRole.${detail.role}`)}`
+    : ''
+
+  const actionButtons = (
+    <div className="flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        className={cn(SETTINGS_BTN_SECONDARY, 'text-xs')}
+        disabled={loadBusy || !detail}
+        onClick={onRefresh}
+      >
+        {loadBusy ? t('common.loading') : t('admin.dashboard.activityDayRefresh')}
+      </button>
+      <button
+        type="button"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+        onClick={onClose}
+        aria-label={t('common.close')}
+      >
+        <MaterialIcon name="close" size={18} />
+      </button>
+    </div>
+  )
 
   return (
-    <div className={ADMIN_NESTED_PANEL}>
-      {/* header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4 className="font-display text-sm font-semibold text-on-surface">
-            {t('admin.dashboard.activityDayTitle', { date: dateLabel })}
-          </h4>
-          {detail ? (
-            <p className="mt-0.5 text-xs text-on-surface-variant">
-              {t('admin.dashboard.activityDayCount', { count })}
-              {detail.role !== 'all'
-                ? ` · ${t(`admin.dashboard.activityChartRole.${detail.role}`)}`
-                : ''}
-            </p>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            className={cn(SETTINGS_BTN_SECONDARY, 'text-xs')}
-            disabled={loadBusy || !detail}
-            onClick={onRefresh}
-          >
-            {loadBusy ? t('common.loading') : t('admin.dashboard.activityDayRefresh')}
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
-            onClick={onClose}
-            aria-label={t('common.close')}
-          >
-            <MaterialIcon name="close" size={18} />
-          </button>
-        </div>
-      </div>
-
-      <div className={ADMIN_CARD_BODY}>
-      {/* status */}
+    <AdminCardSection
+      title={t('admin.dashboard.activityDayTitle', { date: dateLabel })}
+      titleTooltip={t('admin.dashboard.activityDayHint')}
+      hint={detail ? t('admin.dashboard.activityDayCount', { count }) + roleSuffix : undefined}
+      action={actionButtons}
+    >
       {loadError ? (
         <p className="text-xs text-red-400" role="alert">{loadError}</p>
       ) : null}
 
-      {/* content */}
       {loadBusy && !detail?.users.length ? (
         <p className="text-sm text-on-surface-variant">{t('common.loading')}</p>
       ) : detail && detail.users.length === 0 ? (
@@ -118,12 +110,10 @@ export function AdminDashboardActivityDayPanel({
         </div>
       ) : null}
 
-      {/* UTC note */}
       <p className="flex items-center gap-1.5 text-xs text-on-surface-variant/60">
         <MaterialIcon name="info" size={12} className="shrink-0" />
         {t('admin.dashboard.activityDayUtcNote')}
       </p>
-      </div>
-    </div>
+    </AdminCardSection>
   )
 }

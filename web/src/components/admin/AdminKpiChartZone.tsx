@@ -105,7 +105,7 @@ export function AdminKpiChartZone({
   return (
     <AdminCardSection
       title={t(titleKey, { defaultValue: metric })}
-      hint={t('admin.dashboard.kpiTrend.hint')}
+      titleTooltip={t('admin.dashboard.kpiTrend.hint')}
       action={closeButtons}
     >
       {loadError ? (

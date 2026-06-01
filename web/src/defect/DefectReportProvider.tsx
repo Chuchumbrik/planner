@@ -40,7 +40,7 @@ export function DefectReportProvider({ children }: { children: ReactNode }) {
   return (
     <DefectReportContext.Provider value={value}>
       {children}
-      {session && isSupabaseConfigured && supabase ? (
+      {session && (isAdmin || isBetaTester) && isSupabaseConfigured && supabase ? (
         <FileDefectModal
           open={open}
           onClose={closeDefectReport}
