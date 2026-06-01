@@ -6,7 +6,7 @@
 > **Часть MVP Phase 7** «Настройки, аккаунт, юридика» — это под-направление.
 > **Базис решений**: [[19-Business-требования#BR-D-004]] + [[19-Business-требования#BR-D-005]] (owner override).
 
-**Статус**: 🚧 В процессе (7.0–7.6 завершены и в `main`; следующее — 7.7 Reminder 24h).
+**Статус**: 🚧 В процессе (7.0–7.7 завершены и в `main`; следующее — блок Discussions 7.8–7.11).
 
 ---
 
@@ -448,7 +448,7 @@ create table admin_discussion_subscribers (
 - [x] **7.4** Search/filter (sticky-бар, `?q=` debounce 250ms по changes+plainBullets, tag-чипы `?tag=`, range `?from=&to=` через from/to-селекты, reset, счётчик, авто-раскрытие, empty-state; `roadmapFilter.ts`; 12 тестов)
 - [x] **7.5** 2-col Plan+Ideas (xl 2 колонки; План MVP с current-glow/«Сейчас», Идеи со status-чипами §8.3, кликабельные shipped→anchor/discussion; `roadmapIdeaStatusMeta.ts`; 7 тестов)
 - [x] **7.6** Footer stats + sparkline (релизы 7д/30д/всего, идеи по статусам, discussions-заглушка, Recharts sparkline скорости 12нед → Timeline; `roadmapStats.ts`; 6 тестов)
-- [ ] **7.7** Reminder 24h
+- [x] **7.7** Reminder 24h (amber/red баннер по ритму релизов под Hero; порог 24/48/72ч в localStorage, snooze «на сегодня», weekend-skip, paused-bypass; `releaseCadence.ts`; 13 тестов)
 - [ ] **7.8** Discussions backend
 - [ ] **7.9** Discussions UI
 - [ ] **7.10** Notifications (push + badge)
