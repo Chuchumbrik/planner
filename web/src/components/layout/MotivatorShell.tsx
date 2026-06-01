@@ -8,6 +8,7 @@ import { AiAssistantTrigger } from '@/components/ai/AiAssistantTrigger'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { ShellAccountFooter } from '@/components/layout/ShellAccountFooter'
 import { ShellAdminNav } from '@/components/layout/ShellAdminNav'
+import { ShellDiscussionsButton } from '@/components/layout/ShellDiscussionsButton'
 import { ShellHeaderActions } from '@/components/layout/ShellHeaderActions'
 import { QaClockBanner } from '@/components/qa/QaClockBanner'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
@@ -311,6 +312,7 @@ function MotivatorShellInner({
               <h1 className={SHELL_PAGE_TITLE}>{pageTitle}</h1>
             </div>
             <div className={SHELL_HEADER_ACTIONS}>
+              {canAccessPreviewFeatures ? <ShellDiscussionsButton /> : null}
               {canAccessPreviewFeatures && isDesktop ? (
                 <AiAssistantTrigger variant="header" />
               ) : null}

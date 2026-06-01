@@ -306,6 +306,40 @@ body {
   }
 }
 
+/* Phase 7.10 — короткое «покачивание колокольчика» при новом непрочитанном. */
+@keyframes bell-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(12deg);
+  }
+  30% {
+    transform: rotate(-10deg);
+  }
+  45% {
+    transform: rotate(8deg);
+  }
+  60% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+.animate-bell-shake {
+  animation: bell-shake 700ms ease-in-out;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-bell-shake {
+    animation: none;
+  }
+}
+
 /* DR-004 / карточка: короткий «успех» после финального выполнения */
 @keyframes task-done-success {
   0% {

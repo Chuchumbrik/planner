@@ -366,6 +366,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-01', en: '2026-06-01' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.22', en: '0.7.22' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Обсуждения (`/admin/discussions`) — уведомления и sync-поток (Phase 7.10–7.11):** БД-триггер на новый ответ вызывает Edge `admin-discussions-notify` (pg_net) → web-push всем подписчикам треда, кроме автора ответа; текст пуша локализован (ru/en) по языку подписки получателя. Авто-подписка автора и ответивших уже была; добавлен тоггл «Подписаться/Отписаться» во вью треда (сетевой сбой подписки теперь показывает ошибку, а не молчит). In-app бейдж непрочитанных (`UnreadDiscussionsBadge`) — рядом с пунктом меню «Обсуждения» и в шапке приложения; «живой»: обновляется раз в минуту и при возврате на вкладку, с bell-shake при росте счётчика. Для статуса «К журналу» — кнопка copy-to-clipboard итога и inline-поле записи журнала (DR-XXX) с кнопкой «Перенести в журнал» прямо в треде (модалка остаётся резервным путём).',
+            en: '**Discussions (`/admin/discussions`) — notifications & sync flow (Phase 7.10–7.11):** a DB trigger on a new reply calls the `admin-discussions-notify` Edge function (pg_net) → web-push to every thread subscriber except the reply author; the push copy is localized (ru/en) by the recipient subscription language. Author/replier auto-subscribe already existed; a «Subscribe/Unsubscribe» toggle was added to the thread view (a network failure now surfaces an error instead of failing silently). An in-app unread badge (`UnreadDiscussionsBadge`) sits next to the «Discussions» nav item and in the app header; it is «live» — refreshed every minute and on tab refocus, with a bell-shake when the count grows. For the «to-journal» status — a copy-to-clipboard button for the summary and an inline journal-entry field (DR-XXX) with a «Moved to journal» button right in the thread (the modal remains a fallback).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Теперь приходят пуш-уведомления о новых ответах в обсуждениях, рядом с пунктом меню виден счётчик непрочитанного, а перенос решения в журнал можно сделать прямо в треде.',
+            en: 'You now get push notifications for new replies in discussions, an unread counter next to the menu item, and you can move a decision to the journal right inside the thread.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.21', en: '0.7.21' },
         tag: 'feat',
         changes: [

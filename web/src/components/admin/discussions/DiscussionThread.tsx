@@ -5,7 +5,7 @@ import { AiMarkdown } from '@/components/ai/AiMarkdown'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
 import { MOTIVATOR_INPUT, SETTINGS_BTN_SECONDARY } from '@/lib/designClasses'
-import { invokeDiscussionsFn, type Discussion, type DiscussionReply } from '@/lib/discussionsApi'
+import { invokeDiscussionsFn, isStaleStatusError, type Discussion, type DiscussionReply } from '@/lib/discussionsApi'
 import { DiscussionReplyItem } from './DiscussionReplyItem'
 import { DiscussionStatusChip } from './DiscussionStatusChip'
 
@@ -19,6 +19,8 @@ interface Props {
   onChanged: () => void
   onResolveClick: () => void
   onSyncClick: () => void
+  /** Whether the current user is subscribed to this thread's notifications. */
+  subscribed: boolean
 }
 
 export function DiscussionThread({
@@ -30,6 +32,7 @@ export function DiscussionThread({
   onChanged,
   onResolveClick,
   onSyncClick,
+  subscribed,
 }: Props) {
   const { t } = useTranslation()
   const [replyBody, setReplyBody] = useState('')
@@ -37,6 +40,9 @@ export function DiscussionThread({
   const [actionBusy, setActionBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmArchive, setConfirmArchive] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [localJournalEntry, setLocalJournalEntry] = useState('')
+  const [inlineSyncBusy, setInlineSyncBusy] = useState(false)
 
   const canReply = replyBody.trim() !== '' && !replyBusy
 
@@ -73,6 +79,65 @@ export function DiscussionThread({
     onChanged()
   }
 
+  async function toggleSubscribe() {
+    if (actionBusy || loadBusy) return
+    setActionBusy(true)
+    setError(null)
+    const result = await invokeDiscussionsFn(supabase, {
+      action: subscribed ? 'unsubscribe' : 'subscribe',
+      discussionId: discussion.id,
+    })
+    setActionBusy(false)
+    if (!result) return
+    if ('error' in result) {
+      setError(result.error)
+      return
+    }
+    onChanged()
+  }
+
+  async function copySummary() {
+    const text = discussion.resolution_summary ?? ''
+    if (!text) return
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      }
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch (e) {
+      console.warn('copy failed', e)
+    }
+  }
+
+  async function inlineSync() {
+    if (!localJournalEntry.trim() || inlineSyncBusy) return
+    setInlineSyncBusy(true)
+    setError(null)
+    const result = await invokeDiscussionsFn(supabase, {
+      action: 'mark-synced',
+      discussionId: discussion.id,
+      linkedJournalEntry: localJournalEntry.trim(),
+    })
+    setInlineSyncBusy(false)
+    if (!result) return
+    if ('error' in result) {
+      setError(isStaleStatusError(result.error) ? t('admin.discussions.staleStatus') : result.error)
+      return
+    }
+    setLocalJournalEntry('')
+    onChanged()
+  }
+
   function onReplyKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault()
@@ -105,10 +170,50 @@ export function DiscussionThread({
             {t('admin.discussions.pendingJournalHint')}
           </p>
           {discussion.resolution_summary ? (
-            <div className="rounded border border-amber-400/20 bg-surface-container-lowest/60 p-2">
-              <AiMarkdown text={discussion.resolution_summary} />
+            <div className="space-y-2 rounded border border-amber-400/20 bg-surface-container-lowest/60 p-2">
+              <div className="flex items-start justify-between gap-2">
+                <AiMarkdown text={discussion.resolution_summary} />
+                <button
+                  type="button"
+                  className={cn(SETTINGS_BTN_SECONDARY, 'flex shrink-0 items-center gap-1.5')}
+                  onClick={() => void copySummary()}
+                >
+                  <MaterialIcon name={copied ? 'check' : 'content_copy'} size={16} />
+                  {copied ? t('admin.discussions.copiedToClipboard') : t('admin.discussions.copySummary')}
+                </button>
+              </div>
             </div>
           ) : null}
+          <div className="space-y-1.5 border-t border-amber-400/20 pt-2">
+            <label className="block">
+              <span className="mb-1 block text-label-sm text-amber-300/90">
+                {t('admin.discussions.linkedJournalEntryInline')}
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  className={cn(MOTIVATOR_INPUT, 'max-w-[12rem]')}
+                  value={localJournalEntry}
+                  onChange={(e) => setLocalJournalEntry(e.target.value)}
+                  placeholder={t('admin.discussions.linkedJournalEntryPlaceholder')}
+                  disabled={inlineSyncBusy}
+                />
+                <button
+                  type="button"
+                  className={cn(
+                    SETTINGS_BTN_SECONDARY,
+                    'flex items-center gap-1.5 border-primary/40 text-primary hover:bg-primary/10',
+                    (!localJournalEntry.trim() || inlineSyncBusy) && 'opacity-50',
+                  )}
+                  onClick={() => void inlineSync()}
+                  disabled={!localJournalEntry.trim() || inlineSyncBusy}
+                >
+                  <MaterialIcon name="check_circle" size={16} />
+                  {inlineSyncBusy ? t('common.loading') : t('admin.discussions.syncInline')}
+                </button>
+              </div>
+            </label>
+          </div>
         </div>
       ) : null}
 
@@ -155,6 +260,21 @@ export function DiscussionThread({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2 border-t border-surface-variant pt-3">
+        <button
+          type="button"
+          className={cn(
+            SETTINGS_BTN_SECONDARY,
+            'flex items-center gap-1.5',
+            subscribed && 'border-primary/40 text-primary hover:bg-primary/10',
+          )}
+          onClick={toggleSubscribe}
+          disabled={actionBusy || loadBusy}
+          title={subscribed ? t('admin.discussions.subscribed') : t('admin.discussions.unsubscribed')}
+        >
+          <MaterialIcon name={subscribed ? 'notifications_active' : 'notifications_off'} size={16} />
+          {subscribed ? t('admin.discussions.unsubscribeNotify') : t('admin.discussions.subscribeNotify')}
+        </button>
+
         {discussion.status === 'open' ? (
           <button
             type="button"

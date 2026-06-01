@@ -714,9 +714,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return 'no_sw'
     const sub = await ensurePushSubscription()
     if (!sub) return 'denied'
-    await upsertPushSubscriptionRow(supabase, session.user.id, sub)
+    await upsertPushSubscriptionRow(
+      supabase,
+      session.user.id,
+      sub,
+      i18n.language?.startsWith('en') ? 'en' : 'ru',
+    )
     return 'ok'
-  }, [session, supabase])
+  }, [session, supabase, i18n])
 
   const sendTestPushNotification = useCallback(async () => {
     if (!supabase) throw new Error('Supabase is not configured')
