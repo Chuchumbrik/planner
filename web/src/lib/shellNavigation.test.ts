@@ -94,14 +94,19 @@ describe('shellPreviewNavForUser', () => {
 // ── shellAdminNavForUser ──────────────────────────────────────────────────────
 
 describe('shellAdminNavForUser', () => {
-  it('admin gets all 3 items: dashboard, roadmap, testing', () => {
+  it('admin gets all items: dashboard, roadmap, discussions, testing', () => {
     const nav = shellAdminNavForUser(true)
-    expect(nav.map((i) => i.id)).toEqual(['admin-dashboard', 'admin-roadmap', 'admin-testing'])
+    expect(nav.map((i) => i.id)).toEqual([
+      'admin-dashboard',
+      'admin-roadmap',
+      'admin-discussions',
+      'admin-testing',
+    ])
   })
 
-  it('non-admin gets only roadmap and testing (no dashboard)', () => {
+  it('non-admin gets roadmap, discussions and testing (no dashboard)', () => {
     const nav = shellAdminNavForUser(false)
-    expect(nav.map((i) => i.id)).toEqual(['admin-roadmap', 'admin-testing'])
+    expect(nav.map((i) => i.id)).toEqual(['admin-roadmap', 'admin-discussions', 'admin-testing'])
     expect(nav.find((i) => i.id === 'admin-dashboard')).toBeUndefined()
   })
 
@@ -109,6 +114,7 @@ describe('shellAdminNavForUser', () => {
     const byId = Object.fromEntries(SHELL_ADMIN_NAV.map((i) => [i.id, i.to]))
     expect(byId['admin-dashboard']).toBe('/admin/dashboard')
     expect(byId['admin-roadmap']).toBe('/admin/roadmap')
+    expect(byId['admin-discussions']).toBe('/admin/discussions')
     expect(byId['admin-testing']).toBe('/admin/testing')
   })
 })

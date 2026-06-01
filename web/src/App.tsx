@@ -15,6 +15,7 @@ import { DeepFocusPrototypePage } from '@/pages/prototypes/DeepFocusPrototypePag
 import { RequireAdmin } from '@/components/auth/RequireAdmin'
 import { RequireTesterPreview } from '@/components/auth/RequireTesterPreview'
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage'
+import { AdminDiscussionsPage } from '@/pages/AdminDiscussionsPage'
 import { AdminRoadmapPage } from '@/pages/AdminRoadmapPage'
 import { AdminTestingPage } from '@/pages/AdminTestingPage'
 import { CookieConsentGate } from '@/components/CookieConsentGate'
@@ -133,6 +134,30 @@ export function App() {
             session ? (
               <RequireTesterPreview>
                 <AdminRoadmapPage />
+              </RequireTesterPreview>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/admin/discussions"
+          element={
+            session ? (
+              <RequireTesterPreview>
+                <AdminDiscussionsPage />
+              </RequireTesterPreview>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/admin/discussions/:id"
+          element={
+            session ? (
+              <RequireTesterPreview>
+                <AdminDiscussionsPage />
               </RequireTesterPreview>
             ) : (
               <Navigate to="/login" replace />

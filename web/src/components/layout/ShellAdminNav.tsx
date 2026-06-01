@@ -23,6 +23,9 @@ export function ShellAdminNav({ onNavigate, isAdmin, collapsed = false }: Props)
     if (item.id === 'admin-roadmap') {
       return location.pathname === '/admin/roadmap'
     }
+    if (item.id === 'admin-discussions') {
+      return location.pathname.startsWith('/admin/discussions')
+    }
     if (item.id === 'admin-testing') {
       return location.pathname === '/admin/testing'
     }

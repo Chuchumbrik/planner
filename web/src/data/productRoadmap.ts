@@ -366,6 +366,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-01', en: '2026-06-01' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.21', en: '0.7.21' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Обсуждения (`/admin/discussions`) — UI (Phase 7.9):** новая страница тредов поверх Edge `admin-discussions`. Список тредов с сортировкой open→К журналу→synced→архив, status-чипами (§8.4), превью, счётчиком ответов и бейджем непрочитанного. Просмотр треда — заголовок + body (markdown через `AiMarkdown`), список ответов, форма ответа (Ctrl+Enter), действия «Решить» (open→pending-journal), «Перенёс в журнал» (pending-journal→synced) и «Архивировать». Модалки создания/резолюции/синка. Чистая логика — `lib/discussionSort.ts` (тесты).',
+            en: '**Discussions (`/admin/discussions`) — UI (Phase 7.9):** a new thread page over the `admin-discussions` Edge function. Thread list sorted open→to-journal→synced→archived, with status chips (§8.4), preview, reply count, and an unread badge. Thread view — title + body (markdown via `AiMarkdown`), reply list, reply form (Ctrl+Enter), and actions «Resolve» (open→pending-journal), «Moved to journal» (pending-journal→synced), and «Archive». Create / resolve / sync modals. Pure logic in `lib/discussionSort.ts` (unit-tested).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Появился раздел «Обсуждения» в админ-панели: можно заводить треды, отвечать, отмечать решёнными и архивировать.',
+            en: 'A «Discussions» section appeared in the admin panel: you can open threads, reply, mark them resolved, and archive.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.20', en: '0.7.20' },
         tag: 'feat',
         changes: [

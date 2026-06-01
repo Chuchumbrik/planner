@@ -55,17 +55,18 @@ export const SHELL_PREVIEW_NAV: ShellNavItem[] = [
 ]
 
 export type ShellAdminNavItem = {
-  id: 'admin-dashboard' | 'admin-roadmap' | 'admin-testing'
+  id: 'admin-dashboard' | 'admin-roadmap' | 'admin-discussions' | 'admin-testing'
   to: string
   icon: string
   labelKey: string
 }
 
-/** Пункты админ-sidebar: у beta_tester — «Краткая сводка» и «Тестирование». */
+/** Пункты админ-sidebar: у beta_tester — «Краткая сводка», «Обсуждения» и «Тестирование». */
 export function shellAdminNavForUser(isAdmin: boolean): ShellAdminNavItem[] {
   if (isAdmin) return SHELL_ADMIN_NAV
   return SHELL_ADMIN_NAV.filter(
-    (item) => item.id === 'admin-roadmap' || item.id === 'admin-testing',
+    (item) =>
+      item.id === 'admin-roadmap' || item.id === 'admin-discussions' || item.id === 'admin-testing',
   )
 }
 
@@ -95,6 +96,12 @@ export const SHELL_ADMIN_NAV: ShellAdminNavItem[] = [
     to: '/admin/roadmap',
     icon: 'map',
     labelKey: 'shell.adminNavRoadmap',
+  },
+  {
+    id: 'admin-discussions',
+    to: '/admin/discussions',
+    icon: 'forum',
+    labelKey: 'shell.adminNavDiscussions',
   },
   {
     id: 'admin-testing',

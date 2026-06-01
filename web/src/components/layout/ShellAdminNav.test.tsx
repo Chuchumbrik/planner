@@ -33,18 +33,18 @@ function renderNav(
 // ── nav items by role ─────────────────────────────────────────────────────────
 
 describe('ShellAdminNav — items by role', () => {
-  it('admin sees back-to-app link + 3 admin nav links', () => {
+  it('admin sees back-to-app link + 4 admin nav links', () => {
     renderNav({ isAdmin: true })
     const links = screen.getAllByRole('link')
-    // back to /app + dashboard + roadmap + testing = 4
-    expect(links).toHaveLength(4)
+    // back to /app + dashboard + roadmap + discussions + testing = 5
+    expect(links).toHaveLength(5)
   })
 
-  it('non-admin (beta_tester) sees back-to-app link + 2 nav links', () => {
+  it('non-admin (beta_tester) sees back-to-app link + 3 nav links', () => {
     renderNav({ isAdmin: false })
     const links = screen.getAllByRole('link')
-    // back to /app + roadmap + testing = 3 (no dashboard)
-    expect(links).toHaveLength(3)
+    // back to /app + roadmap + discussions + testing = 4 (no dashboard)
+    expect(links).toHaveLength(4)
   })
 
   it('admin: dashboard link present', () => {
