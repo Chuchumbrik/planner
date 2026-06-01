@@ -2,8 +2,8 @@
  * Push-уведомления подписчикам треда при новом reply (Phase 7.10).
  * Вызывается БД-триггером `discussion_reply_notify` через pg_net (net.http_post).
  *
- * Auth: Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY> (передаёт триггер) —
- *       строковое сравнение с env, не JWT-пользователь.
+ * Auth: Authorization: Bearer <secret> (передаёт триггер из Vault); функция
+ *       сверяет токен с тем же vault-секретом через RPC `discussion_notify_check`.
  * Body: { discussion_id: string, reply_author_id: string }
  * Секреты: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, VAPID_PUBLIC_KEY,
  *          VAPID_PRIVATE_KEY, VAPID_SUBJECT.
@@ -47,9 +47,16 @@ Deno.serve(async (req) => {
   if (!url || !service) return json(500, { error: 'supabase_env_missing' })
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) return json(500, { error: 'vapid_not_configured' })
 
-  // Auth: запрос приходит от pg_net с service_role key — сравниваем напрямую.
-  const auth = req.headers.get('Authorization') ?? ''
-  if (auth !== `Bearer ${service}`) return json(401, { error: 'unauthorized' })
+  const sb = createClient(url, service, { auth: { autoRefreshToken: false, persistSession: false } })
+
+  // Auth: сверяем входящий Bearer-токен с общим секретом в Vault через RPC
+  // (`discussion_notify_check`). Платформенный env-ключ для разных проектов
+  // бывает в разном формате, поэтому не сравниваем с ним напрямую.
+  const authHeader = req.headers.get('Authorization') ?? ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+  const { data: authorized, error: authErr } = await sb.rpc('discussion_notify_check', { token })
+  if (authErr) return json(500, { error: 'auth_check_failed', detail: authErr.message })
+  if (!authorized) return json(401, { error: 'unauthorized' })
 
   let body: Record<string, unknown>
   try {
@@ -61,8 +68,6 @@ Deno.serve(async (req) => {
   const discussionId = typeof body.discussion_id === 'string' ? body.discussion_id : ''
   const replyAuthorId = typeof body.reply_author_id === 'string' ? body.reply_author_id : ''
   if (!UUID_RE.test(discussionId)) return json(400, { error: 'invalid_discussion_id' })
-
-  const sb = createClient(url, service, { auth: { autoRefreshToken: false, persistSession: false } })
 
   const { data: discussion } = await sb
     .from('admin_discussions')
