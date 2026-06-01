@@ -6,7 +6,7 @@
 > **Часть MVP Phase 7** «Настройки, аккаунт, юридика» — это под-направление.
 > **Базис решений**: [[19-Business-требования#BR-D-004]] + [[19-Business-требования#BR-D-005]] (owner override).
 
-**Статус**: 🚧 В процессе (7.0–7.7 завершены и в `main`; следующее — блок Discussions 7.8–7.11).
+**Статус**: 🚧 В процессе (7.0–7.9 завершены; 7.9 Discussions UI реализован, нужны доп. тесты перед PR; следующее — 7.10 Notifications, 7.11 Sync workflow, 7.12 A11y/mobile/perf).
 
 ---
 
@@ -47,7 +47,7 @@
 
 | Решение | Выбор | Обоснование |
 |---|---|---|
-| **Аудитория** | только admin | 1 пользователь; не показывается даже beta_tester'у |
+| **Аудитория** | admin (полный доступ) + beta_tester (read+reply) | Решение owner 2026-06-01 (резолюция BUG-2): admin делает всё; beta_tester видит страницу (route под `RequireTesterPreview`), читает треды и отвечает (reply), но НЕ create/resolve/mark-synced/archive (те — admin-only, гард в Edge). `user` — 403. Соответствует RLS-дизайну §5.2. (Ранее §4 говорил «только admin» — отменено этим решением.) |
 | **Discussions vs Obsidian-journal** | Hybrid (вариант B2) | In-app — workspace; Obsidian-journal остаётся источником истины. Ручная sync через статус «К журналу». Claude по-прежнему читает Obsidian через Read+Grep + Supabase через MCP. |
 | **Discussions location** | Отдельная страница `/admin/discussions` | Запросил owner; не перегружает roadmap-страницу |
 | **Reminder 24h** | Keep — fixed 24h + snooze + weekend skip | Owner override BR-D-004 reject. «Это мой инструмент для меня». |
@@ -449,8 +449,8 @@ create table admin_discussion_subscribers (
 - [x] **7.5** 2-col Plan+Ideas (xl 2 колонки; План MVP с current-glow/«Сейчас», Идеи со status-чипами §8.3, кликабельные shipped→anchor/discussion; `roadmapIdeaStatusMeta.ts`; 7 тестов)
 - [x] **7.6** Footer stats + sparkline (релизы 7д/30д/всего, идеи по статусам, discussions-заглушка, Recharts sparkline скорости 12нед → Timeline; `roadmapStats.ts`; 6 тестов)
 - [x] **7.7** Reminder 24h (amber/red баннер по ритму релизов под Hero; порог 24/48/72ч в localStorage, snooze «на сегодня», weekend-skip, paused-bypass; `releaseCadence.ts`; 13 тестов)
-- [x] **7.8** Discussions backend (миграции 008–011 применены на Supabase: `admin_discussions`/`_replies`/`_read`/`_subscribers` + RLS admin/beta + триггер reply_count; Edge `admin-discussions` (10 actions) задеплоена ACTIVE; security-advisors чисто. ⚠️ MCP `execute_sql` недоступен (`crypto is not defined`) — live insert/trigger проверим из UI в 7.9)
-- [ ] **7.9** Discussions UI
+- [x] **7.8** Discussions backend (миграции 008–011 применены на Supabase: `admin_discussions`/`_replies`/`_read`/`_subscribers` + RLS admin/beta + триггер reply_count; Edge `admin-discussions` (10 actions) задеплоена ACTIVE; security-advisors чисто. ✅ live-проверка через Supabase Management API (2026-06-01): триггер бампает reply_count 0→2 + last_reply_at + updated_at, cascade-delete без orphan, RLS = только SELECT для admin/beta (записи — Edge service role), Edge auth-гейт 401/403 ок. ⚠️→✅ MCP `execute_sql` падал `crypto is not defined` (Node 18 + spawned MCP без webcrypto, во всех версиях 0.5–0.8); ФИКС: в `~/.claude.json` → mcpServers.supabase.env добавлен `NODE_OPTIONS=--experimental-global-webcrypto` (бэкап `~/.claude.json.bak-pre-webcrypto-fix`); вступает в силу после рестарта Claude Code. Альтернативный обход без рестарта — curl к `api.supabase.com/v1/projects/{ref}/database/query` тем же `sbp_`-токеном)
+- [x] **7.9** Discussions UI (страница `/admin/discussions`: список с сортировкой open→pending-journal→synced→archived + unread-бейдж, thread view с markdown через `AiMarkdown`, модалки Create/Resolve/Sync, статусные переходы resolve/mark-synced/archive/reply, i18n ru/en, stagger+pulse; хуки `useDiscussions`/`useDiscussionThread`, `discussionStatusMeta.ts`; +14 тестов. v0.7.21. BUG-1 (пустое превью списка) исправлен: Edge `list` теперь отдаёт `body` (admin-discussions v3, верифицировано через get_edge_function). BUG-2 (доступ) разрешён owner'ом → admin+beta read/reply, §4 обновлён. Осталось до PR: доп. тесты статус-переходов/RTL-smoke и мелкие edge-cases из отчёта)
 - [ ] **7.10** Notifications (push + badge)
 - [ ] **7.11** Sync workflow
 - [ ] **7.12** A11y + mobile + perf
@@ -492,7 +492,7 @@ create table admin_discussion_subscribers (
 
 1. Прочитай этот файл целиком (`Read` обязательно).
 2. Прочитай [[19-Business-требования#BR-D-005]] для контекста решений.
-3. Проверь что MCP supabase работает: `mcp__supabase__list_tables`. Если нет — `cp /root/.claude.json.bak-pre-supabase-mcp /root/.claude.json` и restart.
+3. Проверь что MCP supabase работает: `mcp__supabase__list_tables` (read) И `mcp__supabase__execute_sql` `select 1` (write/SQL). Если `execute_sql` падает `crypto is not defined` — проверь что в `~/.claude.json` → mcpServers.supabase.env есть `NODE_OPTIONS=--experimental-global-webcrypto`, затем restart Claude Code. Если MCP отсутствует целиком — `cp /root/.claude.json.bak-pre-supabase-mcp /root/.claude.json` и restart.
 4. Найди следующую `[ ]` строку в §9 Progress tracker.
 5. Открой эту sub-фазу в §7 — там детальная спецификация и acceptance criteria.
 6. Запусти `Workflow` с `scripts/workflows/feature-with-qa.js` для этой sub-фазы (см. [[../CLAUDE.md]]).

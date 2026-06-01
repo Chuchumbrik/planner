@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     case 'list': {
       const { data: rows, error } = await admin
         .from('admin_discussions')
-        .select('id,title,status,created_at,updated_at,reply_count,last_reply_at,linked_journal_entry,linked_version')
+        .select('id,title,body,status,created_at,updated_at,reply_count,last_reply_at,linked_journal_entry,linked_version')
       if (error) return json(500, { error: 'list_failed', detail: error.message })
       const { data: reads } = await admin
         .from('admin_discussion_read')
