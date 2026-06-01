@@ -4,7 +4,7 @@
 
 **Целевой объём MVP для разработки** (релиз продукта **v1.0.0**) зафиксирован в [`obsidian-motivator/16-TZ-MVP-v1.0.md`](../obsidian-motivator/16-TZ-MVP-v1.0.md); поэтапный план внедрения — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md).
 
-**Текущая версия веб-клиента** в репозитории: **`0.7.5`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
+**Текущая версия веб-клиента** в репозитории: **`0.7.16`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
 
 ### Версионирование
 
@@ -68,7 +68,9 @@
 
 ## Краткая сводка
 
-**«Краткая сводка»** — страница **`/admin/roadmap`** для **admin** и **beta_tester** (пункт **`ShellAdminNav`**; из **Настроек** убрана). Обычные пользователи (`user`) сводку в UI не открывают. Контент — **[`ProductRoadmapPanel.tsx`](./src/components/ProductRoadmapPanel.tsx)** на **`AdminRoadmapPage`**. Данные — **[`productRoadmap.ts`](./src/data/productRoadmap.ts)**; «Открытые вопросы» — **i18n** `settings.roadmapOpenQuestion*`. Модалка **`ProductRoadmapModal`** в коде остаётся для возможного переиспользования, в настройках не вызывается.
+**«Краткая сводка»** — страница **`/admin/roadmap`** для **admin** и **beta_tester** (пункт **`ShellAdminNav`**; из **Настроек** убрана). Обычные пользователи (`user`) сводку в UI не открывают. Данные — **[`productRoadmap.ts`](./src/data/productRoadmap.ts)**; «Открытые вопросы» — **i18n** `settings.roadmapOpenQuestion*`. Модалка **`ProductRoadmapModal`** в коде остаётся для возможного переиспользования, в настройках не вызывается.
+
+**Редизайн (Phase 7, этап 1 — 7.1–7.4):** страница `AdminRoadmapPage` собрана из **`AdminRoadmapHero`** (статус MVP / свежий релиз / текущая фаза + quick-links), **`RoadmapSearchBar`** (sticky-фильтр: поиск `?q=`, теги `?tag=`, диапазон версий `?from=&to=`), **`RoadmapTimeline`** (лента релизов по датам с tag-чипами и anchor `#v0.7.16`) и **`ProductRoadmapPanel`** для остальных блоков (`showReleaseNotes={false}` — релиз-ноты теперь рендерит Timeline). В модалке настроек панель используется целиком. Чистая логика — `lib/relativeTime.ts`, `lib/roadmapTimeline.ts`, `lib/roadmapFilter.ts` (покрыты тестами). Модель данных: у выпусков `tag`/`anchor`, у идей `status`, у текущей фазы `current` (бэкфилл — [`scripts/migrate-release-tags.mjs`](../scripts/migrate-release-tags.mjs)).
 
 ### Содержимое модалки (шесть блоков сверху вниз)
 
