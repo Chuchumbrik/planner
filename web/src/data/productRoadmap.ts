@@ -20,6 +20,8 @@ export type RoadmapMvpPhase = {
   detailBullets: LocalizedString[]
   /** Текущая фаза в работе — ровно одна фаза среди плановых имеет `current: true`. */
   current?: boolean
+  /** Работа над фазой приостановлена — гасит напоминание о ритме релизов (7.7). */
+  paused?: boolean
 }
 
 /** Порядок тематических групп в блоке «Идеи на потом» (см. локали `settings.roadmapIdeaGroup*`). */
@@ -363,6 +365,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
     dateLabel: { ru: '2026-06-01', en: '2026-06-01' },
     items: [
+      {
+        releasedInVersion: { ru: '0.7.20', en: '0.7.20' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Краткая сводка (`/admin/roadmap`) — редизайн, этап 4 (Phase 7.7):** напоминание о ритме релизов (`ReleaseCadenceReminder`) под Hero — янтарный баннер при просрочке и красный при ≥3 днях без релиза. Настраиваемый порог (24/48/72ч, `localStorage`), «Скрыть на сегодня» (snooze), пропуск выходных и bypass при приостановленной фазе. Логика — `lib/releaseCadence.ts` (тесты).',
+            en: '**Quick Summary (`/admin/roadmap`) — redesign, stage 4 (Phase 7.7):** a release-cadence reminder (`ReleaseCadenceReminder`) under the Hero — an amber banner when overdue and red after ≥3 days without a release. Configurable threshold (24/48/72h, `localStorage`), «Hide for today» snooze, weekend skip, and a bypass when the phase is paused. Logic in `lib/releaseCadence.ts` (tested).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Если давно не было релиза, сверху «Краткой сводки» появляется напоминание (жёлтое или красное) — можно скрыть на сегодня или поменять порог.',
+            en: 'If there hasn’t been a release in a while, a reminder (amber or red) appears atop the Quick Summary — you can hide it for today or change the threshold.',
+          },
+        ],
+      },
       {
         releasedInVersion: { ru: '0.7.19', en: '0.7.19' },
         tag: 'feat',

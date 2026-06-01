@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { AdminRoadmapHero } from '@/components/admin/AdminRoadmapHero'
+import { ReleaseCadenceReminder } from '@/components/admin/ReleaseCadenceReminder'
 import { RoadmapFooterStats } from '@/components/admin/RoadmapFooterStats'
 import { RoadmapPlanIdeas } from '@/components/admin/RoadmapPlanIdeas'
 import { RoadmapSearchBar } from '@/components/admin/RoadmapSearchBar'
@@ -73,7 +74,8 @@ function AdminRoadmapPageInner() {
           <h2 className={SETTINGS_TAB_PANEL_TITLE}>{t('settings.roadmapTitle')}</h2>
           <p className={SETTINGS_TAB_PANEL_INTRO}>{t('admin.roadmapIntro')}</p>
         </header>
-        <AdminRoadmapHero className="mb-6" onShowChangelog={scrollToTimeline} />
+        <AdminRoadmapHero className="mb-4" onShowChangelog={scrollToTimeline} />
+        <ReleaseCadenceReminder className="mb-6" />
         <RoadmapSearchBar
           filter={filter}
           versions={versions}
