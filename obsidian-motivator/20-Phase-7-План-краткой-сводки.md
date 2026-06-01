@@ -449,7 +449,7 @@ create table admin_discussion_subscribers (
 - [x] **7.5** 2-col Plan+Ideas (xl 2 колонки; План MVP с current-glow/«Сейчас», Идеи со status-чипами §8.3, кликабельные shipped→anchor/discussion; `roadmapIdeaStatusMeta.ts`; 7 тестов)
 - [x] **7.6** Footer stats + sparkline (релизы 7д/30д/всего, идеи по статусам, discussions-заглушка, Recharts sparkline скорости 12нед → Timeline; `roadmapStats.ts`; 6 тестов)
 - [x] **7.7** Reminder 24h (amber/red баннер по ритму релизов под Hero; порог 24/48/72ч в localStorage, snooze «на сегодня», weekend-skip, paused-bypass; `releaseCadence.ts`; 13 тестов)
-- [ ] **7.8** Discussions backend
+- [x] **7.8** Discussions backend (миграции 008–011 применены на Supabase: `admin_discussions`/`_replies`/`_read`/`_subscribers` + RLS admin/beta + триггер reply_count; Edge `admin-discussions` (10 actions) задеплоена ACTIVE; security-advisors чисто. ⚠️ MCP `execute_sql` недоступен (`crypto is not defined`) — live insert/trigger проверим из UI в 7.9)
 - [ ] **7.9** Discussions UI
 - [ ] **7.10** Notifications (push + badge)
 - [ ] **7.11** Sync workflow
