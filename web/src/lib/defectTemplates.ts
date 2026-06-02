@@ -6,6 +6,8 @@ export const DEFECT_TEMPLATE_IDS = [
   'week_view',
   'settings_block',
   'sync_vault',
+  'login_auth',
+  'task',
 ] as const
 
 export type DefectTemplateId = (typeof DEFECT_TEMPLATE_IDS)[number]

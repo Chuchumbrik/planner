@@ -366,6 +366,27 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.28', en: '0.7.28' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**FileDefectModal — полный аудит формы заведения дефекта:** (1) Валидация: отдельные сообщения для заголовка ("Введите заголовок.") и описания ("Введите описание.") вместо общего. (2) `aria-required="true"` на обязательных полях. (3) Счётчик символов скрыт по умолчанию; появляется при фокусе или при заполнении >70% лимита. (4) Подсказка "Описание длинное" стала кнопкой — клик открывает коллапсибл "Шаги и детали". (5) Коллапсибл "Дополнительная информация" переименован в "Шаги и детали воспроизведения". (6) Поле "Тип дефекта" перемещено после "Описания" для естественного флоу. (7) Hints для "Ожидалось" и "Фактически" теперь отображаются (ключи существовали в i18n, но не рендерились). (8) Применение шаблона с шагами автоматически раскрывает коллапсибл деталей. (9) Кнопка "Отмена" в предупреждении о перезаписи шаблона переименована в "Оставить". (10) Ошибка submit прокручивается в видимую область через `scrollIntoView`. (11) `removeAttachment` сбрасывает `uploadError`. (12) Шапка модалки всегда видна; на экране успеха — заголовок "Дефект заведён" вместо полного исчезновения header. (13) Два новых шаблона: "Вход" (login_auth) и "Задача" (task).',
+            en: '**FileDefectModal — full defect-form audit:** (1) Validation: separate messages for title ("Enter a title.") and description ("Enter a description.") instead of a shared generic one. (2) `aria-required="true"` on required fields. (3) Char counter hidden by default; appears on focus or when >70% of limit is used. (4) "Description is long" hint is now a button — click opens the Steps collapsible. (5) "Additional information" collapsible renamed to "Steps and reproduction details". (6) "Defect type" field moved after "Description" for a natural fill flow. (7) Hints for "Expected" and "Actual" are now rendered (keys existed in i18n but were not displayed). (8) Applying a template that has steps auto-expands the details collapsible. (9) Cancel button in template-overwrite warning renamed to "Keep". (10) Submit error scrolls into view via `scrollIntoView`. (11) `removeAttachment` clears `uploadError`. (12) Modal header is always visible; success screen shows "Defect filed" instead of the header disappearing entirely. (13) Two new templates: "Login" (login_auth) and "Task" (task).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Форма заведения дефекта: сообщения об ошибках стали точнее, шапка всегда видна, добавлены шаблоны «Вход» и «Задача».',
+            en: 'Defect form: error messages are more precise, header is always visible, new "Login" and "Task" templates added.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.27', en: '0.7.27' },
         tag: 'fix',
         changes: [
