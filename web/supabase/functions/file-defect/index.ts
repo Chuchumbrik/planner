@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
   const typeLabelsRaw = Deno.env.get('GITHUB_DEFECT_TYPE_LABELS') ?? ''
   const signedTtlSec = Math.min(
     7 * 24 * 3600,
-    Math.max(60, Number(Deno.env.get('DEFECT_ATTACHMENT_SIGNED_URL_TTL_SEC') ?? '3600') || 3600),
+    Math.max(60, Number(Deno.env.get('DEFECT_ATTACHMENT_SIGNED_URL_TTL_SEC') ?? String(7 * 24 * 3600)) || 7 * 24 * 3600),
   )
   const parsedRepo = parseRepo(ghRepoRaw)
 
@@ -286,11 +286,11 @@ Deno.serve(async (req) => {
   if (attachmentPaths.length) {
     issueBodyParts.push('')
     issueBodyParts.push('### Screenshots')
-    for (let i = 0; i < attachmentPaths.length; i++) {
-      const p = attachmentPaths[i]
-      const { data: signed, error: signErr } = await admin.storage
-        .from('defect-attachments')
-        .createSignedUrl(p, signedTtlSec)
+    const signedResults = await Promise.all(
+      attachmentPaths.map((p) => admin.storage.from('defect-attachments').createSignedUrl(p, signedTtlSec)),
+    )
+    for (let i = 0; i < signedResults.length; i++) {
+      const { data: signed, error: signErr } = signedResults[i]
       if (signErr || !signed?.signedUrl) {
         return json(400, { error: 'storage_signed_url_failed' })
       }

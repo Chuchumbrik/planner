@@ -366,6 +366,16 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.26', en: '0.7.26' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**FileDefectModal + Edge `file-defect` — критичные и важные фиксы:** (1) `handleClose` удаляет незакоммиченные вложения из Supabase Storage и draft-запись при закрытии без отправки — устраняет утечку orphaned files. (2) Preview-эффект теперь запускается только при `previewMode === true` — убраны API-запросы `createSignedUrl` при каждом нажатии клавиши в режиме формы. (3) `deviceMeta` мемоизирован через `useMemo` — стабильная ссылка, не дёргает preview-эффект при ре-рендере. (4) Отдельное состояние `uploadBusy` / `uploadError` для загрузки файлов: кнопка «Добавить файл» блокируется и показывает «Загрузка…», ошибка upload отображается рядом со скриншотами отдельно от ошибки submit. (5) Signed URL TTL для скриншотов в issue: дефолт 3600с → 7 дней (604800с); изображения в GitHub issue перестают ломаться через час. (6) Edge: `Promise.all` для генерации signed URLs вложений вместо последовательного цикла.',
+            en: '**FileDefectModal + Edge `file-defect` — critical and important fixes:** (1) `handleClose` deletes uncommitted attachments from Supabase Storage and the draft record on close-without-submit — eliminates orphaned file leak. (2) Preview effect now runs only when `previewMode === true` — removes `createSignedUrl` API calls on every keystroke in form mode. (3) `deviceMeta` memoized with `useMemo` — stable reference, no spurious preview-effect triggers on re-render. (4) Separate `uploadBusy` / `uploadError` state for file uploads: "Add file" button locks and shows "Loading…", upload error displayed near screenshots independently from submit error. (5) Signed URL TTL for issue screenshots: default 3600s → 7 days (604800s); GitHub issue images no longer break after one hour. (6) Edge: `Promise.all` for attachment signed URL generation instead of sequential loop.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.25', en: '0.7.25' },
         tag: 'fix',
         changes: [
