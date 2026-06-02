@@ -10,7 +10,8 @@ import { DEFECT_TEMPLATE_IDS, type DefectTemplateId } from '@/lib/defectTemplate
 import { APP_VERSION } from '@/version'
 import { useFileDefect } from '@/hooks/useFileDefect'
 import {
-  MODAL_HEADER,
+  MODAL_CLOSE_BTN,
+  MODAL_FOOTER,
   MODAL_OVERLAY,
   MODAL_SHELL,
   MODAL_TITLE,
@@ -81,6 +82,7 @@ export function FileDefectModal({
   const [includeRoute, setIncludeRoute] = useState(true)
   const [includeUserAgent, setIncludeUserAgent] = useState(true)
   const [extraOpen, setExtraOpen] = useState(false)
+  const [techOpen, setTechOpen] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [busy, setBusy] = useState(false)
@@ -88,6 +90,8 @@ export function FileDefectModal({
   const [issueUrl, setIssueUrl] = useState<string | null>(null)
   const [suggestedLabels, setSuggestedLabels] = useState<string[]>([])
   const [previewMarkdown, setPreviewMarkdown] = useState('')
+  const [titleTouched, setTitleTouched] = useState(false)
+  const [descTouched, setDescTouched] = useState(false)
 
   const deviceMeta = collectDefectDeviceMeta()
 
@@ -99,7 +103,6 @@ export function FileDefectModal({
 
   useEffect(() => {
     if (!open) return
-    // Defer reset so eslint react-hooks/set-state-in-effect does not treat this as a synchronous render loop.
     queueMicrotask(() => {
       setDraftId(crypto.randomUUID())
       setTitle('')
@@ -111,12 +114,15 @@ export function FileDefectModal({
       setIncludeRoute(true)
       setIncludeUserAgent(true)
       setExtraOpen(false)
+      setTechOpen(false)
       setPreviewMode(false)
       setAttachments([])
       setError(null)
       setIssueUrl(null)
       setSuggestedLabels([])
       setBusy(false)
+      setTitleTouched(false)
+      setDescTouched(false)
     })
   }, [open])
 
@@ -236,6 +242,8 @@ export function FileDefectModal({
   }
 
   const recommendSteps = description.trim().length > 200 && !steps.trim()
+  const titleInvalid = titleTouched && !title.trim()
+  const descInvalid = descTouched && !description.trim()
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -244,7 +252,8 @@ export function FileDefectModal({
     const trimmedTitle = title.trim()
     const trimmedDesc = description.trim()
     if (!trimmedTitle || !trimmedDesc) {
-      setError(t('settings.fileDefectValidationRequired'))
+      setTitleTouched(true)
+      setDescTouched(true)
       return
     }
     setBusy(true)
@@ -287,6 +296,21 @@ export function FileDefectModal({
 
   const routePreview = includeRoute ? pathname || '—' : t('settings.fileDefectRouteOmitted')
 
+  const tabBtn = (active: boolean, label: string, onClick: () => void) => (
+    <button
+      type="button"
+      className={cn(
+        'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+        active
+          ? 'bg-primary/15 text-primary'
+          : 'text-on-surface-variant hover:bg-surface-container-low',
+      )}
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  )
+
   const modal = (
     <div
       className={cn(MODAL_OVERLAY, 'z-[100]')}
@@ -302,49 +326,29 @@ export function FileDefectModal({
         aria-modal="true"
         aria-labelledby={issueUrl ? `${formId}-success-title` : `${formId}-title`}
       >
-        {issueUrl ? null : (
-          <div className={MODAL_HEADER}>
-            <h2 id={`${formId}-title`} className={MODAL_TITLE}>
-              {t('settings.fileDefectModalTitle')}
-            </h2>
-            <p className="mt-1 text-xs text-on-surface-variant">{t('settings.fileDefectModalHelp')}</p>
-            <p className="mt-2 text-[11px] leading-snug text-on-surface-variant">{t('settings.fileDefectModalChecklist')}</p>
-            <p className="mt-2 rounded-md border border-surface-variant/80 bg-surface-container-low/50 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-on-surface-variant">
-              {t('settings.fileDefectContextPreview', { version: APP_VERSION, route: routePreview })}
-            </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {DEFECT_TEMPLATE_IDS.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className="rounded border border-surface-variant px-2 py-0.5 text-[11px] text-on-surface-variant hover:bg-surface-container-low"
-                  onClick={() => applyTemplate(id)}
-                >
-                  {t(`settings.defectTemplate.${id}.label`)}
-                </button>
-              ))}
+        {/* ── HEADER ─────────────────────────────────────────────────────── */}
+        {!issueUrl && (
+          <div className="flex shrink-0 flex-col gap-2 border-b border-surface-variant p-sm pb-3 pt-4 md:px-md max-md:pt-[max(1rem,env(safe-area-inset-top))]">
+            <div className="flex items-center justify-between gap-2">
+              <h2 id={`${formId}-title`} className={MODAL_TITLE}>
+                {t('settings.fileDefectModalTitle')}
+              </h2>
+              <button type="button" className={MODAL_CLOSE_BTN} onClick={onClose} aria-label="Закрыть">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                  <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
             </div>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                className={`rounded-md px-2 py-1 text-xs ${!previewMode ? 'border-primary bg-primary/15 text-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-                onClick={() => setPreviewMode(false)}
-              >
-                {t('settings.fileDefectTabForm')}
-              </button>
-              <button
-                type="button"
-                className={`rounded-md px-2 py-1 text-xs ${previewMode ? 'border-primary bg-primary/15 text-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-                onClick={() => setPreviewMode(true)}
-              >
-                {t('settings.fileDefectTabPreview')}
-              </button>
+            <div className="flex gap-1">
+              {tabBtn(!previewMode, t('settings.fileDefectTabForm'), () => setPreviewMode(false))}
+              {tabBtn(previewMode, t('settings.fileDefectTabPreview'), () => setPreviewMode(true))}
             </div>
           </div>
         )}
 
+        {/* ── SUCCESS ────────────────────────────────────────────────────── */}
         {issueUrl ? (
-          <div className="flex flex-col gap-3 px-4 py-4">
+          <div className="flex flex-col gap-3 px-4 py-5">
             <p id={`${formId}-success-title`} className="text-sm font-medium text-primary">
               {t('settings.fileDefectSuccess48')}
             </p>
@@ -363,21 +367,23 @@ export function FileDefectModal({
             </a>
             <button
               type="button"
-              className="mt-1 rounded-lg border border-surface-variant bg-surface-container-high px-3 py-2 text-sm text-on-surface hover:bg-surface-container-highest"
+              className="mt-1 rounded-lg border border-surface-variant bg-surface-container-high px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-highest"
               onClick={() => onClose()}
             >
               {t('settings.fileDefectClose')}
             </button>
           </div>
+
         ) : previewMode ? (
+          /* ── PREVIEW ───────────────────────────────────────────────────── */
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-            <div className="markdown-preview max-h-[min(50dvh,420px)] overflow-y-auto rounded-lg border border-surface-variant bg-surface-container-low/60 p-3 text-sm text-on-surface [&_a]:break-all [&_a]:text-primary [&_h2]:mb-2 [&_h2]:mt-3 [&_h2]:text-sm [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:text-xs [&_img]:max-h-48 [&_img]:max-w-full [&_li]:ml-4 [&_li]:list-disc [&_p]:mb-2 [&_ul]:mb-2">
+            <div className="markdown-preview overflow-y-auto rounded-lg border border-surface-variant bg-surface-container-low/60 p-3 text-sm text-on-surface [&_a]:break-all [&_a]:text-primary [&_h2]:mb-2 [&_h2]:mt-3 [&_h2]:text-sm [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:text-xs [&_img]:max-h-48 [&_img]:max-w-full [&_li]:ml-4 [&_li]:list-disc [&_p]:mb-2 [&_ul]:mb-2">
               <Markdown>{previewMarkdown}</Markdown>
             </div>
             <div className="mt-3 flex gap-2 border-t border-surface-variant pt-3">
               <button
                 type="button"
-                className="flex-1 rounded-lg border border-surface-variant py-2 text-sm text-on-surface hover:bg-surface-container-high"
+                className="flex-1 rounded-lg border border-surface-variant py-2.5 text-sm text-on-surface hover:bg-surface-container-high"
                 onClick={() => setPreviewMode(false)}
               >
                 {t('settings.fileDefectBackToForm')}
@@ -385,16 +391,63 @@ export function FileDefectModal({
               <button
                 type="button"
                 disabled={busy}
-                className="flex-1 rounded-lg border btn-primary py-2 text-sm disabled:opacity-40"
+                className="flex-1 rounded-lg border btn-primary py-2.5 text-sm disabled:opacity-40"
                 onClick={(e) => void onSubmit(e as unknown as FormEvent)}
               >
                 {busy ? t('common.loading') : t('settings.fileDefectSubmit')}
               </button>
             </div>
           </div>
+
         ) : (
+          /* ── FORM ──────────────────────────────────────────────────────── */
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={(e) => void onSubmit(e)}>
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
+
+              {/* Templates — перенос по словам, без горизонтального скролла */}
+              <div className="flex flex-wrap gap-1.5">
+                {DEFECT_TEMPLATE_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className="rounded border border-surface-variant px-2.5 py-1 text-[11px] text-on-surface-variant hover:bg-surface-container-low"
+                    onClick={() => applyTemplate(id)}
+                  >
+                    {t(`settings.defectTemplate.${id}.label`)}
+                  </button>
+                ))}
+              </div>
+
+              {/* Заголовок * */}
+              <label className="flex flex-col gap-1">
+                <span className="flex items-baseline justify-between gap-2 text-xs text-on-surface-variant">
+                  <span>
+                    {t('settings.fileDefectTitleLabel')}
+                    <span className="ml-0.5 text-red-400" aria-hidden> *</span>
+                  </span>
+                  <span className="font-mono text-[10px]">
+                    {t('settings.fileDefectCharCount', { used: title.length, max: TITLE_MAX })}
+                  </span>
+                </span>
+                <input
+                  className={cn(
+                    MOTIVATOR_INPUT,
+                    'placeholder:text-on-surface-variant',
+                    titleInvalid && 'ring-1 ring-red-400',
+                  )}
+                  value={title}
+                  maxLength={TITLE_MAX}
+                  placeholder={t('settings.fileDefectTitlePlaceholder')}
+                  onChange={(e) => setTitle(clampField(e.target.value, TITLE_MAX))}
+                  onBlur={() => setTitleTouched(true)}
+                  autoFocus
+                />
+                {titleInvalid && (
+                  <p className="text-xs text-red-400">{t('settings.fileDefectValidationRequired')}</p>
+                )}
+              </label>
+
+              {/* Тип */}
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-on-surface-variant">{t('settings.fileDefectTypeLabel')}</span>
                 <select
@@ -410,50 +463,46 @@ export function FileDefectModal({
                 </select>
               </label>
 
+              {/* Описание * */}
               <label className="flex flex-col gap-1">
                 <span className="flex items-baseline justify-between gap-2 text-xs text-on-surface-variant">
-                  <span>{t('settings.fileDefectTitleLabel')}</span>
-                  <span className="font-mono text-[10px] text-on-surface-variant">
-                    {t('settings.fileDefectCharCount', { used: title.length, max: TITLE_MAX })}
+                  <span>
+                    {t('settings.fileDefectDescriptionLabel')}
+                    <span className="ml-0.5 text-red-400" aria-hidden> *</span>
                   </span>
-                </span>
-                <input
-                  className={`${MOTIVATOR_INPUT} placeholder:text-on-surface-variant`}
-                  value={title}
-                  maxLength={TITLE_MAX}
-                  placeholder={t('settings.fileDefectTitlePlaceholder')}
-                  onChange={(e) => setTitle(clampField(e.target.value, TITLE_MAX))}
-                  autoFocus
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="flex items-baseline justify-between gap-2 text-xs text-on-surface-variant">
-                  <span>{t('settings.fileDefectDescriptionLabel')}</span>
-                  <span className="font-mono text-[10px] text-on-surface-variant">
+                  <span className="font-mono text-[10px]">
                     {t('settings.fileDefectCharCount', { used: description.length, max: DESC_MAX })}
                   </span>
                 </span>
                 <textarea
-                  className={`min-h-[88px] resize-y ${MOTIVATOR_INPUT} placeholder:text-on-surface-variant`}
+                  className={cn(
+                    'min-h-[88px] resize-none sm:resize-y',
+                    MOTIVATOR_INPUT,
+                    'placeholder:text-on-surface-variant',
+                    descInvalid && 'ring-1 ring-red-400',
+                  )}
                   value={description}
                   maxLength={DESC_MAX}
                   placeholder={t('settings.fileDefectDescriptionPlaceholder')}
                   onChange={(e) => setDescription(e.target.value)}
+                  onBlur={() => setDescTouched(true)}
                 />
+                {descInvalid && (
+                  <p className="text-xs text-red-400">{t('settings.fileDefectValidationRequired')}</p>
+                )}
               </label>
-              {recommendSteps ? (
-                <p className={TEXT_HINT_WARNING}>{t('settings.fileDefectRecommendSteps')}</p>
-              ) : null}
 
+              {recommendSteps && (
+                <p className={TEXT_HINT_WARNING}>{t('settings.fileDefectRecommendSteps')}</p>
+              )}
+
+              {/* Скриншоты */}
               <div
                 tabIndex={0}
                 role="region"
                 aria-label={t('settings.fileDefectScreenshotsRegionAria')}
                 className="rounded-lg border border-surface-variant bg-surface-container-low/40 p-2 outline-none ring-primary/0 transition-[box-shadow] focus-visible:ring-2 focus-visible:ring-primary/50"
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }}
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
                 onDrop={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -484,7 +533,7 @@ export function FileDefectModal({
                     e.target.value = ''
                   }}
                 />
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-2">
                   <button
                     type="button"
                     className="rounded border border-surface-variant px-2 py-1 text-xs text-on-surface hover:bg-surface-container-high disabled:opacity-40"
@@ -494,137 +543,135 @@ export function FileDefectModal({
                     {t('settings.fileDefectAddScreenshot')}
                   </button>
                 </div>
-                <ul className="mt-2 space-y-1 text-xs text-on-surface-variant">
-                  {attachments.map((a) => (
-                    <li key={a.path} className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate">{a.name}</span>
-                      <button
-                        type="button"
-                        className="shrink-0 text-red-400 hover:underline"
-                        onClick={() => void removeAttachment(a.path)}
-                      >
-                        {t('common.delete')}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                {attachments.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-on-surface-variant">
+                    {attachments.map((a) => (
+                      <li key={a.path} className="flex items-center justify-between gap-2">
+                        <span className="min-w-0 truncate">{a.name}</span>
+                        <button
+                          type="button"
+                          className="shrink-0 text-red-400 hover:underline"
+                          onClick={() => void removeAttachment(a.path)}
+                        >
+                          {t('common.delete')}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
-              <div className="rounded-lg border border-surface-variant bg-surface-container-low/30">
-                <button
-                  type="button"
-                  className="flex w-full cursor-pointer select-none items-center justify-between gap-2 px-3 py-2 text-left text-sm text-on-surface hover:bg-surface-container-low/50"
-                  aria-expanded={extraOpen}
-                  onClick={() => setExtraOpen((v) => !v)}
-                >
-                  <span>{t('settings.fileDefectExtraToggle')}</span>
-                  <span className="text-on-surface-variant" aria-hidden>
-                    {extraOpen ? '▾' : '▸'}
+              {/* Дополнительная информация — шаги, ожидаемый, фактический */}
+              <Collapsible
+                open={extraOpen}
+                onToggle={() => setExtraOpen((v) => !v)}
+                label={t('settings.fileDefectExtraToggle')}
+              >
+                <label className="flex flex-col gap-1">
+                  <span className="flex justify-between text-xs text-on-surface-variant">
+                    <span>{t('settings.fileDefectStepsLabel')}</span>
+                    <span className="font-mono text-[10px]">
+                      {t('settings.fileDefectCharCount', { used: steps.length, max: STEPS_MAX })}
+                    </span>
                   </span>
-                </button>
-                {extraOpen ? (
-                  <div className="space-y-3 border-t border-surface-variant px-3 pb-3 pt-2">
-                    <label className="flex flex-col gap-1">
-                      <span className="flex justify-between text-xs text-on-surface-variant">
-                        <span>{t('settings.fileDefectStepsLabel')}</span>
-                        <span className="font-mono text-[10px] text-on-surface-variant">
-                          {t('settings.fileDefectCharCount', { used: steps.length, max: STEPS_MAX })}
-                        </span>
-                      </span>
-                      <span className="text-[11px] text-on-surface-variant">{t('settings.fileDefectStepsHint')}</span>
-                      <textarea
-                        className={`min-h-[64px] resize-y ${MOTIVATOR_INPUT} placeholder:text-on-surface-variant`}
-                        value={steps}
-                        maxLength={STEPS_MAX}
-                        placeholder={t('settings.fileDefectStepsPlaceholder')}
-                        onChange={(e) => setSteps(e.target.value)}
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="flex justify-between text-xs text-on-surface-variant">
-                        <span>{t('settings.fileDefectExpectedLabel')}</span>
-                        <span className="font-mono text-[10px] text-on-surface-variant">
-                          {t('settings.fileDefectCharCount', { used: expected.length, max: EXPECTED_MAX })}
-                        </span>
-                      </span>
-                      <textarea
-                        className={`min-h-[48px] resize-y ${MOTIVATOR_INPUT} placeholder:text-on-surface-variant`}
-                        value={expected}
-                        maxLength={EXPECTED_MAX}
-                        placeholder={t('settings.fileDefectExpectedPlaceholder')}
-                        onChange={(e) => setExpected(e.target.value)}
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="flex justify-between text-xs text-on-surface-variant">
-                        <span>{t('settings.fileDefectActualLabel')}</span>
-                        <span className="font-mono text-[10px] text-on-surface-variant">
-                          {t('settings.fileDefectCharCount', { used: actual.length, max: ACTUAL_MAX })}
-                        </span>
-                      </span>
-                      <textarea
-                        className={`min-h-[48px] resize-y ${MOTIVATOR_INPUT} placeholder:text-on-surface-variant`}
-                        value={actual}
-                        maxLength={ACTUAL_MAX}
-                        placeholder={t('settings.fileDefectActualPlaceholder')}
-                        onChange={(e) => setActual(e.target.value)}
-                      />
-                    </label>
-                  </div>
-                ) : null}
-              </div>
+                  <span className="text-[11px] text-on-surface-variant">{t('settings.fileDefectStepsHint')}</span>
+                  <textarea
+                    className={cn('min-h-[64px] resize-none sm:resize-y', MOTIVATOR_INPUT, 'placeholder:text-on-surface-variant')}
+                    value={steps}
+                    maxLength={STEPS_MAX}
+                    placeholder={t('settings.fileDefectStepsPlaceholder')}
+                    onChange={(e) => setSteps(e.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="flex justify-between text-xs text-on-surface-variant">
+                    <span>{t('settings.fileDefectExpectedLabel')}</span>
+                    <span className="font-mono text-[10px]">
+                      {t('settings.fileDefectCharCount', { used: expected.length, max: EXPECTED_MAX })}
+                    </span>
+                  </span>
+                  <textarea
+                    className={cn('min-h-[48px] resize-none sm:resize-y', MOTIVATOR_INPUT, 'placeholder:text-on-surface-variant')}
+                    value={expected}
+                    maxLength={EXPECTED_MAX}
+                    placeholder={t('settings.fileDefectExpectedPlaceholder')}
+                    onChange={(e) => setExpected(e.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="flex justify-between text-xs text-on-surface-variant">
+                    <span>{t('settings.fileDefectActualLabel')}</span>
+                    <span className="font-mono text-[10px]">
+                      {t('settings.fileDefectCharCount', { used: actual.length, max: ACTUAL_MAX })}
+                    </span>
+                  </span>
+                  <textarea
+                    className={cn('min-h-[48px] resize-none sm:resize-y', MOTIVATOR_INPUT, 'placeholder:text-on-surface-variant')}
+                    value={actual}
+                    maxLength={ACTUAL_MAX}
+                    placeholder={t('settings.fileDefectActualPlaceholder')}
+                    onChange={(e) => setActual(e.target.value)}
+                  />
+                </label>
+              </Collapsible>
 
-              <label className="flex cursor-pointer items-start gap-2">
-                <input
-                  type="checkbox"
-                  className="mt-0.5"
-                  checked={includeRoute}
-                  onChange={(e) => setIncludeRoute(e.target.checked)}
-                />
-                <span className="text-sm leading-snug text-on-surface">{t('settings.fileDefectIncludeRoute')}</span>
-              </label>
-              <label className="flex cursor-pointer items-start gap-2">
-                <input
-                  type="checkbox"
-                  className="mt-0.5"
-                  checked={includeUserAgent}
-                  onChange={(e) => setIncludeUserAgent(e.target.checked)}
-                />
-                <span className="text-sm leading-snug text-on-surface">{t('settings.fileDefectIncludeUserAgent')}</span>
-              </label>
-
-              <div className="rounded-md border border-surface-variant/80 bg-surface-container-low/40 px-3 py-2">
-                <p className="text-[11px] font-medium text-on-surface-variant">{t('settings.fileDefectTechBlockTitle')}</p>
-                <dl className="mt-1 space-y-0.5 font-mono text-[10px] leading-relaxed text-on-surface-variant">
+              {/* Технические данные — маршрут, UA, устройство */}
+              <Collapsible
+                open={techOpen}
+                onToggle={() => setTechOpen((v) => !v)}
+                label={t('settings.fileDefectTechBlockTitle')}
+              >
+                <label className="flex cursor-pointer items-start gap-2">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={includeRoute}
+                    onChange={(e) => setIncludeRoute(e.target.checked)}
+                  />
+                  <span className="text-sm leading-snug text-on-surface">{t('settings.fileDefectIncludeRoute')}</span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-2">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={includeUserAgent}
+                    onChange={(e) => setIncludeUserAgent(e.target.checked)}
+                  />
+                  <span className="text-sm leading-snug text-on-surface">{t('settings.fileDefectIncludeUserAgent')}</span>
+                </label>
+                <p className="rounded-md border border-surface-variant/80 bg-surface-container-low/50 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-on-surface-variant">
+                  {t('settings.fileDefectContextPreview', { version: APP_VERSION, route: routePreview })}
+                </p>
+                <dl className="space-y-0.5 font-mono text-[10px] leading-relaxed text-on-surface-variant">
                   <div className="flex gap-1">
-                    <dt className="shrink-0 text-on-surface-variant">UA</dt>
+                    <dt className="shrink-0">UA</dt>
                     <dd className="min-w-0 break-all">{includeUserAgent ? userAgentShort || '—' : t('settings.fileDefectOmitted')}</dd>
                   </div>
                   <div className="flex gap-1">
-                    <dt className="shrink-0 text-on-surface-variant">Viewport</dt>
+                    <dt className="shrink-0">Viewport</dt>
                     <dd>{deviceMeta.viewport}</dd>
                   </div>
                   <div className="flex gap-1">
-                    <dt className="shrink-0 text-on-surface-variant">DPR</dt>
+                    <dt className="shrink-0">DPR</dt>
                     <dd>{deviceMeta.device_pixel_ratio}</dd>
                   </div>
                   <div className="flex gap-1">
-                    <dt className="shrink-0 text-on-surface-variant">Device</dt>
+                    <dt className="shrink-0">Device</dt>
                     <dd>{deviceMeta.device_class}</dd>
                   </div>
                 </dl>
-              </div>
+              </Collapsible>
 
-              {error ? (
-                <p className="text-xs text-red-400" role="alert">
-                  {error}
-                </p>
-              ) : null}
+              {error && (
+                <p className="text-xs text-red-400" role="alert">{error}</p>
+              )}
             </div>
-            <div className="flex shrink-0 gap-2 border-t border-surface-variant px-4 py-3">
+
+            {/* Footer */}
+            <div className={cn(MODAL_FOOTER, 'flex gap-2')}>
               <button
                 type="button"
-                className="flex-1 rounded-lg border border-surface-variant py-2 text-sm text-on-surface hover:bg-surface-container-high"
+                className="flex-1 rounded-lg border border-surface-variant py-2.5 text-sm text-on-surface hover:bg-surface-container-high"
                 onClick={() => onClose()}
               >
                 {t('settings.fileDefectCancel')}
@@ -632,7 +679,7 @@ export function FileDefectModal({
               <button
                 type="submit"
                 disabled={busy}
-                className="flex-1 rounded-lg border btn-primary py-2 text-sm disabled:opacity-40"
+                className="flex-1 rounded-lg border btn-primary py-2.5 text-sm disabled:opacity-40"
               >
                 {busy ? t('common.loading') : t('settings.fileDefectSubmit')}
               </button>
@@ -644,4 +691,32 @@ export function FileDefectModal({
   )
 
   return typeof document !== 'undefined' ? createPortal(modal, document.body) : null
+}
+
+type CollapsibleProps = {
+  open: boolean
+  onToggle: () => void
+  label: string
+  children: React.ReactNode
+}
+
+function Collapsible({ open, onToggle, label, children }: CollapsibleProps) {
+  return (
+    <div className="rounded-lg border border-surface-variant bg-surface-container-low/30">
+      <button
+        type="button"
+        className="flex w-full cursor-pointer select-none items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-low/50"
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        <span>{label}</span>
+        <span className="text-on-surface-variant" aria-hidden>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && (
+        <div className="space-y-3 border-t border-surface-variant px-3 pb-3 pt-2">
+          {children}
+        </div>
+      )}
+    </div>
+  )
 }
