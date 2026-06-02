@@ -261,7 +261,7 @@ export const EMPTY_STATE_BOX = cn(
   'w-full rounded-card border border-dashed border-surface-variant p-sm py-8 text-center text-body-sm text-on-surface-variant',
 )
 
-export const MODAL_OVERLAY = 'fixed inset-0 z-[60] flex items-end justify-center glass-overlay p-4 sm:items-center'
+export const MODAL_OVERLAY = 'fixed inset-0 z-[60] flex items-center justify-center glass-overlay p-4'
 
 export const PLAN_ACCORDION = cn(
   'plan-accordion group mt-4 rounded-card border border-surface-variant',
