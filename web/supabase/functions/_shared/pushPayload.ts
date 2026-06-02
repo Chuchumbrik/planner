@@ -1,5 +1,34 @@
 /** Общая логика текста push для Edge Functions (Deno). */
 
+/**
+ * Текст push о новом ответе в обсуждении (Phase 7.10). `locale` берётся из
+ * `push_subscriptions.locale` получателя; всё кроме 'en' трактуется как 'ru'.
+ */
+export function buildDiscussionReplyPayload(
+  discussionId: string,
+  title: string,
+  locale: string,
+): { title: string; body: string; url: string; tag: string } {
+  const loc = locale === 'en' ? 'en' : 'ru'
+  const name = title.trim()
+  const url = `/admin/discussions/${discussionId}`
+  const tag = `discussion-${discussionId}`
+  if (loc === 'en') {
+    return {
+      title: 'Motivator',
+      body: name ? `New reply in “${name}”` : 'New reply in a discussion',
+      url,
+      tag,
+    }
+  }
+  return {
+    title: 'Мотиватор',
+    body: name ? `Новый ответ в «${name}»` : 'Новый ответ в обсуждении',
+    url,
+    tag,
+  }
+}
+
 export type FireRow = {
   kind: string
   title: string | null

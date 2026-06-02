@@ -60,6 +60,7 @@ function AdminDiscussionsPageInner() {
               onChanged={refreshBoth}
               onResolveClick={() => setShowResolve(true)}
               onSyncClick={() => setShowSync(true)}
+              subscribed={threadState.subscribed}
             />
           ) : threadState.loadError ? (
             <div className="space-y-3">

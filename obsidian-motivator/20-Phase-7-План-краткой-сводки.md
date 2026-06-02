@@ -6,7 +6,7 @@
 > **Часть MVP Phase 7** «Настройки, аккаунт, юридика» — это под-направление.
 > **Базис решений**: [[19-Business-требования#BR-D-004]] + [[19-Business-требования#BR-D-005]] (owner override).
 
-**Статус**: 🚧 В процессе (7.0–7.9 завершены; 7.9 Discussions UI реализован, нужны доп. тесты перед PR; следующее — 7.10 Notifications, 7.11 Sync workflow, 7.12 A11y/mobile/perf).
+**Статус**: 🚧 В процессе (7.0–7.11 завершены; 7.10 Notifications push+badge и 7.11 Sync workflow «К журналу» реализованы, v0.7.22; следующее — 7.12 A11y/mobile/perf).
 
 ---
 
@@ -337,7 +337,7 @@ create table admin_discussion_subscribers (
 
 **Файлы**: `web/src/pages/AdminDiscussionsPage.tsx`, `web/src/components/admin/discussions/` (несколько компонентов: List, Thread, Reply, CreateModal, ResolveModal, SyncModal).
 
-### 7.10 — Discussions notifications (`1 день`)
+### 7.10 — Discussions notifications (`1 день`) — ✅ Реализовано
 
 **Что делаем**:
 - При insert reply → DB trigger вызывает Edge function для push'а subscriber'ам.
@@ -349,7 +349,7 @@ create table admin_discussion_subscribers (
 
 **Файлы**: `web/supabase/functions/admin-discussions-notify/index.ts`, `web/src/components/layout/UnreadDiscussionsBadge.tsx`.
 
-### 7.11 — Sync workflow «К журналу» (`0.5 дня`)
+### 7.11 — Sync workflow «К журналу» (`0.5 дня`) — ✅ Реализовано
 
 **Что делаем**:
 - В Thread view при статусе `pending-journal` показать prompt: «Скопируй summary в `obsidian-motivator/12-Журнал-решений.md` как DR-XXX, затем нажми "Synced"».
@@ -451,8 +451,8 @@ create table admin_discussion_subscribers (
 - [x] **7.7** Reminder 24h (amber/red баннер по ритму релизов под Hero; порог 24/48/72ч в localStorage, snooze «на сегодня», weekend-skip, paused-bypass; `releaseCadence.ts`; 13 тестов)
 - [x] **7.8** Discussions backend (миграции 008–011 применены на Supabase: `admin_discussions`/`_replies`/`_read`/`_subscribers` + RLS admin/beta + триггер reply_count; Edge `admin-discussions` (10 actions) задеплоена ACTIVE; security-advisors чисто. ✅ live-проверка через Supabase Management API (2026-06-01): триггер бампает reply_count 0→2 + last_reply_at + updated_at, cascade-delete без orphan, RLS = только SELECT для admin/beta (записи — Edge service role), Edge auth-гейт 401/403 ок. ⚠️→✅ MCP `execute_sql` падал `crypto is not defined` (Node 18 + spawned MCP без webcrypto, во всех версиях 0.5–0.8); ФИКС: в `~/.claude.json` → mcpServers.supabase.env добавлен `NODE_OPTIONS=--experimental-global-webcrypto` (бэкап `~/.claude.json.bak-pre-webcrypto-fix`); вступает в силу после рестарта Claude Code. Альтернативный обход без рестарта — curl к `api.supabase.com/v1/projects/{ref}/database/query` тем же `sbp_`-токеном)
 - [x] **7.9** Discussions UI (страница `/admin/discussions`: список с сортировкой open→pending-journal→synced→archived + unread-бейдж, thread view с markdown через `AiMarkdown`, модалки Create/Resolve/Sync, статусные переходы resolve/mark-synced/archive/reply, i18n ru/en, stagger+pulse; хуки `useDiscussions`/`useDiscussionThread`, `discussionStatusMeta.ts`; +14 тестов. v0.7.21. BUG-1 (пустое превью списка) исправлен: Edge `list` теперь отдаёт `body` (admin-discussions v3, верифицировано через get_edge_function). BUG-2 (доступ) разрешён owner'ом → admin+beta read/reply, §4 обновлён. Осталось до PR: доп. тесты статус-переходов/RTL-smoke и мелкие edge-cases из отчёта)
-- [ ] **7.10** Notifications (push + badge)
-- [ ] **7.11** Sync workflow
+- [x] **7.10** Notifications (push + badge): миграция `012_discussion_notify_trigger.sql` (pg_net + триггер `notify_discussion_reply`) применена; Edge `admin-discussions-notify` задеплоена ACTIVE (v2, verify_jwt=false, auth = service_role key). Текст пуша локализован ru/en через `_shared/pushPayload.ts::buildDiscussionReplyPayload` по `push_subscriptions.locale` получателя — миграция `013_push_subscriptions_locale.sql` применена, клиент пишет язык в `upsertPushSubscriptionRow`. `UnreadDiscussionsBadge` + bell-shake (`animate-bell-shake`, reduced-motion-guard в index.css) — **живой**: poll раз в минуту + refetch по `visibilitychange`; выведен рядом с пунктом меню «Обсуждения» (`ShellAdminNav`) **и в шапке** (`ShellDiscussionsButton` в `MotivatorShell`, gated by `canAccessPreviewFeatures`). Тоггл подписки перенесён в `DiscussionThread` — сетевой сбой показывает ошибку (бывший gap AP-04 устранён, тихого reload нет). auto-subscribe уже был в Edge `admin-discussions`. v0.7.22. ⚠️ для прод-работы триггера нужны GUC `app.settings.supabase_url`/`service_role_key` (документировано в миграции; иначе триггер тихо пропускает push — на проде сейчас НЕ заданы).
+- [x] **7.11** Sync workflow «К журналу»: inline copy-to-clipboard `resolution_summary` + inline-поле DR-XXX и кнопка «Перенести в журнал» в `DiscussionThread` (модалка sync — резервный путь); pulse amber-чип и сортировка pending-journal уже были. Тесты: группы P (subscribe toggle: subscribe/unsubscribe/ошибка) / Q (copy + inline sync), `UnreadDiscussionsBadge` (+refetch по visibilitychange), `ShellDiscussionsButton`. v0.7.22.
 - [ ] **7.12** A11y + mobile + perf
 
 ---

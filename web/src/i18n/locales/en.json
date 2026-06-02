@@ -879,7 +879,16 @@
       "createSubmit": "Create",
       "pendingJournalHint": "Copy the summary below to obsidian-motivator/12-Журнал-решений.md as DR-XXX, then click «Moved to journal».",
       "notFound": "Discussion not found.",
-      "staleStatus": "The discussion status changed (it was already updated). Go back to the list and reopen it."
+      "staleStatus": "The discussion status changed (it was already updated). Go back to the list and reopen it.",
+      "subscribeNotify": "Subscribe to notifications",
+      "unsubscribeNotify": "Unsubscribe from notifications",
+      "subscribed": "You're subscribed to this thread's notifications",
+      "unsubscribed": "Notifications off",
+      "copySummary": "Copy summary",
+      "copiedToClipboard": "Copied!",
+      "linkedJournalEntryInline": "Move the summary to the journal and enter the entry id (DR-XXX), then click «Moved to journal».",
+      "syncInline": "Moved to journal",
+      "notifyBadgeAria": "{{count}} unread discussions"
     },
     "testingTitle": "Testing",
     "testingIntro": "Override “now” to exercise the planner and reports: the app treats the chosen date and time as calendar “today”, not the device clock. Stored in this browser only.",

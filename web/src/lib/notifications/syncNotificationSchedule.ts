@@ -20,6 +20,7 @@ export async function upsertPushSubscriptionRow(
   client: SupabaseClient,
   userId: string,
   sub: PushSubscription,
+  locale?: string,
 ): Promise<void> {
   const json = sub.toJSON()
   const endpoint = json.endpoint
@@ -33,6 +34,7 @@ export async function upsertPushSubscriptionRow(
       p256dh: key.p256dh,
       auth: key.auth,
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      locale: locale === 'en' ? 'en' : 'ru',
       last_seen_at: new Date().toISOString(),
     },
     { onConflict: 'user_id,endpoint' },

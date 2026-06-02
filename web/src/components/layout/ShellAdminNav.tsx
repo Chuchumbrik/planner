@@ -4,6 +4,7 @@ import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
 import { shellSideNavLink } from '@/lib/designClasses'
 import { shellAdminNavForUser } from '@/lib/shellNavigation'
+import { UnreadDiscussionsBadge } from './UnreadDiscussionsBadge'
 
 type Props = {
   onNavigate?: () => void
@@ -63,12 +64,15 @@ export function ShellAdminNav({ onNavigate, isAdmin, collapsed = false }: Props)
           <NavLink
             key={item.id}
             to={item.to!}
-            className={() => shellSideNavLink(active, collapsed)}
+            className={() => cn(shellSideNavLink(active, collapsed), 'relative')}
             title={collapsed ? label : undefined}
             aria-label={collapsed ? label : undefined}
             onClick={onNavigate}
           >
-            <MaterialIcon name={item.icon} size={22} />
+            <span className="relative inline-flex">
+              <MaterialIcon name={item.icon} size={22} />
+              {item.id === 'admin-discussions' ? <UnreadDiscussionsBadge /> : null}
+            </span>
             <span className={collapsed ? 'sr-only' : undefined}>{label}</span>
           </NavLink>
         )
