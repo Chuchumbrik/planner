@@ -21,6 +21,14 @@ function initialAnchorHash(): string {
   return typeof window === 'undefined' ? '' : window.location.hash.replace(/^#/, '')
 }
 
+/** Phase 7.12 — клавиатурная навигация: перенос фокуса между карточками релизов. */
+function navigateCard(current: HTMLElement, direction: 1 | -1) {
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-release-card]'))
+  const idx = cards.indexOf(current)
+  if (idx === -1) return
+  cards[idx + direction]?.focus()
+}
+
 function Chevron() {
   return (
     <span
@@ -49,9 +57,27 @@ function ReleaseCard({
   const version = pickLocale(item.releasedInVersion, lang)
   const anchorId = versionAnchorId(version)
 
+  // Phase 7.12 — a11y: Enter/Space копирует якорь, стрелки переносят фокус по карточкам.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onCopyAnchor(version)
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      navigateCard(e.currentTarget, 1)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      navigateCard(e.currentTarget, -1)
+    }
+  }
+
   return (
     <article
       id={anchorId}
+      data-release-card
+      tabIndex={0}
+      aria-label={version}
+      onKeyDown={onKeyDown}
       className={cn(
         'scroll-mt-24 rounded-lg border border-surface-variant/90 bg-surface-container-lowest/45 px-3 py-2.5 transition-shadow duration-500',
         highlighted && 'ring-2 ring-primary/70',
@@ -167,9 +193,9 @@ export function RoadmapTimeline({ groups, filterActive = false, className }: Roa
         </p>
       ) : null}
 
-      <ol className="flex flex-col gap-5">
+      <ol role="list" className="flex flex-col gap-5">
         {displayGroups.map((day) => (
-          <li key={day.dateISO} className="border-l-2 border-surface-variant/70 pl-4">
+          <li key={day.dateISO} role="listitem" className="border-l-2 border-surface-variant/70 pl-4">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <span className="text-base font-semibold tabular-nums text-on-surface">
                 {pickLocale(day.dateLabel, lang)}

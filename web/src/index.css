@@ -391,6 +391,52 @@ body {
   }
 }
 
+/* Phase 7.12 — Hero collapse (мобильная версия): раскрытие сводки */
+@keyframes hero-collapse-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-collapse {
+  animation: hero-collapse-in 200ms ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-collapse {
+    animation: none;
+  }
+}
+
+/* Phase 7.12 — Swipe-to-resolve: появление overlay «Решить» в списке тредов */
+@keyframes swipe-reveal {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-swipe-reveal {
+  animation: swipe-reveal 150ms ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-swipe-reveal {
+    animation: none;
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @layer base {
   button:focus-visible,
   a:focus-visible,

@@ -366,6 +366,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-01', en: '2026-06-01' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.23', en: '0.7.23' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**A11y + мобильная адаптация + perf (Phase 7.12, финал Phase 7):** Hero на `/admin/roadmap` свёрнут по умолчанию на мобильных (< 768px) — краткая строка статуса + кнопка «Развернуть» (`aria-expanded`/`aria-controls`), на десктопе без изменений. `RoadmapSearchBar` теперь sticky `top-16` (учёт высоты шапки). Timeline: `role="list"/"listitem"`, карточки релизов фокусируемы (`tabIndex`), keyboard-навигация — Enter/Space копирует якорь, стрелки вверх/вниз переносят фокус между карточками. `DiscussionList`: swipe-влево по open-треду (Pointer Events) открывает быстрое действие «Решить» + всегда доступна fallback-кнопка для мыши/клавиатуры. Новые `@keyframes` hero-collapse-in и swipe-reveal с `prefers-reduced-motion` guard. Виртуализация Timeline опирается на существующий «Показать ещё» (скрытое не рендерится).',
+            en: '**A11y + mobile + perf (Phase 7.12, final of Phase 7):** the `/admin/roadmap` Hero collapses by default on mobile (< 768px) — a compact status row + an «Expand» button (`aria-expanded`/`aria-controls`), unchanged on desktop. `RoadmapSearchBar` is now sticky at `top-16` (accounts for the shell header). Timeline: `role="list"/"listitem"`, release cards are focusable (`tabIndex`), keyboard nav — Enter/Space copies the anchor, Arrow Up/Down move focus between cards. `DiscussionList`: swipe-left on an open thread (Pointer Events) opens a quick «Resolve» action, plus an always-available fallback button for mouse/keyboard. New `@keyframes` hero-collapse-in and swipe-reveal with a `prefers-reduced-motion` guard. Timeline virtualization relies on the existing «Show more» (hidden items are not rendered).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На телефоне «Краткая сводка» теперь компактная — нажмите «Развернуть», чтобы увидеть детали. Список обсуждений поддерживает свайп влево для быстрого решения треда.',
+            en: 'On mobile the Quick Summary is compact now — tap «Expand» to see the details. The discussions list supports swipe-left to quickly resolve a thread.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.22', en: '0.7.22' },
         tag: 'feat',
         changes: [

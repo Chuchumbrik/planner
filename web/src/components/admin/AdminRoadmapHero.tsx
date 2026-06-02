@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { cn } from '@/lib/cn'
+import { useIsDesktopShell } from '@/lib/useMediaQuery'
 import { SETTINGS_CARD } from '@/lib/designClasses'
 import {
   IDEAS_LATER_ENTRIES,
@@ -95,6 +96,17 @@ export function AdminRoadmapHero({ onShowChangelog, className }: AdminRoadmapHer
   const { t, i18n } = useTranslation()
   const lang: Lang = i18n.language === 'en' ? 'en' : 'ru'
   const now = new Date()
+  const isDesktop = useIsDesktopShell()
+
+  // Phase 7.12 — на мобильных Hero свёрнут по умолчанию (краткая строка + «Развернуть»).
+  const [expanded, setExpanded] = useState(false)
+  // При переходе к desktop-ширине сбрасываем состояние во время рендера (grid и так показан
+  // полностью) — паттерн «adjusting state during render», без useEffect/каскадных рендеров.
+  const [prevDesktop, setPrevDesktop] = useState(isDesktop)
+  if (isDesktop !== prevDesktop) {
+    setPrevDesktop(isDesktop)
+    if (isDesktop && expanded) setExpanded(false)
+  }
 
   const { mvpPct, currentPhaseN, phasesTotal } = useMemo(() => {
     const shipped = IMPLEMENTED_MVP_PHASES.length
@@ -117,10 +129,52 @@ export function AdminRoadmapHero({ onShowChangelog, className }: AdminRoadmapHer
 
   const fresh = latest ? isFreshRelease(latest.dateISO, now) : false
 
+  const showGrid = isDesktop || expanded
+
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <div className="grid gap-3 md:grid-cols-3">
-        {/* Status card */}
+      {/* Phase 7.12 — мобильная свёрнутая строка-сводка (только < md и не развёрнуто). */}
+      {!isDesktop && !expanded ? (
+        <div className="flex items-center gap-2 rounded-xl border border-surface-variant/80 bg-surface-container-low/50 px-3 py-2.5">
+          <MaterialIcon name="emoji_events" size={18} className="text-emerald-400" filled />
+          <span className="min-w-0 flex-1 truncate text-sm text-on-surface">
+            {t('settings.roadmapHeroStatusSummary', { pct: mvpPct, n: currentPhaseN })}
+          </span>
+          <button
+            type="button"
+            aria-expanded={false}
+            aria-controls="hero-detail"
+            aria-label={t('settings.roadmapHeroExpand')}
+            onClick={() => setExpanded(true)}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-surface-variant/80 px-2 py-1 text-xs font-medium text-primary/90 hover:bg-surface-container-low/60 hover:text-primary"
+          >
+            {t('settings.roadmapHeroExpand')}
+            <MaterialIcon name="expand_more" size={16} />
+          </button>
+        </div>
+      ) : null}
+
+      {showGrid ? (
+        <div
+          id="hero-detail"
+          className={cn('flex flex-col gap-3', !isDesktop && expanded && 'animate-hero-collapse')}
+        >
+          {!isDesktop && expanded ? (
+            <button
+              type="button"
+              aria-expanded
+              aria-controls="hero-detail"
+              aria-label={t('settings.roadmapHeroCollapse')}
+              onClick={() => setExpanded(false)}
+              className="inline-flex shrink-0 items-center gap-1 self-start rounded-md border border-surface-variant/80 px-2 py-1 text-xs font-medium text-primary/90 hover:bg-surface-container-low/60 hover:text-primary"
+            >
+              {t('settings.roadmapHeroCollapse')}
+              <MaterialIcon name="expand_less" size={16} />
+            </button>
+          ) : null}
+
+          <div className="grid gap-3 md:grid-cols-3">
+            {/* Status card */}
         <article className={cn(SETTINGS_CARD, 'flex flex-col gap-2')}>
           <div className="flex items-center gap-2 text-on-surface-variant">
             <MaterialIcon name="emoji_events" size={18} className="text-emerald-400" filled />
@@ -201,7 +255,9 @@ export function AdminRoadmapHero({ onShowChangelog, className }: AdminRoadmapHer
             <p className="text-xs text-on-surface-variant">{t('settings.roadmapHeroNoCurrent')}</p>
           )}
         </article>
-      </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Quick links bar — counters. Навигация к секциям подключается в 7.3+ (Timeline/2-col/Discussions). */}
       <div className="flex flex-wrap gap-2">
