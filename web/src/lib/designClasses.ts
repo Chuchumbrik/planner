@@ -384,10 +384,14 @@ export function shellSideNavLink(isActive: boolean, collapsed = false): string {
   )
 }
 
-export function shellSidebarClass(collapsed: boolean): string {
+export function shellSidebarClass(collapsed: boolean, mobile = false): string {
   return cn(
-    'fixed left-0 top-0 z-50 hidden h-dvh flex-col border-r border-surface-variant',
-    'bg-surface pt-md pb-lg transition-[width] duration-200 ease-out md:flex',
+    'fixed left-0 top-0 z-50 h-dvh flex-col border-r border-surface-variant',
+    'bg-surface pt-md pb-lg transition-[width] duration-200 ease-out',
+    // `cn` не делает tailwind-merge, поэтому НЕ полагаемся на переопределение
+    // display-класса извне (иначе в DOM попадают и `hidden`, и `flex` — `hidden`
+    // выигрывает по порядку в CSS, и мобильное меню становится display:none).
+    mobile ? 'flex md:hidden' : 'hidden md:flex',
     collapsed ? 'w-16' : 'w-64',
   )
 }
