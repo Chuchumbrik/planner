@@ -100,6 +100,7 @@ function ShellSidebar({
   collapsed,
   onToggleCollapsed,
   showCollapseToggle,
+  mobile = false,
 }: {
   activeNav: MotivatorNavId
   onNavigate?: () => void
@@ -110,13 +111,15 @@ function ShellSidebar({
   collapsed: boolean
   onToggleCollapsed?: () => void
   showCollapseToggle?: boolean
+  /** Мобильный overlay-вариант: панель видна <md и скрыта на десктопе. */
+  mobile?: boolean
 }) {
   const { t } = useTranslation()
   const settingsActive = activeNav === 'settings'
   const settingsLabel = t(SHELL_SETTINGS_NAV.labelKey)
 
   return (
-    <aside className={cn(shellSidebarClass(collapsed), className)}>
+    <aside className={cn(shellSidebarClass(collapsed, mobile), className)}>
       <div className={cn('mb-md', collapsed ? 'flex justify-center px-2' : 'px-md')}>
         {collapsed ? (
           <p
@@ -284,7 +287,8 @@ function MotivatorShellInner({
           <ShellSidebar
             {...sidebarProps}
             collapsed={false}
-            className="z-[56] flex md:hidden"
+            mobile
+            className="z-[56]"
             onNavigate={() => setMobileNavOpen(false)}
           />
         </>
