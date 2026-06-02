@@ -366,6 +366,17 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.27', en: '0.7.27' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**FileDefectModal + Edge — средний приоритет:** (1) Шаблон с текстом — кнопка шаблона теперь показывает inline-предупреждение «Шаблон заменит заголовок и описание» с кнопками «Применить» / «Отмена», если поля уже заполнены; пустая форма — применяется сразу. Активный ожидающий шаблон подсвечивается янтарным. (2) Rate limiting — Edge `file-defect` проверяет `defect_submissions` за последний час: при ≥10 отправках возвращает 429 `rate_limited` (фронтенд уже обрабатывал этот код).',
+            en: '**FileDefectModal + Edge — medium priority:** (1) Template overwrite guard — template button now shows an inline amber warning "Template will replace the title and description" with Apply / Cancel, when fields are already filled; empty form applies immediately. The pending template is highlighted in amber. (2) Rate limiting — Edge `file-defect` checks `defect_submissions` over the last hour: ≥10 submissions returns 429 `rate_limited` (front-end already handled this code).',
+          },
+        ],
+      },
+      {
+      {
         releasedInVersion: { ru: '0.7.26', en: '0.7.26' },
         tag: 'fix',
         changes: [

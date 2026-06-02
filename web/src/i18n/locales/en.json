@@ -457,6 +457,8 @@
     "fileDefectStepsHint": "Optional. A numbered list helps reproduce faster.",
     "fileDefectIncludeRoute": "Include the current page path in the report",
     "fileDefectSubmit": "Create issue",
+    "fileDefectTemplateOverwriteWarning": "Template will replace the title and description.",
+    "fileDefectTemplateOverwriteApply": "Apply",
     "fileDefectCancel": "Cancel",
     "fileDefectClose": "Close",
     "fileDefectSuccess": "Issue created.",
