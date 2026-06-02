@@ -479,12 +479,15 @@
     "fileDefectScreenshotsHint": "Файлы загружаются в защищённое хранилище; в issue попадут временные ссылки. Перетащите файлы сюда, нажмите кнопку или сфокусируйте эту область (клик или Tab) и вставьте картинку из буфера (Ctrl+V / ⌘V).",
     "fileDefectScreenshotsRegionAria": "Вложения со скриншотами: перетаскивание, кнопка или вставка из буфера обмена, когда эта область в фокусе.",
     "fileDefectAddScreenshot": "Добавить файл",
-    "fileDefectExtraToggle": "Дополнительная информация",
-    "fileDefectRecommendSteps": "Описание длинное — по возможности добавьте шаги воспроизведения в блоке ниже.",
+    "fileDefectExtraToggle": "Шаги и детали воспроизведения",
+    "fileDefectRecommendSteps": "Описание длинное — нажмите, чтобы добавить шаги воспроизведения.",
     "fileDefectTechBlockTitle": "Техническая информация, которая будет отправлена",
     "fileDefectOmitted": "(не отправляем)",
     "fileDefectOpenIssue": "Открыть issue на GitHub",
-    "fileDefectValidationRequired": "Заполните заголовок и описание.",
+    "fileDefectSuccessTitle": "Дефект заведён",
+    "fileDefectValidationTitleRequired": "Введите заголовок.",
+    "fileDefectValidationDescRequired": "Введите описание.",
+    "fileDefectTemplateKeep": "Оставить",
     "fileDefectErrors": {
       "forbidden": "Недостаточно прав: нужна роль admin или beta_tester в Supabase (app_metadata.motivator_role).",
       "invalid_body": "Проверьте поля формы: заголовок и описание обязательны, длины в пределах лимитов.",
@@ -536,6 +539,18 @@
         "title": "Синхронизация / vault",
         "description": "Расхождения после входа, ошибки расшифровки, сохранение не применяется.",
         "steps": "1. Вошёл на двух устройствах …\n2. …\n3. …"
+      },
+      "login_auth": {
+        "label": "Вход",
+        "title": "Авторизация / вход в аккаунт",
+        "description": "Что произошло при входе, выходе или восстановлении сессии.",
+        "steps": "1. Открыл страницу входа.\n2. …\n3. …"
+      },
+      "task": {
+        "label": "Задача",
+        "title": "Задачи: создание / редактирование",
+        "description": "Что пошло не так при создании, редактировании или завершении задачи.",
+        "steps": "1. Открыл /app, нажал «Новая задача».\n2. …\n3. …"
       }
     },
     "adminRolesTitle": "Доступы",

@@ -479,12 +479,15 @@
     "fileDefectScreenshotsHint": "Files upload to private storage; the issue will include time-limited links. Drag files here, use the button, or focus this area (click or Tab) and paste an image (Ctrl+V / ⌘V).",
     "fileDefectScreenshotsRegionAria": "Screenshot attachments: drag files, add via button, or paste an image from the clipboard when this area is focused.",
     "fileDefectAddScreenshot": "Add file",
-    "fileDefectExtraToggle": "Additional information",
-    "fileDefectRecommendSteps": "The description is long — please add reproduction steps below if you can.",
+    "fileDefectExtraToggle": "Steps and reproduction details",
+    "fileDefectRecommendSteps": "The description is long — click to add reproduction steps.",
     "fileDefectTechBlockTitle": "Technical details that will be sent",
     "fileDefectOmitted": "(not sent)",
     "fileDefectOpenIssue": "Open issue on GitHub",
-    "fileDefectValidationRequired": "Enter a title and description.",
+    "fileDefectSuccessTitle": "Defect filed",
+    "fileDefectValidationTitleRequired": "Enter a title.",
+    "fileDefectValidationDescRequired": "Enter a description.",
+    "fileDefectTemplateKeep": "Keep",
     "fileDefectErrors": {
       "forbidden": "Not allowed: you need the admin or beta_tester role in Supabase (app_metadata.motivator_role).",
       "invalid_body": "Check the form: title and description are required and must be within length limits.",
@@ -536,6 +539,18 @@
         "title": "Sync / vault",
         "description": "Mismatches after sign-in, decrypt errors, changes not sticking.",
         "steps": "1. Signed in on two devices …\n2. …\n3. …"
+      },
+      "login_auth": {
+        "label": "Login",
+        "title": "Auth / login",
+        "description": "What happened when signing in, signing out, or restoring a session.",
+        "steps": "1. Opened the sign-in page.\n2. …\n3. …"
+      },
+      "task": {
+        "label": "Task",
+        "title": "Tasks: create / edit",
+        "description": "What went wrong when creating, editing, or completing a task.",
+        "steps": "1. Opened /app, clicked \"New task\".\n2. …\n3. …"
       }
     },
     "adminRolesTitle": "Access",

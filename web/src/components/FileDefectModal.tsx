@@ -30,6 +30,8 @@ const UA_MAX = 400
 const MAX_FILES = 2
 const MAX_BYTES = 3 * 1024 * 1024
 const ACCEPT_MIME = new Set(['image/png', 'image/jpeg', 'image/webp'])
+// Counter appears when the field is focused or has used more than 70% of the limit
+const COUNTER_RATIO = 0.7
 
 function clampField(value: string, max: number): string {
   return value.length > max ? value.slice(0, max) : value
@@ -70,6 +72,7 @@ export function FileDefectModal({
   const formId = useId()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
+  const errorRef = useRef<HTMLParagraphElement>(null)
   useDialogFocusTrap(open, dialogRef)
 
   const [draftId, setDraftId] = useState(() => crypto.randomUUID())
@@ -95,6 +98,7 @@ export function FileDefectModal({
   const [uploadBusy, setUploadBusy] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [pendingTemplate, setPendingTemplate] = useState<DefectTemplateId | null>(null)
+  const [focusedField, setFocusedField] = useState<string | null>(null)
 
   const deviceMeta = useMemo(() => collectDefectDeviceMeta(), [])
 
@@ -129,8 +133,13 @@ export function FileDefectModal({
       setUploadBusy(false)
       setUploadError(null)
       setPendingTemplate(null)
+      setFocusedField(null)
     })
   }, [open])
+
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [error])
 
   const syncDraftPaths = useCallback(
     async (paths: string[]) => {
@@ -185,6 +194,7 @@ export function FileDefectModal({
       const next = attachments.filter((a) => a.path !== path)
       await supabase.storage.from('defect-attachments').remove([path])
       setAttachments(next)
+      setUploadError(null)
       await syncDraftPaths(next.map((a) => a.path))
     },
     [attachments, supabase, syncDraftPaths],
@@ -256,7 +266,9 @@ export function FileDefectModal({
     setTitle(clampField(t(`settings.defectTemplate.${id}.title`), TITLE_MAX))
     setDescription(clampField(t(`settings.defectTemplate.${id}.description`), DESC_MAX))
     const st = t(`settings.defectTemplate.${id}.steps`)
-    setSteps(st.startsWith('settings.') ? '' : st)
+    const hasSteps = !st.startsWith('settings.')
+    setSteps(hasSteps ? st : '')
+    if (hasSteps) setExtraOpen(true)
   }
 
   const recommendSteps = description.trim().length > 200 && !steps.trim()
@@ -329,6 +341,19 @@ export function FileDefectModal({
     </button>
   )
 
+  const closeBtn = (
+    <button
+      type="button"
+      className={MODAL_CLOSE_BTN}
+      onClick={handleClose}
+      aria-label={t('settings.fileDefectClose')}
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    </button>
+  )
+
   const modal = (
     <div
       className={cn(MODAL_OVERLAY, 'z-[100]')}
@@ -344,30 +369,29 @@ export function FileDefectModal({
         aria-modal="true"
         aria-labelledby={issueUrl ? `${formId}-success-title` : `${formId}-title`}
       >
-        {/* ── HEADER ─────────────────────────────────────────────────────── */}
-        {!issueUrl && (
-          <div className="flex shrink-0 flex-col gap-2 border-b border-surface-variant p-sm pb-3 pt-4 md:px-md max-md:pt-[max(1rem,env(safe-area-inset-top))]">
-            <div className="flex items-center justify-between gap-2">
-              <h2 id={`${formId}-title`} className={MODAL_TITLE}>
-                {t('settings.fileDefectModalTitle')}
-              </h2>
-              <button type="button" className={MODAL_CLOSE_BTN} onClick={handleClose} aria-label="Закрыть">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-                  <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
+        {/* ── HEADER — always visible ────────────────────────────────────── */}
+        <div className="flex shrink-0 flex-col gap-2 border-b border-surface-variant p-sm pb-3 pt-4 md:px-md max-md:pt-[max(1rem,env(safe-area-inset-top))]">
+          <div className="flex items-center justify-between gap-2">
+            <h2
+              id={issueUrl ? `${formId}-success-title` : `${formId}-title`}
+              className={MODAL_TITLE}
+            >
+              {issueUrl ? t('settings.fileDefectSuccessTitle') : t('settings.fileDefectModalTitle')}
+            </h2>
+            {closeBtn}
+          </div>
+          {!issueUrl && (
             <div className="flex gap-1">
               {tabBtn(!previewMode, t('settings.fileDefectTabForm'), () => setPreviewMode(false))}
               {tabBtn(previewMode, t('settings.fileDefectTabPreview'), () => setPreviewMode(true))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ── SUCCESS ────────────────────────────────────────────────────── */}
         {issueUrl ? (
           <div className="flex flex-col gap-3 px-4 py-5">
-            <p id={`${formId}-success-title`} className="text-sm font-medium text-primary">
+            <p className="text-sm text-on-surface-variant">
               {t('settings.fileDefectSuccess48')}
             </p>
             {suggestedLabels.length ? (
@@ -422,7 +446,7 @@ export function FileDefectModal({
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={(e) => void onSubmit(e)}>
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
 
-              {/* Templates — перенос по словам, без горизонтального скролла */}
+              {/* Templates — flex-wrap, no horizontal scroll */}
               <div className="flex flex-wrap gap-1.5">
                 {DEFECT_TEMPLATE_IDS.map((id) => (
                   <button
@@ -462,7 +486,7 @@ export function FileDefectModal({
                       className="rounded border border-surface-variant px-2 py-0.5 text-xs text-on-surface-variant hover:bg-surface-container-low"
                       onClick={() => setPendingTemplate(null)}
                     >
-                      {t('settings.fileDefectCancel')}
+                      {t('settings.fileDefectTemplateKeep')}
                     </button>
                   </div>
                 </div>
@@ -475,9 +499,11 @@ export function FileDefectModal({
                     {t('settings.fileDefectTitleLabel')}
                     <span className="ml-0.5 text-red-400" aria-hidden> *</span>
                   </span>
-                  <span className="font-mono text-[10px]">
-                    {t('settings.fileDefectCharCount', { used: title.length, max: TITLE_MAX })}
-                  </span>
+                  {(focusedField === 'title' || title.length > TITLE_MAX * COUNTER_RATIO) && (
+                    <span className="font-mono text-[10px]">
+                      {t('settings.fileDefectCharCount', { used: title.length, max: TITLE_MAX })}
+                    </span>
+                  )}
                 </span>
                 <input
                   className={cn(
@@ -488,14 +514,59 @@ export function FileDefectModal({
                   value={title}
                   maxLength={TITLE_MAX}
                   placeholder={t('settings.fileDefectTitlePlaceholder')}
+                  aria-required="true"
                   onChange={(e) => setTitle(clampField(e.target.value, TITLE_MAX))}
-                  onBlur={() => setTitleTouched(true)}
+                  onFocus={() => setFocusedField('title')}
+                  onBlur={() => { setTitleTouched(true); setFocusedField(null) }}
                   autoFocus
                 />
                 {titleInvalid && (
-                  <p className="text-xs text-red-400">{t('settings.fileDefectValidationRequired')}</p>
+                  <p className="text-xs text-red-400">{t('settings.fileDefectValidationTitleRequired')}</p>
                 )}
               </label>
+
+              {/* Описание * */}
+              <label className="flex flex-col gap-1">
+                <span className="flex items-baseline justify-between gap-2 text-xs text-on-surface-variant">
+                  <span>
+                    {t('settings.fileDefectDescriptionLabel')}
+                    <span className="ml-0.5 text-red-400" aria-hidden> *</span>
+                  </span>
+                  {(focusedField === 'desc' || description.length > DESC_MAX * COUNTER_RATIO) && (
+                    <span className="font-mono text-[10px]">
+                      {t('settings.fileDefectCharCount', { used: description.length, max: DESC_MAX })}
+                    </span>
+                  )}
+                </span>
+                <textarea
+                  className={cn(
+                    'min-h-[88px] resize-none sm:resize-y',
+                    MOTIVATOR_INPUT,
+                    'placeholder:text-on-surface-variant',
+                    descInvalid && 'ring-1 ring-red-400',
+                  )}
+                  value={description}
+                  maxLength={DESC_MAX}
+                  placeholder={t('settings.fileDefectDescriptionPlaceholder')}
+                  aria-required="true"
+                  onChange={(e) => setDescription(e.target.value)}
+                  onFocus={() => setFocusedField('desc')}
+                  onBlur={() => { setDescTouched(true); setFocusedField(null) }}
+                />
+                {descInvalid && (
+                  <p className="text-xs text-red-400">{t('settings.fileDefectValidationDescRequired')}</p>
+                )}
+              </label>
+
+              {recommendSteps && (
+                <button
+                  type="button"
+                  className={cn(TEXT_HINT_WARNING, 'text-left')}
+                  onClick={() => setExtraOpen(true)}
+                >
+                  {t('settings.fileDefectRecommendSteps')}
+                </button>
+              )}
 
               {/* Тип */}
               <label className="flex flex-col gap-1">
@@ -512,39 +583,6 @@ export function FileDefectModal({
                   <option value="other">{t('settings.fileDefectType.other')}</option>
                 </select>
               </label>
-
-              {/* Описание * */}
-              <label className="flex flex-col gap-1">
-                <span className="flex items-baseline justify-between gap-2 text-xs text-on-surface-variant">
-                  <span>
-                    {t('settings.fileDefectDescriptionLabel')}
-                    <span className="ml-0.5 text-red-400" aria-hidden> *</span>
-                  </span>
-                  <span className="font-mono text-[10px]">
-                    {t('settings.fileDefectCharCount', { used: description.length, max: DESC_MAX })}
-                  </span>
-                </span>
-                <textarea
-                  className={cn(
-                    'min-h-[88px] resize-none sm:resize-y',
-                    MOTIVATOR_INPUT,
-                    'placeholder:text-on-surface-variant',
-                    descInvalid && 'ring-1 ring-red-400',
-                  )}
-                  value={description}
-                  maxLength={DESC_MAX}
-                  placeholder={t('settings.fileDefectDescriptionPlaceholder')}
-                  onChange={(e) => setDescription(e.target.value)}
-                  onBlur={() => setDescTouched(true)}
-                />
-                {descInvalid && (
-                  <p className="text-xs text-red-400">{t('settings.fileDefectValidationRequired')}</p>
-                )}
-              </label>
-
-              {recommendSteps && (
-                <p className={TEXT_HINT_WARNING}>{t('settings.fileDefectRecommendSteps')}</p>
-              )}
 
               {/* Скриншоты */}
               <div
@@ -614,7 +652,7 @@ export function FileDefectModal({
                 )}
               </div>
 
-              {/* Дополнительная информация — шаги, ожидаемый, фактический */}
+              {/* Шаги и детали — шаги, ожидаемый, фактический */}
               <Collapsible
                 open={extraOpen}
                 onToggle={() => setExtraOpen((v) => !v)}
@@ -623,9 +661,11 @@ export function FileDefectModal({
                 <label className="flex flex-col gap-1">
                   <span className="flex justify-between text-xs text-on-surface-variant">
                     <span>{t('settings.fileDefectStepsLabel')}</span>
-                    <span className="font-mono text-[10px]">
-                      {t('settings.fileDefectCharCount', { used: steps.length, max: STEPS_MAX })}
-                    </span>
+                    {(focusedField === 'steps' || steps.length > STEPS_MAX * COUNTER_RATIO) && (
+                      <span className="font-mono text-[10px]">
+                        {t('settings.fileDefectCharCount', { used: steps.length, max: STEPS_MAX })}
+                      </span>
+                    )}
                   </span>
                   <span className="text-[11px] text-on-surface-variant">{t('settings.fileDefectStepsHint')}</span>
                   <textarea
@@ -633,36 +673,48 @@ export function FileDefectModal({
                     value={steps}
                     maxLength={STEPS_MAX}
                     placeholder={t('settings.fileDefectStepsPlaceholder')}
+                    onFocus={() => setFocusedField('steps')}
+                    onBlur={() => setFocusedField(null)}
                     onChange={(e) => setSteps(e.target.value)}
                   />
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className="flex justify-between text-xs text-on-surface-variant">
                     <span>{t('settings.fileDefectExpectedLabel')}</span>
-                    <span className="font-mono text-[10px]">
-                      {t('settings.fileDefectCharCount', { used: expected.length, max: EXPECTED_MAX })}
-                    </span>
+                    {(focusedField === 'expected' || expected.length > EXPECTED_MAX * COUNTER_RATIO) && (
+                      <span className="font-mono text-[10px]">
+                        {t('settings.fileDefectCharCount', { used: expected.length, max: EXPECTED_MAX })}
+                      </span>
+                    )}
                   </span>
+                  <span className="text-[11px] text-on-surface-variant">{t('settings.fileDefectExpectedHint')}</span>
                   <textarea
                     className={cn('min-h-[48px] resize-none sm:resize-y', MOTIVATOR_INPUT, 'placeholder:text-on-surface-variant')}
                     value={expected}
                     maxLength={EXPECTED_MAX}
                     placeholder={t('settings.fileDefectExpectedPlaceholder')}
+                    onFocus={() => setFocusedField('expected')}
+                    onBlur={() => setFocusedField(null)}
                     onChange={(e) => setExpected(e.target.value)}
                   />
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className="flex justify-between text-xs text-on-surface-variant">
                     <span>{t('settings.fileDefectActualLabel')}</span>
-                    <span className="font-mono text-[10px]">
-                      {t('settings.fileDefectCharCount', { used: actual.length, max: ACTUAL_MAX })}
-                    </span>
+                    {(focusedField === 'actual' || actual.length > ACTUAL_MAX * COUNTER_RATIO) && (
+                      <span className="font-mono text-[10px]">
+                        {t('settings.fileDefectCharCount', { used: actual.length, max: ACTUAL_MAX })}
+                      </span>
+                    )}
                   </span>
+                  <span className="text-[11px] text-on-surface-variant">{t('settings.fileDefectActualHint')}</span>
                   <textarea
                     className={cn('min-h-[48px] resize-none sm:resize-y', MOTIVATOR_INPUT, 'placeholder:text-on-surface-variant')}
                     value={actual}
                     maxLength={ACTUAL_MAX}
                     placeholder={t('settings.fileDefectActualPlaceholder')}
+                    onFocus={() => setFocusedField('actual')}
+                    onBlur={() => setFocusedField(null)}
                     onChange={(e) => setActual(e.target.value)}
                   />
                 </label>
@@ -716,7 +768,7 @@ export function FileDefectModal({
               </Collapsible>
 
               {error && (
-                <p className="text-xs text-red-400" role="alert">{error}</p>
+                <p ref={errorRef} className="text-xs text-red-400" role="alert">{error}</p>
               )}
             </div>
 
