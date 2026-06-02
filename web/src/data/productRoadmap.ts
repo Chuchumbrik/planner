@@ -376,7 +376,6 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
         ],
       },
       {
-      {
         releasedInVersion: { ru: '0.7.25', en: '0.7.25' },
         tag: 'fix',
         changes: [
