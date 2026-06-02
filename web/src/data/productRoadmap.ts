@@ -366,6 +366,27 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.29', en: '0.7.29' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**FileDefectModal — центрирование и анимация:** (1) Модальное окно теперь центрируется по экрану на мобилке (`items-center` вместо `items-end` в `MODAL_OVERLAY`). (2) Добавлены анимации открытия и закрытия: overlay — fade 200ms / 180ms; shell — scale(0.95)+translateY → scale(1) при открытии (280ms, ease-out-expo), обратно при закрытии (180ms, ease-in). (3) Реализован паттерн `mounted`/`exiting` для корректного воспроизведения exit-анимации перед размонтированием компонента. (4) Поддержка `prefers-reduced-motion` — все анимации отключаются.',
+            en: '**FileDefectModal — centering and animation:** (1) Modal now centers on mobile screen (`items-center` instead of `items-end` in `MODAL_OVERLAY`). (2) Open/close animations added: overlay — fade 200ms / 180ms; shell — scale(0.95)+translateY → scale(1) on open (280ms, ease-out-expo), reversed on close (180ms, ease-in). (3) `mounted`/`exiting` pattern for correct exit animation before component unmount. (4) `prefers-reduced-motion` support — all animations disabled.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Форма дефекта: плавное открытие и закрытие, модалка по центру на мобилке.',
+            en: 'Defect form: smooth open/close animation, centered on mobile.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
+    items: [
+      {
         releasedInVersion: { ru: '0.7.28', en: '0.7.28' },
         tag: 'fix',
         changes: [

@@ -99,6 +99,8 @@ export function FileDefectModal({
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [pendingTemplate, setPendingTemplate] = useState<DefectTemplateId | null>(null)
   const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const [exiting, setExiting] = useState(false)
 
   const deviceMeta = useMemo(() => collectDefectDeviceMeta(), [])
 
@@ -140,6 +142,17 @@ export function FileDefectModal({
   useEffect(() => {
     if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [error])
+
+  useEffect(() => {
+    if (open) {
+      setExiting(false)
+      setMounted(true)
+    } else if (mounted) {
+      setExiting(true)
+      const t = setTimeout(() => { setMounted(false); setExiting(false) }, 200)
+      return () => clearTimeout(t)
+    }
+  }, [open, mounted])
 
   const syncDraftPaths = useCallback(
     async (paths: string[]) => {
@@ -322,7 +335,7 @@ export function FileDefectModal({
     }
   }
 
-  if (!open) return null
+  if (!mounted) return null
 
   const routePreview = includeRoute ? pathname || '—' : t('settings.fileDefectRouteOmitted')
 
@@ -356,7 +369,7 @@ export function FileDefectModal({
 
   const modal = (
     <div
-      className={cn(MODAL_OVERLAY, 'z-[100]')}
+      className={cn(MODAL_OVERLAY, 'z-[100]', exiting ? 'modal-overlay-out' : 'modal-overlay-in')}
       role="presentation"
       onMouseDown={(ev) => {
         if (ev.target === ev.currentTarget) handleClose()
@@ -364,7 +377,7 @@ export function FileDefectModal({
     >
       <div
         ref={dialogRef}
-        className={cn(MODAL_SHELL, 'max-h-[min(92dvh,780px)]')}
+        className={cn(MODAL_SHELL, 'max-h-[min(92dvh,780px)]', exiting ? 'modal-shell-out' : 'modal-shell-in')}
         role="dialog"
         aria-modal="true"
         aria-labelledby={issueUrl ? `${formId}-success-title` : `${formId}-title`}
