@@ -153,6 +153,26 @@ Workflow({
 | Перед созданием PR | `qa-coverage-review` |
 | Нужен отчёт по покрытию | `qa-coverage-review` |
 
+### Watchdog (защита от зависаний)
+
+Долгие прогоны могут застрять: schema-фазы (Tests/Report) зацикливаются на
+авто-ретраях, либо среда встаёт на паузу — и прогон висит часами. Две линии защиты:
+
+1. **Встроенные предохранители** в `feature-with-qa.js` — обёртка `guard()`
+   ограничивает каждый `agent()` по времени (Implement/Tests — 20 мин, остальные — 8);
+   по таймауту фаза «деградирует» в `null`, а не висит; Report при срыве отдаёт
+   `verdict: blocked`. Работает само, ничего делать не нужно.
+
+2. **Внешний монитор** `scripts/workflows/watch-run.sh` — запускать в фоне сразу
+   после старта Workflow. Пингует журнал прогона и завершается с алертом
+   (STALL / RUNAWAY / DONE), после чего нужно сделать `TaskStop` и разобрать.
+
+   ```
+   # из результата Workflow берём Transcript dir и output-файл (tasks/<id>.output)
+   bash scripts/workflows/watch-run.sh <transcript_dir> 12 20 90 <output_file>
+   # (stall_min=12, max_agents=20, max_runtime_min=90)
+   ```
+
 ### GitHub CI (backstop)
 
 `.github/workflows/pr-checks.yml` блокирует мёрдж если:
