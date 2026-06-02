@@ -363,6 +363,27 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.24', en: '0.7.24' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**FileDefectModal — мобильная переработка:** хедер сокращён до заголовка + кнопки × + табов (было 6 блоков в `shrink-0` зоне, съедавших 55% высоты на телефоне). Чекбоксы и Tech-блок (UA/Viewport/DPR/Device) перенесены в коллапсируемую секцию «Технические данные». Шаблоны переведены в горизонтальный `overflow-x-auto` ряд внутри тела формы. Инлайн-валидация обязательных полей (Title, Description) на `onBlur` вместо только `onSubmit`. Добавлен `MODAL_CLOSE_BTN` (×) в хедер, `MODAL_FOOTER` — в подвал. `resize-y` заменён на `resize-none sm:resize-y` для корректного поведения на touch. Добавлен `Collapsible`-компонент для устранения дублирования.',
+            en: '**FileDefectModal — mobile rework:** header reduced to title + × button + tabs (previously 6 blocks in `shrink-0` area consumed 55% of screen height on phone). Checkboxes and Tech block (UA/Viewport/DPR/Device) moved into a collapsible "Technical data" section. Templates moved to a horizontal `overflow-x-auto` row inside the form body. Inline validation for required fields (Title, Description) on `onBlur` instead of submit-only. Added `MODAL_CLOSE_BTN` (×) to header, `MODAL_FOOTER` to footer. `resize-y` replaced with `resize-none sm:resize-y` for correct touch behavior. Extracted `Collapsible` component to remove duplication.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Форма заведения дефекта стала удобной на мобильном: основные поля сразу видны, лишние детали скрыты под раскрывашками.',
+            en: 'The defect form is now mobile-friendly: core fields are immediately visible, extra details hidden under collapsibles.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-06-01', en: '2026-06-01' },
     items: [
       {
