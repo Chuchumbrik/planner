@@ -92,8 +92,10 @@ export function FileDefectModal({
   const [previewMarkdown, setPreviewMarkdown] = useState('')
   const [titleTouched, setTitleTouched] = useState(false)
   const [descTouched, setDescTouched] = useState(false)
+  const [uploadBusy, setUploadBusy] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const deviceMeta = collectDefectDeviceMeta()
+  const deviceMeta = useMemo(() => collectDefectDeviceMeta(), [])
 
   const userAgentShort = useMemo(() => {
     if (typeof navigator === 'undefined' || !includeUserAgent) return ''
@@ -123,6 +125,8 @@ export function FileDefectModal({
       setBusy(false)
       setTitleTouched(false)
       setDescTouched(false)
+      setUploadBusy(false)
+      setUploadError(null)
     })
   }, [open])
 
@@ -139,6 +143,8 @@ export function FileDefectModal({
 
   const addFiles = useCallback(
     async (files: FileList | File[]) => {
+      setUploadBusy(true)
+      setUploadError(null)
       const list = [...files].filter(Boolean)
       const next: Attachment[] = [...attachments]
       let lastIssue: string | null = null
@@ -166,7 +172,8 @@ export function FileDefectModal({
       }
       setAttachments(next)
       await syncDraftPaths(next.map((a) => a.path))
-      setError(lastIssue)
+      setUploadError(lastIssue)
+      setUploadBusy(false)
     },
     [attachments, draftId, supabase, syncDraftPaths, t, userId],
   )
@@ -182,7 +189,7 @@ export function FileDefectModal({
   )
 
   useEffect(() => {
-    if (!open) return
+    if (!open || !previewMode) return
     let cancelled = false
     async function run() {
       const lines: string[] = []
@@ -219,6 +226,7 @@ export function FileDefectModal({
     }
   }, [
     open,
+    previewMode,
     attachments,
     description,
     steps,
@@ -233,6 +241,14 @@ export function FileDefectModal({
     deviceMeta,
     supabase,
   ])
+
+  const handleClose = useCallback(() => {
+    if (attachments.length > 0 && !issueUrl) {
+      void supabase.storage.from('defect-attachments').remove(attachments.map((a) => a.path))
+      void supabase.from('defect_attachment_drafts').delete().match({ user_id: userId, draft_id: draftId })
+    }
+    onClose()
+  }, [attachments, issueUrl, supabase, userId, draftId, onClose])
 
   const applyTemplate = (id: DefectTemplateId) => {
     setTitle(clampField(t(`settings.defectTemplate.${id}.title`), TITLE_MAX))
@@ -316,7 +332,7 @@ export function FileDefectModal({
       className={cn(MODAL_OVERLAY, 'z-[100]')}
       role="presentation"
       onMouseDown={(ev) => {
-        if (ev.target === ev.currentTarget) onClose()
+        if (ev.target === ev.currentTarget) handleClose()
       }}
     >
       <div
@@ -333,7 +349,7 @@ export function FileDefectModal({
               <h2 id={`${formId}-title`} className={MODAL_TITLE}>
                 {t('settings.fileDefectModalTitle')}
               </h2>
-              <button type="button" className={MODAL_CLOSE_BTN} onClick={onClose} aria-label="Закрыть">
+              <button type="button" className={MODAL_CLOSE_BTN} onClick={handleClose} aria-label="Закрыть">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                   <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
@@ -533,16 +549,19 @@ export function FileDefectModal({
                     e.target.value = ''
                   }}
                 />
-                <div className="mt-2">
+                <div className="mt-2 flex items-center gap-2">
                   <button
                     type="button"
                     className="rounded border border-surface-variant px-2 py-1 text-xs text-on-surface hover:bg-surface-container-high disabled:opacity-40"
-                    disabled={attachments.length >= MAX_FILES}
+                    disabled={attachments.length >= MAX_FILES || uploadBusy}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    {t('settings.fileDefectAddScreenshot')}
+                    {uploadBusy ? t('common.loading') : t('settings.fileDefectAddScreenshot')}
                   </button>
                 </div>
+                {uploadError && (
+                  <p className="mt-1 text-xs text-red-400" role="alert">{uploadError}</p>
+                )}
                 {attachments.length > 0 && (
                   <ul className="mt-2 space-y-1 text-xs text-on-surface-variant">
                     {attachments.map((a) => (
@@ -672,7 +691,7 @@ export function FileDefectModal({
               <button
                 type="button"
                 className="flex-1 rounded-lg border border-surface-variant py-2.5 text-sm text-on-surface hover:bg-surface-container-high"
-                onClick={() => onClose()}
+                onClick={handleClose}
               >
                 {t('settings.fileDefectCancel')}
               </button>
