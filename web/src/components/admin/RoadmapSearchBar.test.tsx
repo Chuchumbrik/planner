@@ -58,4 +58,23 @@ describe('RoadmapSearchBar', () => {
     fireEvent.click(screen.getByText('settings.roadmapSearchReset'))
     expect(p.onReset).toHaveBeenCalledOnce()
   })
+
+  // Phase 7.12 — sticky-offset учитывает шапку (top-16).
+  it('sticky-бар прилипает на top-16 (учёт шапки)', () => {
+    const p = baseProps()
+    const { container } = render(<RoadmapSearchBar {...p} />)
+    const sticky = container.querySelector('.sticky')
+    expect(sticky).toBeTruthy()
+    expect(sticky!.className).toContain('top-16')
+  })
+
+  // Phase 7.12 — a11y: тег-чипы имеют aria-pressed.
+  it('тег-чипы имеют aria-pressed', () => {
+    const p = baseProps()
+    render(<RoadmapSearchBar {...p} filter={{ ...EMPTY_FILTER, tags: ['feat'] }} />)
+    const feat = screen.getByRole('button', { name: /^feat$/i })
+    expect(feat).toHaveAttribute('aria-pressed', 'true')
+    const fix = screen.getByRole('button', { name: /^fix$/i })
+    expect(fix).toHaveAttribute('aria-pressed', 'false')
+  })
 })

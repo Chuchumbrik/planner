@@ -66,7 +66,7 @@ export function RoadmapSearchBar({
   return (
     <div
       className={cn(
-        'sticky top-2 z-10 flex flex-col gap-2 rounded-xl border border-surface-variant/80 bg-surface-container-low/80 px-3 py-2.5 backdrop-blur transition-shadow',
+        'sticky top-16 z-10 flex flex-col gap-2 rounded-xl border border-surface-variant/80 bg-surface-container-low/80 px-3 py-2.5 backdrop-blur transition-shadow',
         scrolled && 'shadow-lg shadow-black/20',
       )}
     >

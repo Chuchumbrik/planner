@@ -85,6 +85,7 @@ function AdminDiscussionsPageInner() {
             onSelect={(threadId) => navigate(`/admin/discussions/${threadId}`)}
             onCreateClick={() => setShowCreate(true)}
             onRetry={listState.reload}
+            onResolveSwipe={(threadId) => navigate(`/admin/discussions/${threadId}`)}
           />
         )}
       </div>
