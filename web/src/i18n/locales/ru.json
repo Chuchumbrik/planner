@@ -457,6 +457,8 @@
     "fileDefectStepsHint": "Необязательно. Нумерованный список помогает быстрее воспроизвести.",
     "fileDefectIncludeRoute": "Включить текущий путь страницы в отчёт",
     "fileDefectSubmit": "Создать issue",
+    "fileDefectTemplateOverwriteWarning": "Шаблон заменит заголовок и описание.",
+    "fileDefectTemplateOverwriteApply": "Применить",
     "fileDefectCancel": "Отмена",
     "fileDefectClose": "Закрыть",
     "fileDefectSuccess": "Issue создан.",

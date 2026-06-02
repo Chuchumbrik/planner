@@ -94,6 +94,7 @@ export function FileDefectModal({
   const [descTouched, setDescTouched] = useState(false)
   const [uploadBusy, setUploadBusy] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [pendingTemplate, setPendingTemplate] = useState<DefectTemplateId | null>(null)
 
   const deviceMeta = useMemo(() => collectDefectDeviceMeta(), [])
 
@@ -127,6 +128,7 @@ export function FileDefectModal({
       setDescTouched(false)
       setUploadBusy(false)
       setUploadError(null)
+      setPendingTemplate(null)
     })
   }, [open])
 
@@ -426,13 +428,45 @@ export function FileDefectModal({
                   <button
                     key={id}
                     type="button"
-                    className="rounded border border-surface-variant px-2.5 py-1 text-[11px] text-on-surface-variant hover:bg-surface-container-low"
-                    onClick={() => applyTemplate(id)}
+                    className={cn(
+                      'rounded border px-2.5 py-1 text-[11px] transition-colors',
+                      pendingTemplate === id
+                        ? 'border-amber-400/50 bg-amber-400/10 text-amber-500'
+                        : 'border-surface-variant text-on-surface-variant hover:bg-surface-container-low',
+                    )}
+                    onClick={() => {
+                      if (title.trim() || description.trim()) {
+                        setPendingTemplate(id)
+                      } else {
+                        applyTemplate(id)
+                      }
+                    }}
                   >
                     {t(`settings.defectTemplate.${id}.label`)}
                   </button>
                 ))}
               </div>
+              {pendingTemplate && (
+                <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2">
+                  <p className="text-xs text-amber-500">{t('settings.fileDefectTemplateOverwriteWarning')}</p>
+                  <div className="flex shrink-0 gap-1.5">
+                    <button
+                      type="button"
+                      className="rounded border border-amber-400/40 px-2 py-0.5 text-xs text-amber-500 hover:bg-amber-400/20"
+                      onClick={() => { applyTemplate(pendingTemplate); setPendingTemplate(null) }}
+                    >
+                      {t('settings.fileDefectTemplateOverwriteApply')}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded border border-surface-variant px-2 py-0.5 text-xs text-on-surface-variant hover:bg-surface-container-low"
+                      onClick={() => setPendingTemplate(null)}
+                    >
+                      {t('settings.fileDefectCancel')}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Заголовок * */}
               <label className="flex flex-col gap-1">

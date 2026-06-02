@@ -179,6 +179,17 @@ Deno.serve(async (req) => {
     return json(403, { error: 'forbidden' })
   }
 
+  // Rate limit: max 10 submissions per hour per user
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const { count: recentCount } = await admin
+    .from('defect_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', uid)
+    .gte('created_at', oneHourAgo)
+  if ((recentCount ?? 0) >= 10) {
+    return json(429, { error: 'rate_limited' })
+  }
+
   let rawText: string
   try {
     rawText = await req.text()
