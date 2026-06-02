@@ -366,6 +366,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.25', en: '0.7.25' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**Admin dashboard + Roadmap — мобильная визуальная оптимизация:** KPI-карточки переведены на сетку `grid-cols-2` с базы (было 1 колонка на мобилке, 4 карточки стопкой); `«Не заходили»` убрано `sm:col-span-2` — на мобилке все 4 карточки в 2×2. `AdminKpiCard`: `gap-sm` → `gap-2`, `flex-1 min-h-[2.5rem]` на обёртке значения заменено на `xl:flex-1` — карточки компактны на телефоне, бенто-растяжка сохраняется на xl+. `RoadmapSearchBar`: тег-чипы переведены на `overflow-x-auto` в одну строку вместо `flex-wrap` в 2 ряда; добавлен `shrink-0` на каждый чип.',
+            en: '**Admin dashboard + Roadmap — mobile visual optimization:** KPI cards use `grid-cols-2` as the base (was 1-column on mobile, 4 stacked cards); `"Inactive"` loses `sm:col-span-2` — all 4 cards are 2×2 on mobile. `AdminKpiCard`: `gap-sm` → `gap-2`, `flex-1 min-h-[2.5rem]` on value wrapper replaced with `xl:flex-1` — cards are compact on phone, bento stretching preserved on xl+. `RoadmapSearchBar`: tag chips switched to `overflow-x-auto` in a single row instead of `flex-wrap` 2 rows; `shrink-0` added to each chip.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На телефоне KPI-плитки дашборда стали компактными (2×2 вместо 4 в столбик), а фильтры в дорожной карте — в одну горизонтальную строку.',
+            en: 'On mobile, dashboard KPI tiles are now compact (2×2 instead of 4 stacked), and roadmap filters fit in a single horizontal row.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.24', en: '0.7.24' },
         tag: 'fix',
         changes: [

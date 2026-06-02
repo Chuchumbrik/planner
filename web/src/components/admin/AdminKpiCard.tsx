@@ -37,7 +37,7 @@ export function AdminKpiCard({
     <article
       className={cn(
         SETTINGS_CARD,
-        'relative flex h-full flex-col justify-between gap-sm transition-colors',
+        'relative flex h-full flex-col justify-between gap-2 transition-colors',
         trendMetric && 'cursor-pointer hover:bg-surface-container-high',
         isActive && 'bg-surface-container-high ring-2 ring-primary',
         className,
@@ -77,8 +77,8 @@ export function AdminKpiCard({
         />
       </div>
 
-      {/* value / skeleton — flex-1 centers in tall bento cells */}
-      <div className="flex min-h-[2.5rem] flex-1 flex-col justify-center">
+      {/* value / skeleton — xl:flex-1 centers in tall bento cells; compact on mobile */}
+      <div className="flex flex-col justify-center xl:flex-1">
         {loading ? (
           <div className="h-10 w-24 animate-pulse rounded-md bg-surface-container-highest" />
         ) : (

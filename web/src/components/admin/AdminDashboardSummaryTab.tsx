@@ -200,7 +200,7 @@ export function AdminDashboardSummaryTab({
           │  Всего   │  Новых 7д │  MAU 30d  │Неактивны │
           └──────────┴───────────┴───────────┴──────────┘
       */}
-      <div className={cn('grid items-stretch', ADMIN_GRID_GAP, 'sm:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 2xl:grid-cols-4 2xl:grid-rows-1')}>
+      <div className={cn('grid items-stretch', ADMIN_GRID_GAP, 'grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 2xl:grid-cols-4 2xl:grid-rows-1')}>
         <div className="h-full xl:row-span-2 2xl:row-span-1">
           <AdminKpiCard
             icon="group"
@@ -240,7 +240,7 @@ export function AdminDashboardSummaryTab({
           />
         </div>
 
-        <div className="h-full sm:col-span-2 xl:col-span-2 2xl:col-span-1">
+        <div className="h-full xl:col-span-2 2xl:col-span-1">
           <AdminKpiCard
             icon="person_off"
             labelKey="admin.dashboard.kpiInactive30d"

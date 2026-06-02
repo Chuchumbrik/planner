@@ -100,7 +100,7 @@ export function RoadmapSearchBar({
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
         {ROADMAP_FILTER_TAGS.map((tag) => {
           const on = filter.tags.includes(tag)
           const meta = ROADMAP_TAG_META[tag]
@@ -111,7 +111,7 @@ export function RoadmapSearchBar({
               aria-pressed={on}
               onClick={() => onToggleTag(tag)}
               className={cn(
-                'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide transition-colors',
+                'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide transition-colors',
                 on
                   ? meta.chipClass
                   : 'border-surface-variant/70 text-on-surface-variant/70 hover:text-on-surface-variant',
