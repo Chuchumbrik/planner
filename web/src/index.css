@@ -484,3 +484,24 @@ body {
   .modal-shell-in,
   .modal-shell-out { animation: none; }
 }
+
+/* ── Collapsible (disclosure) animation ─────────────────────────────────────
+   grid-rows trick: animate height without measuring. The inner wrapper is
+   overflow-hidden so content is clipped while the row collapses to 0fr.
+   Avoids CLS jumps and respects prefers-reduced-motion.                       */
+.collapsible-region {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.collapsible-region[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+.collapsible-region > .collapsible-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapsible-region { transition: none; }
+}
