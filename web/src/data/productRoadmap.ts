@@ -363,6 +363,48 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-06-13', en: '2026-06-13' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.31', en: '0.7.31' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**Настройки → Уведомления:** кнопка «Разрешить уведомления в системе» удалена. Теперь при нажатии «Сохранить» с режимом «Гибрид» или «Полный» разрешение у системы запрашивается автоматически. Если пользователь отклонил или браузер не поддерживает Web Push (нет service worker, не задан VAPID) — режим автоматически возвращается в «Выключить», под кнопкой показывается причина.',
+            en: '**Settings → Notifications:** the separate "Allow notifications in system" button is removed. Now clicking "Save" with Hybrid or Full mode automatically requests browser permission. If denied or browser lacks Web Push support (no service worker, missing VAPID key) — mode reverts to Off and the reason is shown below the button.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Уведомления: включение режима теперь сразу запрашивает разрешение — лишняя кнопка убрана.',
+            en: 'Notifications: enabling a mode now immediately requests permission — the extra button is removed.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    dateLabel: { ru: '2026-06-03', en: '2026-06-03' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.30', en: '0.7.30' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**FileDefectModal — UX/доступность формы дефекта:** (1) Коллапсиблы «Шаги и детали» и «Технические данные» раскрываются/сворачиваются плавно через grid-rows (0fr↔1fr, 220ms) без скачка вёрстки (CLS); шеврон поворачивается, контент остаётся в DOM (данные сохраняются), а в свёрнутом виде помечен `inert` — недоступен с клавиатуры и для ассистивных технологий. (2) Цвета приведены к токенам дизайн-системы: ошибки/обязательность — `text-error`/`ring-error` вместо `red-400`; предупреждение перезаписи шаблона — `tertiary` вместо `amber`. (3) Ссылка на созданный issue и заголовок коллапсибла получили тач-таргет ≥44px. (4) Success-блок озвучивается ассистивными технологиями (`role="status"`, `aria-live="polite"`). (5) Идемпотентность отправки: `onSubmit` и `handleClose` блокируются во время `busy` — двойной клик/повтор/закрытие во время отправки не создают второй дефект и не теряют данные. Все анимации уважают `prefers-reduced-motion`.',
+            en: '**FileDefectModal — defect-form UX/accessibility:** (1) "Steps and details" and "Technical details" collapsibles now expand/collapse smoothly via grid-rows (0fr↔1fr, 220ms) with no layout jump (CLS); the chevron rotates, content stays in the DOM (data preserved), and while collapsed it is marked `inert` — unreachable by keyboard and assistive tech. (2) Colors moved to design-system tokens: errors/required — `text-error`/`ring-error` instead of `red-400`; template-overwrite warning — `tertiary` instead of `amber`. (3) The created-issue link and the collapsible header now have a ≥44px touch target. (4) Success block is announced by assistive tech (`role="status"`, `aria-live="polite"`). (5) Submission idempotency: `onSubmit` and `handleClose` are blocked while `busy` — double-click/retry/close during submit no longer create a second defect or lose data. All animations respect `prefers-reduced-motion`.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Форма дефекта: плавное раскрытие дополнительных полей, читаемые цвета ошибок, надёжная отправка без дублей.',
+            en: 'Defect form: smooth disclosure of extra fields, readable error colors, reliable submit without duplicates.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-06-02', en: '2026-06-02' },
     items: [
       {

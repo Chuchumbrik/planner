@@ -145,10 +145,12 @@ export function FileDefectModal({
 
   useEffect(() => {
     if (open) {
-      setExiting(false)
-      setMounted(true)
+      queueMicrotask(() => {
+        setExiting(false)
+        setMounted(true)
+      })
     } else if (mounted) {
-      setExiting(true)
+      queueMicrotask(() => setExiting(true))
       const t = setTimeout(() => { setMounted(false); setExiting(false) }, 200)
       return () => clearTimeout(t)
     }
@@ -268,12 +270,14 @@ export function FileDefectModal({
   ])
 
   const handleClose = useCallback(() => {
+    // Block closing while a submission is in flight (BP-4 / edge: close during submitting).
+    if (busy) return
     if (attachments.length > 0 && !issueUrl) {
       void supabase.storage.from('defect-attachments').remove(attachments.map((a) => a.path))
       void supabase.from('defect_attachment_drafts').delete().match({ user_id: userId, draft_id: draftId })
     }
     onClose()
-  }, [attachments, issueUrl, supabase, userId, draftId, onClose])
+  }, [busy, attachments, issueUrl, supabase, userId, draftId, onClose])
 
   const applyTemplate = (id: DefectTemplateId) => {
     setTitle(clampField(t(`settings.defectTemplate.${id}.title`), TITLE_MAX))
@@ -290,6 +294,9 @@ export function FileDefectModal({
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
+    // Idempotency: a submission already in flight must not start a second one
+    // (double-click / retry from form or preview tab → exactly one defect).
+    if (busy) return
     setError(null)
     setIssueUrl(null)
     const trimmedTitle = title.trim()
@@ -382,6 +389,17 @@ export function FileDefectModal({
         aria-modal="true"
         aria-labelledby={issueUrl ? `${formId}-success-title` : `${formId}-title`}
       >
+        {/* Always-mounted polite live region for the success transition.
+            The visible success block (below) mounts together with its content,
+            which screen readers do not announce reliably; this region exists for
+            the whole lifetime of the dialog, so inserting the success text into it
+            is announced by NVDA/JAWS/VoiceOver. Kept visually hidden — the visible
+            block carries the same message. Uses bare aria-live (not role="status")
+            so it does not collide with the visible success region's role="status". */}
+        <p className="sr-only" aria-live="polite">
+          {issueUrl ? t('settings.fileDefectSuccess48') : ''}
+        </p>
+
         {/* ── HEADER — always visible ────────────────────────────────────── */}
         <div className="flex shrink-0 flex-col gap-2 border-b border-surface-variant p-sm pb-3 pt-4 md:px-md max-md:pt-[max(1rem,env(safe-area-inset-top))]">
           <div className="flex items-center justify-between gap-2">
@@ -403,7 +421,7 @@ export function FileDefectModal({
 
         {/* ── SUCCESS ────────────────────────────────────────────────────── */}
         {issueUrl ? (
-          <div className="flex flex-col gap-3 px-4 py-5">
+          <div className="flex flex-col gap-3 px-4 py-5" role="status" aria-live="polite">
             <p className="text-sm text-on-surface-variant">
               {t('settings.fileDefectSuccess48')}
             </p>
@@ -416,7 +434,7 @@ export function FileDefectModal({
               href={issueUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="break-all text-sm text-primary underline hover:text-primary-fixed"
+              className="flex min-h-[44px] items-center break-all py-1 text-sm text-primary underline hover:text-primary-fixed"
             >
               {t('settings.fileDefectOpenIssue')}
             </a>
@@ -468,7 +486,7 @@ export function FileDefectModal({
                     className={cn(
                       'rounded border px-2.5 py-1 text-[11px] transition-colors',
                       pendingTemplate === id
-                        ? 'border-amber-400/50 bg-amber-400/10 text-amber-500'
+                        ? 'border-tertiary/50 bg-tertiary-container/15 text-tertiary'
                         : 'border-surface-variant text-on-surface-variant hover:bg-surface-container-low',
                     )}
                     onClick={() => {
@@ -484,12 +502,12 @@ export function FileDefectModal({
                 ))}
               </div>
               {pendingTemplate && (
-                <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2">
-                  <p className="text-xs text-amber-500">{t('settings.fileDefectTemplateOverwriteWarning')}</p>
+                <div className="flex items-center justify-between gap-2 rounded-lg border border-tertiary/30 bg-tertiary-container/15 px-3 py-2">
+                  <p className="text-xs text-tertiary">{t('settings.fileDefectTemplateOverwriteWarning')}</p>
                   <div className="flex shrink-0 gap-1.5">
                     <button
                       type="button"
-                      className="rounded border border-amber-400/40 px-2 py-0.5 text-xs text-amber-500 hover:bg-amber-400/20"
+                      className="rounded border border-tertiary/40 px-2 py-0.5 text-xs text-tertiary hover:bg-tertiary-container/25"
                       onClick={() => { applyTemplate(pendingTemplate); setPendingTemplate(null) }}
                     >
                       {t('settings.fileDefectTemplateOverwriteApply')}
@@ -510,7 +528,7 @@ export function FileDefectModal({
                 <span className="flex items-baseline justify-between gap-2 text-xs text-on-surface-variant">
                   <span>
                     {t('settings.fileDefectTitleLabel')}
-                    <span className="ml-0.5 text-red-400" aria-hidden> *</span>
+                    <span className="ml-0.5 text-error" aria-hidden> *</span>
                   </span>
                   {(focusedField === 'title' || title.length > TITLE_MAX * COUNTER_RATIO) && (
                     <span className="font-mono text-[10px]">
@@ -522,7 +540,7 @@ export function FileDefectModal({
                   className={cn(
                     MOTIVATOR_INPUT,
                     'placeholder:text-on-surface-variant',
-                    titleInvalid && 'ring-1 ring-red-400',
+                    titleInvalid && 'ring-1 ring-error',
                   )}
                   value={title}
                   maxLength={TITLE_MAX}
@@ -534,7 +552,7 @@ export function FileDefectModal({
                   autoFocus
                 />
                 {titleInvalid && (
-                  <p className="text-xs text-red-400">{t('settings.fileDefectValidationTitleRequired')}</p>
+                  <p className="text-xs text-error">{t('settings.fileDefectValidationTitleRequired')}</p>
                 )}
               </label>
 
@@ -543,7 +561,7 @@ export function FileDefectModal({
                 <span className="flex items-baseline justify-between gap-2 text-xs text-on-surface-variant">
                   <span>
                     {t('settings.fileDefectDescriptionLabel')}
-                    <span className="ml-0.5 text-red-400" aria-hidden> *</span>
+                    <span className="ml-0.5 text-error" aria-hidden> *</span>
                   </span>
                   {(focusedField === 'desc' || description.length > DESC_MAX * COUNTER_RATIO) && (
                     <span className="font-mono text-[10px]">
@@ -556,7 +574,7 @@ export function FileDefectModal({
                     'min-h-[88px] resize-none sm:resize-y',
                     MOTIVATOR_INPUT,
                     'placeholder:text-on-surface-variant',
-                    descInvalid && 'ring-1 ring-red-400',
+                    descInvalid && 'ring-1 ring-error',
                   )}
                   value={description}
                   maxLength={DESC_MAX}
@@ -567,7 +585,7 @@ export function FileDefectModal({
                   onBlur={() => { setDescTouched(true); setFocusedField(null) }}
                 />
                 {descInvalid && (
-                  <p className="text-xs text-red-400">{t('settings.fileDefectValidationDescRequired')}</p>
+                  <p className="text-xs text-error">{t('settings.fileDefectValidationDescRequired')}</p>
                 )}
               </label>
 
@@ -628,6 +646,7 @@ export function FileDefectModal({
                   accept="image/png,image/jpeg,image/webp"
                   multiple
                   className="hidden"
+                  aria-label={t('settings.fileDefectAddScreenshot')}
                   onChange={(e) => {
                     const f = e.target.files
                     if (f?.length) void addFiles(f)
@@ -645,7 +664,7 @@ export function FileDefectModal({
                   </button>
                 </div>
                 {uploadError && (
-                  <p className="mt-1 text-xs text-red-400" role="alert">{uploadError}</p>
+                  <p className="mt-1 text-xs text-error" role="alert">{uploadError}</p>
                 )}
                 {attachments.length > 0 && (
                   <ul className="mt-2 space-y-1 text-xs text-on-surface-variant">
@@ -654,7 +673,7 @@ export function FileDefectModal({
                         <span className="min-w-0 truncate">{a.name}</span>
                         <button
                           type="button"
-                          className="shrink-0 text-red-400 hover:underline"
+                          className="shrink-0 text-error hover:underline"
                           onClick={() => void removeAttachment(a.path)}
                         >
                           {t('common.delete')}
@@ -780,9 +799,18 @@ export function FileDefectModal({
                 </dl>
               </Collapsible>
 
-              {error && (
-                <p ref={errorRef} className="text-xs text-red-400" role="alert">{error}</p>
-              )}
+              {/* Always-mounted live region: NVDA/JAWS/VoiceOver only reliably
+                  announce content inserted into a region that already exists in
+                  the DOM. Mounting <p role="alert"> together with its text is not
+                  announced reliably, so keep the region present and swap the text. */}
+              <p
+                ref={errorRef}
+                className={cn('text-xs text-error', !error && 'sr-only')}
+                role="alert"
+                aria-live="assertive"
+              >
+                {error}
+              </p>
             </div>
 
             {/* Footer */}
@@ -823,18 +851,29 @@ function Collapsible({ open, onToggle, label, children }: CollapsibleProps) {
     <div className="rounded-lg border border-surface-variant bg-surface-container-low/30">
       <button
         type="button"
-        className="flex w-full cursor-pointer select-none items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-low/50"
+        className="flex min-h-[44px] w-full cursor-pointer select-none items-center justify-between gap-2 px-3 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-low/50"
         aria-expanded={open}
         onClick={onToggle}
       >
         <span>{label}</span>
-        <span className="text-on-surface-variant" aria-hidden>{open ? '▾' : '▸'}</span>
+        <span
+          className="text-on-surface-variant transition-transform duration-150 ease-out motion-reduce:transition-none"
+          style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
+          aria-hidden
+        >
+          ▸
+        </span>
       </button>
-      {open && (
-        <div className="space-y-3 border-t border-surface-variant px-3 pb-3 pt-2">
-          {children}
+      {/* Content stays mounted: data is preserved across collapse/expand and the
+          grid-rows transition animates height without a layout jump (CLS).
+          `inert` removes collapsed content from tab order and the a11y tree. */}
+      <div className="collapsible-region" data-open={open}>
+        <div className="collapsible-inner">
+          <div className="space-y-3 border-t border-surface-variant px-3 pb-3 pt-2" inert={!open}>
+            {children}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
