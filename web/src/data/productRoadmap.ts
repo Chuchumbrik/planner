@@ -366,6 +366,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-13', en: '2026-06-13' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.33', en: '0.7.33' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**Мобильная версия:** отступ снизу увеличен с `7rem` до `10rem` — теперь нижний контент остаётся виден даже когда iOS Safari показывает свою панель (~49px) при достижении конца страницы.',
+            en: '**Mobile:** bottom padding increased from `7rem` to `10rem` — bottom content now stays visible even when iOS Safari shows its toolbar (~49px) at the end of the page.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Мобилка: последний элемент страницы виден без overscroll даже с открытой панелью Safari.',
+            en: 'Mobile: last page element visible without overscroll even with Safari toolbar visible.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.32', en: '0.7.32' },
         tag: 'fix',
         changes: [
