@@ -355,12 +355,12 @@ describe('SettingsPage — notifications tab', () => {
     expect(screen.getByText('common.save')).toBeEnabled()
   })
 
-  it('hides push action buttons when deliveryMode is off', () => {
+  it('hides test push button when deliveryMode is off', () => {
     renderPage()
-    expect(screen.queryByText('settings.notificationsEnablePush')).not.toBeInTheDocument()
+    expect(screen.queryByText('settings.notificationsTestPush')).not.toBeInTheDocument()
   })
 
-  it('shows push action buttons when deliveryMode is not off', () => {
+  it('shows test push button when deliveryMode is not off', () => {
     vi.mocked(useVault).mockReturnValue({
       vault: {
         ...VAULT_BASE,
@@ -372,7 +372,7 @@ describe('SettingsPage — notifications tab', () => {
       ...VAULT_METHODS,
     } as any)
     renderPage()
-    expect(screen.getByText('settings.notificationsEnablePush')).toBeInTheDocument()
+    expect(screen.queryByText('settings.notificationsEnablePush')).not.toBeInTheDocument()
     expect(screen.getByText('settings.notificationsTestPush')).toBeInTheDocument()
   })
 })
