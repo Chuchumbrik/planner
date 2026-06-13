@@ -529,31 +529,37 @@ function SettingsPageInner() {
             className="btn-primary mt-1 w-fit px-4 py-2 text-sm disabled:opacity-40"
             onClick={() => {
               setNotifModeSaving(true)
-              void setNotificationDeliveryMode(notifModeDraft).finally(() => setNotifModeSaving(false))
+              setNotifPushHint(null)
+              const run = async () => {
+                if (notifModeDraft !== 'off') {
+                  const r = await subscribePushNotifications()
+                  if (r === 'denied') {
+                    setNotifModeDraft('off')
+                    setNotifPushHint(t('settings.notificationsPermissionDenied'))
+                    return
+                  }
+                  if (r === 'no_sw') {
+                    setNotifModeDraft('off')
+                    setNotifPushHint(t('settings.notificationsSwMissing'))
+                    return
+                  }
+                  if (r === 'unconfigured') {
+                    setNotifModeDraft('off')
+                    setNotifPushHint(t('settings.notificationsVapidMissing'))
+                    return
+                  }
+                }
+                await setNotificationDeliveryMode(notifModeDraft)
+              }
+              void run().finally(() => setNotifModeSaving(false))
             }}
           >
             {notifModeSaving ? t('common.loading') : t('common.save')}
           </button>
+          {notifPushHint ? <p className="text-xs text-on-surface-variant mt-1">{notifPushHint}</p> : null}
         </div>
         {deliveryMode !== 'off' ? (
           <div className="mt-4 flex flex-col gap-2">
-            <button
-              type="button"
-              disabled={!canEdit}
-              className={SETTINGS_BTN_SECONDARY}
-              onClick={() => {
-                setNotifPushHint(null)
-                void subscribePushNotifications().then((r: 'ok' | 'denied' | 'unconfigured' | 'no_sw') => {
-                  if (r === 'ok') setNotifPushHint(t('settings.notificationsPushOk'))
-                  else if (r === 'denied') setNotifPushHint(t('settings.notificationsPermissionDenied'))
-                  else if (r === 'no_sw') setNotifPushHint(t('settings.notificationsSwMissing'))
-                  else setNotifPushHint(t('settings.notificationsVapidMissing'))
-                })
-              }}
-            >
-              {t('settings.notificationsEnablePush')}
-            </button>
-            {notifPushHint ? <p className="text-xs text-on-surface-variant">{notifPushHint}</p> : null}
             <button
               type="button"
               disabled={!canEdit || testPushBusy}

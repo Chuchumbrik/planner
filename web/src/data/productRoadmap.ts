@@ -363,6 +363,27 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-06-13', en: '2026-06-13' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.31', en: '0.7.31' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**Настройки → Уведомления:** кнопка «Разрешить уведомления в системе» удалена. Теперь при нажатии «Сохранить» с режимом «Гибрид» или «Полный» разрешение у системы запрашивается автоматически. Если пользователь отклонил или браузер не поддерживает Web Push (нет service worker, не задан VAPID) — режим автоматически возвращается в «Выключить», под кнопкой показывается причина.',
+            en: '**Settings → Notifications:** the separate "Allow notifications in system" button is removed. Now clicking "Save" with Hybrid or Full mode automatically requests browser permission. If denied or browser lacks Web Push support (no service worker, missing VAPID key) — mode reverts to Off and the reason is shown below the button.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Уведомления: включение режима теперь сразу запрашивает разрешение — лишняя кнопка убрана.',
+            en: 'Notifications: enabling a mode now immediately requests permission — the extra button is removed.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-06-03', en: '2026-06-03' },
     items: [
       {
