@@ -363,7 +363,7 @@ export function shellMainContent(wide: boolean, align: ShellMainAlign = 'center'
   return cn(
     'w-full min-w-0 flex-1 px-margin-mobile py-sm md:px-xl md:py-lg',
     align === 'left' ? 'mr-auto' : 'mx-auto',
-    'max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]',
+    'max-md:pb-[calc(7rem+env(safe-area-inset-bottom,0px))]',
     wide ? 'max-w-desktop' : 'max-w-5xl',
   )
 }

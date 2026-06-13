@@ -366,6 +366,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-13', en: '2026-06-13' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.32', en: '0.7.32' },
+        tag: 'fix',
+        changes: [
+          {
+            ru: '**Мобильная версия:** добавлен `viewport-fit=cover` в мета-тег viewport — теперь `env(safe-area-inset-bottom)` корректно рассчитывается на iPhone. Отступ снизу у основного контента увеличен с `5.5rem` до `7rem` (буфер над нижней навигацией вырос с 8px до 32px) — последний блок на странице больше не прячется за навбаром при скролле.',
+            en: '**Mobile:** added `viewport-fit=cover` to the viewport meta tag — `env(safe-area-inset-bottom)` now works correctly on iPhone. Main content bottom padding increased from `5.5rem` to `7rem` (buffer above the bottom nav grew from 8px to 32px) — the last block on a page no longer hides behind the nav bar on scroll.',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Мобилка: нижний контент (например, бэклог) теперь полностью виден при прокрутке без overscroll.',
+            en: 'Mobile: bottom content (e.g. backlog) is now fully visible when scrolling without needing to overscroll.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.31', en: '0.7.31' },
         tag: 'fix',
         changes: [
