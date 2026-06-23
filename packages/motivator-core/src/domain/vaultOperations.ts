@@ -23,6 +23,7 @@ import {
   type VaultPayload,
   type NotificationDeliveryMode,
 } from '../vault/types'
+import { groupColorForSortOrder } from '../vault/colors'
 
 /** Локальный календарный день задачи / вхождения повтора: YYYY-MM-DD */
 export const LOCAL_DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
@@ -89,7 +90,8 @@ export function applyCreateTask(
     createdAt: deps.nowIso(),
     updatedAt: deps.nowIso(),
     groupId: gid,
-    colorKey: input.colorKey ?? 'zinc',
+    // Цвет: явный из формы, иначе наследуется от группы (BR-D-011)
+    colorKey: input.colorKey ?? base.groups.find((g) => g.id === gid)?.colorKey ?? 'zinc',
     checklist: [],
     priorityRank: input.priorityRank,
     scheduledLocalDate: input.scheduledLocalDate,
@@ -443,16 +445,35 @@ export function applyRemoveChecklistItem(
   }
 }
 
-export function applyAddGroup(vault: VaultPayload, name: string, deps: VaultDeps): VaultPayload {
+export function applyAddGroup(
+  vault: VaultPayload,
+  name: string,
+  deps: VaultDeps,
+  colorKey?: TaskColorKey,
+): VaultPayload {
   const trimmed = name.trim()
   if (!trimmed) return vault
   const maxOrder = vault.groups.reduce((m, g) => Math.max(m, g.sortOrder), 0)
+  const sortOrder = maxOrder + 1
   const g: TaskGroup = {
     id: deps.newId(),
     name: trimmed,
-    sortOrder: maxOrder + 1,
+    sortOrder,
+    colorKey: colorKey ?? groupColorForSortOrder(sortOrder),
   }
   return { ...vault, groups: [...vault.groups, g] }
+}
+
+export function applySetGroupColor(
+  vault: VaultPayload,
+  groupId: string,
+  colorKey: TaskColorKey,
+): VaultPayload {
+  if (!vault.groups.some((g) => g.id === groupId)) return vault
+  return {
+    ...vault,
+    groups: vault.groups.map((g) => (g.id === groupId ? { ...g, colorKey } : g)),
+  }
 }
 
 export function applyRenameGroup(vault: VaultPayload, groupId: string, name: string): VaultPayload {

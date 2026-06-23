@@ -9,7 +9,27 @@ describe('normalizeVault', () => {
     const once = normalizeVault(v as unknown)
     const twice = normalizeVault(once as unknown)
     expect(twice).toEqual(once)
-    expect(once.schemaVersion).toBe(8)
+    expect(once.schemaVersion).toBe(9)
+  })
+
+  it('мигрирует V8→V9: проставляет цвет группам (backfill по sortOrder, сохраняет валидный)', () => {
+    const v8 = {
+      schemaVersion: 8,
+      priorityLabels: { 1: 'У1', 2: 'У2', 3: 'У3', 4: 'У4', 5: 'У5' },
+      groups: [
+        { id: 'grp_default', name: 'Общее', sortOrder: 0 }, // без цвета → backfill
+        { id: 'g2', name: 'Работа', sortOrder: 1, colorKey: 'sky' }, // валидный → сохранить
+      ],
+      tasks: [],
+      drafts: [],
+      eodCompletedLocalDates: [],
+      eodPreferences: { enabled: true, autoCloseAtDayEnd: false },
+      notificationPreferences: { deliveryMode: 'off' },
+    }
+    const out = normalizeVault(v8 as unknown)
+    expect(out.schemaVersion).toBe(9)
+    expect(out.groups[0]?.colorKey).toBe('zinc') // groupColorForSortOrder(0)
+    expect(out.groups[1]?.colorKey).toBe('sky') // существующий валидный сохранён
   })
 
   it('принимает сериализованный JSON и возвращает тот же нормализованный снимок', () => {

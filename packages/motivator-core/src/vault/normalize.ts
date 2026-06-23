@@ -23,15 +23,24 @@ import {
   type VaultPayloadV6,
   type VaultPayloadV7,
   type VaultPayloadV8,
+  type VaultPayloadV9,
+  type TaskGroup,
+  type TaskGroupV8,
   type NotificationPreferences,
   type EodPreferences,
 } from './types'
+import { groupColorForSortOrder } from './colors'
 
 function isColorKey(x: unknown): x is TaskColorKey {
   return (
     typeof x === 'string' &&
     ['zinc', 'red', 'orange', 'amber', 'emerald', 'sky', 'violet', 'pink'].includes(x)
   )
+}
+
+/** Дефолтная группа для легаси-repair (V2–V8, без цвета). */
+function LEGACY_DEFAULT_GROUPS(): TaskGroupV8[] {
+  return [{ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 }]
 }
 
 function normalizePrioritySystem(x: unknown): PrioritySystem {
@@ -112,10 +121,19 @@ function normalizeRecurrenceRule(raw: unknown): RecurrenceRule | null {
   return null
 }
 
-/** Приводит произвольный JSON к актуальной схеме v8 */
-export function normalizeVault(raw: unknown): VaultPayloadV8 {
+/** Приводит произвольный JSON к актуальной схеме v9 */
+export function normalizeVault(raw: unknown): VaultPayloadV9 {
   if (!raw || typeof raw !== 'object') return emptyVault()
   const o = raw as Record<string, unknown>
+
+  if (
+    o.schemaVersion === 9 &&
+    Array.isArray(o.tasks) &&
+    Array.isArray(o.groups) &&
+    Array.isArray(o.drafts)
+  ) {
+    return repairV9(o as VaultPayloadV9)
+  }
 
   if (
     o.schemaVersion === 8 &&
@@ -123,7 +141,7 @@ export function normalizeVault(raw: unknown): VaultPayloadV8 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return repairV8(o as VaultPayloadV8)
+    return migrateV8toV9(repairV8(o as VaultPayloadV8))
   }
 
   if (
@@ -132,7 +150,7 @@ export function normalizeVault(raw: unknown): VaultPayloadV8 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return migrateV7toV8(repairV7(o as VaultPayloadV7))
+    return migrateV8toV9(migrateV7toV8(repairV7(o as VaultPayloadV7)))
   }
 
   if (
@@ -141,7 +159,7 @@ export function normalizeVault(raw: unknown): VaultPayloadV8 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return migrateV7toV8(migrateV6toV7(repairV6(o as VaultPayloadV6)))
+    return migrateV8toV9(migrateV7toV8(migrateV6toV7(repairV6(o as VaultPayloadV6))))
   }
 
   if (
@@ -150,29 +168,37 @@ export function normalizeVault(raw: unknown): VaultPayloadV8 {
     Array.isArray(o.groups) &&
     Array.isArray(o.drafts)
   ) {
-    return migrateV7toV8(migrateV6toV7(repairV6(migrateV5toV6(repairV5(o as VaultPayloadV5)))))
+    return migrateV8toV9(
+      migrateV7toV8(migrateV6toV7(repairV6(migrateV5toV6(repairV5(o as VaultPayloadV5))))),
+    )
   }
 
   if (o.schemaVersion === 4 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV7toV8(
-      migrateV6toV7(repairV6(migrateV5toV6(migrateV4toV5(repairV4(o as VaultPayloadV4))))),
+    return migrateV8toV9(
+      migrateV7toV8(
+        migrateV6toV7(repairV6(migrateV5toV6(migrateV4toV5(repairV4(o as VaultPayloadV4))))),
+      ),
     )
   }
 
   if (o.schemaVersion === 3 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV7toV8(
-      migrateV6toV7(
-        repairV6(migrateV5toV6(migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3))))),
+    return migrateV8toV9(
+      migrateV7toV8(
+        migrateV6toV7(
+          repairV6(migrateV5toV6(migrateV4toV5(migrateV3toV4(repairV3(o as VaultPayloadV3))))),
+        ),
       ),
     )
   }
 
   if (o.schemaVersion === 2 && Array.isArray(o.tasks) && Array.isArray(o.groups)) {
-    return migrateV7toV8(
-      migrateV6toV7(
-        repairV6(
-          migrateV5toV6(
-            migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))),
+    return migrateV8toV9(
+      migrateV7toV8(
+        migrateV6toV7(
+          repairV6(
+            migrateV5toV6(
+              migrateV4toV5(migrateV3toV4(repairV3(migrateV2toV3(repairV2(o as VaultPayloadV2))))),
+            ),
           ),
         ),
       ),
@@ -180,12 +206,14 @@ export function normalizeVault(raw: unknown): VaultPayloadV8 {
   }
 
   if (o.schemaVersion === 1 && Array.isArray(o.tasks)) {
-    return migrateV7toV8(
-      migrateV6toV7(
-        repairV6(
-          migrateV5toV6(
-            migrateV4toV5(
-              migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+    return migrateV8toV9(
+      migrateV7toV8(
+        migrateV6toV7(
+          repairV6(
+            migrateV5toV6(
+              migrateV4toV5(
+                migrateV3toV4(repairV3(migrateV2toV3(repairV2(migrateV1(o as VaultPayloadV1))))),
+              ),
             ),
           ),
         ),
@@ -194,6 +222,54 @@ export function normalizeVault(raw: unknown): VaultPayloadV8 {
   }
 
   return emptyVault()
+}
+
+/** Цвет группы при миграции V8→V9: сохранить валидный, иначе детерминированно по sortOrder. */
+function normalizeGroupColor(g: { sortOrder: number } & Record<string, unknown>): TaskGroup['colorKey'] {
+  const raw = g.colorKey
+  return isColorKey(raw) ? raw : groupColorForSortOrder(g.sortOrder)
+}
+
+function migrateV8toV9(v: VaultPayloadV8): VaultPayloadV9 {
+  return {
+    ...v,
+    schemaVersion: 9,
+    groups: v.groups.map((g) => ({
+      ...g,
+      colorKey: normalizeGroupColor(g as { sortOrder: number } & Record<string, unknown>),
+    })),
+  }
+}
+
+function repairV9(v: VaultPayloadV9): VaultPayloadV9 {
+  const colorById = new Map<string, TaskGroup['colorKey']>()
+  for (const g of Array.isArray(v.groups) ? v.groups : []) {
+    if (g && typeof g === 'object' && isColorKey((g as Record<string, unknown>).colorKey)) {
+      colorById.set((g as TaskGroup).id, (g as TaskGroup).colorKey)
+    }
+  }
+  const repaired = repairV8({
+    schemaVersion: 8,
+    priorityLabels: v.priorityLabels,
+    groups: (Array.isArray(v.groups) ? v.groups : []).map((g) => ({
+      id: g.id,
+      name: g.name,
+      sortOrder: g.sortOrder,
+    })),
+    tasks: v.tasks,
+    drafts: v.drafts,
+    eodCompletedLocalDates: v.eodCompletedLocalDates,
+    eodPreferences: v.eodPreferences,
+    notificationPreferences: v.notificationPreferences,
+  })
+  return {
+    ...repaired,
+    schemaVersion: 9,
+    groups: repaired.groups.map((g) => ({
+      ...g,
+      colorKey: colorById.get(g.id) ?? groupColorForSortOrder(g.sortOrder),
+    })),
+  }
 }
 
 function migrateV6toV7(v: VaultPayloadV6): VaultPayloadV7 {
@@ -524,7 +600,7 @@ function migrateV3toV4(v: VaultPayloadV3): VaultPayloadV4 {
 }
 
 function repairV2(v: VaultPayloadV2): VaultPayloadV2 {
-  const groups = Array.isArray(v.groups) && v.groups.length > 0 ? [...v.groups] : emptyVault().groups
+  const groups = Array.isArray(v.groups) && v.groups.length > 0 ? [...v.groups] : LEGACY_DEFAULT_GROUPS()
   const hasDefault = groups.some((g) => g.id === DEFAULT_GROUP_ID)
   if (!hasDefault) {
     groups.unshift({ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 })
@@ -558,7 +634,7 @@ function repairV2(v: VaultPayloadV2): VaultPayloadV2 {
 
 function repairV3(v: VaultPayloadV3): VaultPayloadV3 {
   const prioritySystem = normalizePrioritySystem(v.prioritySystem)
-  const groups = Array.isArray(v.groups) && v.groups.length > 0 ? [...v.groups] : emptyVault().groups
+  const groups = Array.isArray(v.groups) && v.groups.length > 0 ? [...v.groups] : LEGACY_DEFAULT_GROUPS()
   const hasDefault = groups.some((g) => g.id === DEFAULT_GROUP_ID)
   if (!hasDefault) {
     groups.unshift({ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 })
@@ -597,7 +673,7 @@ function repairV3(v: VaultPayloadV3): VaultPayloadV3 {
 
 function repairV4(v: VaultPayloadV4): VaultPayloadV4 {
   const priorityLabels = normalizePriorityLabels(v.priorityLabels)
-  const groups = Array.isArray(v.groups) && v.groups.length > 0 ? [...v.groups] : emptyVault().groups
+  const groups = Array.isArray(v.groups) && v.groups.length > 0 ? [...v.groups] : LEGACY_DEFAULT_GROUPS()
   const hasDefault = groups.some((g) => g.id === DEFAULT_GROUP_ID)
   if (!hasDefault) {
     groups.unshift({ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 })

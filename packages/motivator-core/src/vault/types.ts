@@ -1,5 +1,13 @@
-/** Группа / проект внутри vault */
+/** Группа / проект внутри vault (с V9 — несёт цвет; задача наследует цвет группы с возможностью оверрайда) */
 export type TaskGroup = {
+  id: string
+  name: string
+  sortOrder: number
+  colorKey: TaskColorKey
+}
+
+/** Легаси-форма группы до V9 (без цвета) — используется в payload-схемах V2–V8 */
+export type TaskGroupV8 = {
   id: string
   name: string
   sortOrder: number
@@ -116,14 +124,14 @@ export type TaskDraft = {
 export type VaultPayloadV4 = {
   schemaVersion: 4
   priorityLabels: PriorityLabels
-  groups: TaskGroup[]
+  groups: TaskGroupV8[]
   tasks: Task[]
 }
 
 export type VaultPayloadV5 = {
   schemaVersion: 5
   priorityLabels: PriorityLabels
-  groups: TaskGroup[]
+  groups: TaskGroupV8[]
   tasks: Task[]
   drafts: TaskDraft[]
 }
@@ -154,7 +162,7 @@ export type NotificationPreferences = {
 export type VaultPayloadV6 = {
   schemaVersion: 6
   priorityLabels: PriorityLabels
-  groups: TaskGroup[]
+  groups: TaskGroupV8[]
   tasks: Task[]
   drafts: TaskDraft[]
   /** Локальные дни (YYYY-MM-DD), когда пользователь завершил ритуал EOD */
@@ -165,7 +173,7 @@ export type VaultPayloadV6 = {
 export type VaultPayloadV7 = {
   schemaVersion: 7
   priorityLabels: PriorityLabels
-  groups: TaskGroup[]
+  groups: TaskGroupV8[]
   tasks: Task[]
   drafts: TaskDraft[]
   eodCompletedLocalDates: string[]
@@ -174,6 +182,18 @@ export type VaultPayloadV7 = {
 
 export type VaultPayloadV8 = {
   schemaVersion: 8
+  priorityLabels: PriorityLabels
+  groups: TaskGroupV8[]
+  tasks: Task[]
+  drafts: TaskDraft[]
+  eodCompletedLocalDates: string[]
+  eodPreferences: EodPreferences
+  notificationPreferences: NotificationPreferences
+}
+
+/** V9: группы несут `colorKey` (единый цвет для фильтров/карточек/точек, BR-D-011/008) */
+export type VaultPayloadV9 = {
+  schemaVersion: 9
   priorityLabels: PriorityLabels
   groups: TaskGroup[]
   tasks: Task[]
@@ -230,7 +250,7 @@ export type TaskV3 = {
 export type VaultPayloadV3 = {
   schemaVersion: 3
   prioritySystem: PrioritySystem
-  groups: TaskGroup[]
+  groups: TaskGroupV8[]
   tasks: TaskV3[]
 }
 
@@ -238,7 +258,7 @@ export type TaskV2Stored = Omit<TaskV3, 'priorityLevel' | 'eisenhowerQuadrant'>
 
 export type VaultPayloadV2 = {
   schemaVersion: 2
-  groups: TaskGroup[]
+  groups: TaskGroupV8[]
   tasks: TaskV2Stored[]
 }
 
@@ -253,7 +273,7 @@ export type VaultPayloadV1 = {
   }>
 }
 
-export type VaultPayload = VaultPayloadV8
+export type VaultPayload = VaultPayloadV9
 
 export const DEFAULT_GROUP_ID = 'grp_default'
 
@@ -267,11 +287,12 @@ export function defaultPriorityLabels(): PriorityLabels {
   }
 }
 
-export function emptyVault(): VaultPayloadV8 {
+export function emptyVault(): VaultPayloadV9 {
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     priorityLabels: defaultPriorityLabels(),
-    groups: [{ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0 }],
+    // colorKey 'zinc' = groupColorForSortOrder(0) — единый детерминированный дефолт с миграцией
+    groups: [{ id: DEFAULT_GROUP_ID, name: 'Общее', sortOrder: 0, colorKey: 'zinc' }],
     tasks: [],
     drafts: [],
     eodCompletedLocalDates: [],
