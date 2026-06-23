@@ -2943,12 +2943,12 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
 
 /**
  * Оставшийся охват до 1.0.0 (источник — `obsidian-motivator/17-План-реализации-MVP.md`).
- * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — фазы **7–13** (порядок: **7** аккаунт → **8** монетизация → **9** offline → **10** чеклист → **11** домен → **12** ветки → **13** дизайн).
+ * Фазы 0–6 см. в `IMPLEMENTED_MVP_PHASES`; здесь — фазы **7–13** (id сохранены; нумерация = бэклог-порядок).
+ * **Приоритет (2026-06-22):** в работе сейчас **фаза 13 «Дизайн и адаптивность»** (`current: true`) — продуктовое решение проработать визуальный слой раньше; **фаза 7 «Настройки, аккаунт, юридика»** возвращается в очередь после дизайна. Маркер `current` определяет текущую фазу независимо от id.
  */
 export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   {
     id: 7,
-    current: true,
     title: { ru: 'Настройки, аккаунт, юридика', en: 'Settings, account, legal' },
     summary: {
       ru: 'Настройки по блокам; пароль; seed; удаление и 30 дней; тексты; feedback; cookie. Роли и ограничения UI по permissions — отдельная доработка (см. буллеты ниже).',
@@ -3097,6 +3097,7 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
   },
   {
     id: 13,
+    current: true,
     title: { ru: 'Дизайн и адаптивность', en: 'Design & responsiveness' },
     summary: {
       ru: 'Проработка визуального слоя и макета: единый стиль, типографика и отступы; комфорт на **широких экранах** (сетка, использование ширины, читаемые колонки); полировка под **мобильные** и узкие окна (touch, навигация, модалки и формы без горизонтального скролла). **Отдельно — продуктовая доводка представления задач** во **вкладке «Неделя»** и **календаре месяца:** как они рисуются во времени, нужен ли таймлайн, что делать с прошедшим слотом и невыполненным, как не прятать важное без выбора пользователя.',
@@ -3107,6 +3108,10 @@ export const MVP_PHASES_PLANNED: RoadmapMvpPhase[] = [
       en: 'Make the UI not only functional but tidy: on a large monitor avoid an accidental “tiny strip in the middle,” and on a phone keep taps comfortable and text readable. For **Week** and **Month**, explicitly decide **how tasks should look** (including “time passed but still open”) so the planner stays honest and calm.',
     },
     detailBullets: [
+      {
+        ru: '**🎯 Направление согласовано (2026-06-22):** **3-зонный layout** (икон-рейл + левая панель «мини-календарь / Categories-фильтры / Сегодня» + главная зона + правый сайдбар по триггеру) по референсу; **Неделя** — «мягкая» почасовая сетка (схлоп ночных часов, дорожка задач без времени, цветные карточки по группам); **Месяц** — цветные точки групп; фильтры из модалки в постоянную панель. Решения — BR-D-007(D)/008/010/011/012 в `19-Business-требования.md`; мок и параметры — **`obsidian-motivator/21-Phase-13-Дизайн-layout.md`**. Аудитория — спектр персон (не только СДВГ), см. `02-Целевая-аудитория.md`.',
+        en: '**🎯 Direction agreed (2026-06-22):** **3-zone layout** (icon rail + left panel "mini-calendar / Categories filters / Today" + main zone + triggered right sidebar) per reference; **Week** — "soft" hourly grid (collapsed night hours, an untimed-task lane, color cards by group); **Month** — group color dots; filters move from modal to a persistent panel. Decisions — BR-D-007(D)/008/010/011/012 in `19-Business-требования.md`; mock & params — **`obsidian-motivator/21-Phase-13-Дизайн-layout.md`**. Audience — a spectrum of personas (not only ADHD), see `02-Целевая-аудитория.md`.',
+      },
       {
         ru: '**Как отображаются задачи** в календаре месяца и в недельной сетке: плотность ячеек, обрезка заголовка, цвет/полоска, время, признак выполнения, согласованность с активными **фильтрами** и информером.',
         en: '**How tasks render** in the month grid and week grid: cell density, title truncation, color bar, clock time, done state, consistency with active **filters** and the informer.',
