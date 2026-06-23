@@ -49,6 +49,13 @@ type MotivatorShellProps = {
   /** 'center' (default) for regular pages, 'left' for data-dense admin views. */
   align?: ShellMainAlign
   planTier?: PlanTier
+  /**
+   * Phase 13 (BR-D-010): левая панель-зона планировщика (inline-колонка ≥1280px /
+   * drawer на узких). Сам компонент управляет inline/drawer; рейл слева — коллапс-режим сайдбара.
+   */
+  leftPanel?: ReactNode
+  /** Phase 13 (BR-D-012): правый сайдбар по триггеру (overlay); компонент сам fixed. */
+  rightSidebar?: ReactNode
 }
 
 function ShellNavLinks({
@@ -217,6 +224,8 @@ function MotivatorShellInner({
   wide = false,
   align = 'center',
   planTier: planTierProp,
+  leftPanel,
+  rightSidebar,
 }: MotivatorShellProps) {
   const { t } = useTranslation()
   const location = useLocation()
@@ -301,6 +310,7 @@ function MotivatorShellInner({
           canAccessPreviewFeatures && isDesktop && 'md:flex-row',
         )}
       >
+        {leftPanel}
         <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
           <header className={SHELL_HEADER}>
             <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -361,6 +371,8 @@ function MotivatorShellInner({
       {canAccessPreviewFeatures && !isDesktop ? (
         <AiAssistantPanel mode="overlay" />
       ) : null}
+
+      {rightSidebar}
     </div>
   )
 }
