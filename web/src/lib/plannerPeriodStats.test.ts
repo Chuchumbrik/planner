@@ -54,6 +54,16 @@ describe('summarizePlannerDay', () => {
     const summary = summarizePlannerDay(tasks, '2026-06-05', todayKey)
     expect(summary.overdue).toBe(0)
   })
+
+  it('taskColors: уникальные цвета задач дня (дедуп)', () => {
+    const tasks = [
+      task({ id: 'a', colorKey: 'red', scheduledLocalDate: todayKey }),
+      task({ id: 'b', colorKey: 'red', scheduledLocalDate: todayKey }), // дубль цвета
+      task({ id: 'c', colorKey: 'sky', scheduledLocalDate: todayKey }),
+    ]
+    const summary = summarizePlannerDay(tasks, todayKey, todayKey)
+    expect(summary.taskColors).toHaveLength(2)
+  })
 })
 
 describe('countOverdueInDays', () => {

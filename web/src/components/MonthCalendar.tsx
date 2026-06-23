@@ -53,7 +53,7 @@ export function MonthCalendar({
               }
               const { dateKey } = cell
               const d = Number(dateKey.slice(8, 10))
-              const summary = daySummaries[dateKey] ?? { total: 0, done: 0, overdue: 0 }
+              const summary = daySummaries[dateKey] ?? { total: 0, done: 0, overdue: 0, taskColors: [] }
               const { total, done, overdue } = summary
               const isToday = dateKey === todayKey
               const isPast = dateKey < todayKey

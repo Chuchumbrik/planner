@@ -24,3 +24,11 @@ export function useMediaQuery(query: string): boolean {
 export function useIsDesktopShell(): boolean {
   return useMediaQuery('(min-width: 768px)')
 }
+
+/**
+ * Tailwind `xl` (1280px) — порог постоянной левой панели планировщика (Phase 13, BR-D-010).
+ * Ниже — левая панель уходит в drawer.
+ */
+export function useIsLeftPanelDesktop(): boolean {
+  return useMediaQuery('(min-width: 1280px)')
+}
