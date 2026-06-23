@@ -242,6 +242,7 @@
     "weekNightShow": "Night hours",
     "weekNightHide": "Hide night hours",
     "weekSlotAdd": "Add",
+    "openLeftPanel": "Calendar & filters",
     "monthDayTasks": "Tasks this day: {{count}}"
   },
   "settings": {

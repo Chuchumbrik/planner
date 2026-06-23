@@ -5,6 +5,8 @@ import { DayPlannerStatsRow } from '@/components/planner/DayPlannerStatsRow'
 import { PeriodPlannerStatsRow } from '@/components/planner/PeriodPlannerStatsRow'
 import { PlannerCreateFab } from '@/components/planner/PlannerCreateFab'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
+import { PlannerLeftPanel } from '@/components/layout/PlannerLeftPanel'
+import { PlannerFilterProvider, usePlannerFilter } from '@/context/PlannerFilterContext'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { PeriodPlanBreakdownChart } from '@/components/PeriodPlanBreakdownChart'
@@ -423,7 +425,9 @@ function AppPageInner() {
     setMonthIndex(appNow.getMonth())
   }, [appNow])
 
-  const [filterGroupId, setFilterGroupId] = useState<string | 'all'>('all')
+  // Групповой фильтр живёт в контексте — общий с Categories в левой панели (BR-D-011).
+  const { filterGroupId, setFilterGroupId } = usePlannerFilter()
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false)
   const [filterRepeats, setFilterRepeats] = useState<'all' | 'recurring' | 'nonRecurring'>(
     'all',
   )
@@ -685,6 +689,23 @@ function AppPageInner() {
     list.sort((a, b) => sortDayPlan(a, b, selectedDay))
     return list
   }, [filteredVaultTasks, selectedDay])
+
+  /** Агенда «Сегодня» в левой панели (BR-D-010). */
+  const todayPlanTasks = useMemo(() => {
+    const list = tasksScheduledForPlannerDay(filteredVaultTasks, todayKeyApp)
+    list.sort((a, b) => sortDayPlan(a, b, todayKeyApp))
+    return list
+  }, [filteredVaultTasks, todayKeyApp])
+
+  /** Сдвиг месяца мини-календаря левой панели. */
+  const shiftLeftPanelMonth = useCallback(
+    (delta: number) => {
+      const d = new Date(monthYear, monthIndex + delta, 1)
+      setMonthYear(d.getFullYear())
+      setMonthIndex(d.getMonth())
+    },
+    [monthYear, monthIndex],
+  )
 
   const dayPlanProgress = useMemo(
     () => plannedDayCompletionWeights(plannedForDay, selectedDay),
@@ -982,6 +1003,42 @@ function AppPageInner() {
       activeNav="planner"
       wide
       title={t('app.plannerTitle')}
+      leftPanel={
+        <>
+          <PlannerLeftPanel
+            groups={sortedGroups}
+            disabled={!canEdit}
+            year={monthYear}
+            monthIndex={monthIndex}
+            selectedDay={selectedDay}
+            todayKey={todayKeyApp}
+            locale={locale}
+            onPickDay={setSelectedDay}
+            onPrevMonth={() => shiftLeftPanelMonth(-1)}
+            onNextMonth={() => shiftLeftPanelMonth(1)}
+            todayTasks={todayPlanTasks}
+            onTaskClick={(id) => openTaskEditor(id)}
+            variant="inline"
+          />
+          <PlannerLeftPanel
+            groups={sortedGroups}
+            disabled={!canEdit}
+            year={monthYear}
+            monthIndex={monthIndex}
+            selectedDay={selectedDay}
+            todayKey={todayKeyApp}
+            locale={locale}
+            onPickDay={setSelectedDay}
+            onPrevMonth={() => shiftLeftPanelMonth(-1)}
+            onNextMonth={() => shiftLeftPanelMonth(1)}
+            todayTasks={todayPlanTasks}
+            onTaskClick={(id) => openTaskEditor(id)}
+            variant="drawer"
+            isOpen={leftPanelOpen}
+            onClose={() => setLeftPanelOpen(false)}
+          />
+        </>
+      }
     >
       <div className="relative flex min-h-0 flex-col">
       {!remoteHydrated && !decryptFailed ? (
@@ -1039,6 +1096,14 @@ function AppPageInner() {
           </nav>
 
           <div className={PLANNER_TOOLBAR_TRACK}>
+            <button
+              type="button"
+              aria-label={t('app.openLeftPanel')}
+              className={`${PLANNER_TOOLBAR_BTN} inline-flex shrink-0 items-center justify-center sm:px-3 sm:py-2 xl:hidden`}
+              onClick={() => setLeftPanelOpen(true)}
+            >
+              <span aria-hidden>🗓</span>
+            </button>
             <div className="relative shrink-0">
               <button
                 type="button"
@@ -1477,6 +1542,10 @@ function AppPageInner() {
                 locale={locale}
                 canEdit={canEdit}
                 onTaskClick={(id, day) => openTaskEditor(id, day)}
+                onSlotClick={(day) => {
+                  setSelectedDay(day)
+                  openCreateTask()
+                }}
               />
             </div>
             {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
@@ -1702,7 +1771,9 @@ function AppPageInner() {
 export function AppPage() {
   return (
     <RequireVault>
-      <AppPageInner />
+      <PlannerFilterProvider>
+        <AppPageInner />
+      </PlannerFilterProvider>
     </RequireVault>
   )
 }
