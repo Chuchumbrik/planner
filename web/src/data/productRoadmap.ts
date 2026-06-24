@@ -367,7 +367,7 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     items: [
       {
         releasedInVersion: { ru: '0.7.34', en: '0.7.34' },
-        tag: 'feature',
+        tag: 'feat',
         changes: [
           {
             ru: '**Прототип «Встречи»** (только admin): вкладка `/prototype/meetings` — заглушка планирования встреч с учётом занятости другого пользователя (форма, слоты занятости, иллюстрация).',
