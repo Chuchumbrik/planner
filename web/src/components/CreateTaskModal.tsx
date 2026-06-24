@@ -219,6 +219,8 @@ export type CreateTaskModalProps = {
   onPersistDraft: (draft: TaskDraft) => Promise<void>
   /** 'modal' (центр, по умолчанию) или 'sidebar' — правый сайдбар / bottom-sheet (Phase 13). */
   presentation?: 'modal' | 'sidebar'
+  /** Минуты от полуночи для префилла времени при «+Add» из пустого слота недели (Phase 13). */
+  initialStartMinutes?: number | null
 }
 
 export function CreateTaskModal({
@@ -233,6 +235,7 @@ export function CreateTaskModal({
   onSave,
   onPersistDraft,
   presentation = 'modal',
+  initialStartMinutes = null,
 }: CreateTaskModalProps) {
   const { t } = useTranslation()
   const savedRef = useRef(false)
@@ -279,9 +282,14 @@ export function CreateTaskModal({
     const base = resumeDraft
       ? snapshotFromDraft(resumeDraft, selectedDayKey)
       : emptySnapshot(selectedDayKey, defaultGroupId)
+    // Префилл времени из «+Add» по пустому слоту недели (только для нового, не для черновика).
+    if (!resumeDraft && initialStartMinutes != null) {
+      base.timeMode = 'start'
+      base.timeClock = minutesToTimeInput(initialStartMinutes)
+    }
     initialRef.current = JSON.parse(JSON.stringify(base)) as Snapshot
     setSnap(base)
-  }, [open, resumeDraft, selectedDayKey, defaultGroupId])
+  }, [open, resumeDraft, selectedDayKey, defaultGroupId, initialStartMinutes])
 
   const isDirty = useMemo(() => {
     const init = initialRef.current

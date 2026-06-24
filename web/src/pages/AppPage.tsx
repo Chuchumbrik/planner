@@ -399,6 +399,7 @@ function AppPageInner() {
 
   const [view, setView] = useState<'day' | 'week' | 'month'>('day')
   const [createOpen, setCreateOpen] = useState(false)
+  const [createInitialMinutes, setCreateInitialMinutes] = useState<number | null>(null)
   const [resumeDraft, setResumeDraft] = useState<TaskDraft | null>(null)
   const { todayKey: todayKeyApp, now: appNow } = useAppNow()
   const [selectedDay, setSelectedDay] = useState(() => appLocalDateKey())
@@ -773,6 +774,15 @@ function AppPageInner() {
 
   const openCreateTask = useCallback(() => {
     setResumeDraft(null)
+    setCreateInitialMinutes(null)
+    setCreateOpen(true)
+  }, [])
+
+  /** «+Add» по пустому слоту недели/дня: выбрать день, префилл времени, открыть создание. */
+  const openCreateTaskAtSlot = useCallback((day: string, startMinutes: number) => {
+    setSelectedDay(day)
+    setResumeDraft(null)
+    setCreateInitialMinutes(startMinutes)
     setCreateOpen(true)
   }, [])
 
@@ -1443,6 +1453,7 @@ function AppPageInner() {
       <CreateTaskModal
         open={createOpen}
         presentation="sidebar"
+        initialStartMinutes={createInitialMinutes}
         selectedDayKey={selectedDay}
         resumeDraft={resumeDraft}
         groups={vault.groups}
@@ -1452,6 +1463,7 @@ function AppPageInner() {
         onClose={() => {
           setCreateOpen(false)
           setResumeDraft(null)
+          setCreateInitialMinutes(null)
         }}
         onSave={async (input, opts) => {
           await createTask(input, { removeDraftId: opts.removeDraftId })
@@ -1597,10 +1609,7 @@ function AppPageInner() {
                   locale={locale}
                   canEdit={canEdit}
                   onTaskClick={(id, day) => openTaskEditor(id, day)}
-                  onSlotClick={(day) => {
-                    setSelectedDay(day)
-                    openCreateTask()
-                  }}
+                  onSlotClick={openCreateTaskAtSlot}
                 />
               ) : (
                 <WeekDayView
@@ -1611,10 +1620,7 @@ function AppPageInner() {
                   locale={locale}
                   canEdit={canEdit}
                   onTaskClick={(id, day) => openTaskEditor(id, day)}
-                  onSlotClick={(day) => {
-                    setSelectedDay(day)
-                    openCreateTask()
-                  }}
+                  onSlotClick={openCreateTaskAtSlot}
                   onPrevDay={() => setSelectedDay((d) => shiftLocalDateKey(d, -1))}
                   onNextDay={() => setSelectedDay((d) => shiftLocalDateKey(d, 1))}
                 />
