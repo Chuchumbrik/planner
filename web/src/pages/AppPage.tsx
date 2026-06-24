@@ -14,6 +14,8 @@ import { PeriodPlanDonut } from '@/components/PeriodPlanDonut'
 import { EndOfDayModal } from '@/components/EndOfDayModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
+import { WeekDayView } from '@/components/WeekDayView'
+import { useIsDesktopShell } from '@/lib/useMediaQuery'
 import { TaskEditModal } from '@/components/TaskEditModal'
 import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
@@ -428,6 +430,8 @@ function AppPageInner() {
   // Групповой фильтр живёт в контексте — общий с Categories в левой панели (BR-D-011).
   const { filterGroupId, setFilterGroupId } = usePlannerFilter()
   const [leftPanelOpen, setLeftPanelOpen] = useState(false)
+  /** На мобилке (<md) недельный вид — один день со свайпом (BR-D-010), а не 7 колонок. */
+  const isWeekGridDesktop = useIsDesktopShell()
   const [filterRepeats, setFilterRepeats] = useState<'all' | 'recurring' | 'nonRecurring'>(
     'all',
   )
@@ -1535,19 +1539,37 @@ function AppPageInner() {
           />
           <div className="flex min-h-0 w-full flex-1 flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <WeekGrid
-                weekDays={weekDays}
-                tasks={filteredVaultTasks}
-                todayKey={todayKeyApp}
-                priorityLabels={vault.priorityLabels}
-                locale={locale}
-                canEdit={canEdit}
-                onTaskClick={(id, day) => openTaskEditor(id, day)}
-                onSlotClick={(day) => {
-                  setSelectedDay(day)
-                  openCreateTask()
-                }}
-              />
+              {isWeekGridDesktop ? (
+                <WeekGrid
+                  weekDays={weekDays}
+                  tasks={filteredVaultTasks}
+                  todayKey={todayKeyApp}
+                  priorityLabels={vault.priorityLabels}
+                  locale={locale}
+                  canEdit={canEdit}
+                  onTaskClick={(id, day) => openTaskEditor(id, day)}
+                  onSlotClick={(day) => {
+                    setSelectedDay(day)
+                    openCreateTask()
+                  }}
+                />
+              ) : (
+                <WeekDayView
+                  day={selectedDay}
+                  tasks={filteredVaultTasks}
+                  todayKey={todayKeyApp}
+                  priorityLabels={vault.priorityLabels}
+                  locale={locale}
+                  canEdit={canEdit}
+                  onTaskClick={(id, day) => openTaskEditor(id, day)}
+                  onSlotClick={(day) => {
+                    setSelectedDay(day)
+                    openCreateTask()
+                  }}
+                  onPrevDay={() => setSelectedDay((d) => shiftLocalDateKey(d, -1))}
+                  onNextDay={() => setSelectedDay((d) => shiftLocalDateKey(d, 1))}
+                />
+              )}
             </div>
             {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
               <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:pt-1">
