@@ -38,16 +38,10 @@ function StatTile({
 export function PeriodPlannerStatsRow({
   mode,
   progress,
-  periodLabel,
   overdueCount,
 }: PeriodPlannerStatsRowProps) {
   const { t, i18n } = useTranslation()
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'ru-RU'
-
-  const pct = useMemo(() => {
-    if (progress.plannedTaskCount === 0) return 0
-    return Math.round((100 * progress.doneFraction) / progress.plannedTaskCount)
-  }, [progress])
 
   const closedValue = useMemo(() => {
     if (progress.plannedTaskCount === 0) return '—'
@@ -59,32 +53,6 @@ export function PeriodPlannerStatsRow({
 
   return (
     <section className="flex flex-col gap-4" aria-label={t(ariaKey)}>
-      {progress.plannedTaskCount > 0 ? (
-        <div className="motivator-card p-sm md:p-md">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-label-sm uppercase text-primary">
-              {mode === 'week' ? t('app.weekStatsProgress') : t('app.monthStatsProgress')}
-            </span>
-            <span className="text-mono-data text-on-surface-variant">{periodLabel}</span>
-          </div>
-          <div className="mt-sm flex items-center gap-3">
-            <div
-              className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-surface-container-highest"
-              role="progressbar"
-              aria-valuenow={pct}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-300"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <span className="text-mono-data text-on-surface">{pct}%</span>
-          </div>
-        </div>
-      ) : null}
-
       <div className="scrollbar-site flex snap-x snap-mandatory gap-sm overflow-x-auto pb-1 md:grid md:grid-cols-3 md:overflow-visible">
         <StatTile
           icon="donut_large"

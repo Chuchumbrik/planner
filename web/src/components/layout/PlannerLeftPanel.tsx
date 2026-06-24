@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Task, TaskGroup } from '@motivator/core'
 import { cn } from '@/lib/cn'
 import { CategoriesBlock } from './CategoriesBlock'
@@ -23,6 +24,8 @@ type Props = {
   variant?: 'inline' | 'drawer'
   isOpen?: boolean
   onClose?: () => void
+  /** Кольцо прогресса текущего вида (перенесено из главной области). */
+  progressSlot?: ReactNode
 }
 
 /**
@@ -45,6 +48,7 @@ export function PlannerLeftPanel({
   variant = 'inline',
   isOpen = false,
   onClose,
+  progressSlot,
 }: Props) {
   const pickDay = (dateKey: string) => {
     onPickDay(dateKey)
@@ -53,6 +57,7 @@ export function PlannerLeftPanel({
 
   const content = (
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-4">
+      {progressSlot ? <div className="flex justify-center">{progressSlot}</div> : null}
       <PlannerLeftPanelMiniCal
         year={year}
         monthIndex={monthIndex}

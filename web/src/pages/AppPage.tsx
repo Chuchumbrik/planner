@@ -800,6 +800,35 @@ function AppPageInner() {
     [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp],
   )
 
+  /** Кольцо прогресса текущего вида — для левой панели (перенос из главной области). */
+  const leftPanelProgress = chartsHidden
+    ? undefined
+    : view === 'day'
+      ? <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
+      : view === 'week'
+        ? weekPlanProgress.plannedTaskCount > 0
+          ? (
+              <PeriodPlanDonut
+                progress={weekPlanProgress}
+                title={t('app.periodPlanWeekRingTitle')}
+                subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+                ringSize={112}
+                ringStroke={9}
+              />
+            )
+          : undefined
+        : monthPlanProgress.plannedTaskCount > 0
+          ? (
+              <PeriodPlanDonut
+                progress={monthPlanProgress}
+                title={t('app.periodPlanMonthRingTitle')}
+                subtitle={monthLabel(monthYear, monthIndex, locale)}
+                ringSize={112}
+                ringStroke={9}
+              />
+            )
+          : undefined
+
   const weekBreakdownChartRows = useMemo((): { name: string; pct: number }[] => {
     const buckets =
       periodSlotsMode === 'group'
@@ -1023,6 +1052,7 @@ function AppPageInner() {
             todayTasks={todayPlanTasks}
             onTaskClick={(id) => openTaskEditor(id)}
             variant="inline"
+            progressSlot={leftPanelProgress}
           />
           <PlannerLeftPanel
             groups={sortedGroups}
@@ -1040,6 +1070,7 @@ function AppPageInner() {
             variant="drawer"
             isOpen={leftPanelOpen}
             onClose={() => setLeftPanelOpen(false)}
+            progressSlot={leftPanelProgress}
           />
         </>
       }
@@ -1479,11 +1510,6 @@ function AppPageInner() {
                   </ul>
                 )}
               </div>
-              {!chartsHidden ? (
-                <div className="flex w-full min-w-0 shrink-0 justify-center lg:w-auto lg:justify-start">
-                  <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
-                </div>
-              ) : null}
             </div>
           </section>
 
@@ -1573,13 +1599,6 @@ function AppPageInner() {
             </div>
             {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
               <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:pt-1">
-                <PeriodPlanDonut
-                  progress={weekPlanProgress}
-                  title={t('app.periodPlanWeekRingTitle')}
-                  subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
-                  ringSize={weekPlanUiWide ? 120 : 92}
-                  ringStroke={weekPlanUiWide ? 10 : 8}
-                />
                 <PeriodPlanBreakdownChart
                   compact={!weekPlanUiWide}
                   rows={weekBreakdownChartRows}
@@ -1657,11 +1676,6 @@ function AppPageInner() {
             </div>
             {monthPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
               <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:justify-end xl:pt-1">
-                <PeriodPlanDonut
-                  progress={monthPlanProgress}
-                  title={t('app.periodPlanMonthRingTitle')}
-                  subtitle={monthLabel(monthYear, monthIndex, locale)}
-                />
                 <PeriodPlanBreakdownChart
                   rows={monthBreakdownChartRows}
                   title={
