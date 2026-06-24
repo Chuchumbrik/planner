@@ -13,7 +13,7 @@ import {
   type Task,
 } from '@motivator/core'
 
-const HOUR_HEIGHT_PX = 42
+const HOUR_HEIGHT_PX = 56
 /** «Рабочее окно» по умолчанию — часы вне него схлопываются (BR-D-007 D). */
 const DEFAULT_DAY_START_HOUR = 7
 const DEFAULT_DAY_END_HOUR = 22
@@ -56,9 +56,9 @@ function formatSlotClock(task: Task, day: string): string | null {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-/** Полупрозрачная заливка карточки цветом группы (hex #rrggbb → #rrggbb + alpha). */
-function tintBg(hex: string): string {
-  return /^#[0-9a-fA-F]{6}$/.test(hex) ? `${hex}22` : hex
+/** Заливка карточки цветом группы (hex #rrggbb → #rrggbb + alpha ~35%) — «весомая» карточка. */
+function cardFill(hex: string): string {
+  return /^#[0-9a-fA-F]{6}$/.test(hex) ? `${hex}59` : hex
 }
 
 type Props = {
@@ -158,12 +158,12 @@ export function WeekGrid({
 
   function taskBlockClass(done: boolean, overdue: boolean): string {
     return cn(
-      'absolute left-0.5 right-0.5 z-[2] overflow-hidden rounded border border-l-[3px] px-1 py-0.5',
-      'text-left text-[10px] leading-tight disabled:opacity-40 hover:brightness-110',
+      'absolute left-1 right-1 z-[2] overflow-hidden rounded-lg border border-l-[4px] px-1.5 py-1',
+      'text-left text-[11px] leading-tight disabled:opacity-40 hover:brightness-110',
       done
         ? 'border-primary/30 bg-primary/10 text-on-surface-variant line-through opacity-75'
         : overdue
-          ? 'border-tertiary/40 bg-tertiary-container/10 text-on-surface'
+          ? 'border-tertiary/45 bg-tertiary-container/15 text-on-surface'
           : 'border-surface-variant text-on-surface',
     )
   }
@@ -212,16 +212,18 @@ export function WeekGrid({
                 cn('border-b border-l p-2 text-center text-xs', GRID_BORDER, 'bg-surface-container-low'),
               )}
             >
-              <div className={cn('font-display text-[10px] uppercase', isToday ? 'text-primary' : GRID_MUTED)}>
+              <div className="font-display text-[10px] uppercase text-on-surface-variant">
                 {weekday}
               </div>
-              <div
-                className={cn(
-                  'font-display text-headline-md',
-                  isToday ? 'font-bold text-primary' : 'font-semibold text-on-surface',
-                )}
-              >
-                {dayNum}
+              <div className="mt-1 flex justify-center">
+                <span
+                  className={cn(
+                    'inline-flex h-9 min-w-9 items-center justify-center rounded-full px-2 font-display text-headline-md',
+                    isToday ? 'bg-primary font-bold text-on-primary' : 'font-semibold text-on-surface',
+                  )}
+                >
+                  {dayNum}
+                </span>
               </div>
             </div>
           )
@@ -260,17 +262,17 @@ export function WeekGrid({
                         disabled={!canEdit}
                         title={task.title}
                         className={cn(
-                          'flex max-w-full items-center gap-1 truncate rounded border border-l-2 px-1.5 py-0.5',
-                          'text-left text-[10px] disabled:opacity-40 hover:brightness-110',
+                          'flex max-w-full items-center gap-1 truncate rounded-md border border-l-[3px] px-1.5 py-1',
+                          'text-left text-[11px] disabled:opacity-40 hover:brightness-110',
                           done
                             ? 'border-primary/25 bg-primary/10 text-on-surface-variant line-through'
                             : overdue
-                              ? 'border-tertiary/35 bg-tertiary-container/10 text-on-surface'
-                              : 'border-surface-variant text-on-surface-variant',
+                              ? 'border-tertiary/40 bg-tertiary-container/15 text-on-surface'
+                              : 'border-surface-variant text-on-surface',
                         )}
                         style={{
                           borderLeftColor: accent,
-                          backgroundColor: done || overdue ? undefined : tintBg(accent),
+                          backgroundColor: done || overdue ? undefined : cardFill(accent),
                         }}
                         onClick={() => onTaskClick(task.id, day)}
                       >
@@ -329,7 +331,7 @@ export function WeekGrid({
                         type="button"
                         aria-label={t('app.weekSlotAdd')}
                         onClick={() => onSlotClick(day, h * 60)}
-                        className="absolute inset-0 z-[1] flex items-center justify-center text-[10px] text-on-surface-variant/0 transition hover:bg-primary/5 hover:text-on-surface-variant"
+                        className="absolute inset-0.5 z-[1] flex items-center justify-center rounded-md text-[11px] text-on-surface-variant/0 transition hover:border hover:border-dashed hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
                       >
                         + {t('app.weekSlotAdd')}
                       </button>
@@ -339,7 +341,7 @@ export function WeekGrid({
                 {slotted.map((task) => {
                   const slot = getTaskSlotMinutes(task, day)!
                   const top = ((slot.start - winStart * 60) / 60) * HOUR_HEIGHT_PX
-                  const height = Math.max(((slot.end - slot.start) / 60) * HOUR_HEIGHT_PX, 22)
+                  const height = Math.max(((slot.end - slot.start) / 60) * HOUR_HEIGHT_PX, 30)
                   const accent = TASK_COLOR_HEX[task.colorKey] ?? TASK_COLOR_HEX.zinc
                   const done = isMainTaskDoneForDay(task, day)
                   const overdue = !done && isPlannerTaskOverdue(task, day, todayKey, getAppNow())
@@ -355,11 +357,11 @@ export function WeekGrid({
                         top,
                         height,
                         borderLeftColor: accent,
-                        backgroundColor: done || overdue ? undefined : tintBg(accent),
+                        backgroundColor: done || overdue ? undefined : cardFill(accent),
                       }}
                       onClick={() => onTaskClick(task.id, day)}
                     >
-                      {clock ? <span className="text-mono-data text-[9px] text-on-surface-variant">{clock}</span> : null}
+                      {clock ? <span className="block text-mono-data text-[10px] opacity-80">{clock}</span> : null}
                       <span className="line-clamp-2 font-medium">{task.title}</span>
                     </button>
                   )
