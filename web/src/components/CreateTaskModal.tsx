@@ -13,6 +13,8 @@ import {
   MODAL_FOOTER,
   MODAL_HEADER,
   MODAL_SHELL,
+  TASK_PANEL_OVERLAY_SIDEBAR,
+  TASK_PANEL_SHELL_SIDEBAR,
   MODAL_TITLE,
   MOTIVATOR_INPUT,
   SETTINGS_BTN_SECONDARY,
@@ -215,6 +217,8 @@ export type CreateTaskModalProps = {
   onClose: () => void
   onSave: (input: CreateTaskInput, opts: { removeDraftId?: string }) => Promise<void>
   onPersistDraft: (draft: TaskDraft) => Promise<void>
+  /** 'modal' (центр, по умолчанию) или 'sidebar' — правый сайдбар / bottom-sheet (Phase 13). */
+  presentation?: 'modal' | 'sidebar'
 }
 
 export function CreateTaskModal({
@@ -228,6 +232,7 @@ export function CreateTaskModal({
   onClose,
   onSave,
   onPersistDraft,
+  presentation = 'modal',
 }: CreateTaskModalProps) {
   const { t } = useTranslation()
   const savedRef = useRef(false)
@@ -562,7 +567,11 @@ export function CreateTaskModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 sm:items-center"
+        className={
+          presentation === 'sidebar'
+            ? TASK_PANEL_OVERLAY_SIDEBAR
+            : 'fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 sm:items-center'
+        }
         role="presentation"
         aria-hidden={closeConfirmOpen}
         onClick={(e) => {
@@ -571,7 +580,7 @@ export function CreateTaskModal({
       >
       <div
         ref={dialogRef}
-        className={MODAL_SHELL}
+        className={presentation === 'sidebar' ? TASK_PANEL_SHELL_SIDEBAR : MODAL_SHELL}
         role="dialog"
         aria-modal
         aria-labelledby="create-task-modal-title"

@@ -1384,6 +1384,7 @@ function AppPageInner() {
 
       <CreateTaskModal
         open={createOpen}
+        presentation="sidebar"
         selectedDayKey={selectedDay}
         resumeDraft={resumeDraft}
         groups={vault.groups}
@@ -1693,6 +1694,7 @@ function AppPageInner() {
       {editingTask ? (
         <TaskEditModal
           key={editingTask.id}
+          presentation="sidebar"
           task={editingTask}
           groups={vault.groups}
           priorityLabels={vault.priorityLabels}

@@ -263,6 +263,17 @@ export const EMPTY_STATE_BOX = cn(
 
 export const MODAL_OVERLAY = 'fixed inset-0 z-[60] flex items-center justify-center glass-overlay p-4'
 
+/**
+ * Phase 13 (BR-D-012): презентация формы задачи как правый сайдбар (≥sm) / нижний лист (mobile).
+ * Используется CreateTaskModal/TaskEditModal при `presentation="sidebar"` вместо центр-модалки.
+ */
+export const TASK_PANEL_OVERLAY_SIDEBAR =
+  'fixed inset-0 z-[70] flex items-end justify-center bg-black/50 sm:items-stretch sm:justify-end'
+export const TASK_PANEL_SHELL_SIDEBAR = cn(
+  'flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-surface-variant bg-surface-container-lowest shadow-2xl',
+  'sm:h-dvh sm:max-h-none sm:w-[380px] sm:max-w-[90vw] sm:rounded-none sm:rounded-l-2xl sm:border-y-0 sm:border-r-0',
+)
+
 export const PLAN_ACCORDION = cn(
   'plan-accordion group mt-4 rounded-card border border-surface-variant',
   'bg-surface-container-low open:border-primary/30',
