@@ -258,7 +258,10 @@ function MotivatorShellInner({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [mobileNavOpen])
 
-  const desktopSidebarCollapsed = isDesktop && sidebarCollapsed
+  // На планировщике (есть leftPanel) основной сайдбар сворачивается в икон-рейл —
+  // навигацию по датам/фильтрам несёт левая панель (BR-D-010, как в референсе).
+  const forceRail = Boolean(leftPanel)
+  const desktopSidebarCollapsed = isDesktop && (sidebarCollapsed || forceRail)
 
   function toggleSidebarCollapsed() {
     setSidebarCollapsed((prev) => {
@@ -281,7 +284,7 @@ function MotivatorShellInner({
       <ShellSidebar
         {...sidebarProps}
         className="max-md:hidden"
-        showCollapseToggle
+        showCollapseToggle={!forceRail}
         onToggleCollapsed={toggleSidebarCollapsed}
       />
 

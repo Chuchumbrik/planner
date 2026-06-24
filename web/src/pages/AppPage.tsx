@@ -446,12 +446,6 @@ function AppPageInner() {
   const [draftsModalOpen, setDraftsModalOpen] = useState(false)
   /** Рядом с кольцом недели/месяца: столбчатая диаграмма по группам или по цветам. */
   const [periodSlotsMode, setPeriodSlotsMode] = useState<'group' | 'color'>('group')
-  /** `lg+`: полноразмерные кольцо и столбчатый график в колонке недели. */
-  const [weekPlanUiWide, setWeekPlanUiWide] = useState(() =>
-    typeof globalThis !== 'undefined' && 'matchMedia' in globalThis
-      ? globalThis.matchMedia('(min-width: 1024px)').matches
-      : false,
-  )
   const [eodModalContext, setEodModalContext] = useState<EodModalContext | null>(null)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
@@ -496,14 +490,6 @@ function AppPageInner() {
     if (vault.drafts.length === 0) setDraftsModalOpen(false)
   }, [vault.drafts.length])
 
-  useEffect(() => {
-    if (typeof globalThis === 'undefined' || !('matchMedia' in globalThis)) return
-    const mq = globalThis.matchMedia('(min-width: 1024px)')
-    const fn = () => setWeekPlanUiWide(mq.matches)
-    fn()
-    mq.addEventListener('change', fn)
-    return () => mq.removeEventListener('change', fn)
-  }, [])
 
   useEffect(() => {
     if (!draftsModalOpen) return
@@ -800,35 +786,6 @@ function AppPageInner() {
     [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp],
   )
 
-  /** Кольцо прогресса текущего вида — для левой панели (перенос из главной области). */
-  const leftPanelProgress = chartsHidden
-    ? undefined
-    : view === 'day'
-      ? <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
-      : view === 'week'
-        ? weekPlanProgress.plannedTaskCount > 0
-          ? (
-              <PeriodPlanDonut
-                progress={weekPlanProgress}
-                title={t('app.periodPlanWeekRingTitle')}
-                subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
-                ringSize={112}
-                ringStroke={9}
-              />
-            )
-          : undefined
-        : monthPlanProgress.plannedTaskCount > 0
-          ? (
-              <PeriodPlanDonut
-                progress={monthPlanProgress}
-                title={t('app.periodPlanMonthRingTitle')}
-                subtitle={monthLabel(monthYear, monthIndex, locale)}
-                ringSize={112}
-                ringStroke={9}
-              />
-            )
-          : undefined
-
   const weekBreakdownChartRows = useMemo((): { name: string; pct: number }[] => {
     const buckets =
       periodSlotsMode === 'group'
@@ -856,6 +813,72 @@ function AppPageInner() {
       pct: b.slotCount > 0 ? Math.round((100 * b.doneFractionSum) / b.slotCount) : 0,
     }))
   }, [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp, periodSlotsMode, sortedGroups, t])
+
+  /** Блок «по группам» (график + переключатель Группы/Цвета) для левой панели. */
+  const periodBreakdownNode = (rows: { name: string; pct: number }[]) => (
+    <div className="flex flex-col gap-2">
+      <PeriodPlanBreakdownChart
+        compact
+        rows={rows}
+        title={
+          periodSlotsMode === 'group'
+            ? t('app.periodBreakdownChartTitleGroup')
+            : t('app.periodBreakdownChartTitleColor')
+        }
+      />
+      <div className="flex flex-wrap justify-center gap-1">
+        <button
+          type="button"
+          className={periodBreakdownToggle(periodSlotsMode === 'group')}
+          onClick={() => setPeriodSlotsMode('group')}
+        >
+          {t('app.periodBreakdownByGroup')}
+        </button>
+        <button
+          type="button"
+          className={periodBreakdownToggle(periodSlotsMode === 'color')}
+          onClick={() => setPeriodSlotsMode('color')}
+        >
+          {t('app.periodBreakdownByColor')}
+        </button>
+      </div>
+    </div>
+  )
+
+  /** Графики текущего вида для левой панели (кольцо % + «по группам») — перенос из главной области. */
+  const leftPanelProgress = chartsHidden
+    ? undefined
+    : view === 'day'
+      ? <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
+      : view === 'week'
+        ? weekPlanProgress.plannedTaskCount > 0
+          ? (
+              <div className="flex flex-col gap-3">
+                <PeriodPlanDonut
+                  progress={weekPlanProgress}
+                  title={t('app.periodPlanWeekRingTitle')}
+                  subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+                  ringSize={112}
+                  ringStroke={9}
+                />
+                {periodBreakdownNode(weekBreakdownChartRows)}
+              </div>
+            )
+          : undefined
+        : monthPlanProgress.plannedTaskCount > 0
+          ? (
+              <div className="flex flex-col gap-3">
+                <PeriodPlanDonut
+                  progress={monthPlanProgress}
+                  title={t('app.periodPlanMonthRingTitle')}
+                  subtitle={monthLabel(monthYear, monthIndex, locale)}
+                  ringSize={112}
+                  ringStroke={9}
+                />
+                {periodBreakdownNode(monthBreakdownChartRows)}
+              </div>
+            )
+          : undefined
 
   const backlogTasks = useMemo(() => {
     const list = filteredVaultTasks.filter(
@@ -1597,35 +1620,6 @@ function AppPageInner() {
                 />
               )}
             </div>
-            {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:pt-1">
-                <PeriodPlanBreakdownChart
-                  compact={!weekPlanUiWide}
-                  rows={weekBreakdownChartRows}
-                  title={
-                    periodSlotsMode === 'group'
-                      ? t('app.periodBreakdownChartTitleGroup')
-                      : t('app.periodBreakdownChartTitleColor')
-                  }
-                />
-                <div className="flex flex-wrap justify-center gap-1">
-                  <button
-                    type="button"
-                    className={periodBreakdownToggle(periodSlotsMode === 'group')}
-                    onClick={() => setPeriodSlotsMode('group')}
-                  >
-                    {t('app.periodBreakdownByGroup')}
-                  </button>
-                  <button
-                    type="button"
-                    className={periodBreakdownToggle(periodSlotsMode === 'color')}
-                    onClick={() => setPeriodSlotsMode('color')}
-                  >
-                    {t('app.periodBreakdownByColor')}
-                  </button>
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
       )}
@@ -1674,34 +1668,6 @@ function AppPageInner() {
                 }}
               />
             </div>
-            {monthPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:justify-end xl:pt-1">
-                <PeriodPlanBreakdownChart
-                  rows={monthBreakdownChartRows}
-                  title={
-                    periodSlotsMode === 'group'
-                      ? t('app.periodBreakdownChartTitleGroup')
-                      : t('app.periodBreakdownChartTitleColor')
-                  }
-                />
-                <div className="flex flex-wrap justify-center gap-1">
-                  <button
-                    type="button"
-                    className={periodBreakdownToggle(periodSlotsMode === 'group')}
-                    onClick={() => setPeriodSlotsMode('group')}
-                  >
-                    {t('app.periodBreakdownByGroup')}
-                  </button>
-                  <button
-                    type="button"
-                    className={periodBreakdownToggle(periodSlotsMode === 'color')}
-                    onClick={() => setPeriodSlotsMode('color')}
-                  >
-                    {t('app.periodBreakdownByColor')}
-                  </button>
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
       )}

@@ -57,7 +57,6 @@ export function PlannerLeftPanel({
 
   const content = (
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-4">
-      {progressSlot ? <div className="flex justify-center">{progressSlot}</div> : null}
       <PlannerLeftPanelMiniCal
         year={year}
         monthIndex={monthIndex}
@@ -70,6 +69,7 @@ export function PlannerLeftPanel({
       />
       <CategoriesBlock groups={groups} disabled={disabled} />
       <TodayAgendaBlock tasks={todayTasks} onTaskClick={onTaskClick} />
+      {progressSlot ? <div className="mt-auto">{progressSlot}</div> : null}
     </div>
   )
 

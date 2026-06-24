@@ -231,7 +231,11 @@ export function WeekGrid({
 
         {/* Дорожка «Без времени» */}
         <div
-          className={cn(cellBorder, 'flex items-start p-1 text-label-sm uppercase leading-tight', GRID_MUTED)}
+          className={cn(
+            cellBorder,
+            'flex items-start p-1 text-[9px] uppercase leading-none [overflow-wrap:anywhere]',
+            GRID_MUTED,
+          )}
         >
           {t('app.weekUnslotted')}
         </div>
