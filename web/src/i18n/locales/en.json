@@ -149,7 +149,7 @@
     "periodStatsOverdue": "Still open",
     "periodStatsOverdueCount": "{{count}}",
     "periodStatsOverdueNone": "None",
-    "monthDayOverdueShort": "{{count}} overdue",
+    "monthDayOverdueShort": "{{count}} not closed",
     "monthDayOpenShort": "{{count}} open",
     "monthDayDoneShort": "done",
     "dayPrev": "Previous day",
@@ -238,6 +238,11 @@
       "pink": "Pink"
     },
     "weekGridHint": "Slots show tasks with start or end time and duration (default 30 min if estimate missing). Tasks completed for that calendar day are hidden (including recurring tasks marked done that day).",
+    "weekUnslotted": "No time",
+    "weekNightShow": "Night hours",
+    "weekNightHide": "Hide night hours",
+    "weekSlotAdd": "Add",
+    "openLeftPanel": "Calendar & filters",
     "monthDayTasks": "Tasks this day: {{count}}"
   },
   "settings": {

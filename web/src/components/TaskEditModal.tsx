@@ -49,6 +49,8 @@ import {
   MODAL_FOOTER,
   MODAL_HEADER,
   MODAL_SHELL,
+  TASK_PANEL_OVERLAY_SIDEBAR,
+  TASK_PANEL_SHELL_SIDEBAR,
   MODAL_TITLE,
   MOTIVATOR_INPUT,
   SETTINGS_BTN_SECONDARY,
@@ -121,6 +123,8 @@ type Props = {
   onToggleOccurrenceForDay?: () => void
   /** Локальный календарный «сегодня» — отметка вхождения только при совпадении с occurrenceDayKey */
   todayLocalDateKey: string
+  /** 'modal' (центр, по умолчанию) или 'sidebar' — правый сайдбар / bottom-sheet (Phase 13). */
+  presentation?: 'modal' | 'sidebar'
 }
 
 export function TaskEditModal({
@@ -146,6 +150,7 @@ export function TaskEditModal({
   onRemoveChecklistItem,
   onToggleOccurrenceForDay,
   todayLocalDateKey,
+  presentation = 'modal',
 }: Props) {
   const { t } = useTranslation()
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -505,7 +510,11 @@ export function TaskEditModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[80] flex min-h-dvh w-full items-end justify-center bg-black/60 p-4 sm:items-center"
+      className={
+        presentation === 'sidebar'
+          ? TASK_PANEL_OVERLAY_SIDEBAR
+          : 'fixed inset-0 z-[80] flex min-h-dvh w-full items-end justify-center bg-black/60 p-4 sm:items-center'
+      }
       role="presentation"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -513,7 +522,7 @@ export function TaskEditModal({
     >
       <div
         ref={dialogRef}
-        className={MODAL_SHELL}
+        className={presentation === 'sidebar' ? TASK_PANEL_SHELL_SIDEBAR : MODAL_SHELL}
         role="dialog"
         aria-modal
         aria-labelledby="task-edit-modal-title"

@@ -108,28 +108,6 @@ export function DayPlannerStatsRow({
 
   return (
     <section className="flex flex-col gap-4" aria-label={t('app.dayStatsAria')}>
-      {progress.plannedTaskCount > 0 ? (
-        <div className="motivator-card p-sm md:p-md">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-label-sm uppercase text-primary">{t('app.dayStatsProgress')}</span>
-            <span className="text-mono-data text-on-surface-variant">{pct}%</span>
-          </div>
-          <div
-            className="mt-sm h-1 overflow-hidden rounded-full bg-surface-container-highest"
-            role="progressbar"
-            aria-valuenow={pct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={t('app.dayStatsProgress')}
-          >
-            <div
-              className="h-full rounded-full bg-primary transition-[width] duration-300"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
-      ) : null}
-
       <div className="scrollbar-site flex snap-x snap-mandatory gap-sm overflow-x-auto pb-1 md:grid md:grid-cols-3 md:overflow-visible">
         <StatTile
           icon="task_alt"

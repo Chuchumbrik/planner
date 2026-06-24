@@ -137,7 +137,7 @@ vi.mock('@/lib/connectivityHints', () => ({
 vi.mock('@/lib/plannerPeriodStats', () => ({
   countHiddenByFilterInDays: vi.fn(() => 0),
   countOverdueInDays: vi.fn(() => 0),
-  summarizePlannerDay: vi.fn(() => ({ planned: 0, done: 0, overdue: 0 })),
+  summarizePlannerDay: vi.fn(() => ({ total: 0, done: 0, overdue: 0, taskColors: [] })),
 }))
 
 vi.mock('@/lib/plannerTaskDayStatus', () => ({

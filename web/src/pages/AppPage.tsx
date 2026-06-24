@@ -5,6 +5,8 @@ import { DayPlannerStatsRow } from '@/components/planner/DayPlannerStatsRow'
 import { PeriodPlannerStatsRow } from '@/components/planner/PeriodPlannerStatsRow'
 import { PlannerCreateFab } from '@/components/planner/PlannerCreateFab'
 import { MotivatorShell } from '@/components/layout/MotivatorShell'
+import { PlannerLeftPanel } from '@/components/layout/PlannerLeftPanel'
+import { PlannerFilterProvider, usePlannerFilter } from '@/context/PlannerFilterContext'
 import { CreateTaskModal } from '@/components/CreateTaskModal'
 import { DayPlanDonut } from '@/components/DayPlanDonut'
 import { PeriodPlanBreakdownChart } from '@/components/PeriodPlanBreakdownChart'
@@ -12,6 +14,8 @@ import { PeriodPlanDonut } from '@/components/PeriodPlanDonut'
 import { EndOfDayModal } from '@/components/EndOfDayModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
+import { WeekDayView } from '@/components/WeekDayView'
+import { useIsDesktopShell } from '@/lib/useMediaQuery'
 import { TaskEditModal } from '@/components/TaskEditModal'
 import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
@@ -395,6 +399,7 @@ function AppPageInner() {
 
   const [view, setView] = useState<'day' | 'week' | 'month'>('day')
   const [createOpen, setCreateOpen] = useState(false)
+  const [createInitialMinutes, setCreateInitialMinutes] = useState<number | null>(null)
   const [resumeDraft, setResumeDraft] = useState<TaskDraft | null>(null)
   const { todayKey: todayKeyApp, now: appNow } = useAppNow()
   const [selectedDay, setSelectedDay] = useState(() => appLocalDateKey())
@@ -423,7 +428,11 @@ function AppPageInner() {
     setMonthIndex(appNow.getMonth())
   }, [appNow])
 
-  const [filterGroupId, setFilterGroupId] = useState<string | 'all'>('all')
+  // Групповой фильтр живёт в контексте — общий с Categories в левой панели (BR-D-011).
+  const { filterGroupId, setFilterGroupId } = usePlannerFilter()
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false)
+  /** На мобилке (<md) недельный вид — один день со свайпом (BR-D-010), а не 7 колонок. */
+  const isWeekGridDesktop = useIsDesktopShell()
   const [filterRepeats, setFilterRepeats] = useState<'all' | 'recurring' | 'nonRecurring'>(
     'all',
   )
@@ -438,12 +447,6 @@ function AppPageInner() {
   const [draftsModalOpen, setDraftsModalOpen] = useState(false)
   /** Рядом с кольцом недели/месяца: столбчатая диаграмма по группам или по цветам. */
   const [periodSlotsMode, setPeriodSlotsMode] = useState<'group' | 'color'>('group')
-  /** `lg+`: полноразмерные кольцо и столбчатый график в колонке недели. */
-  const [weekPlanUiWide, setWeekPlanUiWide] = useState(() =>
-    typeof globalThis !== 'undefined' && 'matchMedia' in globalThis
-      ? globalThis.matchMedia('(min-width: 1024px)').matches
-      : false,
-  )
   const [eodModalContext, setEodModalContext] = useState<EodModalContext | null>(null)
   const [openFilterMenu, setOpenFilterMenu] = useState<'priorities' | null>(null)
   const priorityMenuRef = useRef<HTMLDivElement>(null)
@@ -488,14 +491,6 @@ function AppPageInner() {
     if (vault.drafts.length === 0) setDraftsModalOpen(false)
   }, [vault.drafts.length])
 
-  useEffect(() => {
-    if (typeof globalThis === 'undefined' || !('matchMedia' in globalThis)) return
-    const mq = globalThis.matchMedia('(min-width: 1024px)')
-    const fn = () => setWeekPlanUiWide(mq.matches)
-    fn()
-    mq.addEventListener('change', fn)
-    return () => mq.removeEventListener('change', fn)
-  }, [])
 
   useEffect(() => {
     if (!draftsModalOpen) return
@@ -686,6 +681,23 @@ function AppPageInner() {
     return list
   }, [filteredVaultTasks, selectedDay])
 
+  /** Агенда «Сегодня» в левой панели (BR-D-010). */
+  const todayPlanTasks = useMemo(() => {
+    const list = tasksScheduledForPlannerDay(filteredVaultTasks, todayKeyApp)
+    list.sort((a, b) => sortDayPlan(a, b, todayKeyApp))
+    return list
+  }, [filteredVaultTasks, todayKeyApp])
+
+  /** Сдвиг месяца мини-календаря левой панели. */
+  const shiftLeftPanelMonth = useCallback(
+    (delta: number) => {
+      const d = new Date(monthYear, monthIndex + delta, 1)
+      setMonthYear(d.getFullYear())
+      setMonthIndex(d.getMonth())
+    },
+    [monthYear, monthIndex],
+  )
+
   const dayPlanProgress = useMemo(
     () => plannedDayCompletionWeights(plannedForDay, selectedDay),
     [plannedForDay, selectedDay],
@@ -762,6 +774,15 @@ function AppPageInner() {
 
   const openCreateTask = useCallback(() => {
     setResumeDraft(null)
+    setCreateInitialMinutes(null)
+    setCreateOpen(true)
+  }, [])
+
+  /** «+Add» по пустому слоту недели/дня: выбрать день, префилл времени, открыть создание. */
+  const openCreateTaskAtSlot = useCallback((day: string, startMinutes: number) => {
+    setSelectedDay(day)
+    setResumeDraft(null)
+    setCreateInitialMinutes(startMinutes)
     setCreateOpen(true)
   }, [])
 
@@ -802,6 +823,72 @@ function AppPageInner() {
       pct: b.slotCount > 0 ? Math.round((100 * b.doneFractionSum) / b.slotCount) : 0,
     }))
   }, [filteredVaultTasks, monthDayKeysForPlan, todayKeyApp, periodSlotsMode, sortedGroups, t])
+
+  /** Блок «по группам» (график + переключатель Группы/Цвета) для левой панели. */
+  const periodBreakdownNode = (rows: { name: string; pct: number }[]) => (
+    <div className="flex flex-col gap-2">
+      <PeriodPlanBreakdownChart
+        compact
+        rows={rows}
+        title={
+          periodSlotsMode === 'group'
+            ? t('app.periodBreakdownChartTitleGroup')
+            : t('app.periodBreakdownChartTitleColor')
+        }
+      />
+      <div className="flex flex-wrap justify-center gap-1">
+        <button
+          type="button"
+          className={periodBreakdownToggle(periodSlotsMode === 'group')}
+          onClick={() => setPeriodSlotsMode('group')}
+        >
+          {t('app.periodBreakdownByGroup')}
+        </button>
+        <button
+          type="button"
+          className={periodBreakdownToggle(periodSlotsMode === 'color')}
+          onClick={() => setPeriodSlotsMode('color')}
+        >
+          {t('app.periodBreakdownByColor')}
+        </button>
+      </div>
+    </div>
+  )
+
+  /** Графики текущего вида для левой панели (кольцо % + «по группам») — перенос из главной области. */
+  const leftPanelProgress = chartsHidden
+    ? undefined
+    : view === 'day'
+      ? <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
+      : view === 'week'
+        ? weekPlanProgress.plannedTaskCount > 0
+          ? (
+              <div className="flex flex-col gap-3">
+                <PeriodPlanDonut
+                  progress={weekPlanProgress}
+                  title={t('app.periodPlanWeekRingTitle')}
+                  subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
+                  ringSize={112}
+                  ringStroke={9}
+                />
+                {periodBreakdownNode(weekBreakdownChartRows)}
+              </div>
+            )
+          : undefined
+        : monthPlanProgress.plannedTaskCount > 0
+          ? (
+              <div className="flex flex-col gap-3">
+                <PeriodPlanDonut
+                  progress={monthPlanProgress}
+                  title={t('app.periodPlanMonthRingTitle')}
+                  subtitle={monthLabel(monthYear, monthIndex, locale)}
+                  ringSize={112}
+                  ringStroke={9}
+                />
+                {periodBreakdownNode(monthBreakdownChartRows)}
+              </div>
+            )
+          : undefined
 
   const backlogTasks = useMemo(() => {
     const list = filteredVaultTasks.filter(
@@ -982,6 +1069,44 @@ function AppPageInner() {
       activeNav="planner"
       wide
       title={t('app.plannerTitle')}
+      leftPanel={
+        <>
+          <PlannerLeftPanel
+            groups={sortedGroups}
+            disabled={!canEdit}
+            year={monthYear}
+            monthIndex={monthIndex}
+            selectedDay={selectedDay}
+            todayKey={todayKeyApp}
+            locale={locale}
+            onPickDay={setSelectedDay}
+            onPrevMonth={() => shiftLeftPanelMonth(-1)}
+            onNextMonth={() => shiftLeftPanelMonth(1)}
+            todayTasks={todayPlanTasks}
+            onTaskClick={(id) => openTaskEditor(id)}
+            variant="inline"
+            progressSlot={leftPanelProgress}
+          />
+          <PlannerLeftPanel
+            groups={sortedGroups}
+            disabled={!canEdit}
+            year={monthYear}
+            monthIndex={monthIndex}
+            selectedDay={selectedDay}
+            todayKey={todayKeyApp}
+            locale={locale}
+            onPickDay={setSelectedDay}
+            onPrevMonth={() => shiftLeftPanelMonth(-1)}
+            onNextMonth={() => shiftLeftPanelMonth(1)}
+            todayTasks={todayPlanTasks}
+            onTaskClick={(id) => openTaskEditor(id)}
+            variant="drawer"
+            isOpen={leftPanelOpen}
+            onClose={() => setLeftPanelOpen(false)}
+            progressSlot={leftPanelProgress}
+          />
+        </>
+      }
     >
       <div className="relative flex min-h-0 flex-col">
       {!remoteHydrated && !decryptFailed ? (
@@ -1039,6 +1164,14 @@ function AppPageInner() {
           </nav>
 
           <div className={PLANNER_TOOLBAR_TRACK}>
+            <button
+              type="button"
+              aria-label={t('app.openLeftPanel')}
+              className={`${PLANNER_TOOLBAR_BTN} inline-flex shrink-0 items-center justify-center sm:px-3 sm:py-2 xl:hidden`}
+              onClick={() => setLeftPanelOpen(true)}
+            >
+              <span aria-hidden>🗓</span>
+            </button>
             <div className="relative shrink-0">
               <button
                 type="button"
@@ -1319,6 +1452,8 @@ function AppPageInner() {
 
       <CreateTaskModal
         open={createOpen}
+        presentation="sidebar"
+        initialStartMinutes={createInitialMinutes}
         selectedDayKey={selectedDay}
         resumeDraft={resumeDraft}
         groups={vault.groups}
@@ -1328,6 +1463,7 @@ function AppPageInner() {
         onClose={() => {
           setCreateOpen(false)
           setResumeDraft(null)
+          setCreateInitialMinutes(null)
         }}
         onSave={async (input, opts) => {
           await createTask(input, { removeDraftId: opts.removeDraftId })
@@ -1409,11 +1545,6 @@ function AppPageInner() {
                   </ul>
                 )}
               </div>
-              {!chartsHidden ? (
-                <div className="flex w-full min-w-0 shrink-0 justify-center lg:w-auto lg:justify-start">
-                  <DayPlanDonut plannedTasksForDay={plannedForDay} dayKey={selectedDay} />
-                </div>
-              ) : null}
             </div>
           </section>
 
@@ -1469,52 +1600,32 @@ function AppPageInner() {
           />
           <div className="flex min-h-0 w-full flex-1 flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <WeekGrid
-                weekDays={weekDays}
-                tasks={filteredVaultTasks}
-                todayKey={todayKeyApp}
-                priorityLabels={vault.priorityLabels}
-                locale={locale}
-                canEdit={canEdit}
-                onTaskClick={(id, day) => openTaskEditor(id, day)}
-              />
+              {isWeekGridDesktop ? (
+                <WeekGrid
+                  weekDays={weekDays}
+                  tasks={filteredVaultTasks}
+                  todayKey={todayKeyApp}
+                  priorityLabels={vault.priorityLabels}
+                  locale={locale}
+                  canEdit={canEdit}
+                  onTaskClick={(id, day) => openTaskEditor(id, day)}
+                  onSlotClick={openCreateTaskAtSlot}
+                />
+              ) : (
+                <WeekDayView
+                  day={selectedDay}
+                  tasks={filteredVaultTasks}
+                  todayKey={todayKeyApp}
+                  priorityLabels={vault.priorityLabels}
+                  locale={locale}
+                  canEdit={canEdit}
+                  onTaskClick={(id, day) => openTaskEditor(id, day)}
+                  onSlotClick={openCreateTaskAtSlot}
+                  onPrevDay={() => setSelectedDay((d) => shiftLocalDateKey(d, -1))}
+                  onNextDay={() => setSelectedDay((d) => shiftLocalDateKey(d, 1))}
+                />
+              )}
             </div>
-            {weekPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:pt-1">
-                <PeriodPlanDonut
-                  progress={weekPlanProgress}
-                  title={t('app.periodPlanWeekRingTitle')}
-                  subtitle={formatWeekRangeCompact(weekDays[0], weekDays[6], locale)}
-                  ringSize={weekPlanUiWide ? 120 : 92}
-                  ringStroke={weekPlanUiWide ? 10 : 8}
-                />
-                <PeriodPlanBreakdownChart
-                  compact={!weekPlanUiWide}
-                  rows={weekBreakdownChartRows}
-                  title={
-                    periodSlotsMode === 'group'
-                      ? t('app.periodBreakdownChartTitleGroup')
-                      : t('app.periodBreakdownChartTitleColor')
-                  }
-                />
-                <div className="flex flex-wrap justify-center gap-1">
-                  <button
-                    type="button"
-                    className={periodBreakdownToggle(periodSlotsMode === 'group')}
-                    onClick={() => setPeriodSlotsMode('group')}
-                  >
-                    {t('app.periodBreakdownByGroup')}
-                  </button>
-                  <button
-                    type="button"
-                    className={periodBreakdownToggle(periodSlotsMode === 'color')}
-                    onClick={() => setPeriodSlotsMode('color')}
-                  >
-                    {t('app.periodBreakdownByColor')}
-                  </button>
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
       )}
@@ -1563,39 +1674,6 @@ function AppPageInner() {
                 }}
               />
             </div>
-            {monthPlanProgress.plannedTaskCount > 0 && !chartsHidden ? (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 xl:w-[min(100%,320px)] xl:justify-end xl:pt-1">
-                <PeriodPlanDonut
-                  progress={monthPlanProgress}
-                  title={t('app.periodPlanMonthRingTitle')}
-                  subtitle={monthLabel(monthYear, monthIndex, locale)}
-                />
-                <PeriodPlanBreakdownChart
-                  rows={monthBreakdownChartRows}
-                  title={
-                    periodSlotsMode === 'group'
-                      ? t('app.periodBreakdownChartTitleGroup')
-                      : t('app.periodBreakdownChartTitleColor')
-                  }
-                />
-                <div className="flex flex-wrap justify-center gap-1">
-                  <button
-                    type="button"
-                    className={periodBreakdownToggle(periodSlotsMode === 'group')}
-                    onClick={() => setPeriodSlotsMode('group')}
-                  >
-                    {t('app.periodBreakdownByGroup')}
-                  </button>
-                  <button
-                    type="button"
-                    className={periodBreakdownToggle(periodSlotsMode === 'color')}
-                    onClick={() => setPeriodSlotsMode('color')}
-                  >
-                    {t('app.periodBreakdownByColor')}
-                  </button>
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
       )}
@@ -1624,6 +1702,7 @@ function AppPageInner() {
       {editingTask ? (
         <TaskEditModal
           key={editingTask.id}
+          presentation="sidebar"
           task={editingTask}
           groups={vault.groups}
           priorityLabels={vault.priorityLabels}
@@ -1702,7 +1781,9 @@ function AppPageInner() {
 export function AppPage() {
   return (
     <RequireVault>
-      <AppPageInner />
+      <PlannerFilterProvider>
+        <AppPageInner />
+      </PlannerFilterProvider>
     </RequireVault>
   )
 }

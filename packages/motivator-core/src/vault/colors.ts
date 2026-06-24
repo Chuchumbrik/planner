@@ -23,6 +23,13 @@ export const TASK_COLOR_KEYS: TaskColorKey[] = [
   'pink',
 ]
 
+/** Детерминированный цвет группы по её порядковому номеру (для дефолтов и миграции V8→V9). */
+export function groupColorForSortOrder(sortOrder: number): TaskColorKey {
+  const n = TASK_COLOR_KEYS.length
+  const i = ((Math.trunc(sortOrder) % n) + n) % n
+  return TASK_COLOR_KEYS[i]
+}
+
 /** Опорный HEX для палитры (Tailwind ~500) — подбор ближайшего ключа из произвольного цвета */
 export const TASK_COLOR_HEX: Record<TaskColorKey, string> = {
   zinc: '#71717a',

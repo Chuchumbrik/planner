@@ -53,7 +53,7 @@ export function MonthCalendar({
               }
               const { dateKey } = cell
               const d = Number(dateKey.slice(8, 10))
-              const summary = daySummaries[dateKey] ?? { total: 0, done: 0, overdue: 0 }
+              const summary = daySummaries[dateKey] ?? { total: 0, done: 0, overdue: 0, taskColors: [] }
               const { total, done, overdue } = summary
               const isToday = dateKey === todayKey
               const isPast = dateKey < todayKey
@@ -110,6 +110,20 @@ export function MonthCalendar({
                           {t('app.monthDayDoneShort')}
                         </span>
                       )}
+                      {summary.taskColors.length > 0 ? (
+                        <div
+                          className="flex max-w-full flex-wrap items-center justify-center gap-0.5"
+                          aria-hidden
+                        >
+                          {summary.taskColors.map((hex) => (
+                            <span
+                              key={hex}
+                              style={{ backgroundColor: hex }}
+                              className="h-1.5 w-1.5 rounded-full"
+                            />
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   ) : (
                     <span className="mt-1 h-5 w-5 rounded border border-dashed border-outline-variant" />

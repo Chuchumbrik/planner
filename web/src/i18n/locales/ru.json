@@ -149,7 +149,7 @@
     "periodStatsOverdue": "Не закрыто",
     "periodStatsOverdueCount": "{{count}}",
     "periodStatsOverdueNone": "Нет",
-    "monthDayOverdueShort": "долг {{count}}",
+    "monthDayOverdueShort": "не закрыто {{count}}",
     "monthDayOpenShort": "открыто {{count}}",
     "monthDayDoneShort": "готово",
     "dayPrev": "Предыдущий день",
@@ -238,6 +238,11 @@
       "pink": "Розовый"
     },
     "weekGridHint": "Слоты — задачи с временем начала или завершения и оценкой (если нет оценки, для слота берётся 30 мин). Для выбранного календарного дня скрыты задачи, отмеченные выполненными в этот день (включая повторы).",
+    "weekUnslotted": "Без времени",
+    "weekNightShow": "Ночные часы",
+    "weekNightHide": "Скрыть ночные часы",
+    "weekSlotAdd": "Добавить",
+    "openLeftPanel": "Календарь и фильтры",
     "monthDayTasks": "Задач в дне: {{count}}"
   },
   "settings": {
