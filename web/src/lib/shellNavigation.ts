@@ -6,6 +6,7 @@ export type MotivatorNavId =
   | 'settings'
   | 'prototype-deep-focus'
   | 'prototype-ai-insights'
+  | 'prototype-meetings'
   | 'prototype-admin'
 
 export type ShellNavItem = {
@@ -54,6 +55,16 @@ export const SHELL_PREVIEW_NAV: ShellNavItem[] = [
   },
 ]
 
+/** Превью модуля встреч — только motivator_role admin. */
+export const SHELL_ADMIN_ONLY_PREVIEW_NAV: ShellNavItem[] = [
+  {
+    id: 'prototype-meetings',
+    to: '/prototype/meetings',
+    icon: 'event_available',
+    labelKey: 'prototype.nav.meetings',
+  },
+]
+
 export type ShellAdminNavItem = {
   id: 'admin-dashboard' | 'admin-roadmap' | 'admin-discussions' | 'admin-testing'
   to: string
@@ -72,7 +83,7 @@ export function shellAdminNavForUser(isAdmin: boolean): ShellAdminNavItem[] {
 
 /** Превью в sidebar: у beta_tester «Админ-панель» ведёт на /admin/testing, без прототипа dashboard. */
 export function shellPreviewNavForUser(isAdmin: boolean): ShellNavItem[] {
-  if (isAdmin) return SHELL_PREVIEW_NAV
+  if (isAdmin) return [...SHELL_PREVIEW_NAV, ...SHELL_ADMIN_ONLY_PREVIEW_NAV]
   return [
     ...SHELL_PREVIEW_NAV.filter((item) => item.id !== 'prototype-admin'),
     {
@@ -116,6 +127,7 @@ export function shellTitleKey(navId: MotivatorNavId): string {
     const map: Record<string, string> = {
       'prototype-deep-focus': 'prototype.deepFocus.title',
       'prototype-ai-insights': 'prototype.aiInsights.title',
+      'prototype-meetings': 'prototype.meetings.title',
       'prototype-admin': 'prototype.admin.title',
     }
     return map[navId] ?? 'shell.title.settings'

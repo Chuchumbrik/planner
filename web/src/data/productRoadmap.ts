@@ -363,6 +363,27 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-06-24', en: '2026-06-24' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.34', en: '0.7.34' },
+        tag: 'feat',
+        changes: [
+          {
+            ru: '**Прототип «Встречи»** (только admin): вкладка `/prototype/meetings` — заглушка планирования встреч с учётом занятости другого пользователя (форма, слоты занятости, иллюстрация).',
+            en: '**Meetings prototype** (admin only): `/prototype/meetings` tab — placeholder for scheduling meetings around another user\'s availability (form, busy slots, illustration).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'Админам: в превью появилась вкладка «Встречи» — макет согласования времени с другим пользователем.',
+            en: 'Admins: new “Meetings” preview tab — mock UI for finding time with another user.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-06-13', en: '2026-06-13' },
     items: [
       {
