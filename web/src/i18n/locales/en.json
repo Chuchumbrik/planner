@@ -149,7 +149,7 @@
     "periodStatsOverdue": "Still open",
     "periodStatsOverdueCount": "{{count}}",
     "periodStatsOverdueNone": "None",
-    "monthDayOverdueShort": "{{count}} overdue",
+    "monthDayOverdueShort": "{{count}} not closed",
     "monthDayOpenShort": "{{count}} open",
     "monthDayDoneShort": "done",
     "dayPrev": "Previous day",

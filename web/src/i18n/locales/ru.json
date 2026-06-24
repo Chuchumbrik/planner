@@ -149,7 +149,7 @@
     "periodStatsOverdue": "Не закрыто",
     "periodStatsOverdueCount": "{{count}}",
     "periodStatsOverdueNone": "Нет",
-    "monthDayOverdueShort": "долг {{count}}",
+    "monthDayOverdueShort": "не закрыто {{count}}",
     "monthDayOpenShort": "открыто {{count}}",
     "monthDayDoneShort": "готово",
     "dayPrev": "Предыдущий день",
