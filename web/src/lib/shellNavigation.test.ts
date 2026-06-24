@@ -4,6 +4,7 @@ import {
   SHELL_SETTINGS_NAV,
   SHELL_ADMIN_NAV,
   SHELL_PREVIEW_NAV,
+  SHELL_ADMIN_ONLY_PREVIEW_NAV,
   shellTitleKey,
   shellPreviewNavForUser,
   shellAdminNavForUser,
@@ -59,6 +60,10 @@ describe('shellTitleKey', () => {
     expect(shellTitleKey('prototype-ai-insights')).toBe('prototype.aiInsights.title')
   })
 
+  it('prototype-meetings → prototype.meetings.title', () => {
+    expect(shellTitleKey('prototype-meetings')).toBe('prototype.meetings.title')
+  })
+
   it('prototype-admin → prototype.admin.title', () => {
     expect(shellTitleKey('prototype-admin')).toBe('prototype.admin.title')
   })
@@ -67,9 +72,14 @@ describe('shellTitleKey', () => {
 // ── shellPreviewNavForUser ────────────────────────────────────────────────────
 
 describe('shellPreviewNavForUser', () => {
-  it('admin gets SHELL_PREVIEW_NAV unchanged', () => {
+  it('admin gets preview nav plus admin-only module prototype', () => {
     const nav = shellPreviewNavForUser(true)
-    expect(nav).toEqual(SHELL_PREVIEW_NAV)
+    expect(nav).toEqual([...SHELL_PREVIEW_NAV, ...SHELL_ADMIN_ONLY_PREVIEW_NAV])
+  })
+
+  it('non-admin does not get meetings prototype entry', () => {
+    const nav = shellPreviewNavForUser(false)
+    expect(nav.find((i) => i.id === 'prototype-meetings')).toBeUndefined()
   })
 
   it('non-admin: prototype-admin entry points to /admin/testing', () => {
@@ -78,8 +88,10 @@ describe('shellPreviewNavForUser', () => {
     expect(adminEntry.to).toBe('/admin/testing')
   })
 
-  it('non-admin: same item count as admin', () => {
-    expect(shellPreviewNavForUser(false)).toHaveLength(shellPreviewNavForUser(true).length)
+  it('non-admin: same item count as admin minus admin-only previews', () => {
+    expect(shellPreviewNavForUser(false)).toHaveLength(
+      shellPreviewNavForUser(true).length - SHELL_ADMIN_ONLY_PREVIEW_NAV.length,
+    )
   })
 
   it('non-admin: non-admin-dashboard items are unchanged', () => {

@@ -12,6 +12,7 @@ import { SettingsPage } from '@/pages/SettingsPage'
 import { LegalDocumentPage } from '@/pages/LegalDocumentPage'
 import { AiInsightsPrototypePage } from '@/pages/prototypes/AiInsightsPrototypePage'
 import { DeepFocusPrototypePage } from '@/pages/prototypes/DeepFocusPrototypePage'
+import { MeetingsPrototypePage } from '@/pages/prototypes/MeetingsPrototypePage'
 import { RequireAdmin } from '@/components/auth/RequireAdmin'
 import { RequireTesterPreview } from '@/components/auth/RequireTesterPreview'
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage'
@@ -99,6 +100,18 @@ export function App() {
               <RequireTesterPreview>
                 <AiInsightsPrototypePage />
               </RequireTesterPreview>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/prototype/meetings"
+          element={
+            session ? (
+              <RequireAdmin>
+                <MeetingsPrototypePage />
+              </RequireAdmin>
             ) : (
               <Navigate to="/login" replace />
             )

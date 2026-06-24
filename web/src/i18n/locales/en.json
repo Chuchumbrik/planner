@@ -1083,6 +1083,7 @@
     "nav": {
       "deepFocus": "Deep Focus",
       "aiInsights": "AI Insights",
+      "meetings": "Meetings",
       "securityLog": "Security log",
       "admin": "Admin dashboard"
     },
@@ -1105,6 +1106,27 @@
       "item2": "Overload risk: Wednesday",
       "item3": "EOD ritual: 4 days in a row",
       "chartTitle": "Weekly trend (mock)"
+    },
+    "meetings": {
+      "title": "Meetings (prototype)",
+      "intro": "Schedule meetings around another user's availability: shared free slots on top of your plan and their calendar.",
+      "formTitle": "New meeting",
+      "participantLabel": "Participant",
+      "participantSample": "alexey@example.com",
+      "durationLabel": "Duration",
+      "durationSample": "60 minutes",
+      "suggestedSlot": "Shared window: today, 2:00–3:00 PM",
+      "createButton": "Create meeting",
+      "availabilityTitle": "Today's availability",
+      "availabilityHint": "Green slots are free for both; red means a conflict with the participant's plan.",
+      "slotMorning": "10:00–11:00",
+      "slotConflict": "11:30–12:30",
+      "slotFree": "2:00–3:00 PM",
+      "slotConflict2": "4:00–5:00 PM",
+      "busy": "busy",
+      "free": "free",
+      "hint": "Prototype: mock data only; the button does not create a meeting. Administrators only.",
+      "imageAlt": "Mockup of a meeting form and two-user availability timeline"
     },
     "securityLog": {
       "title": "Security log (prototype)",
