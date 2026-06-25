@@ -159,14 +159,25 @@ npm run dev
 
 ## Amvera Cloud (тестовый деплой SPA)
 
-Конфигурация в корне репозитория: [`amvera.yaml`](../amvera.yaml) (окружение **Node.js Browser**, Node **22**, артефакты **`web/dist`**). Подключите в Amvera **корень** монорепозитория и ветку **`main`** (или настройте автосборку на нужную ветку в панели).
+Конфигурация в корне репозитория: [`amvera.yaml`](../amvera.yaml) (окружение **Node.js Browser**, Node **22**, артефакты **`web/dist`**, сборка **`npm run build:amvera`**).
 
-**Чеклист перед первой сборкой:**
+### Ветки и стенды
 
-1. **Корень проекта** в Amvera — каталог `planner/` (не только `web/`), иначе workspace `@motivator/core` не соберётся.
-2. **`VITE_*` на этапе сборки:** в Amvera переменные окружения на фазе build **недоступны** ([документация](https://docs.amvera.ru/applications/configuration/variables.html)). Для теста задайте их в **`build.additionalCommands`** в `amvera.yaml` или в скрипте сборки, например: `VITE_SUPABASE_URL=… VITE_SUPABASE_ANON_KEY=… VITE_VAPID_PUBLIC_KEY=… npm run build` (значения — как в [`.env.example`](./.env.example) / прод Vercel).
-3. **Только фронт:** профиль Browser раздаёт статику; **`api/send-due-cron`** и прочие serverless из Vercel на Amvera **не** переносятся — cron и Edge остаются на Supabase / Vercel / внешнем HTTP-cron.
-4. После пуша в подключённую ветку — «Пересобрать проект» в панели Amvera, если автосборка не сработала.
+| Ветка | Назначение |
+|-------|------------|
+| **`dev`** | Интеграция и **тестовый стенд Amvera** (переезд, гибрид с Supabase). Пуш в `dev` → автосборка в проекте Amvera. |
+| **`main`** | Прод на **Vercel** (`planner-tawny-omega.vercel.app`) до завершения миграции; позже — preprod/prod на Amvera. |
+
+Фичи и правки по переезду мержатся в **`dev`**; после проверки на `*.amvera.io` — в **`main`**.
+
+### Чеклист: первый проект Amvera (стенд на `dev`)
+
+1. **GitHub:** репозиторий `Chuchumbrik/planner`, ветка **`dev`**, корень репозитория (не подпапка `web/`).
+2. **Сборка:** в панели Amvera переопределите **`build.additionalCommands`** (секреты **не** в git) — шаблон в [`amvera.build.commands.example.txt`](../amvera.build.commands.example.txt). Скрипт [`scripts/build-amvera.mjs`](../scripts/build-amvera.mjs) проверяет **`VITE_SUPABASE_URL`** и **`VITE_SUPABASE_ANON_KEY`** до сборки.
+3. **`VITE_*` на этапе сборки:** переменные окружения runtime в Amvera на фазе build **недоступны** ([документация](https://docs.amvera.ru/applications/configuration/variables.html)). Значения — как на Vercel / в [`.env.example`](./.env.example) (тот же Supabase project ref **`ntpkveicqetjjvlnfrwc`**).
+4. **Только фронт (гибрид):** профиль Browser раздаёт статику; **Auth, vault, Edge, cron** пока на **Supabase** (+ cron-прокси на Vercel или внешний cron). **`api/send-due-cron`** на Amvera **не** работает.
+5. После пуша в **`dev`** — «Пересобрать проект», если webhook не сработал. Smoke: вход, vault, планировщик (данные через Supabase).
+6. **Supabase Auth:** в Dashboard → **Authentication → URL configuration** добавьте URL стенда `https://<project>.amvera.io` в **Redirect URLs** / **Site URL** для OAuth и magic link при тесте с Amvera.
 
 ## Доступ из РФ (без VPN)
 

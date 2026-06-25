@@ -8,6 +8,9 @@ meta:
     version: "22"
 
 build:
-  # По умолчанию: npm install && npm run build (корневой package.json → npm run build -w web).
+  # npm install && npm run build:amvera (проверка VITE_* + сборка монорепо).
+  # Секреты VITE_* — только в override additionalCommands в панели Amvera (не в git).
+  # Шаблон: см. amvera.build.commands.example.txt и web/README.md → «Amvera Cloud».
+  additionalCommands: npm run build:amvera
   artifacts:
     "web/dist/*": /

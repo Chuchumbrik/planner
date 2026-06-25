@@ -1,0 +1,5 @@
+# Шаблон для Amvera → Конфигурация → переопределение build.additionalCommands
+# (секреты не коммитить; значения — как VITE_* на Vercel / в web/.env.local)
+#
+# Одна строка (Linux shell на фазе сборки):
+VITE_SUPABASE_URL=https://ntpkveicqetjjvlnfrwc.supabase.co VITE_SUPABASE_ANON_KEY=<anon-jwt> VITE_VAPID_PUBLIC_KEY=<base64url> npm run build:amvera

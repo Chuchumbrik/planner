@@ -8,6 +8,7 @@
   "scripts": {
     "test": "npm run test -w @motivator/core && npm run test -w web",
     "dev": "npm run dev -w web",
-    "build": "npm run build -w web"
+    "build": "npm run build -w web",
+    "build:amvera": "node scripts/build-amvera.mjs"
   }
 }
