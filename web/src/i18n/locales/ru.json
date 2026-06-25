@@ -123,6 +123,8 @@
     "viewDay": "День",
     "viewWeek": "Неделя",
     "viewMonth": "Месяц",
+    "viewModeTimeline": "Таймлайн",
+    "viewModeList": "Список",
     "dayStatsAria": "Сводка дня",
     "dayStatsProgress": "Прогресс плана",
     "dayStatsTasks": "Задачи",

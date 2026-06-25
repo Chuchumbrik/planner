@@ -123,6 +123,8 @@
     "viewDay": "Day",
     "viewWeek": "Week",
     "viewMonth": "Month",
+    "viewModeTimeline": "Timeline",
+    "viewModeList": "List",
     "dayStatsAria": "Day summary",
     "dayStatsProgress": "Plan progress",
     "dayStatsTasks": "Tasks",

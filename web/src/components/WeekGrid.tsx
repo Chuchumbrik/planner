@@ -20,7 +20,10 @@ const DEFAULT_DAY_END_HOUR = 22
 /** Сколько задач без слота показываем в дорожке до «… и ещё N». */
 const UNSLOTTED_CAP = 4
 
-const GRID_COLS = '56px repeat(7, minmax(0, 1fr))' as const
+/** Колонки сетки: метка часов + по колонке на каждый показываемый день (1 для дня, 7 для недели). */
+function gridColsFor(dayCount: number): string {
+  return `56px repeat(${dayCount}, minmax(0, 1fr))`
+}
 
 const GRID_BORDER = 'border-surface-variant'
 const GRID_MUTED = 'text-on-surface-variant'
@@ -103,6 +106,7 @@ export function WeekGrid({
   const winEnd = showNightBottom ? 24 : dayEndHour
   const hours = range(winStart, winEnd)
   const gridHeight = (winEnd - winStart) * HOUR_HEIGHT_PX
+  const gridCols = gridColsFor(weekDays.length)
 
   function tasksForDay(day: string) {
     return tasks.filter((x) => taskHasOccurrenceOnDate(x, day))
@@ -198,7 +202,7 @@ export function WeekGrid({
       {/* Шапка дней + дорожка «без времени» */}
       <div
         className={cn('grid w-full min-w-0 border-x border-t', GRID_BORDER)}
-        style={{ gridTemplateColumns: GRID_COLS, gridTemplateRows: 'auto auto' }}
+        style={{ gridTemplateColumns: gridCols, gridTemplateRows: 'auto auto' }}
       >
         <div className={cn(cellBorder, 'p-2', GRID_MUTED)} />
         {weekDays.map((day) => {
@@ -300,7 +304,7 @@ export function WeekGrid({
       <div className="week-grid-v-scroll min-h-0 flex-1 overflow-y-auto overscroll-y-contain border-x border-b border-surface-variant">
         <NightBar side="top" />
 
-        <div className="grid w-full min-w-0" style={{ gridTemplateColumns: GRID_COLS }}>
+        <div className="grid w-full min-w-0" style={{ gridTemplateColumns: gridCols }}>
           {/* Колонка часов */}
           <div className={cn('border-r pr-1', GRID_BORDER, GRID_SURFACE)} style={{ height: gridHeight }}>
             {hours.map((h) => (

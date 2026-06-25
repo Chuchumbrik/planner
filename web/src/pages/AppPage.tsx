@@ -15,7 +15,16 @@ import { EndOfDayModal } from '@/components/EndOfDayModal'
 import { MonthCalendar } from '@/components/MonthCalendar'
 import { WeekGrid } from '@/components/WeekGrid'
 import { WeekDayView } from '@/components/WeekDayView'
+import { WeekAgenda } from '@/components/WeekAgenda'
+import { MaterialIcon } from '@/components/ui/MaterialIcon'
 import { useIsDesktopShell } from '@/lib/useMediaQuery'
+import {
+  readDayViewMode,
+  readWeekViewMode,
+  writeDayViewMode,
+  writeWeekViewMode,
+  type PlannerViewMode,
+} from '@/lib/plannerViewModePref'
 import { TaskEditModal } from '@/components/TaskEditModal'
 import { TaskMiniCard } from '@/components/TaskMiniCard'
 import { RequireVault } from '@/components/RequireVault'
@@ -433,6 +442,27 @@ function AppPageInner() {
   const [leftPanelOpen, setLeftPanelOpen] = useState(false)
   /** На мобилке (<md) недельный вид — один день со свайпом (BR-D-010), а не 7 колонок. */
   const isWeekGridDesktop = useIsDesktopShell()
+
+  // Режим вкладки: таймлайн (почасовая сетка) / список-агенда — отдельно для Дня и Недели (Phase 13).
+  const [dayMode, setDayMode] = useState<PlannerViewMode>(() =>
+    typeof window !== 'undefined' ? readDayViewMode() : 'list',
+  )
+  const [weekMode, setWeekMode] = useState<PlannerViewMode>(() =>
+    typeof window !== 'undefined' ? readWeekViewMode() : 'timeline',
+  )
+  const viewMode = view === 'week' ? weekMode : dayMode
+  const setViewMode = useCallback(
+    (mode: PlannerViewMode) => {
+      if (view === 'week') {
+        setWeekMode(mode)
+        writeWeekViewMode(mode)
+      } else {
+        setDayMode(mode)
+        writeDayViewMode(mode)
+      }
+    },
+    [view],
+  )
   const [filterRepeats, setFilterRepeats] = useState<'all' | 'recurring' | 'nonRecurring'>(
     'all',
   )
@@ -1172,6 +1202,29 @@ function AppPageInner() {
             >
               <span aria-hidden>🗓</span>
             </button>
+            {view !== 'month' ? (
+              <div className="flex shrink-0 items-center gap-0.5 rounded-motivator-lg border border-surface-variant p-0.5">
+                {(['timeline', 'list'] as const).map((m) => {
+                  const active = viewMode === m
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      aria-pressed={active}
+                      aria-label={m === 'timeline' ? t('app.viewModeTimeline') : t('app.viewModeList')}
+                      title={m === 'timeline' ? t('app.viewModeTimeline') : t('app.viewModeList')}
+                      className={cn(
+                        'inline-flex h-7 w-7 items-center justify-center rounded-motivator',
+                        active ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high',
+                      )}
+                      onClick={() => setViewMode(m)}
+                    >
+                      <MaterialIcon name={m === 'timeline' ? 'view_timeline' : 'view_agenda'} size={18} />
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
             <div className="relative shrink-0">
               <button
                 type="button"
@@ -1508,6 +1561,20 @@ function AppPageInner() {
                 </span>
               ) : null}
             </div>
+            {dayMode === 'timeline' ? (
+              <div className="flex min-h-[420px] flex-col">
+                <WeekGrid
+                  weekDays={[selectedDay]}
+                  tasks={filteredVaultTasks}
+                  todayKey={todayKeyApp}
+                  priorityLabels={vault.priorityLabels}
+                  locale={locale}
+                  canEdit={canEdit}
+                  onTaskClick={(id, day) => openTaskEditor(id, day)}
+                  onSlotClick={openCreateTaskAtSlot}
+                />
+              </div>
+            ) : (
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
               <div className="min-w-0 w-full lg:max-w-lg lg:flex-1">
                 {plannedForDay.length === 0 ? (
@@ -1546,6 +1613,7 @@ function AppPageInner() {
                 )}
               </div>
             </div>
+            )}
           </section>
 
           <section className={PLANNER_SECTION}>
@@ -1600,7 +1668,16 @@ function AppPageInner() {
           />
           <div className="flex min-h-0 w-full flex-1 flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              {isWeekGridDesktop ? (
+              {weekMode === 'list' ? (
+                <WeekAgenda
+                  weekDays={weekDays}
+                  tasks={filteredVaultTasks}
+                  todayKey={todayKeyApp}
+                  locale={locale}
+                  canEdit={canEdit}
+                  onTaskClick={(id, day) => openTaskEditor(id, day)}
+                />
+              ) : isWeekGridDesktop ? (
                 <WeekGrid
                   weekDays={weekDays}
                   tasks={filteredVaultTasks}
