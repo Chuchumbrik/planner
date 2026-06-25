@@ -1,0 +1,13 @@
+# Amvera Cloud — тестовый деплой SPA (Vite, монорепозиторий planner/).
+# Окружение Node.js Browser: сборка npm, раздача статики через nginx (SPA fallback).
+# Документация: https://docs.amvera.ru/applications/environments/nodejs-browser.html
+meta:
+  environment: node
+  toolchain:
+    name: browser
+    version: "22"
+
+build:
+  # По умолчанию: npm install && npm run build (корневой package.json → npm run build -w web).
+  artifacts:
+    "web/dist/*": /

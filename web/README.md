@@ -157,6 +157,17 @@ npm run dev
 
 Файл [`vercel.json`](../vercel.json) в **корне** репозитория (`planner/`) задаёт **`installCommand`**, **`buildCommand`** и **`outputDirectory`**: **`web/dist`**, отправляет все пути на `index.html` для SPA и **короткий HTTP-кэш** для **`sw.js`**, **`manifest.webmanifest`**, **`workbox-*.js`**. Минутный вызов **`send-due`** — через serverless [`api/send-due-cron.js`](../api/send-due-cron.js); ежедневная очистка черновиков дефектов — опционально через [`api/defect-attachments-cleanup-cron.js`](../api/defect-attachments-cleanup-cron.js) (см. [ниже](#прокси-defect-attachments-cleanup-vercel)). Оба сценария — **внешний** cron или **Pro**-`crons` (см. [«Минутный вызов send-due»](#минутный-вызов-send-due)); на **Hobby** встроенный Cron **не** даёт минутного расписания / `* * * * *` может **ломать деплой**.
 
+## Amvera Cloud (тестовый деплой SPA)
+
+Конфигурация в корне репозитория: [`amvera.yaml`](../amvera.yaml) (окружение **Node.js Browser**, Node **22**, артефакты **`web/dist`**). Подключите в Amvera **корень** монорепозитория и ветку **`main`** (или настройте автосборку на нужную ветку в панели).
+
+**Чеклист перед первой сборкой:**
+
+1. **Корень проекта** в Amvera — каталог `planner/` (не только `web/`), иначе workspace `@motivator/core` не соберётся.
+2. **`VITE_*` на этапе сборки:** в Amvera переменные окружения на фазе build **недоступны** ([документация](https://docs.amvera.ru/applications/configuration/variables.html)). Для теста задайте их в **`build.additionalCommands`** в `amvera.yaml` или в скрипте сборки, например: `VITE_SUPABASE_URL=… VITE_SUPABASE_ANON_KEY=… VITE_VAPID_PUBLIC_KEY=… npm run build` (значения — как в [`.env.example`](./.env.example) / прод Vercel).
+3. **Только фронт:** профиль Browser раздаёт статику; **`api/send-due-cron`** и прочие serverless из Vercel на Amvera **не** переносятся — cron и Edge остаются на Supabase / Vercel / внешнем HTTP-cron.
+4. После пуша в подключённую ветку — «Пересобрать проект» в панели Amvera, если автосборка не сработала.
+
 ## Доступ из РФ (без VPN)
 
 **Симптом (GitHub #37):** в РФ приложение и **Web Push** часто работают только через VPN: не открывается SPA, не проходит вход, не синхронизируется vault, не приходят напоминания.
