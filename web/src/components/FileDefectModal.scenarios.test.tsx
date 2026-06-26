@@ -1,5 +1,5 @@
 /**
- * HIGH-priority scenarios from qa-output/test-scenarios.md
+ * HIGH-priority scenarios for FileDefectModal
  * (ticket 20260603-134318 — defect-form optimization).
  *
  * Covers the Must-Test scenarios not already exercised by FileDefectModal.test.tsx:

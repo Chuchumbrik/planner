@@ -483,7 +483,7 @@ create table admin_discussion_subscribers (
 - [[19-Business-требования#BR-D-005]] — Owner override + финальный scope (источник истины)
 - [[12-Журнал-решений]] — куда переносить resolved discussions (sync workflow)
 - [[17-План-реализации-MVP]] — MVP Phase 7 общий план (это под-направление)
-- [[18-CI-workflow-и-инструменты]] — workflow-скрипты (`feature-with-qa`, `qa-coverage-review`) для каждой sub-фазы
+- [[18-CI-workflow-и-инструменты]] — CI и ручной QA-цикл перед PR
 - [[../CLAUDE.md]] — правила версионирования, тегов, обновления roadmap
 
 ---
@@ -495,4 +495,4 @@ create table admin_discussion_subscribers (
 3. Проверь что MCP supabase работает: `mcp__supabase__list_tables` (read) И `mcp__supabase__execute_sql` `select 1` (write/SQL). Если `execute_sql` падает `crypto is not defined` — проверь что в `~/.claude.json` → mcpServers.supabase.env есть `NODE_OPTIONS=--experimental-global-webcrypto`, затем restart Claude Code. Если MCP отсутствует целиком — `cp /root/.claude.json.bak-pre-supabase-mcp /root/.claude.json` и restart.
 4. Найди следующую `[ ]` строку в §9 Progress tracker.
 5. Открой эту sub-фазу в §7 — там детальная спецификация и acceptance criteria.
-6. Запусти `Workflow` с `scripts/workflows/feature-with-qa.js` для этой sub-фазы (см. [[../CLAUDE.md]]).
+6. Реализуй sub-фазу, добавь тесты, прогони `npm test` и CI-чеклист из [[../CLAUDE.md]].

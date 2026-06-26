@@ -112,71 +112,13 @@
 
 ### Правило: фича без тестов не уходит в PR
 
-Каждая фича проходит полный цикл: архитектура → код → QA-анализ → тесты → PR.
+Каждая фича проходит цикл: архитектура → код → тесты → PR. Перед PR локально:
 
-### Workflow-скрипты
+- `npm test` в `web/` (или из корня, если так принято в задаче)
+- typecheck + build по тому же пути, что в CI
 
-Скрипты лежат в `scripts/workflows/`. Запускаются через инструмент `Workflow` с `scriptPath`.
-
-#### 1. Новая фича — полный цикл
-
-```
-Workflow({
-  scriptPath: '/root/Projects/planner/scripts/workflows/feature-with-qa.js',
-  args: {
-    feature: 'описание задачи',
-    projectPath: '/root/Projects/planner',  // опционально
-    skipImpl: false,  // true если код уже написан
-  }
-})
-```
-
-Фазы: Explore → Architect → Implement → QA Scan → Scenarios → Tests → Report (verdict: ready-for-pr / needs-work / blocked)
-
-#### 2. QA-анализ изменений (без реализации)
-
-```
-Workflow({
-  scriptPath: '/root/Projects/planner/scripts/workflows/qa-coverage-review.js',
-  args: { projectPath: '/root/Projects/planner', base: 'main' }
-})
-```
-
-Фазы: Scan → Review (test-selector + functional-reviewer параллельно) → Scenarios → Report
-
-### Когда запускать
-
-| Ситуация | Workflow |
-|---|---|
-| Начинаем новую фичу | `feature-with-qa` |
-| Изменили существующий компонент | `qa-coverage-review` |
-| Перед созданием PR | `qa-coverage-review` |
-| Нужен отчёт по покрытию | `qa-coverage-review` |
-
-### Watchdog (защита от зависаний)
-
-Долгие прогоны могут застрять: schema-фазы (Tests/Report) зацикливаются на
-авто-ретраях, либо среда встаёт на паузу — и прогон висит часами. Две линии защиты:
-
-1. **Встроенные предохранители** в `feature-with-qa.js` — обёртка `guard()`
-   ограничивает каждый `agent()` по времени (Implement/Tests — 20 мин, остальные — 8);
-   по таймауту фаза «деградирует» в `null`, а не висит; Report при срыве отдаёт
-   `verdict: blocked`. Работает само, ничего делать не нужно.
-
-2. **Внешний монитор** `scripts/workflows/watch-run.sh` — запускать в фоне сразу
-   после старта Workflow. Пингует журнал прогона и завершается с алертом
-   (STALL / RUNAWAY / DONE), после чего нужно сделать `TaskStop` и разобрать.
-
-   ```
-   # из результата Workflow берём Transcript dir и output-файл (tasks/<id>.output)
-   bash scripts/workflows/watch-run.sh <transcript_dir> 12 20 90 <output_file>
-   # (stall_min=12, max_agents=20, max_runtime_min=90)
-   ```
-
-### GitHub CI (backstop)
+### GitHub CI
 
 `.github/workflows/pr-checks.yml` блокирует мёрдж если:
 - Не проходит typecheck + build
 - Не проходят тесты (`npm test`)
-
-CI — последний рубеж. Основной контроль — через workflow выше до PR.
