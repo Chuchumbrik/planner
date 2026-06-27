@@ -4,7 +4,7 @@
 
 **Целевой объём MVP для разработки** (релиз продукта **v1.0.0**) зафиксирован в [`obsidian-motivator/16-TZ-MVP-v1.0.md`](../obsidian-motivator/16-TZ-MVP-v1.0.md); поэтапный план внедрения — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md).
 
-**Текущая версия веб-клиента** в репозитории: **`0.7.35`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
+**Текущая версия веб-клиента** в репозитории: **`0.7.36`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
 
 ### Версионирование
 
@@ -124,6 +124,12 @@ npm run dev
 
 **Процесс для агентов:** после правки логики автор кода **не** пишет первичные тесты — отдельно `unit-test-writer`, при сквозном риске `autotest-writer`. Процедура — скилл `.cursor/skills/test-contour-orchestrator/SKILL.md`, карта — [`docs/rules-system-overview.md`](../docs/rules-system-overview.md). Cursor hook `.cursor/hooks.json` (`stop` / `subagentStop`) при незакрытых исходниках подставляет follow-up с просьбой запустить `unit-test-writer` (не заменяет явный Task).
 
+**Качество кода (skills):** **план перед кодом** — `plan-before-implement` (`alwaysApply`); **мастерство** — `engineering-craft`; слои — `layer-boundaries-and-ports`; vault — `vault-and-crypto-invariants`; UI — `react-ui-conventions`; **безопасность** — `security-hygiene` (`alwaysApply`). Карта — [`docs/rules-system-overview.md`](../docs/rules-system-overview.md).
+
+**Миграция Amvera (skills):** оркестратор — `amvera-migration-orchestrator`; секреты — [`docs/amvera-secrets.md`](../docs/amvera-secrets.md); Edge→API — `supabase-edge-to-api-porting`; SQL — `sql-amvera-migration-adaptation`; фронт — `frontend-api-client-cutover`; HTTP API — `api-http-contracts`. План — [`obsidian-motivator/22-План-миграции-Amvera.md`](../obsidian-motivator/22-План-миграции-Amvera.md).
+
+**PR и архитектура:** ревью — `pr-and-code-review` + subagent `code-reviewer`; ADR/DR — `adr-and-architecture-decisions`. **API-код:** `api-http-contracts` + `api-implementation-and-logging`.
+
 CI: job **`checks`** (build + vitest), job **`e2e`** (Playwright, warn), job **`gates`** (правила репозитория, **block**).
 
 ## Supabase
@@ -179,7 +185,7 @@ CI: job **`checks`** (build + vitest), job **`e2e`** (Playwright, warn), job **`
 | **`dev`** | Интеграция и **тестовый стенд Amvera** (переезд, гибрид с Supabase). Пуш в `dev` → автосборка в проекте Amvera. |
 | **`main`** | Прод на **Vercel** (`planner-tawny-omega.vercel.app`) до завершения миграции; **в `main` не вливается** код переезда, пока не выполнен cutover ([[12-Журнал-решений#DR-019 — Миграция Amvera: ветки, архитектура, уровни шифрования (2026-06-24)]] в Obsidian). |
 
-Фичи и правки по переезду мержатся в **`dev`**; детальный план — [`obsidian-motivator/22-План-миграции-Amvera.md`](../obsidian-motivator/22-План-миграции-Amvera.md). После cutover — в **`main`**.
+Фичи и правки по переезду мержатся в **`dev`**; детальный план — [`obsidian-motivator/22-План-миграции-Amvera.md`](../obsidian-motivator/22-План-миграции-Amvera.md). Процесс для агентов — skill **`amvera-migration-orchestrator`**; таблица секретов (без значений) — [`docs/amvera-secrets.md`](../docs/amvera-secrets.md). После cutover — в **`main`**.
 
 ### Чеклист: первый проект Amvera (стенд на `dev`)
 

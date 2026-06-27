@@ -8,7 +8,7 @@ applies-when: нужно написать unit и компонентные/ин�
 implements: [tests-by-independent-agent]
 enforced-by: ".claude/agents/unit-test-writer.md (Claude); .cursor/agents/unit-test-writer.md (Cursor)"
 status: active
-links: [tests-by-independent-agent, tests-for-new-code, autotest-writer]
+links: [tests-by-independent-agent, tests-for-new-code, autotest-writer, code-reviewer]
 ---
 
 # Субагент unit-test-writer
@@ -27,7 +27,8 @@ links: [tests-by-independent-agent, tests-for-new-code, autotest-writer]
 ## Место в пирамиде (твоя зона)
 
 Нижние и средние уровни:
-- **unit** — чистая логика без DOM: `packages/*/src/**`, `web/src/lib/**`, утилиты, редьюсеры, хелперы.
+- **Unit** — чистая логика: `packages/*/src/**`, `web/src/lib/**`, `services/planner-api/src/**/*.service.ts`.
+- **HTTP (API)** — supertest на routes/handlers: колокация `*.routes.test.ts` / `*.test.ts` в том же модуле.
 - **компонентные/интеграционные** — рендер через React Testing Library: поведение компонента и связки
   нескольких модулей в одном дереве.
 

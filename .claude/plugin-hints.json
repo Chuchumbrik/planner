@@ -1,8 +1,10 @@
 [
-  { "match": ["ревью", "review", "проверь код", "посмотри код", "пулреквест", "pull request", "code review"], "hint": "ревью кода → /code-review (для PR — /review-pr)" },
+  { "match": ["ревью", "review", "проверь код", "посмотри код", "пулреквест", "pull request", "code review"], "hint": "ревью → subagent `code-reviewer` или /code-review; чеклист → skill `pr-and-code-review`" },
   { "match": ["закоммить", "коммит", "commit", "запушь", "запуш", "push", "открой pr", "создай pr"], "hint": "коммит/PR → /commit, /commit-push-pr" },
   { "match": ["новая фича", "реализуй фичу", "новую функци", "feature-dev"], "hint": "разработка фичи → /feature-dev" },
   { "match": ["вёрстка", "верстка", "интерфейс", "страниц", "компонент", "дизайн", "фронтенд", " ui"], "hint": "UI/дизайн → /frontend-design" },
   { "match": ["безопасн", "уязвим", "security"], "hint": "безопасность → /security-review" },
-  { "match": ["архитектурн", "adr", "журнал решени", "decision record"], "hint": "арх-решение → /adr-create" }
+  { "match": ["архитектурн", "adr", "журнал решени", "decision record"], "hint": "ADR → skill `adr-and-architecture-decisions` + /adr-create; слои → `layer-boundaries-and-ports`" },
+  { "match": ["amvera", "миграц", "planner-api", "cutover", "переезд"], "hint": "миграция Amvera → skill `amvera-migration-orchestrator`; секреты → docs/amvera-secrets.md" },
+  { "match": ["реализуй", "напиши код", "refactor", "рефактор", "implement", "фикс", "fix bug", "доработ"], "hint": "сначала skill `plan-before-implement`; затем `engineering-craft`; тесты → test-contour-orchestrator" }
 ]

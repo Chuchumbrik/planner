@@ -1,0 +1,11 @@
+---
+description: Переезд Vercel+Supabase → Amvera — кластеры плана, ветки dev/main, DoD cutover, связанные migration skills
+globs: ["services/**", "deploy/**", "amvera.yaml", "scripts/build-amvera.mjs", "web/src/api/**", "docs/amvera-secrets.md"]
+alwaysApply: false
+---
+
+# Оркестратор миграции Amvera (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/amvera-migration-orchestrator/SKILL.md`.
+
+Коротко: один PR — один кластер плана; `dev` — интеграция; `main` — cutover по чеклисту §12; блокер 0.3 free/paid vault. Сначала [[plan-before-implement]].

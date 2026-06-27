@@ -1,0 +1,12 @@
+---
+description: При создании или изменении React UI в web/src — i18n, a11y, designClasses, тонкие компоненты, RTL-тесты
+globs: ["web/src/**/*.tsx", "web/src/**/*.ts"]
+alwaysApply: false
+---
+
+# Конвенции React UI (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/react-ui-conventions/SKILL.md`
+(открыть skill `react-ui-conventions`).
+
+Коротко: UI тонкий; стили из `designClasses.ts`; текст через i18n (ru+en); a11y и user-event; логика — в core/lib, не в page-монолитах.

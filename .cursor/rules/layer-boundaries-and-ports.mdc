@@ -1,0 +1,12 @@
+---
+description: При изменении логики в web, @motivator/core или services/planner-api — соблюдать границы слоёв, порты и модульную архитектуру API
+globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "packages/*/src/**/*.ts", "packages/*/src/**/*.tsx", "services/**/*.ts"]
+alwaysApply: false
+---
+
+# Границы слоёв и порты (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/layer-boundaries-and-ports/SKILL.md`
+(открыть skill `layer-boundaries-and-ports`).
+
+Коротко: домен — в `@motivator/core`, UI — тонкий, сеть/БД — в API-модулях; общение через порты (`VaultRemotePort` и аналоги), не через прямой Supabase в компонентах. Перед коммитом — self-check слоя.

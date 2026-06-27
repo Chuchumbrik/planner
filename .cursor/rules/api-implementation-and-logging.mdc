@@ -1,0 +1,11 @@
+---
+description: Реализация planner-api — тонкие routes, service/repo, валидация, apiError; structured JSON logging без секретов и ciphertext
+globs: ["services/planner-api/**", "api/**"]
+alwaysApply: false
+---
+
+# API implementation & logging (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/api-implementation-and-logging/SKILL.md`.
+
+Коротко: routes → service → repo; Zod на входе; `{ code, message }` наружу; logger JSON + requestId; **never** log secrets/ciphertext. Контракты URL — `api-http-contracts`.

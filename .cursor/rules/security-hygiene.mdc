@@ -1,0 +1,10 @@
+---
+description: Безопасность — секреты не в git, authz на сервере, no PII/ciphertext в логах; гейт no-secrets-in-diff (warn)
+alwaysApply: true
+---
+
+# Гигиена безопасности (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/security-hygiene/SKILL.md`.
+
+Коротко: секреты только env/LK; admin — server-side; vault/crypto — vault-and-crypto-invariants; diff scan — no-secrets-in-diff.

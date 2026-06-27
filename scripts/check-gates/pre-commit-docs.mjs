@@ -7,7 +7,8 @@
 
 import { changedFiles, isBlock } from './_lib.mjs';
 
-const PRODUCT_RE = /^(web\/src|packages\/[^/]+\/src)\/.*\.(ts|tsx)$/;
+const PRODUCT_RE =
+  /^(web\/src|packages\/[^/]+\/src|services\/[^/]+\/src)\/.*\.(ts|tsx)$/;
 const TEST_RE = /\.(test|spec)\.(ts|tsx)$/;
 const DECL_RE = /\.d\.ts$/;
 const DOC_FILES = ['web/README.md', 'web/src/data/productRoadmap.ts'];

@@ -1,0 +1,11 @@
+---
+description: Cutover web на apiClient и VITE_API_URL — порядок модулей, feature flag, убрать прямой supabase.*
+globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "web/.env.example"]
+alwaysApply: false
+---
+
+# Frontend apiClient cutover (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/frontend-api-client-cutover/SKILL.md`.
+
+Коротко: единый api/client.ts; auth → vault → notify → …; VITE_API_URL flag; grep supabase = 0 в prod path.

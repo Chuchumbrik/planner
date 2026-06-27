@@ -1,0 +1,11 @@
+---
+description: SQL-миграции Amvera — схемы auth/vault/notify/defects/admin, без RLS и auth.uid(); гейт no-supabase-patterns (warn)
+globs: ["services/**/migrations/**/*.sql"]
+alwaysApply: false
+---
+
+# SQL Amvera migration (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/sql-amvera-migration-adaptation/SKILL.md`.
+
+Коротко: адаптация supabase/migrations → services/.../migrations; без RLS/pg_net/FK auth.users; проверка `scripts/check-gates/no-supabase-patterns-in-amvera-sql.mjs`.

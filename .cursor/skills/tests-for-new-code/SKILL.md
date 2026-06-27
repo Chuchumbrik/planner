@@ -3,49 +3,46 @@ id: tests-for-new-code
 title: Новый код несёт тесты
 class: gate
 scope: [cursor, claude]
-applies-when: коммит трогает логику в web/src или packages/*/src — на изменённый исходник должен меняться его тест
-globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"]
+applies-when: коммит трогает логику в web/src, packages/*/src или services/*/src — на изменённый исходник должен меняться его тест
+globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "packages/*/src/**/*.ts", "packages/*/src/**/*.tsx", "services/*/src/**/*.ts", "services/*/src/**/*.tsx"]
 enforcement: git-hook+ci
 enforcement-level: block
 enforced-by: "scripts/check-gates/tests-for-new-code.mjs"
 owner: TBD
 status: active
-links: [tests-by-independent-agent, pre-commit-docs-roadmap]
+links: [tests-by-independent-agent, pre-commit-docs-roadmap, api-http-contracts]
 ---
 
 # Новый код несёт тесты
 
 ## Правило (результат, не механизм)
 
-Коммит, который меняет **логический исходник** под `web/src/**` или `packages/*/src/**`
-(`.ts`/`.tsx`, кроме `*.test.*`, `*.spec.*`, `*.d.ts`), **обязан** в том же коммите менять
-**соответствующий тест-файл**.
+Коммит, который меняет **логический исходник** под:
 
-Сформулировано как **факт об артефакте**, а не как инструмент: правило не диктует, *как* написать
-тест (руками, агентом Cursor, субагентом Claude) — только что результат обязан присутствовать.
-Чем именно его удобно закрывать — см. «Как удовлетворить».
+- `web/src/**`
+- `packages/*/src/**`
+- `services/*/src/**` *(planner-api и др.)*
 
-## Что проверяется (детерминированно)
+(`.ts`/`.tsx`, кроме `*.test.*`, `*.spec.*`, `*.d.ts`), **обязан** в том же коммите менять **соответствующий тест-файл** (колокация).
 
-`scripts/check-gates/tests-for-new-code.mjs`:
-1. берёт изменённые файлы (pre-commit — staged; CI — дифф против базы);
-2. отбирает логические исходники по маске выше;
-3. для `dir/Name.tsx` ищет среди изменённых тест `dir/Name.test.tsx|ts` (или `.spec.`);
-4. исходники без пары — «непокрытые».
+## Что проверяется
 
-**Режим:** `enforcement-level: block` — непокрытые исходники **блокируют** коммит и CI (`exit 1`).
-Локальный warn: `GATE_WARN=1`. Исключение: `web/src/data/**` (данные сводки, не логика).
+`scripts/check-gates/tests-for-new-code.mjs` + общая логика `scripts/check-gates/_lib.mjs` (тот же критерий в hook `nudge-unit-test-writer`).
+
+**Режим:** `block`. Локальный warn: `GATE_WARN=1`. Исключение: `web/src/data/**`.
+
+## API (`services/planner-api`)
+
+- Unit: `*.service.test.ts` рядом с service.
+- HTTP: supertest на routes — `*.routes.test.ts` или колокация с handler.
+- Запуск: `npm test` / `npx vitest run` в workspace API (когда появится package).
 
 ## Как удовлетворить
 
-- В Cursor — написать/обновить колокационный тест рядом с исходником.
-- В Claude Code — запустить субагента [[unit-test-writer]] (отдельного от автора кода), который
-  допишет недостающие тесты. Важный смежный инвариант — тесты пишет не тот агент, что писал код:
-  см. [[tests-by-independent-agent]].
+- [[unit-test-writer]] — отдельно от автора кода ([[tests-by-independent-agent]]).
+- [[test-contour-orchestrator]] — порядок после фичи.
 
 ## Краевые случаи
 
-- Чистый рефакторинг без смены поведения: тест всё равно ожидается (хотя бы обновлённый снапшот/проверка) —
-  в `warn` это лишь напоминание; при `block` использовать осознанный bypass с пометкой в сообщении коммита.
-- Не-логические файлы (`*.css`, ассеты, конфиги, `web/src/data/**`) под маску не попадают.
-- Открытый вопрос (RULES.md §8): засчитывать только колокацию `X.test.tsx` или любой изменённый тест в коммите.
+- Чистый рефакторинг — обновить существующий тест.
+- Конфиги, CSS, `web/src/data/**` — вне scope.

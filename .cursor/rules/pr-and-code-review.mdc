@@ -1,0 +1,10 @@
+---
+description: Перед PR и merge — self-review, чеклист проекта, независимый субагент code-reviewer для нетривиальных diff
+alwaysApply: false
+---
+
+# PR и code review (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/pr-and-code-review/SKILL.md`.
+
+Коротко: self-review + vitest + гейты; vault/auth/migration — Task `code-reviewer` в отдельном контексте; verdict approve/request-changes.

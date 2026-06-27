@@ -3,7 +3,7 @@
 # block по умолчанию (гейт возвращает 1 — коммит прерывается). Локальный warn: GATE_WARN=1. См. RULES.md §7.
 ROOT="$(git rev-parse --show-toplevel)"
 status=0
-for gate in tests-for-new-code pre-commit-docs; do
+for gate in tests-for-new-code pre-commit-docs no-secrets-in-diff no-supabase-patterns-in-amvera-sql; do
   if [ -f "$ROOT/scripts/check-gates/$gate.mjs" ]; then
     node "$ROOT/scripts/check-gates/$gate.mjs" || status=1
   fi

@@ -1,0 +1,12 @@
+---
+description: При правках vault, crypto, sync, schemaVersion или тарифов — не нарушать крипто-инварианты и VAULT_CRYPTO_CONTRACT
+globs: ["packages/motivator-core/src/**/crypto*.ts", "packages/motivator-core/src/vault/**", "packages/motivator-core/src/domain/**", "packages/motivator-core/src/sync/**", "web/src/**/*Vault*", "web/src/**/*vault*", "web/src/**/crypto*.ts"]
+alwaysApply: false
+---
+
+# Vault и крипто-инварианты (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/vault-and-crypto-invariants/SKILL.md`
+(открыть skill `vault-and-crypto-invariants`).
+
+Коротко: seed/KDF не на сервер; после parse — `normalizeVault`; не менять KDF/формат без контракта и тестов; не логировать ciphertext/seed. Free/paid — только по DR-019.

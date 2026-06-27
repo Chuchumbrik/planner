@@ -115,7 +115,7 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 
 | id | class | enforcement | level | состояние |
 |---|---|---|---|---|
-| `tests-for-new-code` | gate | git-hook+ci | block | канон+адаптер+проверка ✅; pre-commit + CI (block); `web/src/data/**` вне scope |
+| `tests-for-new-code` | gate | git-hook+ci | block | + `services/*/src` (2026-06); pre-commit + CI (block) |
 | `tests-by-independent-agent` | process-invariant | workflow | block | канон+адаптер ✅; оркестратор `test-contour-orchestrator` ✅ |
 | `test-contour-orchestrator` | guidance | workflow | — | канон+`.mdc` ✅; процедура код→unit→e2e |
 | `unit-test-writer` | subagent-spec | — | — | канон ✅; Claude + Cursor агенты ✅ |
@@ -123,6 +123,22 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 | `pre-commit-docs-roadmap` | gate | git-hook+ci | block | реформат ✅; check-скрипт ✅; pre-commit + CI (block) |
 | `documentation-orientation` | guidance | none | — | реформат ✅ (канон-скилл + тонкий `.mdc`, `alwaysApply`) |
 | `russian-requirements-writing-skill` | guidance | none | — | реформат ✅; ГОСТ-ревизия доков — план `plans/gost-doc-revision.md` |
+| `engineering-craft` | guidance | none | — | волна 1 ✅; мета-уровень: как писать код; `alwaysApply` |
+| `plan-before-implement` | guidance | none | — | обязательно: декомпозиция → план → противоречия → код; `alwaysApply` |
+| `layer-boundaries-and-ports` | guidance | none | — | волна 1 ✅; слои core/web/API, порты |
+| `vault-and-crypto-invariants` | guidance | none | — | волна 1 ✅; VAULT_CRYPTO_CONTRACT, инварианты |
+| `react-ui-conventions` | guidance | none | — | волна 1 ✅; React, i18n, a11y, designClasses |
+| `amvera-migration-orchestrator` | guidance | none | — | волна 2 ✅; кластеры Amvera, ветки, DoD |
+| `amvera-secrets-and-env` | guidance | none | — | волна 2 ✅; docs/amvera-secrets.md |
+| `supabase-edge-to-api-porting` | guidance | none | — | волна 2 ✅; Edge → planner-api |
+| `sql-amvera-migration-adaptation` | guidance | git-hook+ci | warn | волна 2 ✅; gate no-supabase-patterns |
+| `frontend-api-client-cutover` | guidance | none | — | волна 2 ✅; apiClient, VITE_API_URL |
+| `security-hygiene` | guidance | git-hook+ci | warn | волна 2 ✅; gate no-secrets-in-diff; `alwaysApply` |
+| `api-http-contracts` | guidance | none | — | волна 2 ✅; planner-api модули, HTTP errors |
+| `pr-and-code-review` | guidance | none | — | волна 3 ✅; PR checklist, self-review |
+| `adr-and-architecture-decisions` | guidance | none | — | волна 3 ✅; DR в Obsidian |
+| `code-reviewer` | subagent-spec | — | — | волна 3 ✅; read-only review; Cursor+Claude agents |
+| `api-implementation-and-logging` | guidance | none | — | API handler/service/repo, structured logging |
 
 > Удалён `github-defect-workflow` (не нужен). ГОСТ-анализ obsidian-доков выполнен (11 ✅ / 9 🟡 / 0 🔴);
 > список к правке — в `plans/gost-doc-revision.md`.
@@ -141,4 +157,3 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
   `scripts/claude-plugin-hints.mjs`, конфиг `.claude/plugin-hints.json` (редактируемый список
   `{match, hint}`). На запрос подсказывает уместный плагин (`/code-review`, `/commit`, `/frontend-design`…),
   молчит без совпадений. Работает только в Claude Code (Cursor эти хуки не исполняет).
-```

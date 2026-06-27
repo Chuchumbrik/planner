@@ -1,28 +1,13 @@
 #!/usr/bin/env node
 /**
- * Cursor hook (stop / subagentStop): если в рабочем дереве есть логические исходники
- * без колокированного теста — вернуть followup_message с просьбой запустить unit-test-writer.
- *
- * Критерии исходников совпадают с scripts/check-gates/tests-for-new-code.mjs.
- * stdin: JSON payload хука; stdout: {} или { "followup_message": "..." }.
+ * Cursor hook (stop / subagentStop): nudge unit-test-writer when logic sources lack colocated tests.
+ * Criteria shared with scripts/check-gates/_lib.mjs
  */
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { isLogicSource, uncoveredLogicSources } from '../../scripts/check-gates/_lib.mjs';
 
-const SRC_RE = /^(web\/src|packages\/[^/]+\/src)\/.*\.(ts|tsx)$/;
-const DATA_RE = /^web\/src\/data\//;
-const TEST_RE = /\.(test|spec)\.(ts|tsx)$/;
-const DECL_RE = /\.d\.ts$/;
 const SKIP_SUBAGENT = /unit-test-writer|autotest-writer/i;
-
-function isLogicSource(f) {
-  return SRC_RE.test(f) && !DATA_RE.test(f) && !TEST_RE.test(f) && !DECL_RE.test(f);
-}
-
-function testCandidates(src) {
-  const base = src.replace(/\.(ts|tsx)$/, '');
-  return [`${base}.test.ts`, `${base}.test.tsx`, `${base}.spec.ts`, `${base}.spec.tsx`];
-}
 
 function normalizePath(p) {
   return String(p).replace(/\\/g, '/').replace(/^\.\//, '');
@@ -39,12 +24,6 @@ function gitDiffHead() {
   } catch {
     return [];
   }
-}
-
-function uncoveredSources(files) {
-  const changedTests = new Set(files.filter((f) => TEST_RE.test(f)));
-  const sources = files.filter(isLogicSource);
-  return sources.filter((src) => !testCandidates(src).some((t) => changedTests.has(t)));
 }
 
 function shouldSkipSubagent(input) {
@@ -67,7 +46,7 @@ function buildMessage(uncovered) {
     '',
     'Канон: `.cursor/skills/unit-test-writer/SKILL.md`, оркестратор: `.cursor/skills/test-contour-orchestrator/SKILL.md`.',
     '',
-    'После тестов: `cd web && npx vitest run`.',
+    'После тестов: `cd web && npx vitest run` (и тесты workspace API при правках `services/planner-api`).',
   ].join('\n');
 }
 
@@ -98,7 +77,7 @@ function main() {
 
   const fromHook = (input.modified_files || []).map(normalizePath).filter(Boolean);
   const files = [...new Set([...gitDiffHead(), ...fromHook])];
-  const uncovered = uncoveredSources(files);
+  const uncovered = uncoveredLogicSources(files);
 
   if (uncovered.length === 0) {
     console.log('{}');

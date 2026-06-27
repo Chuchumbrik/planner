@@ -1,0 +1,11 @@
+---
+description: Смена архитектуры, контракта или инфраструктуры — DR в obsidian-motivator/12-Журнал-решений.md в том же PR
+globs: ["obsidian-motivator/**", "packages/motivator-core/**", "services/**", "docs/**"]
+alwaysApply: false
+---
+
+# ADR и архитектурные решения (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/adr-and-architecture-decisions/SKILL.md`.
+
+Коротко: необратимые решения — DR-xxx в журнале + синхрон 08/10/11; free/paid vault — ADR до кода; русский текст — russian-requirements-writing-skill.

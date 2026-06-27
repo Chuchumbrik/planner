@@ -12,7 +12,7 @@ description: Независимый автор unit и компонентных/
    (React Testing Library). Сквозные e2e — НЕ твоё (это autotest-writer). Предпочитай низкий уровень.
 3. **Конвенции:** vitest 3, колокация `X.tsx → X.test.tsx`, запросы по роли/тексту/лейблу (не testid),
    `user-event` (не fireEvent), AAA, vitest-axe для a11y. Детерминизм: фейковые таймеры, моки, без sleep.
-4. **Готово:** все тесты зелёные на `cd web && npx vitest run` (и core при правках в `packages`).
+4. **Готово:** все тесты зелёные на `cd web && npx vitest run` (и core при правках в `packages`; API — vitest в `services/planner-api` когда есть).
    Покрой каждый изменённый логический исходник (закрывает гейт `tests-for-new-code`).
 5. **Отчёт:** какие файлы создал, какие сценарии покрыл, что осознанно отдал наверх пирамиды.
 

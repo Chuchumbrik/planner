@@ -1,12 +1,12 @@
 {
   "name": "planner-workspace",
   "private": true,
-  "workspaces": ["web", "packages/motivator-core"],
+  "workspaces": ["web", "packages/motivator-core", "services/planner-api"],
   "overrides": {
     "vite": "7.3.3"
   },
   "scripts": {
-    "test": "npm run test -w @motivator/core && npm run test -w web",
+    "test": "npm run test -w @motivator/core && npm run test -w web && npm run test -w @motivator/planner-api",
     "test:e2e": "npm run test:e2e -w web",
     "dev": "npm run dev -w web",
     "build": "npm run build -w web",

@@ -86,6 +86,7 @@ cd web && npm run test:e2e
 1. Изменённые исходники и кто писал тесты (unit-writer / autotest-writer — не автор кода).
 2. Команды прогона и результат (vitest / e2e).
 3. Осознанные пробелы и что отложено наверх/вниз пирамиды.
+4. Self-review по [[pr-and-code-review]]; при необходимости — findings [[code-reviewer]].
 
 ## Краевые случаи
 

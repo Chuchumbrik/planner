@@ -366,6 +366,16 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-28', en: '2026-06-28' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.36', en: '0.7.36' },
+        tag: 'chore',
+        changes: [
+          {
+            ru: '**Внутреннее (инфра):** волны skills 1–3 (craft, Amvera-миграция, PR/ADR), gate pre-commit/CI, скелет `services/planner-api` (`shared/logging`, `apiError`).',
+            en: '**Internal (infra):** skills waves 1–3 (craft, Amvera migration, PR/ADR), pre-commit/CI gates, `services/planner-api` skeleton (`shared/logging`, `apiError`).',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.35', en: '0.7.35' },
         tag: 'chore',
         changes: [

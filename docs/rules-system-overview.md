@@ -43,7 +43,7 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 
 | Правило / артефакт | Класс | Когда срабатывает | На что влияет |
 |---|---|---|---|
-| `tests-for-new-code` | gate | коммит/PR трогает логику (не `web/src/data/**`) | требует изменения парного теста; pre-commit + CI (**block**) |
+| `tests-for-new-code` | gate | коммит/PR: `web/src`, `packages/*/src`, `services/*/src` | колокированный тест; **block** |
 | `tests-by-independent-agent` | process-invariant | тесты пишутся агентом автоматически | тесты пишет отдельный агент, не автор кода; держится воркфлоу |
 | `test-contour-orchestrator` | guidance (workflow) | после правки логики в web/packages | фазы: стоп автору → unit-test-writer → autotest-writer (условно) |
 | `unit-test-writer` | subagent-spec | нужны unit/компонентные тесты (низ/середина пирамиды) | vitest+RTL, независимость, дисциплина пирамиды |
@@ -51,17 +51,31 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 | `pre-commit-docs-roadmap` | gate | перед коммитом, если тронут продуктовый код | требует синхрон README / `productRoadmap.ts` / локалей; pre-commit + CI (**block**) |
 | `documentation-orientation` | guidance | любая задача в репо (`alwaysApply`) | ориентир на доки + актуализация в том же PR; ручные шаги — в README |
 | `russian-requirements-writing-skill` | guidance | правка `obsidian-motivator/**` или запрос ТЗ на русском | структура по ГОСТ, строгий язык, glossary-wikilinks |
+| `engineering-craft` | guidance (meta) | любая реализация/рефакторинг в коде | мантра, промпты до/во время/после, self-review Staff-уровня; `alwaysApply` |
+| `plan-before-implement` | guidance (process) | перед любой реализацией | декомпозиция, глубокий план, проверка противоречий; затем код; `alwaysApply` |
+| `layer-boundaries-and-ports` | guidance | логика в web/packages/services | слои, порты, куда класть код, anti-patterns |
+| `vault-and-crypto-invariants` | guidance | vault, crypto, sync, schemaVersion | DR-005/019, контракт, не логировать ciphertext |
+| `react-ui-conventions` | guidance | компоненты и UI в `web/src` | i18n, a11y, designClasses, TanStack Query, RTL |
+| `amvera-migration-orchestrator` | guidance | переезд Amvera | кластеры 0–12, dev/main, cutover |
+| `amvera-secrets-and-env` | guidance | секреты Amvera | VITE build, runtime API, docs/amvera-secrets.md |
+| `supabase-edge-to-api-porting` | guidance | Edge → API | карта функций, JWT, cron |
+| `sql-amvera-migration-adaptation` | gate | SQL migrations Amvera | без RLS/auth.uid; gate **warn** |
+| `frontend-api-client-cutover` | guidance | web → apiClient | VITE_API_URL, порядок модулей |
+| `security-hygiene` | gate | секреты, authz, логи | no-secrets-in-diff **warn**; `alwaysApply` |
+| `api-http-contracts` | guidance | planner-api | /api, /internal, errors, middleware |
+| `pr-and-code-review` | guidance | перед PR / merge | чеклист, self-review, code-reviewer |
+| `adr-and-architecture-decisions` | guidance | архитектурные изменения | DR-xxx, 08/10/11 Obsidian |
+| `code-reviewer` | subagent-spec | ревью diff/PR | read-only, verdict approve/request-changes |
+| `api-implementation-and-logging` | guidance | код planner-api | routes/service/repo, validation, JSON logs |
 
-Адаптеры Cursor (`.cursor/rules/*.mdc`): `tests-for-new-code`, `tests-by-independent-agent`,
-`test-contour-orchestrator`, `pre-commit-docs-roadmap`, `documentation-orientation`, `russian-requirements-writing-skill`.
-Субагенты Cursor (`.cursor/agents/*.md`): `unit-test-writer`, `autotest-writer` — зеркало `.claude/agents/*`.
+Субагенты Cursor (`.cursor/agents/*.md`): `unit-test-writer`, `autotest-writer`, **`code-reviewer`**.
 Остальное Claude видит через проекцию в `CLAUDE.md`; Cursor — через `.mdc` и agents в репозитории.
 
 ## Триггеры (когда что исполняется)
 
 | Механизм | Где | Когда срабатывает | Что делает |
 |---|---|---|---|
-| **pre-commit** | `.githooks/pre-commit` | перед каждым `git commit` | гоняет гейты по staged; **block** (warn: `GATE_WARN=1`) |
+| **pre-commit** | `.githooks/pre-commit` | перед каждым `git commit` | block-гейты + warn-гейты (secrets, SQL patterns) |
 | **CI gates** | `.github/workflows/pr-checks.yml` | на PR в `main` | те же гейты против базы PR (**block**) + typecheck/build/tests |
 | **post-merge** | `.githooks/post-merge` | на `git pull`/`merge` (любой движок) | пересобирает проекцию правил под Claude |
 | **SessionStart** | `.claude/settings.json` | старт сессии Claude | пересобирает проекцию (страховка свежести) |

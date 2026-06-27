@@ -33,11 +33,21 @@
   (агент Cursor сам делает `.mdc` и Cursor-агентов; формат агентов — на стороне Cursor).
 - [x] **`_cursor-adapter-sync` (gaps)** — `.mdc` для `russian-requirements-writing-skill`, агенты в `.cursor/agents/` (2026-06-26).
 
+### Инженерное мастерство (волна 1) — done
+- [x] `engineering-craft`, `plan-before-implement`, `layer-boundaries-and-ports`, `vault-and-crypto-invariants`, `react-ui-conventions`.
+
+### Миграция Amvera (волна 2) — done
+- [x] `amvera-migration-orchestrator`, `amvera-secrets-and-env`, `supabase-edge-to-api-porting`, `sql-amvera-migration-adaptation`, `frontend-api-client-cutover`, `security-hygiene`, `api-http-contracts`, `docs/amvera-secrets.md`, гейты secrets/SQL, `services/*/src` в tests-for-new-code.
+
+### PR и ADR (волна 3) — done
+- [x] `pr-and-code-review`, `adr-and-architecture-decisions`, subagent `code-reviewer` (`.cursor/agents/` + `.claude/agents/`).
+- [x] `api-implementation-and-logging` — реализация API + structured logging (доп. к `api-http-contracts`).
+
 ### Governance / решения (за владельцем)
 - [ ] `owner` для гейтов (сейчас `TBD`).
 - [ ] Семантика `tests-for-new-code`: только колокация или любой изменённый тест.
 - [ ] `CLAUDE.md` обрезан коммитом `193c3ee` (~66 строк) — возвращать ли вырезанное.
-- [ ] Расширение `.claude/plugin-hints.json`.
+- [x] Расширение `.claude/plugin-hints.json` (review, amvera, implement).
 
 ### Документация по ГОСТ
 - [ ] Правки obsidian-доков — см. отдельный план `plans/gost-doc-revision.md`.

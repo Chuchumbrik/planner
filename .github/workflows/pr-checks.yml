@@ -80,5 +80,7 @@ jobs:
         run: |
           git fetch --no-tags origin "$BASE_REF" || true
           export GATE_BASE="origin/$BASE_REF"
-          node scripts/check-gates/tests-for-new-code.mjs || true
-          node scripts/check-gates/pre-commit-docs.mjs || true
+          node scripts/check-gates/tests-for-new-code.mjs
+          node scripts/check-gates/pre-commit-docs.mjs
+          node scripts/check-gates/no-secrets-in-diff.mjs || true
+          node scripts/check-gates/no-supabase-patterns-in-amvera-sql.mjs || true

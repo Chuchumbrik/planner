@@ -1,0 +1,11 @@
+---
+description: Портирование Supabase Edge Functions в modules planner-api — карта legacy→API, JWT, cron, тесты
+globs: ["web/supabase/functions/**", "services/planner-api/**", "api/**"]
+alwaysApply: false
+---
+
+# Edge → API porting (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/supabase-edge-to-api-porting/SKILL.md`.
+
+Коротко: Edge → module в planner-api; auth.uid/RLS убрать; cron через /internal + CRON_SECRET; фронт на apiClient.

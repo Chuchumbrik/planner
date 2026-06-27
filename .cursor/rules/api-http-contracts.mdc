@@ -1,0 +1,11 @@
+---
+description: planner-api — структура модулей, /api и /internal/cron, формат ошибок, middleware, supertest
+globs: ["services/planner-api/**", "deploy/**"]
+alwaysApply: false
+---
+
+# HTTP-контракты planner-api (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/api-http-contracts/SKILL.md`.
+
+Коротко: модульный монолит; routes→service→repo; единый JSON error; JWT + CRON_SECRET; тесты колокация.
