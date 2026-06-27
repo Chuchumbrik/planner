@@ -6,7 +6,7 @@ class: guidance
 scope: [cursor, claude]
 applies-when: нужно написать unit и компонентные/интеграционные тесты на новую/изменённую логику (нижние и средние уровни пирамиды)
 implements: [tests-by-independent-agent]
-enforced-by: ".claude/agents/unit-test-writer.md (Claude); Cursor-агент (TODO)"
+enforced-by: ".claude/agents/unit-test-writer.md (Claude); .cursor/agents/unit-test-writer.md (Cursor)"
 status: active
 links: [tests-by-independent-agent, tests-for-new-code, autotest-writer]
 ---

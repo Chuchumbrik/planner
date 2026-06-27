@@ -1,0 +1,13 @@
+---
+description: После правки логики в web/src или packages/*/src — тесты пишут отдельные субагенты unit-test-writer и при необходимости autotest-writer, не автор кода
+globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"]
+alwaysApply: false
+---
+
+# Оркестратор тест-контура (адаптер Cursor)
+
+Тонкий адаптер. Источник истины — `.cursor/skills/test-contour-orchestrator/SKILL.md`
+(открыть skill `test-contour-orchestrator`).
+
+Коротко: автор кода **останавливается** → отдельно **unit-test-writer** (vitest) → при сквozном риске **autotest-writer** (Playwright).
+Проверка наличия тестов: `scripts/check-gates/tests-for-new-code.mjs` (режим `warn`).

@@ -20,9 +20,9 @@
   триггеры pre-commit/CI/post-merge/SessionStart/UserPromptSubmit, субагенты, как расширять).
 
 ### Тест-контур (основной новый)
-- [ ] Оркестрирующий тест-воркфлоу «код → unit-test-writer → autotest-writer» (раздельные агенты).
-- [ ] Playwright-инфраструктура: `@playwright/test`, `playwright.config.ts`, скрипт `test:e2e`, CI-job (трогает `package.json`).
-- [x] Cursor-определения субагентов `unit-test-writer` / `autotest-writer` → `.cursor/agents/*.md` (sync 2026-06-26).
+- [x] Оркестрирующий тест-воркфлоу «код → unit-test-writer → autotest-writer» → `.cursor/skills/test-contour-orchestrator/SKILL.md` + `.cursor/rules/test-contour-orchestrator.mdc`.
+- [x] Playwright-инфраструктура: `@playwright/test`, `playwright.config.ts`, `test:e2e`, CI-job `e2e` (warn).
+- [x] Cursor-определения субагентов `unit-test-writer` / `autotest-writer` → `.cursor/agents/*.md` (sync 2026-06-27).
 
 ### Доводка гейтов
 - [ ] Промоушен `warn → block` для `tests-for-new-code` и `pre-commit-docs` после обкатки.
@@ -43,4 +43,4 @@
 - [ ] Правки obsidian-доков — см. отдельный план `plans/gost-doc-revision.md`.
 
 ## Фиксация
-- [ ] Коммит наших файлов (только система правил, не WIP-дерево).
+- [ ] Коммит наших файлов (только система правил, не WIP-дерево). *(Частично: тест-контур 2026-06-27.)*

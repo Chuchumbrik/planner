@@ -4,7 +4,7 @@
 
 **Целевой объём MVP для разработки** (релиз продукта **v1.0.0**) зафиксирован в [`obsidian-motivator/16-TZ-MVP-v1.0.md`](../obsidian-motivator/16-TZ-MVP-v1.0.md); поэтапный план внедрения — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md).
 
-**Текущая версия веб-клиента** в репозитории: **`0.7.20`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
+**Текущая версия веб-клиента** в репозитории: **`0.7.35`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
 
 ### Версионирование
 
@@ -115,6 +115,17 @@ cp .env.example .env.local
 npm run dev
 ```
 
+## Тесты
+
+| Уровень | Команда | Где |
+|---------|---------|-----|
+| **Unit / компонентные** (vitest) | `npm test` из корня или `cd web && npx vitest run` | `web/src/**/*.test.*`, `packages/motivator-core` |
+| **E2E** (Playwright) | `cd web && npm run test:e2e:install` (один раз), затем `npm run test:e2e` | `web/e2e/**` против `vite preview` |
+
+**Процесс для агентов:** после правки логики автор кода **не** пишет первичные тесты — отдельно `unit-test-writer`, при сквозном риске `autotest-writer`. Процедура — скилл `.cursor/skills/test-contour-orchestrator/SKILL.md`, карта — [`docs/rules-system-overview.md`](../docs/rules-system-overview.md).
+
+CI: job **`checks`** (build + vitest), job **`e2e`** (Playwright, режим warn — не блокирует PR), job **`gates`** (правила репозитория, warn).
+
 ## Supabase
 
 1. Создайте проект в [Supabase](https://supabase.com/).
@@ -166,9 +177,9 @@ npm run dev
 | Ветка | Назначение |
 |-------|------------|
 | **`dev`** | Интеграция и **тестовый стенд Amvera** (переезд, гибрид с Supabase). Пуш в `dev` → автосборка в проекте Amvera. |
-| **`main`** | Прод на **Vercel** (`planner-tawny-omega.vercel.app`) до завершения миграции; позже — preprod/prod на Amvera. |
+| **`main`** | Прод на **Vercel** (`planner-tawny-omega.vercel.app`) до завершения миграции; **в `main` не вливается** код переезда, пока не выполнен cutover ([[12-Журнал-решений#DR-019 — Миграция Amvera: ветки, архитектура, уровни шифрования (2026-06-24)]] в Obsidian). |
 
-Фичи и правки по переезду мержатся в **`dev`**; после проверки на `*.amvera.io` — в **`main`**.
+Фичи и правки по переезду мержатся в **`dev`**; детальный план — [`obsidian-motivator/22-План-миграции-Amvera.md`](../obsidian-motivator/22-План-миграции-Amvera.md). После cutover — в **`main`**.
 
 ### Чеклист: первый проект Amvera (стенд на `dev`)
 

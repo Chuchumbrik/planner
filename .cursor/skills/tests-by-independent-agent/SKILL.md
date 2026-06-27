@@ -7,7 +7,7 @@ applies-when: когда новый код покрывается тестами
 globs: []
 enforcement: workflow
 enforcement-level: block
-enforced-by: "субагенты unit-test-writer + autotest-writer (оба отдельные от автора кода); оркестрация — новый тест-воркфлоу (в разработке)"
+enforced-by: "test-contour-orchestrator; субагенты unit-test-writer + autotest-writer (оба отдельные от автора кода)"
 owner: TBD
 status: active
 links: [tests-for-new-code]
@@ -30,8 +30,8 @@ links: [tests-for-new-code]
 
 ## Как обеспечивается
 
-> Старые воркфлоу (`feature-with-qa.js` и пр.) удалены с `dev` намеренно — строится новый
-> тест-контур из двух субагентов. До его готовности enforcement данного инварианта — **в разработке**.
+Оркестрация — скилл [[test-contour-orchestrator]] (фазы: стоп автору → unit-test-writer → при необходимости autotest-writer → отчёт).
+Старые workflow-скрипты (`feature-with-qa.js` и пр.) удалены с `dev` намеренно.
 
 Тесты пишут **два отдельных субагента, оба не являющиеся автором кода** (см. [[unit-test-writer]],
 [[autotest-writer]]):
@@ -39,7 +39,7 @@ links: [tests-for-new-code]
 - **autotest-writer** — верхние уровни (e2e/сквозные).
 
 Оба запускаются в **отдельных контекстах** от агента-автора кода и друг от друга — это и есть
-независимость. Оркестрация (код → unit-test-writer → autotest-writer) — новый тест-воркфлоу.
+независимость. Подробные шаги — [[test-contour-orchestrator]].
 
 Канонические инструкции субагентов едины для обоих движков; Claude и Cursor оборачивают их своими
 определениями агента (см. RULES.md, слой адаптеров).

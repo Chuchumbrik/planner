@@ -116,9 +116,10 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 | id | class | enforcement | level | состояние |
 |---|---|---|---|---|
 | `tests-for-new-code` | gate | git-hook+ci | warn | канон+адаптер+проверка ✅; pre-commit-хук + CI-шаг ✅ (warn); промоушен block — TODO |
-| `tests-by-independent-agent` | process-invariant | workflow | block | канон+адаптер ✅, оркестрирующий воркфлоу — TODO |
-| `unit-test-writer` | subagent-spec | — | — | канон ✅ + Claude-агент ✅; Cursor-агент — TODO |
-| `autotest-writer` | subagent-spec | — | — | канон ✅ + Claude-агент ✅; Playwright-инфра — TODO |
+| `tests-by-independent-agent` | process-invariant | workflow | block | канон+адаптер ✅; оркестратор `test-contour-orchestrator` ✅ |
+| `test-contour-orchestrator` | guidance | workflow | — | канон+`.mdc` ✅; процедура код→unit→e2e |
+| `unit-test-writer` | subagent-spec | — | — | канон ✅; Claude + Cursor агенты ✅ |
+| `autotest-writer` | subagent-spec | — | — | канон ✅; Claude + Cursor агенты ✅; Playwright + CI e2e ✅ |
 | `pre-commit-docs-roadmap` | gate | git-hook+ci | warn | реформат ✅; check-скрипт ✅; pre-commit-хук + CI-шаг ✅ (warn) |
 | `documentation-orientation` | guidance | none | — | реформат ✅ (канон-скилл + тонкий `.mdc`, `alwaysApply`) |
 | `russian-requirements-writing-skill` | guidance | none | — | реформат ✅; ГОСТ-ревизия доков — план `plans/gost-doc-revision.md` |

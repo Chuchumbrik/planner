@@ -6,7 +6,7 @@ class: guidance
 scope: [cursor, claude]
 applies-when: нужны сквозные e2e-автотесты на критичные пользовательские сценарии (верх пирамиды, Playwright)
 implements: [tests-by-independent-agent]
-enforced-by: ".claude/agents/autotest-writer.md (Claude); Cursor-агент (TODO)"
+enforced-by: ".claude/agents/autotest-writer.md (Claude); .cursor/agents/autotest-writer.md (Cursor)"
 status: active
 links: [tests-by-independent-agent, unit-test-writer]
 ---
@@ -29,9 +29,9 @@ E2e — **вершина**: их должно быть **немного**, и т
   [[unit-test-writer]], **не** дублируй в e2e. E2e дорогие и хрупкие.
 - Каждый e2e-тест обоснуй: какой сквозной риск он закрывает и почему не хватает нижнего уровня.
 
-## Стек и конвенции (Playwright — вводится)
+## Стек и конвенции (Playwright)
 
-- **Playwright** (выбран как e2e-стек; инфраструктуру — установку/конфиг/CI — см. «Предусловие»).
+- **Playwright** — `@playwright/test`, конфиг `web/playwright.config.ts`, прогон против `vite preview`.
 - Тесты в `web/e2e/**` (отдельно от vitest-тестов `web/src/**`).
 - Селекторы — **роль/текст/лейбл** (`getByRole`, `getByLabel`); `data-testid` — только при необходимости.
 - **Web-first утверждения** с авто-ожиданием (`await expect(locator).toBeVisible()`); **никаких** `waitForTimeout`.
@@ -40,10 +40,8 @@ E2e — **вершина**: их должно быть **немного**, и т
 
 ## Предусловие (инфраструктура)
 
-E2e-фреймворка в проекте ещё нет. До написания тестов нужно ввести Playwright:
-`@playwright/test`, `playwright.config.ts` (baseURL на `vite preview`/деплой), скрипт `test:e2e`,
-отдельный CI-job (возможно nightly/on-demand из-за стоимости). Это **отдельный инфраструктурный шаг**
-до генерации автотестов — не смешивать с написанием самих сценариев.
+Playwright введён в `web/`: `npm run test:e2e`, CI-job `e2e` в `.github/workflows/pr-checks.yml` (режим warn).
+Первый запуск локально: `cd web && npm run test:e2e:install` (браузер Chromium).
 
 ## Выход
 

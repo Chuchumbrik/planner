@@ -363,6 +363,21 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-06-27', en: '2026-06-27' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.35', en: '0.7.35' },
+        tag: 'test',
+        changes: [
+          {
+            ru: '**Внутреннее (QA):** Playwright e2e (`web/e2e`, `npm run test:e2e`), CI-job `e2e`; оркестратор тест-контура `test-contour-orchestrator` — код → unit-test-writer → autotest-writer.',
+            en: '**Internal (QA):** Playwright e2e (`web/e2e`, `npm run test:e2e`), CI `e2e` job; test contour orchestrator `test-contour-orchestrator` — code → unit-test-writer → autotest-writer.',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-06-24', en: '2026-06-24' },
     items: [
       {

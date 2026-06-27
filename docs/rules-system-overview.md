@@ -45,6 +45,7 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 |---|---|---|---|
 | `tests-for-new-code` | gate | коммит/PR трогает `web/src` или `packages/*/src` (`.ts/.tsx`, не тест) | требует изменения парного теста; pre-commit + CI (warn) |
 | `tests-by-independent-agent` | process-invariant | тесты пишутся агентом автоматически | тесты пишет отдельный агент, не автор кода; держится воркфлоу |
+| `test-contour-orchestrator` | guidance (workflow) | после правки логики в web/packages | фазы: стоп автору → unit-test-writer → autotest-writer (условно) |
 | `unit-test-writer` | subagent-spec | нужны unit/компонентные тесты (низ/середина пирамиды) | vitest+RTL, независимость, дисциплина пирамиды |
 | `autotest-writer` | subagent-spec | нужны сквозные e2e (верх пирамиды) | Playwright, только критичные пути, независимость |
 | `pre-commit-docs-roadmap` | gate | перед коммитом, если тронут продуктовый код | требует синхрон README / `productRoadmap.ts` / локалей; pre-commit + CI (warn) |
@@ -52,7 +53,7 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 | `russian-requirements-writing-skill` | guidance | правка `obsidian-motivator/**` или запрос ТЗ на русском | структура по ГОСТ, строгий язык, glossary-wikilinks |
 
 Адаптеры Cursor (`.cursor/rules/*.mdc`): `tests-for-new-code`, `tests-by-independent-agent`,
-`pre-commit-docs-roadmap`, `documentation-orientation`, `russian-requirements-writing-skill`.
+`test-contour-orchestrator`, `pre-commit-docs-roadmap`, `documentation-orientation`, `russian-requirements-writing-skill`.
 Субагенты Cursor (`.cursor/agents/*.md`): `unit-test-writer`, `autotest-writer` — зеркало `.claude/agents/*`.
 Остальное Claude видит через проекцию в `CLAUDE.md`; Cursor — через `.mdc` и agents в репозитории.
 
@@ -75,7 +76,7 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 - **unit-test-writer** — низ/середина: unit (`packages/*/src`, `web/src/lib`) и компонентные/интеграционные (vitest + React Testing Library).
 - **autotest-writer** — верх: сквозные e2e (Playwright — вводится), только критичные пользовательские пути.
 
-Оркестрирующий воркфлоу «код → unit-test-writer → autotest-writer» — в разработке.
+Оркестрирующий воркфлоу «код → unit-test-writer → autotest-writer» — **`.cursor/skills/test-contour-orchestrator/SKILL.md`**. E2e: Playwright в `web/e2e/**`, `npm run test:e2e`, CI job `e2e` (warn).
 
 ## Подсказки по плагинам (только Claude)
 
