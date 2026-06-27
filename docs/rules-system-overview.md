@@ -66,6 +66,7 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 | **post-merge** | `.githooks/post-merge` | на `git pull`/`merge` (любой движок) | пересобирает проекцию правил под Claude |
 | **SessionStart** | `.claude/settings.json` | старт сессии Claude | пересобирает проекцию (страховка свежести) |
 | **UserPromptSubmit** | `.claude/settings.json` | каждый запрос в Claude | подсказывает уместный плагин (см. ниже) |
+| **Cursor stop / subagentStop** | `.cursor/hooks.json` | конец хода Agent / subagent | если логические исходники без теста — `followup_message` → unit-test-writer (`.cursor/hooks/nudge-unit-test-writer.mjs`, `loop_limit: 2`) |
 
 Подключение git-хуков: `git config core.hooksPath .githooks` (для команды — TODO: `prepare`-скрипт или README).
 Локальный warn: `GATE_WARN=1` перед commit или в CI (не рекомендуется для main).

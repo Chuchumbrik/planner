@@ -122,7 +122,7 @@ npm run dev
 | **Unit / компонентные** (vitest) | `npm test` из корня или `cd web && npx vitest run` | `web/src/**/*.test.*`, `packages/motivator-core` |
 | **E2E** (Playwright) | `cd web && npm run test:e2e:install` (один раз), затем `npm run test:e2e` | `web/e2e/**` против `vite preview` |
 
-**Процесс для агентов:** после правки логики автор кода **не** пишет первичные тесты — отдельно `unit-test-writer`, при сквозном риске `autotest-writer`. Процедура — скилл `.cursor/skills/test-contour-orchestrator/SKILL.md`, карта — [`docs/rules-system-overview.md`](../docs/rules-system-overview.md).
+**Процесс для агентов:** после правки логики автор кода **не** пишет первичные тесты — отдельно `unit-test-writer`, при сквозном риске `autotest-writer`. Процедура — скилл `.cursor/skills/test-contour-orchestrator/SKILL.md`, карта — [`docs/rules-system-overview.md`](../docs/rules-system-overview.md). Cursor hook `.cursor/hooks.json` (`stop` / `subagentStop`) при незакрытых исходниках подставляет follow-up с просьбой запустить `unit-test-writer` (не заменяет явный Task).
 
 CI: job **`checks`** (build + vitest), job **`e2e`** (Playwright, warn), job **`gates`** (правила репозитория, **block**).
 

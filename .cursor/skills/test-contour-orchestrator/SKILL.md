@@ -98,22 +98,18 @@ cd web && npm run test:e2e
 
 ## Автоматический вызов субагентов?
 
-**Нет.** Cursor **не** запускает `unit-test-writer` / `autotest-writer` сам после того, как другой агент
-написал код. Это **процесс**, который выполняют **явно**:
-
-- `/unit-test-writer` или Task с subagent `unit-test-writer` — **в отдельном чате/контексте**;
-- при необходимости e2e — то же с `autotest-writer`.
-
-Rule `.cursor/rules/test-contour-orchestrator.mdc` **напоминает** о порядке при правке исходников,
-но **не порождает** второго агента автоматически.
-
-Что всё же «подталкивает»:
+Cursor **не** порождает изолированный subagent сам по себе — только **подталкивает** родительский агент
+через hook или гейты. Явный `/unit-test-writer` / Task остаётся надёжнее hook.
 
 | Механизм | Эффект |
 |----------|--------|
+| Hook `.cursor/hooks.json` → `stop` / `subagentStop` | после завершения хода: если в `git diff HEAD` есть логические исходники без колокированного теста — `followup_message` с просьбой запустить **unit-test-writer** (скрипт `.cursor/hooks/nudge-unit-test-writer.mjs`; `loop_limit: 2`; subagent `unit-test-writer` / `autotest-writer` не триггерит повтор) |
 | Гейт `tests-for-new-code` (**block**) | без теста в коммите — **не пройдёт** hook/CI |
 | Гейт `pre-commit-docs` (**block**) | продуктовый код без README/сводки — **не пройдёт** |
+| Rule `.cursor/rules/test-contour-orchestrator.mdc` | напоминание при правке исходников |
 | Привычка / чеклист перед PR | явный вызов subagent после Implement |
+
+**Ограничения hook:** не гарантирует отдельный контекст; лимит follow-up (~2 на скрипт); при только docs/data — тишина.
 
 ---
 

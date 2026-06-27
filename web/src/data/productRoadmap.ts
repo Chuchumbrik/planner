@@ -363,6 +363,21 @@ export const IMPLEMENTED_MVP_PHASES: RoadmapMvpPhase[] = [
  */
 export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
   {
+    dateLabel: { ru: '2026-06-28', en: '2026-06-28' },
+    items: [
+      {
+        releasedInVersion: { ru: '0.7.35', en: '0.7.35' },
+        tag: 'chore',
+        changes: [
+          {
+            ru: '**Внутреннее (Cursor):** hook `stop` / `subagentStop` подталкивает запуск `unit-test-writer`, если в diff есть логика без колокированного теста (`.cursor/hooks.json`).',
+            en: '**Internal (Cursor):** `stop` / `subagentStop` hook nudges `unit-test-writer` when logic sources lack colocated tests (`.cursor/hooks.json`).',
+          },
+        ],
+      },
+    ],
+  },
+  {
     dateLabel: { ru: '2026-06-27', en: '2026-06-27' },
     items: [
       {

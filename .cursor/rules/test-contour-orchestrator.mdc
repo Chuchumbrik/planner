@@ -9,5 +9,5 @@ alwaysApply: false
 Тонкий адаптер. Источник истины — `.cursor/skills/test-contour-orchestrator/SKILL.md`
 (открыть skill `test-contour-orchestrator`).
 
-Коротко: автор кода **останавливается** → отдельно **unit-test-writer** (vitest) → при сквozном риске **autotest-writer** (Playwright).
+Коротко: автор кода **останавливается** → отдельно **unit-test-writer** (vitest) → при сквозном риске **autotest-writer** (Playwright). Hook `.cursor/hooks.json` после хода может auto-submit просьбу запустить unit-test-writer (см. skill).
 Проверка наличия тестов: `scripts/check-gates/tests-for-new-code.mjs` (режим `block`).
