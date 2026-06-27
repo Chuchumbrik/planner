@@ -51,11 +51,10 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 | `documentation-orientation` | guidance | любая задача в репо (`alwaysApply`) | ориентир на доки + актуализация в том же PR; ручные шаги — в README |
 | `russian-requirements-writing-skill` | guidance | правка `obsidian-motivator/**` или запрос ТЗ на русском | структура по ГОСТ, строгий язык, glossary-wikilinks |
 
-Адаптеры Cursor (`.cursor/rules/*.mdc`): для `tests-for-new-code`, `tests-by-independent-agent`,
-`pre-commit-docs-roadmap`, `documentation-orientation`. *(Для субагентов и `russian-requirements` —
-Cursor-адаптеры пока TODO.)*
-Адаптеры Claude (`.claude/agents/*`): `unit-test-writer`, `autotest-writer`. Остальное Claude видит через
-проекцию в `CLAUDE.md`.
+Адаптеры Cursor (`.cursor/rules/*.mdc`): `tests-for-new-code`, `tests-by-independent-agent`,
+`pre-commit-docs-roadmap`, `documentation-orientation`, `russian-requirements-writing-skill`.
+Субагенты Cursor (`.cursor/agents/*.md`): `unit-test-writer`, `autotest-writer` — зеркало `.claude/agents/*`.
+Остальное Claude видит через проекцию в `CLAUDE.md`; Cursor — через `.mdc` и agents в репозитории.
 
 ## Триггеры (когда что исполняется)
 

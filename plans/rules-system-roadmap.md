@@ -22,7 +22,7 @@
 ### Тест-контур (основной новый)
 - [ ] Оркестрирующий тест-воркфлоу «код → unit-test-writer → autotest-writer» (раздельные агенты).
 - [ ] Playwright-инфраструктура: `@playwright/test`, `playwright.config.ts`, скрипт `test:e2e`, CI-job (трогает `package.json`).
-- [ ] Cursor-определения субагентов `unit-test-writer` / `autotest-writer` — через `_cursor-adapter-sync` (запуск в Cursor).
+- [x] Cursor-определения субагентов `unit-test-writer` / `autotest-writer` → `.cursor/agents/*.md` (sync 2026-06-26).
 
 ### Доводка гейтов
 - [ ] Промоушен `warn → block` для `tests-for-new-code` и `pre-commit-docs` после обкатки.
@@ -31,8 +31,7 @@
 ### Cursor-сторона
 - [x] Инструкция генерации Cursor-стороны из канона → `.cursor/skills/_cursor-adapter-sync/SKILL.md`
   (агент Cursor сам делает `.mdc` и Cursor-агентов; формат агентов — на стороне Cursor).
-- [ ] **Запустить `_cursor-adapter-sync` в Cursor** после коммита — подготовит недостающие `.mdc`
-  (`russian-requirements`) и Cursor-агентов субагентов (`unit-test-writer`, `autotest-writer`). *(Делает владелец в Cursor.)*
+- [x] **`_cursor-adapter-sync` (gaps)** — `.mdc` для `russian-requirements-writing-skill`, агенты в `.cursor/agents/` (2026-06-26).
 
 ### Governance / решения (за владельцем)
 - [ ] `owner` для гейтов (сейчас `TBD`).
