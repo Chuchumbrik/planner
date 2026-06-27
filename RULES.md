@@ -100,8 +100,8 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 - ✅ **Канон — в `.cursor/skills/<id>/SKILL.md`** (достраиваем существующую конвенцию команды).
 - ✅ **Гейты — git-хук + CI**: одна логика проверки (`scripts/check-gates/<id>.mjs`), запуск из двух мест
   (`.githooks/pre-commit` — быстрый локальный фидбек; `pr-checks.yml#gates` — авторитет, не обойти).
-- ✅ **Раскатка гейта `warn → block`**: новый гейт сначала `enforcement-level: warn` (логирует, `exit 0`),
-  после обкатки повышается до `block`. Защищает команду от того, что сырой гейт остановит всем коммиты.
+- ✅ **Раскатка гейта `warn → block`**: новый гейт стартует в `warn`; `tests-for-new-code` и
+  `pre-commit-docs-roadmap` переведены в **`block`** (2026-06-27). Локальный warn: `GATE_WARN=1`.
 
 ## 8. Открытые вопросы
 
@@ -115,12 +115,12 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 
 | id | class | enforcement | level | состояние |
 |---|---|---|---|---|
-| `tests-for-new-code` | gate | git-hook+ci | warn | канон+адаптер+проверка ✅; pre-commit-хук + CI-шаг ✅ (warn); промоушен block — TODO |
+| `tests-for-new-code` | gate | git-hook+ci | block | канон+адаптер+проверка ✅; pre-commit + CI (block); `web/src/data/**` вне scope |
 | `tests-by-independent-agent` | process-invariant | workflow | block | канон+адаптер ✅; оркестратор `test-contour-orchestrator` ✅ |
 | `test-contour-orchestrator` | guidance | workflow | — | канон+`.mdc` ✅; процедура код→unit→e2e |
 | `unit-test-writer` | subagent-spec | — | — | канон ✅; Claude + Cursor агенты ✅ |
 | `autotest-writer` | subagent-spec | — | — | канон ✅; Claude + Cursor агенты ✅; Playwright + CI e2e ✅ |
-| `pre-commit-docs-roadmap` | gate | git-hook+ci | warn | реформат ✅; check-скрипт ✅; pre-commit-хук + CI-шаг ✅ (warn) |
+| `pre-commit-docs-roadmap` | gate | git-hook+ci | block | реформат ✅; check-скрипт ✅; pre-commit + CI (block) |
 | `documentation-orientation` | guidance | none | — | реформат ✅ (канон-скилл + тонкий `.mdc`, `alwaysApply`) |
 | `russian-requirements-writing-skill` | guidance | none | — | реформат ✅; ГОСТ-ревизия доков — план `plans/gost-doc-revision.md` |
 

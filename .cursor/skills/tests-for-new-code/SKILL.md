@@ -6,7 +6,7 @@ scope: [cursor, claude]
 applies-when: коммит трогает логику в web/src или packages/*/src — на изменённый исходник должен меняться его тест
 globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"]
 enforcement: git-hook+ci
-enforcement-level: warn
+enforcement-level: block
 enforced-by: "scripts/check-gates/tests-for-new-code.mjs"
 owner: TBD
 status: active
@@ -33,8 +33,8 @@ links: [tests-by-independent-agent, pre-commit-docs-roadmap]
 3. для `dir/Name.tsx` ищет среди изменённых тест `dir/Name.test.tsx|ts` (или `.spec.`);
 4. исходники без пары — «непокрытые».
 
-**Раскатка:** сейчас `enforcement-level: warn` — проверка только **логирует** непокрытые файлы и
-**не блокирует** коммит/CI (`exit 0`). После обкатки повышаем до `block` (см. RULES.md §7).
+**Режим:** `enforcement-level: block` — непокрытые исходники **блокируют** коммит и CI (`exit 1`).
+Локальный warn: `GATE_WARN=1`. Исключение: `web/src/data/**` (данные сводки, не логика).
 
 ## Как удовлетворить
 
@@ -47,5 +47,5 @@ links: [tests-by-independent-agent, pre-commit-docs-roadmap]
 
 - Чистый рефакторинг без смены поведения: тест всё равно ожидается (хотя бы обновлённый снапшот/проверка) —
   в `warn` это лишь напоминание; при `block` использовать осознанный bypass с пометкой в сообщении коммита.
-- Не-логические файлы (`*.css`, ассеты, конфиги) под маску не попадают.
+- Не-логические файлы (`*.css`, ассеты, конфиги, `web/src/data/**`) под маску не попадают.
 - Открытый вопрос (RULES.md §8): засчитывать только колокацию `X.test.tsx` или любой изменённый тест в коммите.

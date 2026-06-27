@@ -10,4 +10,4 @@ alwaysApply: false
 (открыть skill `test-contour-orchestrator`).
 
 Коротко: автор кода **останавливается** → отдельно **unit-test-writer** (vitest) → при сквozном риске **autotest-writer** (Playwright).
-Проверка наличия тестов: `scripts/check-gates/tests-for-new-code.mjs` (режим `warn`).
+Проверка наличия тестов: `scripts/check-gates/tests-for-new-code.mjs` (режим `block`).

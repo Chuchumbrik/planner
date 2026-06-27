@@ -23,7 +23,7 @@
 
 КЛАСС ПРАВИЛА                 ЧЕМ ДЕРЖИТСЯ                                  ТРИГГЕР
 guidance (подсказка)     ─►  только контекст                              —
-gate (проверка факта)    ─►  scripts/check-gates/<id>.mjs                 pre-commit + CI (warn→block)
+gate (проверка факта)    ─►  scripts/check-gates/<id>.mjs                 pre-commit + CI (block)
 process-invariant        ─►  форма воркфлоу (оркестратор тестов)          в момент производства
 subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент     при написании тестов
 ```
@@ -43,12 +43,12 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 
 | Правило / артефакт | Класс | Когда срабатывает | На что влияет |
 |---|---|---|---|
-| `tests-for-new-code` | gate | коммит/PR трогает `web/src` или `packages/*/src` (`.ts/.tsx`, не тест) | требует изменения парного теста; pre-commit + CI (warn) |
+| `tests-for-new-code` | gate | коммит/PR трогает логику (не `web/src/data/**`) | требует изменения парного теста; pre-commit + CI (**block**) |
 | `tests-by-independent-agent` | process-invariant | тесты пишутся агентом автоматически | тесты пишет отдельный агент, не автор кода; держится воркфлоу |
 | `test-contour-orchestrator` | guidance (workflow) | после правки логики в web/packages | фазы: стоп автору → unit-test-writer → autotest-writer (условно) |
 | `unit-test-writer` | subagent-spec | нужны unit/компонентные тесты (низ/середина пирамиды) | vitest+RTL, независимость, дисциплина пирамиды |
 | `autotest-writer` | subagent-spec | нужны сквозные e2e (верх пирамиды) | Playwright, только критичные пути, независимость |
-| `pre-commit-docs-roadmap` | gate | перед коммитом, если тронут продуктовый код | требует синхрон README / `productRoadmap.ts` / локалей; pre-commit + CI (warn) |
+| `pre-commit-docs-roadmap` | gate | перед коммитом, если тронут продуктовый код | требует синхрон README / `productRoadmap.ts` / локалей; pre-commit + CI (**block**) |
 | `documentation-orientation` | guidance | любая задача в репо (`alwaysApply`) | ориентир на доки + актуализация в том же PR; ручные шаги — в README |
 | `russian-requirements-writing-skill` | guidance | правка `obsidian-motivator/**` или запрос ТЗ на русском | структура по ГОСТ, строгий язык, glossary-wikilinks |
 
@@ -61,14 +61,14 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 
 | Механизм | Где | Когда срабатывает | Что делает |
 |---|---|---|---|
-| **pre-commit** | `.githooks/pre-commit` | перед каждым `git commit` | гоняет гейты по staged (`tests-for-new-code`, `pre-commit-docs`); warn — не блокирует |
-| **CI gates** | `.github/workflows/pr-checks.yml` | на PR в `main` | те же гейты против базы PR (warn, `continue-on-error`) + typecheck/build/tests |
+| **pre-commit** | `.githooks/pre-commit` | перед каждым `git commit` | гоняет гейты по staged; **block** (warn: `GATE_WARN=1`) |
+| **CI gates** | `.github/workflows/pr-checks.yml` | на PR в `main` | те же гейты против базы PR (**block**) + typecheck/build/tests |
 | **post-merge** | `.githooks/post-merge` | на `git pull`/`merge` (любой движок) | пересобирает проекцию правил под Claude |
 | **SessionStart** | `.claude/settings.json` | старт сессии Claude | пересобирает проекцию (страховка свежести) |
 | **UserPromptSubmit** | `.claude/settings.json` | каждый запрос в Claude | подсказывает уместный плагин (см. ниже) |
 
 Подключение git-хуков: `git config core.hooksPath .githooks` (для команды — TODO: `prepare`-скрипт или README).
-Промоушен гейта `warn → block`: убрать `continue-on-error` в CI и выставить `GATE_BLOCK=1`.
+Локальный warn: `GATE_WARN=1` перед commit или в CI (не рекомендуется для main).
 
 ## Субагенты и пирамида тестирования
 

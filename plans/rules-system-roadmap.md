@@ -25,7 +25,7 @@
 - [x] Cursor-определения субагентов `unit-test-writer` / `autotest-writer` → `.cursor/agents/*.md` (sync 2026-06-27).
 
 ### Доводка гейтов
-- [ ] Промоушен `warn → block` для `tests-for-new-code` и `pre-commit-docs` после обкатки.
+- [x] Промоушен `warn → block` для `tests-for-new-code` и `pre-commit-docs` (2026-06-27).
 - [ ] Подключение `.githooks` команде: `prepare`-скрипт npm vs инструкция в README (решение).
 
 ### Cursor-сторона

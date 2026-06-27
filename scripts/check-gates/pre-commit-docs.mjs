@@ -3,7 +3,7 @@
 // Если коммит меняет продуктовый код, но НЕ трогает README/productRoadmap.ts — предупредить
 // о несинхронизированной документации. Деталь и краевые случаи — в скилле.
 //
-// warn по умолчанию (exit 0); GATE_BLOCK=1 → exit 1. Запуск как у tests-for-new-code (staged / GATE_BASE).
+// block по умолчанию (exit 1); GATE_WARN=1 → только warn. Запуск как у tests-for-new-code (staged / GATE_BASE).
 
 import { changedFiles, isBlock } from './_lib.mjs';
 

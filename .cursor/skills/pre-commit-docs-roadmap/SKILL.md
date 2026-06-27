@@ -6,7 +6,7 @@ scope: [cursor, claude]
 applies-when: перед git commit/push, когда дифф трогает web/src, @motivator/core, UX, локали или версию — синхронизировать README, productRoadmap.ts и локали в том же коммите
 globs: ["web/src/**", "packages/*/src/**", "web/README.md", "web/src/data/productRoadmap.ts", "web/src/i18n/locales/*.json", "web/package.json"]
 enforcement: git-hook+ci
-enforcement-level: warn
+enforcement-level: block
 enforced-by: "scripts/check-gates/pre-commit-docs.mjs (TODO); чеклист в теле скилла"
 owner: TBD
 status: active

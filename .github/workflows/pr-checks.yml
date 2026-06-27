@@ -73,10 +73,8 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      # Гейты правил проекта (RULES.md §2). Раскатка warn: шаг логирует, но не валит PR
-      # (continue-on-error). Промоушен в block: убрать continue-on-error и добавить GATE_BLOCK=1.
-      - name: Project rule gates (warn)
-        continue-on-error: true
+      # Гейты правил проекта (RULES.md §2). block по умолчанию; локальный warn — GATE_WARN=1.
+      - name: Project rule gates (block)
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |

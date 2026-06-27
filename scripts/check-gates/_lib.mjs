@@ -14,5 +14,6 @@ export function changedFiles() {
     .filter(Boolean);
 }
 
-// Блокирующий режим (промоушен warn -> block).
-export const isBlock = () => process.env.GATE_BLOCK === '1';
+// Блокирующий режим по умолчанию (промоушен warn → block, 2026-06-27).
+// Локальный откат на warn: GATE_WARN=1
+export const isBlock = () => process.env.GATE_WARN !== '1';

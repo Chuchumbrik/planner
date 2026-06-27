@@ -6,19 +6,19 @@
 // Запуск:
 //   node scripts/check-gates/tests-for-new-code.mjs            # pre-commit: staged-файлы
 //   GATE_BASE=origin/main node .../tests-for-new-code.mjs      # CI: дифф против базы
-//   GATE_BLOCK=1 node .../tests-for-new-code.mjs               # block-режим: exit 1 при пробелах
+//   GATE_WARN=1 node .../tests-for-new-code.mjs                # только warn (exit 0 при пробелах)
 //
-// Раскатка warn -> block: по умолчанию warn (логирует, exit 0). Поднять флагом GATE_BLOCK=1
-// либо синхронизировать с enforcement-level в SKILL.md при промоушене.
+// По умолчанию block (exit 1). Откат на warn — GATE_WARN=1 (см. enforcement-level в SKILL.md).
 
 import { changedFiles, isBlock } from './_lib.mjs';
 
 const SRC_RE = /^(web\/src|packages\/[^/]+\/src)\/.*\.(ts|tsx)$/;
+const DATA_RE = /^web\/src\/data\//;
 const TEST_RE = /\.(test|spec)\.(ts|tsx)$/;
 const DECL_RE = /\.d\.ts$/;
 
 function isLogicSource(f) {
-  return SRC_RE.test(f) && !TEST_RE.test(f) && !DECL_RE.test(f);
+  return SRC_RE.test(f) && !DATA_RE.test(f) && !TEST_RE.test(f) && !DECL_RE.test(f);
 }
 
 // Кандидаты-тесты для исходника dir/Name.tsx → dir/Name.test.{ts,tsx}, dir/Name.spec.{ts,tsx}

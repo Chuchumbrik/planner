@@ -124,7 +124,7 @@ npm run dev
 
 **Процесс для агентов:** после правки логики автор кода **не** пишет первичные тесты — отдельно `unit-test-writer`, при сквозном риске `autotest-writer`. Процедура — скилл `.cursor/skills/test-contour-orchestrator/SKILL.md`, карта — [`docs/rules-system-overview.md`](../docs/rules-system-overview.md).
 
-CI: job **`checks`** (build + vitest), job **`e2e`** (Playwright, режим warn — не блокирует PR), job **`gates`** (правила репозитория, warn).
+CI: job **`checks`** (build + vitest), job **`e2e`** (Playwright, warn), job **`gates`** (правила репозитория, **block**).
 
 ## Supabase
 

@@ -126,8 +126,8 @@ GitHub CI (`.github/workflows/pr-checks.yml`) блокирует мёрдж пр
 _Сгенерировано из `.cursor/skills/*` (scope включает `claude`). Источник истины — там; блок переписывается автоматически, руками не править._
 
 **Гейты (обязательные проверки):**
-- `pre-commit-docs-roadmap` — перед git commit/push, когда дифф трогает web/src, @motivator/core, UX, локали или версию — синхронизировать README, productRoadmap.ts и локали в том же коммите. Проверка: `scripts/check-gates/pre-commit-docs.mjs (TODO); чеклист в теле скилла` (warn). Канон: `.cursor/skills/pre-commit-docs-roadmap/SKILL.md`.
-- `tests-for-new-code` — коммит трогает логику в web/src или packages/*/src — на изменённый исходник должен меняться его тест. Проверка: `scripts/check-gates/tests-for-new-code.mjs` (warn). Канон: `.cursor/skills/tests-for-new-code/SKILL.md`.
+- `pre-commit-docs-roadmap` — перед git commit/push, когда дифф трогает web/src, @motivator/core, UX, локали или версию — синхронизировать README, productRoadmap.ts и локали в том же коммите. Проверка: `scripts/check-gates/pre-commit-docs.mjs (TODO); чеклист в теле скилла` (block). Канон: `.cursor/skills/pre-commit-docs-roadmap/SKILL.md`.
+- `tests-for-new-code` — коммит трогает логику в web/src или packages/*/src — на изменённый исходник должен меняться его тест. Проверка: `scripts/check-gates/tests-for-new-code.mjs` (block). Канон: `.cursor/skills/tests-for-new-code/SKILL.md`.
 
 **Инварианты процесса (держатся воркфлоу, не диффом):**
 - `tests-by-independent-agent` — когда новый код покрывается тестами автоматически (агентом) — тесты должен писать НЕ тот агент, что писал код. Обеспечивает: test-contour-orchestrator; субагенты unit-test-writer + autotest-writer (оба отдельные от автора кода). Канон: `.cursor/skills/tests-by-independent-agent/SKILL.md`.

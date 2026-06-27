@@ -11,4 +11,4 @@ alwaysApply: false
 
 Короткое напоминание: меняешь логику под `web/src/**` или `packages/*/src/**` (`.ts`/`.tsx`,
 кроме `*.test.*`/`*.spec.*`/`*.d.ts`) — в том же коммите меняй её тест. Проверка:
-`scripts/check-gates/tests-for-new-code.mjs` (сейчас режим `warn` — логирует, не блокирует).
+`scripts/check-gates/tests-for-new-code.mjs` (режим `block` — валит коммит/CI; локальный warn: `GATE_WARN=1`).
