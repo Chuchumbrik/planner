@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Git-хук pre-commit: прогон гейтов проекта по staged-файлам.
+# warn по умолчанию (гейты возвращают 0 — коммит проходит). Промоушен в блокирующий режим:
+# выставить GATE_BLOCK=1 (тогда гейт вернёт 1 и коммит прервётся). См. RULES.md §7.
+ROOT="$(git rev-parse --show-toplevel)"
+status=0
+for gate in tests-for-new-code pre-commit-docs; do
+  if [ -f "$ROOT/scripts/check-gates/$gate.mjs" ]; then
+    node "$ROOT/scripts/check-gates/$gate.mjs" || status=1
+  fi
+done
+exit $status

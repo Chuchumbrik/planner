@@ -1,0 +1,8 @@
+[
+  { "match": ["ревью", "review", "проверь код", "посмотри код", "пулреквест", "pull request", "code review"], "hint": "ревью кода → /code-review (для PR — /review-pr)" },
+  { "match": ["закоммить", "коммит", "commit", "запушь", "запуш", "push", "открой pr", "создай pr"], "hint": "коммит/PR → /commit, /commit-push-pr" },
+  { "match": ["новая фича", "реализуй фичу", "новую функци", "feature-dev"], "hint": "разработка фичи → /feature-dev" },
+  { "match": ["вёрстка", "верстка", "интерфейс", "страниц", "компонент", "дизайн", "фронтенд", " ui"], "hint": "UI/дизайн → /frontend-design" },
+  { "match": ["безопасн", "уязвим", "security"], "hint": "безопасность → /security-review" },
+  { "match": ["архитектурн", "adr", "журнал решени", "decision record"], "hint": "арх-решение → /adr-create" }
+]

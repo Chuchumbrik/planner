@@ -1,0 +1,14 @@
+---
+description: Новый логический код в web/src или packages/*/src должен сопровождаться изменением соответствующего теста в том же коммите
+globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"]
+alwaysApply: false
+---
+
+# Новый код несёт тесты (адаптер Cursor)
+
+Это **тонкий адаптер**. Источник истины и полная процедура — в скилле
+**`.cursor/skills/tests-for-new-code/SKILL.md`** (открыть skill `tests-for-new-code`).
+
+Короткое напоминание: меняешь логику под `web/src/**` или `packages/*/src/**` (`.ts`/`.tsx`,
+кроме `*.test.*`/`*.spec.*`/`*.d.ts`) — в том же коммите меняй её тест. Проверка:
+`scripts/check-gates/tests-for-new-code.mjs` (сейчас режим `warn` — логирует, не блокирует).

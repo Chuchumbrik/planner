@@ -1,13 +1,13 @@
 ---
-name: russian-requirements-writing-skill
-description: >-
-  Forms and edits Russian product and technical documentation (ТЗ, requirements, user stories,
-  decision log, architecture) without AI slop; structure per GOST 19.201-78 and GOST R 59795-2021,
-  stricter language rules (complete sentences, measurable criteria, Obsidian wikilinks),
-  mandatory glossary wikilinks with Obsidian Page preview (#Определение); opt-out only with explicit user confirmation.
-  Use when writing or editing files in obsidian-motivator/, or when the user asks for ТЗ, требования,
-  спецификацию, журнал решений, or Russian technical docs within skill scope.
-disable-model-invocation: false
+id: russian-requirements-writing-skill
+title: Русская продуктовая/техническая документация (ГОСТ)
+class: guidance
+scope: [cursor, claude]
+applies-when: создание/правка документов в obsidian-motivator/ или запрос ТЗ/требований/спецификации/журнала решений на русском — структура по ГОСТ 19.201-78 и Р 59795-2021, строгие языковые правила, обязательные glossary-wikilinks
+globs: ["obsidian-motivator/**/*.md"]
+enforcement: none
+status: active
+links: [documentation-orientation, pre-commit-docs-roadmap]
 ---
 
 # Русскоязычная продуктовая и техническая документация

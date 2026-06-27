@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# Git-хук post-merge: срабатывает на `git pull`/`git merge` (любой движок/терминал).
+# Пересобирает проекцию правил под Claude из .cursor/skills/*. Движко-независимая часть системы.
+ROOT="$(git rev-parse --show-toplevel)"
+[ -f "$ROOT/scripts/project-rules-to-claude.mjs" ] && node "$ROOT/scripts/project-rules-to-claude.mjs" || true

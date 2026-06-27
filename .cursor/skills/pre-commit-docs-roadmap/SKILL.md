@@ -1,10 +1,16 @@
 ---
-name: pre-commit-docs-roadmap
-description: >-
-  Enforces the planner repo pre-commit documentation workflow before git commit or push:
-  web/README.md, web/src/data/productRoadmap.ts (Brief summary / «Краткая сводка» data), i18n when needed.
-  Use before any git commit, git push, or when the user asks to ship changes; also when
-  touching web/src, @motivator/core public API, UX, locales, or package versions.
+id: pre-commit-docs-roadmap
+title: Доки и «Краткая сводка» перед коммитом
+class: gate
+scope: [cursor, claude]
+applies-when: перед git commit/push, когда дифф трогает web/src, @motivator/core, UX, локали или версию — синхронизировать README, productRoadmap.ts и локали в том же коммите
+globs: ["web/src/**", "packages/*/src/**", "web/README.md", "web/src/data/productRoadmap.ts", "web/src/i18n/locales/*.json", "web/package.json"]
+enforcement: git-hook+ci
+enforcement-level: warn
+enforced-by: "scripts/check-gates/pre-commit-docs.mjs (TODO); чеклист в теле скилла"
+owner: TBD
+status: active
+links: [tests-for-new-code, documentation-orientation]
 ---
 
 # Pre-commit: README и «Краткая сводка»

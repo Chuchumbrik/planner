@@ -110,15 +110,33 @@
 
 ## Процесс разработки с QA
 
-### Правило: фича без тестов не уходит в PR
+Требования к тестам вынесены в **правила проекта** (см. блок «Правила проекта (проекция под Claude)» ниже и канон в `.cursor/skills/`): `tests-for-new-code` (новый код несёт тесты) и `tests-by-independent-agent` (тесты пишет независимый агент). Здесь их **не дублировать**.
 
-Каждая фича проходит цикл: архитектура → код → тесты → PR. Перед PR локально:
+Перед PR локально:
+- `npm test` в `web/`
+- typecheck + build по тому же пути, что в CI (`npm run build -w web`)
 
-- `npm test` в `web/` (или из корня, если так принято в задаче)
-- typecheck + build по тому же пути, что в CI
+GitHub CI (`.github/workflows/pr-checks.yml`) блокирует мёрдж при провале typecheck+build или тестов; гейты правил (`tests-for-new-code`, `pre-commit-docs`) идут отдельным шагом (раскатка warn).
 
-### GitHub CI
+---
 
-`.github/workflows/pr-checks.yml` блокирует мёрдж если:
-- Не проходит typecheck + build
-- Не проходят тесты (`npm test`)
+<!-- RULES:BEGIN (авто-генерация scripts/project-rules-to-claude.mjs — не редактировать вручную) -->
+## Правила проекта (проекция под Claude)
+
+_Сгенерировано из `.cursor/skills/*` (scope включает `claude`). Источник истины — там; блок переписывается автоматически, руками не править._
+
+**Гейты (обязательные проверки):**
+- `pre-commit-docs-roadmap` — перед git commit/push, когда дифф трогает web/src, @motivator/core, UX, локали или версию — синхронизировать README, productRoadmap.ts и локали в том же коммите. Проверка: `scripts/check-gates/pre-commit-docs.mjs (TODO); чеклист в теле скилла` (warn). Канон: `.cursor/skills/pre-commit-docs-roadmap/SKILL.md`.
+- `tests-for-new-code` — коммит трогает логику в web/src или packages/*/src — на изменённый исходник должен меняться его тест. Проверка: `scripts/check-gates/tests-for-new-code.mjs` (warn). Канон: `.cursor/skills/tests-for-new-code/SKILL.md`.
+
+**Инварианты процесса (держатся воркфлоу, не диффом):**
+- `tests-by-independent-agent` — когда новый код покрывается тестами автоматически (агентом) — тесты должен писать НЕ тот агент, что писал код. Обеспечивает: субагенты unit-test-writer + autotest-writer (оба отдельные от автора кода); оркестрация — новый тест-воркфлоу (в разработке). Канон: `.cursor/skills/tests-by-independent-agent/SKILL.md`.
+
+**Субагенты:**
+- `autotest-writer` — нужны сквозные e2e-автотесты на критичные пользовательские сценарии (верх пирамиды, Playwright). Канон: `.cursor/skills/autotest-writer/SKILL.md`.
+- `unit-test-writer` — нужно написать unit и компонентные/интеграционные тесты на новую/изменённую логику (нижние и средние уровни пирамиды). Канон: `.cursor/skills/unit-test-writer/SKILL.md`.
+
+**Подсказки:**
+- `documentation-orientation` — при любой задаче в репозитории — ориентироваться на документацию как контекст/договорённости и держать её актуальной; ручные шаги вне репо фиксировать в README. Канон: `.cursor/skills/documentation-orientation/SKILL.md`.
+- `russian-requirements-writing-skill` — создание/правка документов в obsidian-motivator/ или запрос ТЗ/требований/спецификации/журнала решений на русском — структура по ГОСТ 19.201-78 и Р 59795-2021, строгие языковые правила, обязательные glossary-wikilinks. Канон: `.cursor/skills/russian-requirements-writing-skill/SKILL.md`.
+<!-- RULES:END -->
