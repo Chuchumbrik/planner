@@ -1,7 +1,13 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { LoginPage } from './LoginPage'
+
+const { mockIsApiConfigured, mockIsSupabaseConfigured } = vi.hoisted(() => ({
+  mockIsApiConfigured: vi.fn(() => false),
+  mockIsSupabaseConfigured: vi.fn(() => true),
+}))
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -12,8 +18,14 @@ vi.mock('@/auth/AuthProvider', () => ({
   useAuth: vi.fn(),
 }))
 
+vi.mock('@/lib/apiConfig', () => ({
+  isApiConfigured: () => mockIsApiConfigured(),
+}))
+
 vi.mock('@/lib/supabase', () => ({
-  isSupabaseConfigured: true,
+  get isSupabaseConfigured() {
+    return mockIsSupabaseConfigured()
+  },
 }))
 
 vi.mock('@/components/brand/BrandMark', () => ({
@@ -46,6 +58,8 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  mockIsApiConfigured.mockReturnValue(false)
+  mockIsSupabaseConfigured.mockReturnValue(true)
   vi.mocked(useAuth).mockReturnValue({
     signIn: mockSignIn,
     signUp: mockSignUp,
@@ -55,6 +69,47 @@ beforeEach(() => {
   mockSignUp.mockReset()
   mockRequestPasswordReset.mockReset()
   mockNavigate.mockReset()
+})
+
+describe('LoginPage — backend configuration hint', () => {
+  it('shows env hint when neither API nor Supabase is configured', async () => {
+    mockIsApiConfigured.mockReturnValue(false)
+    mockIsSupabaseConfigured.mockReturnValue(false)
+
+    renderPage()
+
+    expect(screen.getByText('login.envHintAmveraOrLegacy')).toBeInTheDocument()
+  })
+
+  it('hides env hint when API is configured', async () => {
+    mockIsApiConfigured.mockReturnValue(true)
+    mockIsSupabaseConfigured.mockReturnValue(false)
+
+    renderPage()
+
+    expect(screen.queryByText('login.envHintAmveraOrLegacy')).not.toBeInTheDocument()
+  })
+
+  it('hides env hint when only Supabase is configured', async () => {
+    mockIsApiConfigured.mockReturnValue(false)
+    mockIsSupabaseConfigured.mockReturnValue(true)
+
+    renderPage()
+
+    expect(screen.queryByText('login.envHintAmveraOrLegacy')).not.toBeInTheDocument()
+  })
+
+  it('still renders login form when backend is unconfigured', async () => {
+    mockIsApiConfigured.mockReturnValue(false)
+    mockIsSupabaseConfigured.mockReturnValue(false)
+    const user = userEvent.setup()
+
+    renderPage()
+
+    expect(screen.getByText('login.envHintAmveraOrLegacy')).toBeInTheDocument()
+    await user.type(screen.getByRole('textbox'), 'u@u.com')
+    expect(screen.getByRole('textbox')).toHaveValue('u@u.com')
+  })
 })
 
 describe('LoginPage — initial render', () => {

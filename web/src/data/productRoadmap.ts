@@ -366,6 +366,22 @@ export const RELEASE_NOTES_BLOCKS: RoadmapReleaseNoteBlock[] = [
     dateLabel: { ru: '2026-06-28', en: '2026-06-28' },
     items: [
       {
+        releasedInVersion: { ru: '0.7.37', en: '0.7.37' },
+        tag: 'feature',
+        changes: [
+          {
+            ru: '**Amvera stage (API-only):** `planner-api` — Express `/health`, `/api/auth/*` (register, login, refresh, logout); web при `VITE_API_URL` — вход через JWT без Supabase в браузере; сборка Amvera требует `VITE_API_URL` (`build-amvera.mjs`).',
+            en: '**Amvera stage (API-only):** `planner-api` — Express `/health`, `/api/auth/*` (register, login, refresh, logout); with `VITE_API_URL` the web app uses JWT auth without Supabase in the browser; Amvera build requires `VITE_API_URL` (`build-amvera.mjs`).',
+          },
+        ],
+        plainBullets: [
+          {
+            ru: 'На тестовом стенде Amvera вход и регистрация идут через наш backend, а не через Supabase. Vault и push на stage пока ещё на Supabase — следующие этапы миграции.',
+            en: 'On the Amvera test stage, sign-in and registration go through our backend, not Supabase. Vault and push on stage still use Supabase — later migration steps.',
+          },
+        ],
+      },
+      {
         releasedInVersion: { ru: '0.7.36', en: '0.7.36' },
         tag: 'chore',
         changes: [

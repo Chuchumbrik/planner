@@ -4,7 +4,7 @@
 
 **Целевой объём MVP для разработки** (релиз продукта **v1.0.0**) зафиксирован в [`obsidian-motivator/16-TZ-MVP-v1.0.md`](../obsidian-motivator/16-TZ-MVP-v1.0.md); поэтапный план внедрения — [`obsidian-motivator/17-План-реализации-MVP.md`](../obsidian-motivator/17-План-реализации-MVP.md).
 
-**Текущая версия веб-клиента** в репозитории: **`0.7.36`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
+**Текущая версия веб-клиента** в репозитории: **`0.7.37`** ([`package.json`](./package.json)) — см. правила ниже. Краткий обзор модалки **«Краткая сводка»** — в [отдельном разделе](#краткая-сводка); источник данных — [`web/src/data/productRoadmap.ts`](./src/data/productRoadmap.ts).
 
 ### Версионирование
 
@@ -174,7 +174,7 @@ CI: job **`checks`** (build + vitest), job **`e2e`** (Playwright, warn), job **`
 
 Файл [`vercel.json`](../vercel.json) в **корне** репозитория (`planner/`) задаёт **`installCommand`**, **`buildCommand`** и **`outputDirectory`**: **`web/dist`**, отправляет все пути на `index.html` для SPA и **короткий HTTP-кэш** для **`sw.js`**, **`manifest.webmanifest`**, **`workbox-*.js`**. Минутный вызов **`send-due`** — через serverless [`api/send-due-cron.js`](../api/send-due-cron.js); ежедневная очистка черновиков дефектов — опционально через [`api/defect-attachments-cleanup-cron.js`](../api/defect-attachments-cleanup-cron.js) (см. [ниже](#прокси-defect-attachments-cleanup-vercel)). Оба сценария — **внешний** cron или **Pro**-`crons` (см. [«Минутный вызов send-due»](#минутный-вызов-send-due)); на **Hobby** встроенный Cron **не** даёт минутного расписания / `* * * * *` может **ломать деплой**.
 
-## Amvera Cloud (тестовый деплой SPA)
+## Amvera Cloud (stage: API-only, без Supabase в браузере)
 
 Конфигурация в корне репозитория: [`amvera.yaml`](../amvera.yaml) (окружение **Node.js Browser**, Node **22**, артефакты **`web/dist`**, сборка **`npm run build:amvera`**).
 
@@ -182,19 +182,22 @@ CI: job **`checks`** (build + vitest), job **`e2e`** (Playwright, warn), job **`
 
 | Ветка | Назначение |
 |-------|------------|
-| **`dev`** | Интеграция и **тестовый стенд Amvera** (переезд, гибрид с Supabase). Пуш в `dev` → автосборка в проекте Amvera. |
+| **`dev`** | Stage Amvera: web → **planner-api** → **planner-db** (без Supabase в сборке web). |
 | **`main`** | Прод на **Vercel** (`planner-tawny-omega.vercel.app`) до завершения миграции; **в `main` не вливается** код переезда, пока не выполнен cutover ([[12-Журнал-решений#DR-019 — Миграция Amvera: ветки, архитектура, уровни шифрования (2026-06-24)]] в Obsidian). |
 
 Фичи и правки по переезду мержатся в **`dev`**; детальный план — [`obsidian-motivator/22-План-миграции-Amvera.md`](../obsidian-motivator/22-План-миграции-Amvera.md). Процесс для агентов — skill **`amvera-migration-orchestrator`**; таблица секретов (без значений) — [`docs/amvera-secrets.md`](../docs/amvera-secrets.md). После cutover — в **`main`**.
 
-### Чеклист: первый проект Amvera (стенд на `dev`)
+### Чеклист stage (API-only)
 
-1. **GitHub:** репозиторий `Chuchumbrik/planner`, ветка **`dev`**, корень репозитория (не подпапка `web/`).
-2. **Сборка:** в панели Amvera переопределите **`build.additionalCommands`** (секреты **не** в git) — шаблон в [`amvera.build.commands.example.txt`](../amvera.build.commands.example.txt). Скрипт [`scripts/build-amvera.mjs`](../scripts/build-amvera.mjs) проверяет **`VITE_SUPABASE_URL`** и **`VITE_SUPABASE_ANON_KEY`** до сборки.
-3. **`VITE_*` на этапе сборки:** переменные окружения runtime в Amvera на фазе build **недоступны** ([документация](https://docs.amvera.ru/applications/configuration/variables.html)). Значения — как на Vercel / в [`.env.example`](./.env.example) (тот же Supabase project ref **`ntpkveicqetjjvlnfrwc`**).
-4. **Только фронт (гибрид):** профиль Browser раздаёт статику; **Auth, vault, Edge, cron** пока на **Supabase** (+ cron-прокси на Vercel или внешний cron). **`api/send-due-cron`** на Amvera **не** работает.
-5. После пуша в **`dev`** — «Пересобрать проект», если webhook не сработал. Smoke: вход, vault, планировщик (данные через Supabase).
-6. **Supabase Auth:** в Dashboard → **Authentication → URL configuration** добавьте URL стенда `https://<project>.amvera.io` в **Redirect URLs** / **Site URL** для OAuth и magic link при тесте с Amvera.
+1. **GitHub `dev`** на **`planner-web`** (`planner`) и **`planner-api`**.
+2. **Web:** override `build.additionalCommands` — **`VITE_API_URL`** (HTTPS origin API) + `VITE_VAPID_PUBLIC_KEY`. Шаблон: [`amvera.build.commands.example.txt`](../amvera.build.commands.example.txt). [`build-amvera.mjs`](../scripts/build-amvera.mjs) требует **`VITE_API_URL`**, не Supabase.
+3. **API:** yaml — [`deploy/planner-api.amvera.yaml`](../deploy/planner-api.amvera.yaml); runtime: `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS` ([`docs/amvera-secrets.md`](../docs/amvera-secrets.md)).
+4. **БД:** `npm run migrate -w @motivator/planner-api` с `DATABASE_URL`.
+5. **Внешний HTTPS** на **`planner-api`** — тот же URL в `VITE_API_URL`.
+6. **Supabase Redirect для Amvera не нужен** — login через `/api/auth/*`.
+7. Smoke: `/health`, регистрация/вход. Vault/push — следующие кластеры.
+
+**Vercel (`main`):** `VITE_SUPABASE_*` без `VITE_API_URL`.
 
 ## Доступ из РФ (без VPN)
 

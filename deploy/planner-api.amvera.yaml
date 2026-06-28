@@ -1,0 +1,15 @@
+# Amvera Cloud — planner-api (Node.js Server, монорепо planner/).
+# В ЛK проекта planner-api: вставить этот yaml в «Конфигурация» (override корневого Browser-yaml).
+# Документация: https://docs.amvera.ru/applications/environments/nodejs-server.html
+meta:
+  environment: node
+  toolchain:
+    name: npm
+    version: "22"
+
+build:
+  additionalCommands: npm install && npm run build -w @motivator/planner-api
+
+run:
+  command: npm run start -w @motivator/planner-api
+  containerPort: 8080

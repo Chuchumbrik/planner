@@ -9,6 +9,7 @@ import {
   isLikelyNetworkFetchFailure,
 } from '@/lib/connectivityHints'
 import { legalDocHref } from '@/lib/legalLinks'
+import { isApiConfigured } from '@/lib/apiConfig'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import {
   ALERT_WARNING,
@@ -96,6 +97,8 @@ export function LoginPage() {
         ? 'login.registerTitle'
         : 'login.forgotPasswordTitle'
 
+  const backendConfigured = isApiConfigured() || isSupabaseConfigured
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-x-hidden bg-background px-4 py-12">
       <div className="pointer-events-none absolute inset-0 grid-pattern opacity-20" aria-hidden />
@@ -115,15 +118,9 @@ export function LoginPage() {
           </div>
         </div>
 
-      {!isSupabaseConfigured && (
+      {!backendConfigured && (
         <div className={cn(ALERT_WARNING, 'mb-4')}>
-          <p className={ALERT_WARNING_BODY}>
-          {t('login.envHint', {
-            url: t('login.envUrl'),
-            key: t('login.envKey'),
-            env: t('login.envFile'),
-          })}
-          </p>
+          <p className={ALERT_WARNING_BODY}>{t('login.envHintAmveraOrLegacy')}</p>
         </div>
       )}
 

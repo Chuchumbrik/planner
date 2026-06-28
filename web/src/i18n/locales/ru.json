@@ -683,6 +683,7 @@
     "homeLink": "На главную",
     "confirmEmailInfo": "Аккаунт создан. Подтвердите email по ссылке из письма, затем войдите. Если письма нет — проверьте «Спам».",
     "envHint": "Задайте переменные {{url}} и {{key}} в {{env}} и на Vercel.",
+    "envHintAmveraOrLegacy": "Amvera stage: VITE_API_URL в override сборки planner-web. Legacy Vercel: VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY в web/.env.local.",
     "envUrl": "VITE_SUPABASE_URL",
     "envKey": "VITE_SUPABASE_ANON_KEY",
     "envFile": "web/.env.local",

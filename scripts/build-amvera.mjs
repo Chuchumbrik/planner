@@ -1,26 +1,33 @@
 #!/usr/bin/env node
 /**
  * Amvera Node.js Browser: VITE_* must be present in the build shell (not Amvera runtime env).
- * Set them in Amvera → amvera.yaml override → build.additionalCommands, e.g.:
- *   VITE_SUPABASE_URL=https://<ref>.supabase.co VITE_SUPABASE_ANON_KEY=eyJ… VITE_VAPID_PUBLIC_KEY=… npm run build:amvera
+ * Stage/prod on Amvera — API-only (no Supabase): set VITE_API_URL to planner-api HTTPS origin.
+ * Legacy Vercel / hybrid: VITE_SUPABASE_* (optional here if VITE_API_URL is set).
  */
 import { spawnSync } from 'node:child_process';
 
-const required = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
-const missing = required.filter((key) => !String(process.env[key] ?? '').trim());
+const apiUrl = String(process.env.VITE_API_URL ?? '').trim();
+const supabaseUrl = String(process.env.VITE_SUPABASE_URL ?? '').trim();
+const supabaseAnon = String(process.env.VITE_SUPABASE_ANON_KEY ?? '').trim();
 
-if (missing.length > 0) {
-  console.error('[build:amvera] Missing required environment variables:', missing.join(', '));
-  console.error('[build:amvera] Amvera does not inject runtime env into the build phase.');
-  console.error('[build:amvera] In Amvera panel, override build.additionalCommands (see web/README.md → Amvera):');
+if (!apiUrl) {
+  console.error('[build:amvera] Missing required environment variable: VITE_API_URL');
+  console.error('[build:amvera] Amvera stage uses planner-api only (no Supabase in the browser build).');
+  console.error('[build:amvera] In Amvera → planner-web → override build.additionalCommands, e.g.:');
   console.error(
-    '  VITE_SUPABASE_URL=https://<ref>.supabase.co VITE_SUPABASE_ANON_KEY=<anon> VITE_VAPID_PUBLIC_KEY=<vapid> npm run build:amvera',
+    '  VITE_API_URL=https://planner-api-chuchumbrik.amvera.io VITE_VAPID_PUBLIC_KEY=<vapid> npm run build:amvera',
   );
   process.exit(1);
 }
 
+if (supabaseUrl || supabaseAnon) {
+  console.warn(
+    '[build:amvera] VITE_SUPABASE_* is set but ignored when VITE_API_URL is present (Amvera API-only build).',
+  );
+}
+
 if (!String(process.env.VITE_VAPID_PUBLIC_KEY ?? '').trim()) {
-  console.warn('[build:amvera] VITE_VAPID_PUBLIC_KEY is empty — Web Push subscribe may fail in the stage build.');
+  console.warn('[build:amvera] VITE_VAPID_PUBLIC_KEY is empty — Web Push subscribe may fail until notify module ships.');
 }
 
 const result = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true });

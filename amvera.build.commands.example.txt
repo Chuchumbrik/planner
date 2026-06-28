@@ -1,5 +1,8 @@
-# Шаблон для Amvera → Конфигурация → переопределение build.additionalCommands
-# (секреты не коммитить; значения — как VITE_* на Vercel / в web/.env.local)
+# Шаблон для Amvera → planner-web → Конфигурация → override build.additionalCommands
+# (секреты не коммитить; значения — password manager / Amvera LK)
+#
+# Amvera stage: API-only (без Supabase). VITE_API_URL — публичный HTTPS origin planner-api.
+# Добавьте внешний домен HTTPS на проект planner-api в ЛK, если его ещё нет.
 #
 # Одна строка (Linux shell на фазе сборки):
-VITE_SUPABASE_URL=https://ntpkveicqetjjvlnfrwc.supabase.co VITE_SUPABASE_ANON_KEY=<anon-jwt> VITE_VAPID_PUBLIC_KEY=<base64url> npm run build:amvera
+VITE_API_URL=https://planner-api-chuchumbrik.amvera.io VITE_VAPID_PUBLIC_KEY=<base64url-public-vapid> npm run build:amvera

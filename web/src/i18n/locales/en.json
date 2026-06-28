@@ -683,6 +683,7 @@
     "homeLink": "Home",
     "confirmEmailInfo": "Account created. Confirm your email from the message, then sign in. Check Spam if needed.",
     "envHint": "Set {{url}} and {{key}} in {{env}} and on Vercel.",
+    "envHintAmveraOrLegacy": "Amvera stage: set VITE_API_URL in planner-web build override. Legacy Vercel: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in web/.env.local.",
     "envUrl": "VITE_SUPABASE_URL",
     "envKey": "VITE_SUPABASE_ANON_KEY",
     "envFile": "web/.env.local",

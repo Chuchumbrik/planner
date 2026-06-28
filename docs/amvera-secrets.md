@@ -29,19 +29,20 @@
 | `GITHUB_TOKEN` | planner-api | file-defect issues | да |
 | `GITHUB_DEFECT_REPO` | planner-api | owner/repo | нет |
 | `CRON_SECRET` | planner-api + planner-jobs | Защита `/internal/cron/*` | да |
-| `INTERNAL_CRON_SECRET` | *(alias)* | То же, если используется в коде | — |
-| `VITE_SUPABASE_URL` | planner-web build | Legacy hybrid (до cutover) | stage |
-| `VITE_SUPABASE_ANON_KEY` | planner-web build | Legacy hybrid | stage |
-| `VITE_API_URL` | planner-web build | База API после миграции клиента | stage/prod |
+| `CORS_ORIGINS` | planner-api | CSV origins web (HTTPS Amvera + localhost) | stage |
+| `INTERNAL_CRON_SECRET` | *(alias)* | То же, что `CRON_SECRET`, если используется в коде | — |
+| `VITE_API_URL` | planner-web build | База **planner-api** (HTTPS); **обязателен** для Amvera stage | stage/prod |
+| `VITE_SUPABASE_URL` | planner-web build (legacy Vercel) | Supabase hybrid | только Vercel до cutover |
+| `VITE_SUPABASE_ANON_KEY` | planner-web build (legacy) | Supabase hybrid | только Vercel |
 | `VITE_VAPID_PUBLIC_KEY` | planner-web build | Подписка push в браузере | да |
 
-## Чеклист stage
+## Чеклист stage (API-only)
 
-- [ ] Все секреты API заведены в LK `planner-api` (без значений в репо).
-- [ ] `VITE_*` прописаны в override `build.additionalCommands` для `planner-web`.
-- [ ] Cron job шлёт `Authorization: Bearer <CRON_SECRET>` на internal URL.
-- [ ] SMTP: тестовое письмо доходит.
-- [ ] Экспорт пользователей Supabase Auth — **вне git** (план миграции §0.4.3).
+- [ ] `planner-api`: yaml из `deploy/planner-api.amvera.yaml`; env `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`.
+- [ ] `planner-db`: `npm run migrate -w @motivator/planner-api` (001_auth).
+- [ ] `planner-api`: внешний HTTPS; тот же URL в `VITE_API_URL` при сборке web.
+- [ ] `planner-web`: `build.additionalCommands` с `VITE_API_URL` (без Supabase).
+- [ ] Smoke: `/health`, регистрация/вход на web.
 
 ## Гейт
 

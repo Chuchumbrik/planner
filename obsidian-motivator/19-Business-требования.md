@@ -60,7 +60,10 @@ flowchart LR
 
 | ID | Requirement | Status | Source |
 |---|---|---|---|
-| BR-NF-001 | End-to-end шифрование данных (E2E, ciphertext в Supabase) | ✅ shipped | [[06-Приватность-и-безопасность]], [[08-Архитектура]] |
+| BR-NF-001 | End-to-end шифрование vault (E2E ciphertext) | 🚧 пересмотр | Платный тариф + DR-019; базовый профиль — отдельная модель |
+| BR-NF-001a | Гибрид metadata + сейф (push без title в hybrid) | 📋 planned | DR-019, модуль `notify` на Amvera |
+| BR-NF-001b | Зашифрованные команды sync (вместо полной перезаливки сейфа) | 📋 planned | DR-019, backlog миграции |
+| BR-NF-001c | Миграция инфраструктуры на Amvera (3–4 проекта, модульный API) | 🚧 в процессе | DR-019, ветка `dev` only |
 | BR-NF-002 | Offline-first работа | ✅ shipped | [[08-Архитектура#Offline-first]] |
 | BR-NF-003 | PWA с web-push-уведомлениями | ✅ shipped | [[08-Архитектура#Push-уведомления (PWA)]] |
 | BR-NF-004 | CI gating всех PR (тесты + typecheck) | ✅ shipped (2026-05-31) | [[12-Журнал-решений#DR-016]] |
