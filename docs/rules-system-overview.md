@@ -51,7 +51,7 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 | `pre-commit-docs-roadmap` | gate | перед коммитом, если тронут продуктовый код | требует синхрон README / `productRoadmap.ts` / локалей; pre-commit + CI (**block**) |
 | `documentation-orientation` | guidance | любая задача в репо (`alwaysApply`) | ориентир на доки + актуализация в том же PR; ручные шаги — в README |
 | `russian-requirements-writing-skill` | guidance | правка `obsidian-motivator/**` или запрос ТЗ на русском | структура по ГОСТ, строгий язык, glossary-wikilinks |
-| `engineering-craft` | guidance (meta) | любая реализация/рефакторинг в коде | мантра, промпты до/во время/после, self-review Staff-уровня; `alwaysApply` |
+| `engineering-craft` | guidance (meta) | правки в `web/packages/services` src | мантра, self-review Staff-уровня; globs на код |
 | `plan-before-implement` | guidance (process) | перед любой реализацией | декомпозиция, глубокий план, проверка противоречий; затем код; `alwaysApply` |
 | `layer-boundaries-and-ports` | guidance | логика в web/packages/services | слои, порты, куда класть код, anti-patterns |
 | `vault-and-crypto-invariants` | guidance | vault, crypto, sync, schemaVersion | DR-005/019, контракт, не логировать ciphertext |
@@ -61,7 +61,8 @@ subagent-spec            ─►  .claude/agents/* (Claude) / Cursor-агент  
 | `supabase-edge-to-api-porting` | guidance | Edge → API | карта функций, JWT, cron |
 | `sql-amvera-migration-adaptation` | gate | SQL migrations Amvera | без RLS/auth.uid; gate **warn** |
 | `frontend-api-client-cutover` | guidance | web → apiClient | VITE_API_URL, порядок модулей |
-| `security-hygiene` | gate | секреты, authz, логи | no-secrets-in-diff **warn**; `alwaysApply` |
+| `security-hygiene` | guidance | любая задача (`alwaysApply`) | authz, PII/ciphertext в логах; секреты только env/LK |
+| `no-secrets-in-diff` | gate | pre-commit / CI | scan staged diff на секреты; **warn** (promote → block) |
 | `api-http-contracts` | guidance | planner-api | /api, /internal, errors, middleware |
 | `pr-and-code-review` | guidance | перед PR / merge | чеклист, self-review, code-reviewer |
 | `adr-and-architecture-decisions` | guidance | архитектурные изменения | DR-xxx, 08/10/11 Obsidian |

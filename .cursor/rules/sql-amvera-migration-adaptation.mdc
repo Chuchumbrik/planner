@@ -8,4 +8,4 @@ alwaysApply: false
 
 Тонкий адаптер. Источник истины — `.cursor/skills/sql-amvera-migration-adaptation/SKILL.md`.
 
-Коротко: адаптация supabase/migrations → services/.../migrations; без RLS/pg_net/FK auth.users; проверка `scripts/check-gates/no-supabase-patterns-in-amvera-sql.mjs`.
+Коротко: адаптация supabase/migrations → services/.../migrations; без RLS/pg_net/FK auth.users; проверка `scripts/check-gates/no-supabase-patterns-in-amvera-sql.mjs` (**warn**).
