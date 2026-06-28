@@ -7,6 +7,8 @@ applies-when: замена прямого supabase.* на HTTP API, VITE_API_URL
 globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "web/.env.example"]
 enforcement: none
 status: active
+lifecycle: migration
+sunset-when: "cutover (план §12)"
 links: [layer-boundaries-and-ports, supabase-edge-to-api-porting, api-http-contracts, amvera-migration-orchestrator, test-contour-orchestrator]
 ---
 

@@ -5,15 +5,14 @@ class: guidance
 scope: [cursor, claude]
 applies-when: любой код, конфиг, diff, логи — секреты, authz, PII, vault ciphertext
 globs: ["**/*"]
-enforcement: git-hook+ci
-enforcement-level: warn
-enforced-by: "scripts/check-gates/no-secrets-in-diff.mjs"
-owner: TBD
+enforcement: none
 status: active
-links: [vault-and-crypto-invariants, amvera-secrets-and-env, api-http-contracts, engineering-craft]
+links: [vault-and-crypto-invariants, amvera-secrets-and-env, api-http-contracts, engineering-craft, no-secrets-in-diff]
 ---
 
 # Гигиена безопасности
+
+Грань «нет секретов в диффе» вынесена в отдельный гейт [[no-secrets-in-diff]] (там автопроверка); здесь — guidance по authz, PII, rate-limit, path-traversal.
 
 ## Секреты
 

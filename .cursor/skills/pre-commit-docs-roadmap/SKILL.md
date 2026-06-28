@@ -7,8 +7,8 @@ applies-when: перед git commit/push, когда дифф трогает web
 globs: ["web/src/**", "packages/*/src/**", "services/*/src/**", "web/README.md", "web/src/data/productRoadmap.ts", "web/src/i18n/locales/*.json", "web/package.json"]
 enforcement: git-hook+ci
 enforcement-level: block
-enforced-by: "scripts/check-gates/pre-commit-docs.mjs (TODO); чеклист в теле скилла"
-owner: TBD
+enforced-by: "scripts/check-gates/pre-commit-docs.mjs; чеклист в теле скилла"
+owner: "@Chuchumbrik"
 status: active
 links: [tests-for-new-code, documentation-orientation]
 ---
@@ -23,6 +23,8 @@ links: [tests-for-new-code, documentation-orientation]
 2. Не полагаться только на краткий текст правила `.cursor/rules/pre-commit-docs-roadmap.mdc`: правило задаёт **требование**, этот скилл — **порядок действий и краевые случаи**. Обход скилла при коммите с изменениями вне «только docs-файлы по списку» — нарушение процесса.
 
 Если пользователь просит коммит **без** прохождения чеклиста — напомнить о правиле репозитория; для исключений нужно явное человеческое решение и коммит только разрешённых файлов.
+
+Гейт проверяет только присутствие `web/README.md` или `web/src/data/productRoadmap.ts` в диффе; синхрон версии README↔package.json, локалей и содержимого — guidance (глаза/чеклист), не автопроверка.
 
 ## Цели
 

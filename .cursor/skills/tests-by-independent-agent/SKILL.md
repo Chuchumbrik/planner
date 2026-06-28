@@ -6,9 +6,8 @@ scope: [cursor, claude]
 applies-when: когда новый код покрывается тестами автоматически (агентом) — тесты должен писать НЕ тот агент, что писал код
 globs: []
 enforcement: workflow
-enforcement-level: block
 enforced-by: "test-contour-orchestrator; субагенты unit-test-writer + autotest-writer (оба отдельные от автора кода)"
-owner: TBD
+owner: "@Chuchumbrik"
 status: active
 links: [tests-for-new-code]
 ---
@@ -27,6 +26,10 @@ links: [tests-for-new-code]
 (см. RULES.md §2). Поэтому инвариант обеспечивается не проверкой на выходе, а **формой воркфлоу
 в точке производства**. Рядом стоит гейт [[tests-for-new-code]] как backstop: он ловит случай
 «тестов вообще нет», но не «кто их автор» — это и держит данный инвариант.
+
+Фактическую **блокировку** обеспечивает именно backstop-гейт [[tests-for-new-code]]; сам же инвариант
+«тесты пишет не автор кода» держится **формой воркфлоу** (воркфлоу не «падает» — он устроен так, что тесты
+производит отдельный агент).
 
 ## Как обеспечивается
 

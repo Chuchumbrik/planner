@@ -2,7 +2,6 @@
 id: autotest-writer
 title: Субагент autotest-writer
 kind: subagent-spec
-class: guidance
 scope: [cursor, claude]
 applies-when: нужны сквозные e2e-автотесты на критичные пользовательские сценарии (верх пирамиды, Playwright)
 implements: [tests-by-independent-agent]

@@ -7,7 +7,8 @@ applies-when: проектирование или реализация services/
 globs: ["services/planner-api/**", "deploy/**"]
 enforcement: none
 status: active
-links: [api-http-contracts, api-implementation-and-logging, layer-boundaries-and-ports, supabase-edge-to-api-porting, security-hygiene, sql-amvera-migration-adaptation, tests-for-new-code]
+lifecycle: permanent
+links: [api-implementation-and-logging, layer-boundaries-and-ports, supabase-edge-to-api-porting, security-hygiene, sql-amvera-migration-adaptation, tests-for-new-code]
 ---
 
 # HTTP-контракты planner-api

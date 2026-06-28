@@ -50,11 +50,17 @@ enforcement-level: warn | block  # для gate: warn = логирует, не б
 enforced-by: <указатель|"">      # напр. "scripts/check-gates/<id>.mjs", "pr-checks.yml#gates", ".claude/agents/unit-test-writer.md"
 owner: <ник>                     # обязателен для gate / process-invariant (кто ревьюит изменения)
 status: active | draft | deprecated
+lifecycle: permanent | migration # опц. (по умолч. permanent); migration → временное правило
+sunset-when: <событие>           # опц., только для lifecycle: migration — когда удалять
 links: [<other-ids>]             # связанные правила
 ---
 
 <тело: само правило, чеклист, краевые случаи>
 ```
+
+> **Артефакты-не-правила.** Субагенты (`kind: subagent-spec`) и тулинг (`kind: tooling`) используют
+> поле `kind` ВМЕСТО `class` (у них `class` не ставится). Допустимы поля `implements`, `enforced-by`.
+> Это «способ удовлетворить правило», а не правило (§2/§9) — в проекции идут отдельной группой.
 
 ## 4. Слои и где что лежит
 
@@ -105,11 +111,17 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 
 ## 8. Открытые вопросы
 
-- [ ] Кто `owner` по умолчанию для гейтов на старте?
-- [ ] Семантика проверки `tests-for-new-code`: что считаем «соответствующим тестом» (колокация `X.test.tsx` vs любой тест в коммите)?
-- [ ] Подключение `.githooks` всем: через `git config core.hooksPath .githooks` (локально) или npm `prepare`-скрипт.
-- [ ] Cursor-эквивалент для `tests-by-independent-agent`: конкретный Cursor-воркфлоу/агент (механика — за владельцем проекта).
-- [ ] Коммит `193c3ee` урезал `CLAUDE.md` (~66 строк) вместе с удалением воркфлоу — вернуть ли вырезанное содержимое.
+- [ ] Коммит `193c3ee` урезал `CLAUDE.md` (~66 строк) — вернуть ли вырезанное содержимое.
+- [ ] Гейт «фронт без supabase»: нужен список легитимных путей-адаптеров (где supabase допустим до cutover).
+
+### Решено (2026-06-28)
+- ✅ `owner` гейтов — `@Chuchumbrik` (один владелец на старте).
+- ✅ Семантика `tests-for-new-code` — строгая колокация по имени (`X.test.tsx`), как в `_lib.mjs`.
+- ✅ `.githooks` — авто-включение через npm `prepare` (`git config core.hooksPath .githooks`).
+- ✅ Cursor-субагенты — `.cursor/agents/*` (через `_cursor-adapter-sync`).
+- ✅ Прямой push в `main` запрещён — только PR (branch protection, `enforce_admins`).
+- ✅ `security-hygiene` split: guidance + отдельный gate `no-secrets-in-diff`; `sql-amvera` → class `gate`.
+- ✅ Контракт §3: введены `lifecycle` и `kind: subagent-spec`.
 
 ## 9. Реестр правил
 
@@ -123,7 +135,7 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 | `pre-commit-docs-roadmap` | gate | git-hook+ci | block | реформат ✅; check-скрипт ✅; pre-commit + CI (block) |
 | `documentation-orientation` | guidance | none | — | реформат ✅ (канон-скилл + тонкий `.mdc`, `alwaysApply`) |
 | `russian-requirements-writing-skill` | guidance | none | — | реформат ✅; ГОСТ-ревизия доков — план `plans/gost-doc-revision.md` |
-| `engineering-craft` | guidance | none | — | волна 1 ✅; мета-уровень: как писать код; `alwaysApply` |
+| `engineering-craft` | guidance | none | — | мета: как писать код; **контекстное** (globs на код, не alwaysApply) |
 | `plan-before-implement` | guidance | none | — | обязательно: декомпозиция → план → противоречия → код; `alwaysApply` |
 | `layer-boundaries-and-ports` | guidance | none | — | волна 1 ✅; слои core/web/API, порты |
 | `vault-and-crypto-invariants` | guidance | none | — | волна 1 ✅; VAULT_CRYPTO_CONTRACT, инварианты |
@@ -131,9 +143,10 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 | `amvera-migration-orchestrator` | guidance | none | — | волна 2 ✅; кластеры Amvera, ветки, DoD |
 | `amvera-secrets-and-env` | guidance | none | — | волна 2 ✅; docs/amvera-secrets.md |
 | `supabase-edge-to-api-porting` | guidance | none | — | волна 2 ✅; Edge → planner-api |
-| `sql-amvera-migration-adaptation` | guidance | git-hook+ci | warn | волна 2 ✅; gate no-supabase-patterns |
+| `sql-amvera-migration-adaptation` | gate | git-hook+ci | warn | gate no-supabase-patterns; `lifecycle: migration`; owner @Chuchumbrik |
 | `frontend-api-client-cutover` | guidance | none | — | волна 2 ✅; apiClient, VITE_API_URL |
-| `security-hygiene` | guidance | git-hook+ci | warn | волна 2 ✅; gate no-secrets-in-diff; `alwaysApply` |
+| `security-hygiene` | guidance | none | — | split: guidance (authz/PII/abuse); гейт вынесен → `no-secrets-in-diff`; `alwaysApply` |
+| `no-secrets-in-diff` | gate | git-hook+ci | warn | вынесен из `security-hygiene`; owner @Chuchumbrik |
 | `api-http-contracts` | guidance | none | — | волна 2 ✅; planner-api модули, HTTP errors |
 | `pr-and-code-review` | guidance | none | — | волна 3 ✅; PR checklist, self-review |
 | `adr-and-architecture-decisions` | guidance | none | — | волна 3 ✅; DR в Obsidian |
@@ -143,9 +156,14 @@ Cursor — у всех, Claude — пока у одного. Поэтому ка
 > Удалён `github-defect-workflow` (не нужен). ГОСТ-анализ obsidian-доков выполнен (11 ✅ / 9 🟡 / 0 🔴);
 > список к правке — в `plans/gost-doc-revision.md`.
 
-> `subagent-spec` — новый вид артефакта: канонические инструкции субагента, которые *реализуют*
+> `subagent-spec` — вид артефакта (§3): канонические инструкции субагента, которые *реализуют*
 > инвариант процесса. Живут в `.cursor/skills/`, оборачиваются `.claude/agents/*` (Claude) и
-> Cursor-агентом. Это «способ удовлетворить правило», а не само правило (RULES.md §2).
+> `.cursor/agents/*` (Cursor). Это «способ удовлетворить правило», а не само правило (§2). `class` не ставится.
+
+> **Жизненный цикл (§3 `lifecycle`).** `migration` (гасятся после cutover, sunset §12):
+> `amvera-migration-orchestrator`, `supabase-edge-to-api-porting`, `frontend-api-client-cutover`,
+> `sql-amvera-migration-adaptation`. Постоянные (после cutover вынести из миграционной группы в «planner-api»):
+> `api-http-contracts`, `api-implementation-and-logging`, `amvera-secrets-and-env`.
 
 ## 10. Реализованные механизмы
 

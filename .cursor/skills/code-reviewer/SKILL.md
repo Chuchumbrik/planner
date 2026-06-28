@@ -2,7 +2,6 @@
 id: code-reviewer
 title: Субагент code-reviewer
 kind: subagent-spec
-class: guidance
 scope: [cursor, claude]
 applies-when: независимое ревью PR или diff перед merge — read-only, чеклист pr-and-code-review, verdict approve/request-changes
 implements: []

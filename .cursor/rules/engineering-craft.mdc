@@ -1,6 +1,7 @@
 ---
 description: При любой реализации или рефакторинге — писать код на уровне лучших инженеров: архитектура, self-review, тесты, безопасность, минимальный осмысленный diff
-alwaysApply: true
+globs: ["web/src/**", "packages/*/src/**", "services/*/src/**"]
+alwaysApply: false
 ---
 
 # Инженерное мастерство (адаптер Cursor)

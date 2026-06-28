@@ -2,7 +2,6 @@
 id: unit-test-writer
 title: Субагент unit-test-writer
 kind: subagent-spec
-class: guidance
 scope: [cursor, claude]
 applies-when: нужно написать unit и компонентные/интеграционные тесты на новую/изменённую логику (нижние и средние уровни пирамиды)
 implements: [tests-by-independent-agent]

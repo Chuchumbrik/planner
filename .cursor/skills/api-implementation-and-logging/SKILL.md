@@ -7,6 +7,7 @@ applies-when: написание handlers, services, middleware и логов в
 globs: ["services/planner-api/**", "api/**"]
 enforcement: none
 status: active
+lifecycle: permanent
 links: [api-http-contracts, security-hygiene, supabase-edge-to-api-porting, layer-boundaries-and-ports, tests-for-new-code, vault-and-crypto-invariants]
 ---
 
@@ -56,7 +57,7 @@ export async function upsert(userId: string, body: VaultPutDto) {
 ## Валидация
 
 - **Zod** (или выбранная схема в проекте) на входе route — body, query, params.
-- UUID path params — явная проверка формata.
+- UUID path params — явная проверка формата.
 - Размер body — limit middleware **до** parse (defects, AI audio).
 - Enum labels (defect type) — whitelist как на Edge.
 

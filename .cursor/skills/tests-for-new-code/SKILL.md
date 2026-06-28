@@ -8,7 +8,7 @@ globs: ["web/src/**/*.ts", "web/src/**/*.tsx", "packages/*/src/**/*.ts", "packag
 enforcement: git-hook+ci
 enforcement-level: block
 enforced-by: "scripts/check-gates/tests-for-new-code.mjs"
-owner: TBD
+owner: "@Chuchumbrik"
 status: active
 links: [tests-by-independent-agent, pre-commit-docs-roadmap, api-http-contracts]
 ---
@@ -28,6 +28,8 @@ links: [tests-by-independent-agent, pre-commit-docs-roadmap, api-http-contracts]
 ## Что проверяется
 
 `scripts/check-gates/tests-for-new-code.mjs` + общая логика `scripts/check-gates/_lib.mjs` (тот же критерий в hook `nudge-unit-test-writer`).
+
+Критерий «соответствующего теста» — **строгая колокация по имени** (`X.tsx → X.test.tsx`/`X.test.ts`), как реализовано в `scripts/check-gates/_lib.mjs`. Гейт проверяет только **присутствие** теста в диффе, а не его прогон или осмысленность.
 
 **Режим:** `block`. Локальный warn: `GATE_WARN=1`. Исключение: `web/src/data/**`.
 

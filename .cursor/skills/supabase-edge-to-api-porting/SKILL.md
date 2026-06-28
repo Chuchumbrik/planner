@@ -7,6 +7,8 @@ applies-when: перенос логики из web/supabase/functions в service
 globs: ["web/supabase/functions/**", "services/planner-api/**", "api/**"]
 enforcement: none
 status: active
+lifecycle: migration
+sunset-when: "cutover (план §12)"
 links: [api-http-contracts, sql-amvera-migration-adaptation, amvera-migration-orchestrator, security-hygiene, layer-boundaries-and-ports]
 ---
 

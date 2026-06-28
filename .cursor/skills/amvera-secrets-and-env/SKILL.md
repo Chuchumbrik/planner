@@ -7,6 +7,7 @@ applies-when: настройка Amvera, сборка web, env API, cron, док
 globs: ["amvera.yaml", "amvera.build.commands.example.txt", "scripts/build-amvera.mjs", "docs/amvera-secrets.md", "deploy/**", "web/.env.example"]
 enforcement: none
 status: active
+lifecycle: permanent
 links: [security-hygiene, amvera-migration-orchestrator]
 ---
 

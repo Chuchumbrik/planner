@@ -1,15 +1,17 @@
 ---
 id: sql-amvera-migration-adaptation
 title: Адаптация SQL для Amvera Postgres
-class: guidance
+class: gate
 scope: [cursor, claude]
 applies-when: перенос или создание SQL-миграций для planner-db / services/planner-api/migrations
 globs: ["services/**/migrations/**/*.sql", "web/supabase/migrations/**/*.sql"]
 enforcement: git-hook+ci
 enforcement-level: warn
 enforced-by: "scripts/check-gates/no-supabase-patterns-in-amvera-sql.mjs"
-owner: TBD
+owner: "@Chuchumbrik"
 status: active
+lifecycle: migration
+sunset-when: "cutover (план §12)"
 links: [amvera-migration-orchestrator, api-http-contracts, layer-boundaries-and-ports]
 ---
 

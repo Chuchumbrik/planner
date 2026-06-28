@@ -4,7 +4,7 @@ title: Инженерное мастерство — как писать код
 class: guidance
 scope: [cursor, claude]
 applies-when: при любой реализации, рефакторинге или исправлении в коде — держать планку staff/principal-уровня: архитектура, читаемость, тесты, безопасность, минимальный diff
-globs: ["**/*"]
+globs: ["web/src/**", "packages/*/src/**", "services/*/src/**"]
 enforcement: none
 status: active
 links: [plan-before-implement, layer-boundaries-and-ports, vault-and-crypto-invariants, react-ui-conventions, tests-by-independent-agent, test-contour-orchestrator, documentation-orientation]

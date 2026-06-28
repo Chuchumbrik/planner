@@ -126,7 +126,9 @@ GitHub CI (`.github/workflows/pr-checks.yml`) блокирует мёрдж пр
 _Сгенерировано из `.cursor/skills/*` (scope включает `claude`). Источник истины — там; блок переписывается автоматически, руками не править._
 
 **Гейты (обязательные проверки):**
-- `pre-commit-docs-roadmap` — перед git commit/push, когда дифф трогает web/src, packages/*/src, services/*/src, UX, локали или версию — синхронизировать README, productRoadmap.ts и локали в том же коммите. Проверка: `scripts/check-gates/pre-commit-docs.mjs (TODO); чеклист в теле скилла` (block). Канон: `.cursor/skills/pre-commit-docs-roadmap/SKILL.md`.
+- `no-secrets-in-diff` — перед коммитом — патч не должен содержать секретов (токены, приватные ключи, строки подключения с паролем). Проверка: `scripts/check-gates/no-secrets-in-diff.mjs` (warn). Канон: `.cursor/skills/no-secrets-in-diff/SKILL.md`.
+- `pre-commit-docs-roadmap` — перед git commit/push, когда дифф трогает web/src, packages/*/src, services/*/src, UX, локали или версию — синхронизировать README, productRoadmap.ts и локали в том же коммите. Проверка: `scripts/check-gates/pre-commit-docs.mjs; чеклист в теле скилла` (block). Канон: `.cursor/skills/pre-commit-docs-roadmap/SKILL.md`.
+- `sql-amvera-migration-adaptation` — перенос или создание SQL-миграций для planner-db / services/planner-api/migrations. Проверка: `scripts/check-gates/no-supabase-patterns-in-amvera-sql.mjs` (warn). Канон: `.cursor/skills/sql-amvera-migration-adaptation/SKILL.md`.
 - `tests-for-new-code` — коммит трогает логику в web/src, packages/*/src или services/*/src — на изменённый исходник должен меняться его тест. Проверка: `scripts/check-gates/tests-for-new-code.mjs` (block). Канон: `.cursor/skills/tests-for-new-code/SKILL.md`.
 
 **Инварианты процесса (держатся воркфлоу, не диффом):**
@@ -152,7 +154,6 @@ _Сгенерировано из `.cursor/skills/*` (scope включает `cla
 - `react-ui-conventions` — при создании или изменении компонентов, страниц, hooks с UI в web/src. Канон: `.cursor/skills/react-ui-conventions/SKILL.md`.
 - `russian-requirements-writing-skill` — создание/правка документов в obsidian-motivator/ или запрос ТЗ/требований/спецификации/журнала решений на русском — структура по ГОСТ 19.201-78 и Р 59795-2021, строгие языковые правила, обязательные glossary-wikilinks. Канон: `.cursor/skills/russian-requirements-writing-skill/SKILL.md`.
 - `security-hygiene` — любой код, конфиг, diff, логи — секреты, authz, PII, vault ciphertext. Канон: `.cursor/skills/security-hygiene/SKILL.md`.
-- `sql-amvera-migration-adaptation` — перенос или создание SQL-миграций для planner-db / services/planner-api/migrations. Канон: `.cursor/skills/sql-amvera-migration-adaptation/SKILL.md`.
 - `supabase-edge-to-api-porting` — перенос логики из web/supabase/functions в services/planner-api — модуль, контракт, cron. Канон: `.cursor/skills/supabase-edge-to-api-porting/SKILL.md`.
 - `test-contour-orchestrator` — после реализации или правки логики в web/src или packages/*/src — закрыть tests-by-independent-agent и tests-for-new-code через двух субагентов, не автором кода. Канон: `.cursor/skills/test-contour-orchestrator/SKILL.md`.
 - `vault-and-crypto-invariants` — при любой правке шифрования, vault JSON, sync, seed/KDF, remote save, schemaVersion или тарифов free/paid. Канон: `.cursor/skills/vault-and-crypto-invariants/SKILL.md`.

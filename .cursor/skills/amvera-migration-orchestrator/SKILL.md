@@ -7,6 +7,8 @@ applies-when: работа по переезду Vercel+Supabase → Amvera — 
 globs: ["services/**", "deploy/**", "amvera.yaml", "amvera.build.commands.example.txt", "scripts/build-amvera.mjs", "scripts/migrate-from-supabase/**", "web/src/api/**", "docs/amvera-secrets.md"]
 enforcement: none
 status: active
+lifecycle: migration
+sunset-when: "cutover (план §12)"
 links: [plan-before-implement, supabase-edge-to-api-porting, sql-amvera-migration-adaptation, frontend-api-client-cutover, amvera-secrets-and-env, api-http-contracts, security-hygiene, layer-boundaries-and-ports]
 ---
 
@@ -25,12 +27,12 @@ links: [plan-before-implement, supabase-edge-to-api-porting, sql-amvera-migratio
 | **`main`** | Prod до cutover — legacy Vercel+Supabase; **после cutover** — prod Amvera |
 
 - Миграционный код **обычно** мержится в **`dev`**; один PR — один **кластер/подшаг** плана.
-- **`main`** не обязан быть «запретной зоной навсегда**: влитие миграции в `main` — только по **чеклисту cutover** (план §12), не «случайным» PR.
+- **`main`** не обязан быть «запретной зоной навсегда»: влитие миграции в `main` — только по **чеклисту cutover** (план §12), не «случайным» PR.
 - Не смешивать unrelated prod-fix на legacy с большим кластером API без явного решения.
 
 ## Кластеры (карта)
 
-| ID | Содержание | Skill / артеfact |
+| ID | Содержание | Skill / артефакт |
 |----|------------|------------------|
 | 0 | Amvera проекты, секреты, решения free/paid | [[amvera-secrets-and-env]], `docs/amvera-secrets.md` |
 | 1 | БД, схемы, миграции SQL | [[sql-amvera-migration-adaptation]] |
@@ -58,7 +60,7 @@ links: [plan-before-implement, supabase-edge-to-api-porting, sql-amvera-migratio
 
 План §12 + §1: prod на Amvera, legacy off, smoke 48h, `main` = Amvera prod, Supabase/Vercel отключены для prod.
 
-## Связанные артеfactы
+## Связанные артефакты
 
 - `amvera.yaml`, `scripts/build-amvera.mjs`, `web/README.md` → Amvera Cloud
 - [[supabase-edge-to-api-porting]], [[frontend-api-client-cutover]]
